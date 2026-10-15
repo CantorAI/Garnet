@@ -1,0 +1,146 @@
+# Metal experiment evidence index
+
+Generated UTC: 2026-10-15T18:48:54.108935+00:00
+
+Source commit: `caad60a3a8930644ff1b3d755876aed383649bc3`. Reports indexed: **136**.
+
+Each row links to its original report. Read that report's scope, exclusions and status before citing it. The JSON snapshot retains complete report text, documented command blocks and hashes; the CSV supports analysis. Neither report presence nor a verification filename certifies a successful experiment.
+
+| Experiment | Original report title |
+| --- | --- |
+| [results/20261013/attention-prefix](../../../results/20261013/attention-prefix/README.md) | GPU-verified contiguous prompt-slot lookup: repeated latency gains |
+| [results/20261013/chunk-delta-algebra](../../../results/20261013/chunk-delta-algebra/README.md) | CPU foundation for a parallel recurrent prefill experiment |
+| [results/20261013/compact-joined](../../../results/20261013/compact-joined/README.md) | Compact joined half-weight storage: lower memory, no repeated latency gain |
+| [results/20261013/comparator-dtypes](../../../results/20261013/comparator-dtypes/README.md) | Actual comparator precision audit |
+| [results/20261013/current-selected-operations](../../../results/20261013/current-selected-operations/README.md) | Refreshed operation attribution for the selected implementation |
+| [results/20261013/decode-accumulators](../../../results/20261013/decode-accumulators/README.md) | Independent decode accumulators: component candidate, not a serving gain |
+| [results/20261013/decode-occupancy](../../../results/20261013/decode-occupancy/README.md) | Decode work distribution: component evidence, not a model speed claim |
+| [results/20261013/decode-single-output](../../../results/20261013/decode-single-output/README.md) | One-output SIMD decode: rejected |
+| [results/20261013/decode-subsimd](../../../results/20261013/decode-subsimd/README.md) | Sixteen-lane decode groups: full-model integration rejected |
+| [results/20261013/decode-unroll](../../../results/20261013/decode-unroll/README.md) | Rejected decode dot-loop unrolling |
+| [results/20261013/decode-wide-outputs](../../../results/20261013/decode-wide-outputs/README.md) | Rejected wider-output decode kernels |
+| [results/20261013/delta-norm-cache](../../../results/20261013/delta-norm-cache/README.md) | Rejected per-head/token norm cache |
+| [results/20261013/dense-key-prefill](../../../results/20261013/dense-key-prefill/README.md) | Dense one-pass prefill: verified improvement, full goal still unmet |
+| [results/20261013/dense-key-prefill/rejected-128](../../../results/20261013/dense-key-prefill/rejected-128/README.md) | rejected-128 |
+| [results/20261013/direct-state-zero](../../../results/20261013/direct-state-zero/README.md) | Direct resident-state reset: repeated latency gains and a decode tradeoff |
+| [results/20261013/dual-text-head](../../../results/20261013/dual-text-head/README.md) | Bounded dual-accumulator text head: rejected after real model execution |
+| [results/20261013/equivalent-f32](../../../results/20261013/equivalent-f32/README.md) | Exact-value FP32 precision study; full goal still unmet |
+| [results/20261013/equivalent-f32-linear-chunk](../../../results/20261013/equivalent-f32-linear-chunk/README.md) | Selected recurrent chunk build: current matched FP32 comparison |
+| [results/20261013/exact-dense-tails](../../../results/20261013/exact-dense-tails/README.md) | Exact dense prefill tails: validated modest latency gains |
+| [results/20261013/extended-half-scale](../../../results/20261013/extended-half-scale/README.md) | Extended exact-half QKV scales: correct reconstruction, no useful speed gain |
+| [results/20261013/extended-prefill](../../../results/20261013/extended-prefill/README.md) | Extended prefill profiles: actual tests, no 2× claim |
+| [results/20261013/finer-dense-tails](../../../results/20261013/finer-dense-tails/README.md) | Opt-in finer dense prefill profiles |
+| [results/20261013/frame-frontend](../../../results/20261013/frame-frontend/README.md) | Fresh-frame copy elision: less CPU work, no clear model latency gain |
+| [results/20261013/fused-mlp-decode](../../../results/20261013/fused-mlp-decode/README.md) | Rejected broad fused BF16 MLP decode |
+| [results/20261013/half-vision](../../../results/20261013/half-vision/README.md) | Exact-scaled half vision projections: rejected |
+| [results/20261013/joined-prefill](../../../results/20261013/joined-prefill/README.md) | Bounded joined MPS prefill: modest warm gain, costly first use |
+| [results/20261013/linear-chunk](../../../results/20261013/linear-chunk/README.md) | Batched recurrent output projections: validated latency improvement |
+| [results/20261013/linear-conv-chunk](../../../results/20261013/linear-conv-chunk/README.md) | Chunk convolution and preparation: verified VL prefill gain |
+| [results/20261013/linear-delta-chunk](../../../results/20261013/linear-delta-chunk/README.md) | Persistent chunk recurrence: verified VL latency gain |
+| [results/20261013/linear-direct-write](../../../results/20261013/linear-direct-write/README.md) | Recurrent token output writes: repeatable VL latency gain |
+| [results/20261013/lossless-block-gpu](../../../results/20261013/lossless-block-gpu/README.md) | Whole-block BF16 packing: rejected |
+| [results/20261013/mps-gemv](../../../results/20261013/mps-gemv/README.md) | Dedicated MPS vector multiply: dtype limit and rejected FP32 route |
+| [results/20261013/mps-half-decode](../../../results/20261013/mps-half-decode/README.md) | Rejected mixed-input MPS decode |
+| [results/20261013/mps-pair-probes](../../../results/20261013/mps-pair-probes/README.md) | Independent MPS scheduling and joined prefill projections |
+| [results/20261013/mps-vision-context](../../../results/20261013/mps-vision-context/README.md) | Batched MPS vision value projection: rejected |
+| [results/20261013/mps-vision-scores](../../../results/20261013/mps-vision-scores/README.md) | Optional FP32 MPS vision attention: validated modest latency gain |
+| [results/20261013/native-bfloat-body](../../../results/20261013/native-bfloat-body/README.md) | Native BF16 body decode: small repeated gains, latency tradeoff |
+| [results/20261013/native-frame-phases](../../../results/20261013/native-frame-phases/README.md) | Actual warm frame phase attribution |
+| [results/20261013/packed-decode](../../../results/20261013/packed-decode/README.md) | Rejected interleaved BF16 decode layout |
+| [results/20261013/parallel-delta](../../../results/20261013/parallel-delta/README.md) | Parallel recurrent reductions: validated and retained |
+| [results/20261013/parallel-delta-gpu](../../../results/20261013/parallel-delta-gpu/README.md) | Parallel delta GPU prototypes: rejected |
+| [results/20261013/qwen35-extended-prefill](../../../results/20261013/qwen35-extended-prefill/README.md) | Extended Qwen3.5 prefill: small batch-1 latency gain |
+| [results/20261013/resident-kv-inplace](../../../results/20261013/resident-kv-inplace/README.md) | Private single-slot KV writes: retained opt-in text decode improvement |
+| [results/20261013/resident-kv-vllm](../../../results/20261013/resident-kv-vllm/README.md) | Fresh Garnet / vLLM-Metal comparison after private KV writes |
+| [results/20261013/retained-prefill-vllm](../../../results/20261013/retained-prefill-vllm/README.md) | Fresh comparison with the retained dense prefill policies |
+| [results/20261013/selected-attention-vllm](../../../results/20261013/selected-attention-vllm/README.md) | Selected attention policy versus vLLM-Metal |
+| [results/20261013/small-output-decode](../../../results/20261013/small-output-decode/README.md) | Bounded small-output decode: modest repeated gain |
+| [results/20261013/split-half-prefill](../../../results/20261013/split-half-prefill/README.md) | Three-half activation prefill: rejected partial experiment |
+| [results/20261013/state-zero-gpu](../../../results/20261013/state-zero-gpu/README.md) | GPU buffer-fill reset: rejected component variant |
+| [results/20261013/transpose-half-prefill](../../../results/20261013/transpose-half-prefill/README.md) | MPS exact-half weight layout: no broad serving promotion |
+| [results/20261013/vision-fused-context](../../../results/20261013/vision-fused-context/README.md) | FP32 vision softmax/value fusion: default-OFF experiment |
+| [results/20261013/webp-thread](../../../results/20261013/webp-thread/README.md) | Threaded fresh WebP preparation: exact inputs and repeated latency benefit |
+| [results/20261013/worldsense-forwarding-guard](../../../results/20261013/worldsense-forwarding-guard/README.md) | worldsense-forwarding-guard |
+| [results/20261013/worldsense-inline-guard](../../../results/20261013/worldsense-inline-guard/README.md) | Verified direct WorldSense launcher in the benchmark guard |
+| [results/20261014/compact-frame](../../../results/20261014/compact-frame/README.md) | Optional compact frame preparation |
+| [results/20261014/constant-bf16](../../../results/20261014/constant-bf16/README.md) | Constant-address BF16 weights: no useful native decode gain |
+| [results/20261014/decode-matrix](../../../results/20261014/decode-matrix/README.md) | FP32 matrix units at decode rows: slower than native dot kernels |
+| [results/20261014/dirty-prefix-reset](../../../results/20261014/dirty-prefix-reset/README.md) | Bounded cache reset: repeated component signal |
+| [results/20261014/global-half-alpha](../../../results/20261014/global-half-alpha/README.md) | Global lossless half scale through MPS alpha: trained components pass, native validation running |
+| [results/20261014/global-half-alpha/vllm](../../../results/20261014/global-half-alpha/vllm/README.md) | Global-alpha bundle versus vLLM-Metal |
+| [results/20261014/indirect-bf16](../../../results/20261014/indirect-bf16/README.md) | Recorded real BF16 projections: no broad speed benefit |
+| [results/20261014/indirect-command](../../../results/20261014/indirect-command/README.md) | Recorded compute commands: lower CPU encoding, no broad wall-time gain |
+| [results/20261014/indirect-mlp](../../../results/20261014/indirect-mlp/README.md) | Recorded four-kernel MLP: clean numerics, unstable wall-time gains |
+| [results/20261014/joined-activation-decode](../../../results/20261014/joined-activation-decode/README.md) | One joined product for lossless input components: rejected |
+| [results/20261014/joined-global-alpha](../../../results/20261014/joined-global-alpha/README.md) | One joined common-alpha MPS product with output views |
+| [results/20261014/joined-global-mlp](../../../results/20261014/joined-global-mlp/README.md) | Optional joined global MLP native trial |
+| [results/20261014/prefill-residual-norm](../../../results/20261014/prefill-residual-norm/README.md) | Packed Add/Layout/RMS fusion: small native latency benefit, no promotion |
+| [results/20261014/private-bf16](../../../results/20261014/private-bf16/README.md) | GPU-private BF16 weights: compatible, no repeated broad speed gain |
+| [results/20261014/residual-norm](../../../results/20261014/residual-norm/README.md) | Residual addition plus RMS normalization: no useful native decode gain |
+| [results/20261014/single-coder-head](../../../results/20261014/single-coder-head/README.md) | Optional single-row coder vocabulary kernel |
+| [results/20261014/single-row-bf16](../../../results/20261014/single-row-bf16/README.md) | Single-row BF16 specialization: coder-head component signal only |
+| [results/20261014/vision-global-alpha](../../../results/20261014/vision-global-alpha/README.md) | Vision FP32 products versus exact common half alpha |
+| [results/20261015/aligned-row-prefill](../../../results/20261015/aligned-row-prefill/README.md) | Physical MPS prefill row alignment: no broad promotion |
+| [results/20261015/body-shape-inference](../../../results/20261015/body-shape-inference/README.md) | Body-only fixed-shape serving experiment |
+| [results/20261015/coalesced-activation-decode](../../../results/20261015/coalesced-activation-decode/README.md) | Coalesced mixed-input matrix decode: rejected |
+| [results/20261015/coalesced-activation-prefill](../../../results/20261015/coalesced-activation-prefill/README.md) | Coalesced lossless activation MMA for prefill: rejected |
+| [results/20261015/coalesced-body-block](../../../results/20261015/coalesced-body-block/README.md) | Exact coalesced BF16 block storage: repeated component signal |
+| [results/20261015/coalesced-body-native](../../../results/20261015/coalesced-body-native/README.md) | Native exact BF16 block storage: validation running |
+| [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: queued prefill investigation |
+| [results/20261015/combined-prefill-reset](../../../results/20261015/combined-prefill-reset/README.md) | Combined bounded reset and ordered prefill: initial latency tradeoff |
+| [results/20261015/concurrent-bf16-groups](../../../results/20261015/concurrent-bf16-groups/README.md) | Independent native projections in one compute pass: mixed results |
+| [results/20261015/counter-trace](../../../results/20261015/counter-trace/README.md) | Compute-pass GPU timestamps: validated diagnostic, substantial overhead |
+| [results/20261015/decode-eight-lane](../../../results/20261015/decode-eight-lane/README.md) | Eight-lane FP32 decode: numerically valid, slower, rejected |
+| [results/20261015/decode-only-head](../../../results/20261015/decode-only-head/README.md) | Decode-only fused head: repeated full runs verified |
+| [results/20261015/decode-splitk](../../../results/20261015/decode-splitk/README.md) | FP32 split-K decode: no broad gain, rejected for general dispatch |
+| [results/20261015/deferred-state-zero](../../../results/20261015/deferred-state-zero/README.md) | Deferred request-state zero: repeated full-model latency tradeoff |
+| [results/20261015/direct-mps-body](../../../results/20261015/direct-mps-body/README.md) | Direct original-row mixed-storage MPS component |
+| [results/20261015/fastencode-streamed-mps-body](../../../results/20261015/fastencode-streamed-mps-body/README.md) | MPS argument-validation option: wall penalty persists |
+| [results/20261015/fused-head-argmax](../../../results/20261015/fused-head-argmax/README.md) | Fused vocabulary projection and partial argmax: component gain repeats |
+| [results/20261015/fused-projection-groups](../../../results/20261015/fused-projection-groups/README.md) | Single-dispatch independent projections |
+| [results/20261015/interleaved-bf16-body](../../../results/20261015/interleaved-bf16-body/README.md) | Isolated interleaved BF16 decoder body component |
+| [results/20261015/interleaved-body-native](../../../results/20261015/interleaved-body-native/README.md) | Native large-matrix BF16 body layout |
+| [results/20261015/interleaved-head-native](../../../results/20261015/interleaved-head-native/README.md) | Native interleaved screening index: profile-dependent tradeoffs |
+| [results/20261015/interleaved-screen-index](../../../results/20261015/interleaved-screen-index/README.md) | Lossless four-column screening index: repeated component gain |
+| [results/20261015/joint-state-zero](../../../results/20261015/joint-state-zero/README.md) | Reset and dependent GPU read in one command buffer: repeated component signal |
+| [results/20261015/mixed-accumulator](../../../results/20261015/mixed-accumulator/README.md) | Apple M4 mixed-input FP32 accumulator capability |
+| [results/20261015/mps-screen-index](../../../results/20261015/mps-screen-index/README.md) | MPS-derived screening dot products: rejected |
+| [results/20261015/mpsgraph-prefill](../../../results/20261015/mpsgraph-prefill/README.md) | MPSGraph FP32 prefill: actual component results, no broad promotion |
+| [results/20261015/packed-body-prefill](../../../results/20261015/packed-body-prefill/README.md) | Packed BF16 prefill tiles: rejected |
+| [results/20261015/padded-mps-body](../../../results/20261015/padded-mps-body/README.md) | Padded-row native MPS body projection: rejected |
+| [results/20261015/parallel-vision-context](../../../results/20261015/parallel-vision-context/README.md) | Parallel FP32 vision value contraction |
+| [results/20261015/prefill-stream](../../../results/20261015/prefill-stream/README.md) | Ordered partial prefill submissions: repeated latency tradeoff |
+| [results/20261015/replanned-vl-prefill](../../../results/20261015/replanned-vl-prefill/README.md) | Retuned native VL B2 prefill on the same library |
+| [results/20261015/reused-zero-source](../../../results/20261015/reused-zero-source/README.md) | Retained CPU zero source: repeated component signal |
+| [results/20261015/reused-zero-source-inference](../../../results/20261015/reused-zero-source-inference/README.md) | Retained CPU zero source: full-model investigation |
+| [results/20261015/screened-head](../../../results/20261015/screened-head/README.md) | Captured-query greedy head screening |
+| [results/20261015/screened-head-inference](../../../results/20261015/screened-head-inference/README.md) | Native guarded greedy-head screening |
+| [results/20261015/screened-head-vllm](../../../results/20261015/screened-head-vllm/README.md) | Screened greedy head versus fresh vLLM-Metal |
+| [results/20261015/screened-prefill-reset](../../../results/20261015/screened-prefill-reset/README.md) | Screened head plus ordered prefill and partial cache reset |
+| [results/20261015/screened-seed-abba](../../../results/20261015/screened-seed-abba/README.md) | Direct exact-seed comparison and native candidate |
+| [results/20261015/screened-seed-sweep](../../../results/20261015/screened-seed-sweep/README.md) | Exact screened-head seed-width exploration |
+| [results/20261015/serial-vision-context](../../../results/20261015/serial-vision-context/README.md) | Original-order vision context prefetch |
+| [results/20261015/serial-vision-native](../../../results/20261015/serial-vision-native/README.md) | Repeated native inference with original-order vision prefetch |
+| [results/20261015/shape-specialized-bf16](../../../results/20261015/shape-specialized-bf16/README.md) | Full-shape BF16 decode specialization: head regressions, mixed body gains |
+| [results/20261015/small-seed-native](../../../results/20261015/small-seed-native/README.md) | Native exact seed 1024 versus 8192: small mixed gains |
+| [results/20261015/sparse-counter-trace](../../../results/20261015/sparse-counter-trace/README.md) | Sparse GPU counters: much lower diagnostic overhead |
+| [results/20261015/streamed-direct-mps-body](../../../results/20261015/streamed-direct-mps-body/README.md) | Streamed direct-row native MPS: rejected for integration |
+| [results/20261015/striped-frame](../../../results/20261015/striped-frame/README.md) | Exact-coordinate parallel Pillow resize |
+| [results/20261015/threaded-striped-frame](../../../results/20261015/threaded-striped-frame/README.md) | Combined threaded WebP decode and exact striped resize |
+| [results/20261015/wide-batch-prefill](../../../results/20261015/wide-batch-prefill/README.md) | Exact 160-row VL batch-2 prefill investigation |
+| [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
+| [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |
+| [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
+| [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
+| [test2026/metal/results/20261012/vllm-metal/prefill-tiles](../../../test2026/metal/results/20261012/vllm-metal/prefill-tiles/README.md) | Validated wide prefill tiles |
+| [test2026/metal/results/20261012/vllm-metal/pruned-head-gpu](../../../test2026/metal/results/20261012/vllm-metal/pruned-head-gpu/README.md) | Measured native GPU partial-head prototypes |
+| [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
+| [test2026/metal/results/20261013/decode-input-tiles](../../../test2026/metal/results/20261013/decode-input-tiles/README.md) | Rejected BF16 decode input tiles |
+| [test2026/metal/results/20261013/decoder-codec](../../../test2026/metal/results/20261013/decoder-codec/README.md) | Rejected lossless decoder packing |
+| [test2026/metal/results/20261013/delta-split](../../../test2026/metal/results/20261013/delta-split/README.md) | Validated direct delta state outputs |
+| [test2026/metal/results/20261013/encoder-reuse](../../../test2026/metal/results/20261013/encoder-reuse/README.md) | Rejected compute encoder reuse |
+| [test2026/metal/results/20261013/exact-half-prefill](../../../test2026/metal/results/20261013/exact-half-prefill/README.md) | Validated exact scaled FP16 MPS prefill |
+| [test2026/metal/results/20261013/exact-half-probe](../../../test2026/metal/results/20261013/exact-half-probe/README.md) | Exact scaled FP16 storage feasibility |
+| [test2026/metal/results/20261013/half-body-decode](../../../test2026/metal/results/20261013/half-body-decode/README.md) | Rejected exact-scaled FP16 body decode |
+| [test2026/metal/results/20261013/kv-chunk-vector](../../../test2026/metal/results/20261013/kv-chunk-vector/README.md) | Validated vector chunk KV-cache updates |
+| [test2026/metal/results/20261013/vector-slices](../../../test2026/metal/results/20261013/vector-slices/README.md) | Validated vector state slices |
