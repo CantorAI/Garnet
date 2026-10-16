@@ -1,0 +1,18 @@
+{
+  "experiment": "WS-M5-09",
+  "declared_utc": "2026-10-16T22:36:58.014104+00:00",
+  "method": "Heterogeneous chunks:4B VLM64 and Qwen3-1.7B dense reasoner32 versus16/16. Original BF16/FP32 kernels, same budgets/images.",
+  "motivation": "WS08 car screen passed, but first prospective broader worker failed text preservation. Dense full-attention prefill32 may have a better activation/attention tradeoff than64. This is an exploratory hypothesis, not a causal explanation of WS08 regression. Do not adopt WS08 or retry it unchanged.",
+  "tradeoffs": "Larger VLM activation/cache footprint; reasoner32 cache smaller than64 but more chunk submissions. Both policies remain warm/shared-weight in the ablation. No quantization or output cache.",
+  "stage": "Prepared only while mirrored WS08 worker completes. No build/GPU validation/timing until that process terminates. Then native/reference and all32VLM/28reasoner state/token checks before fixed-car WorldSense ABBA screen/four measured samples per policy/model. Fresh full three-frame/search mirrored workers required for promotion.",
+  "gates": {
+    "exact_tokens_and_all_state_bits": true,
+    "actual_chunk_plan": true,
+    "4b_ttft_min_gain": 0.1,
+    "4b_total_min_gain": 0.03,
+    "decode_max_regression": 0.02,
+    "text_total_ttft_max_regression": 0.02,
+    "identical_prompt_hash_and_nonchunk_budgets": true
+  },
+  "telemetry": "Identical control/candidate prompt SHA-256 and effective capacity/pixels/output limit are recorded. Prompt equality and unchanged non-chunk budgets are additional correctness gates; this telemetry is part of WS09 source before any timing."
+}

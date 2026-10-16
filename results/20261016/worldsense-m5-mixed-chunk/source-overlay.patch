@@ -1,0 +1,118 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -7,6 +7,13 @@
+ find_library(GARNET_MPS_FRAMEWORK MetalPerformanceShaders REQUIRED)
+ find_library(GARNET_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+ add_library(garnet_metal STATIC src/backends/metal/metal_context.mm)
++option(GARNET_METAL_QWEN35_4B_WIDE_PREFILL "Validate 4B 64-token packed prefill" OFF)
++if(GARNET_METAL_QWEN35_4B_WIDE_PREFILL)
++    if(GARNET_METAL_QWEN35_EXTENDED_PREFILL)
++        message(FATAL_ERROR "4B wide prefill and small-model extended prefill are separate experiments")
++    endif()
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_QWEN35_4B_WIDE_PREFILL=1)
++endif()
+ option(GARNET_METAL_MLP_PREFILL_GRAPH "Test complete FP32 MLP graphs during prefill" OFF)
+ if(GARNET_METAL_MLP_PREFILL_GRAPH)
+     if(GARNET_METAL_JOINED_GLOBAL_MLP OR GARNET_METAL_JOINED_PREFILL)
+--- a/runtime/metal_serving.py
++++ b/runtime/metal_serving.py
+@@ -3,6 +3,7 @@
+ import json
+ import os
+ import threading
++import hashlib
+ import time
+ 
+ # The native package registers import roots with XLang3. Embedded Cantor
+@@ -49,7 +50,8 @@
+         checkpoint = index if os.path.isfile(index) else os.path.join(root, 'model.safetensors')
+         self.checkpoint = checkpoint
+         cls = MetalDecoder if self.visual else DenseMetalDecoder
+-        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > 65536:
++        packed_limit = 64 * 2560 if self.visual and self.xmodel == 'vl_4b' and 'qwen35_4b_wide_prefill' in garnet.backend_info() else 65536
++        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > packed_limit:
+             raise ValueError('Metal prefill chunk times hidden size exceeds the packed width limit')
+         self.model_factory = None
+         if self.visual and self.xmodel == 'vl_4b':
+@@ -145,7 +147,7 @@
+         stages['decode_seconds'] = time.monotonic() - first
+         stages['decode_profile'] = decode_profile
+         stages['decode_fused_head_dispatches'] = fused_head_dispatches
+-        return dict(image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
++        return dict(input_prompt_sha256=hashlib.sha256(prompt.encode()).hexdigest(), serving_configuration=dict(capacity=self.capacity, image_pixels=self.image_pixels, prefill_chunk=self.decoder.chunk, requested_output_limit=int(limit), share_vision_weights=self.share_vision_weights), image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
+                     backend=garnet.backend_info(), generated_tokens=len(output),
+                     timings=stages, generated_token_ids=output,
+                     ttft_seconds=first-start, total_seconds=time.monotonic()-start)
+@@ -173,3 +175,27 @@
+             return json.dumps(_models[name].infer(prompt, image, int(limit)))
+         except Exception as error:
+             return json.dumps(dict(status='error', error_message=str(error), model_id=name))
++
++
++def set_benchmark_prefill_policy(enabled):
++    """Paired 4B chunk ablation; graph keys already include physical chunk width."""
++    with _lock:
++        if 'qwen35_4b_wide_prefill' not in garnet.backend_info() or not _models:
++            return json.dumps(dict(supported=False))
++        changed = 0
++        for model in _models.values():
++            if model.visual and model.xmodel == 'vl_4b':
++                if model.text_config['hidden_size'] != 2560 or not model.decoder.linear_chunk:
++                    raise ValueError('Wide 4B prefill requires validated 4B parallel linear decoder')
++                # Reuse chunk-keyed graphs and shared weights. Preserve both policies'
++                # warm graphs; enable_prefill would otherwise close the old cache.
++                model.decoder.chunk = 64 if enabled else 16
++                model.prefill_chunk = model.decoder.chunk
++                changed += 1
++            elif not model.visual:
++                if model.text_config['hidden_size'] != 2048 or model.text_config['num_hidden_layers'] != 28:
++                    raise ValueError('Dual prefill admits only the validated Qwen3-1.7B reasoner')
++                model.decoder.chunk = 32 if enabled else 16
++                model.prefill_chunk = model.decoder.chunk
++                changed += 1
++        return json.dumps(dict(supported=changed > 0, enabled=bool(enabled)))
+--- a/src/backends/metal/metal_context.h
++++ b/src/backends/metal/metal_context.h
+@@ -12,7 +12,11 @@
+ inline constexpr size_t kMetalPrefillPackedHiddenLimit=80*1024;
+ #else
+ inline constexpr size_t kMetalPrefillChunkLimit=64;
++#ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
++inline constexpr size_t kMetalPrefillPackedHiddenLimit=64*2560;
++#else
+ inline constexpr size_t kMetalPrefillPackedHiddenLimit=65536;
++#endif
+ #endif
+ class MetalMatrix {
+     struct Impl;
+--- a/src/entry/metal_main.cpp
++++ b/src/entry/metal_main.cpp
+@@ -34,6 +34,10 @@
+         auto result=X::Value::List(path.host());result.Append(X::Tensor::Create(path.host(),X3_TENSOR_FLOAT32,shape,image.patches.data(),image.patches.size()*4));
+         result.Append(X::Value(image.gridH));result.Append(X::Value(image.gridW));
+         result.Append(X::Value(image.decodeMs));result.Append(X::Value(image.resizeMs));result.Append(X::Value(image.packMs));return result;
++    }
++    std::string BenchmarkPrefillPolicy(X::Value enabled) {
++        auto module=Serving(enabled.host());
++        return module["set_benchmark_prefill_policy"](enabled).ToString();
+     }
+     std::string ServeModel(X::Value root, X::Value xmodel, X::Value cache,
+             X::Value profile, X::Value model) {
+@@ -110,6 +114,9 @@
+ #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+         info+="; reused_zero_source";
+ #endif
++#ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
++        info+="; qwen35_4b_wide_prefill";
++#endif
+ #ifdef GARNET_METAL_BODY_SHAPE
+         info+="; body_shape";
+ #endif
+@@ -177,6 +184,7 @@
+         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
+         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
+         APISET().AddFunc<4>("infer_json",&GarnetMetalAPI::InferJson);
++        APISET().AddFunc<1>("set_benchmark_prefill_policy",&GarnetMetalAPI::BenchmarkPrefillPolicy);
+         APISET().AddFunc<0>("shutdown",&GarnetMetalAPI::Shutdown);
+     END_PACKAGE
+ };

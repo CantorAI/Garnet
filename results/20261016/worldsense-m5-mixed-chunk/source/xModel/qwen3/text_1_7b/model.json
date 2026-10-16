@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "id": "Qwen3-1.7B",
+  "slug": "qwen3-1.7b",
+  "display_name": "Qwen3-1.7B",
+  "family": "qwen3",
+  "task": "text-generation",
+  "capabilities": {
+    "text": true,
+    "vision": false,
+    "paged_kv_cache": true,
+    "continuous_batching_graph": true
+  },
+  "entrypoints": {
+    "prefill": {
+      "file": "prefill.py",
+      "function": "Qwen3Prefill",
+      "frontend": "qwen3_text"
+    },
+    "decode": {
+      "file": "decode.py",
+      "function": "Qwen3Decode",
+      "frontend": "qwen3_text"
+    },
+    "decode_batch": {
+      "file": "decode_batch.py",
+      "function": "Qwen3DecodeBatch",
+      "frontend": "qwen3_text"
+    }
+  },
+  "profile_files": [
+    "profiles/openvino_cpu_int4.json",
+    "profiles/tensorrt_bf16.json"
+  ],
+  "serving_profiles": [
+    {
+      "id": "chat-small",
+      "usage": "chat",
+      "default": true,
+      "maxInputTokens": 2048,
+      "maxOutputTokens": 512,
+      "kvPages": 160
+    },
+    {
+      "id": "agent-4k",
+      "usage": "agent",
+      "maxInputTokens": 4096,
+      "maxOutputTokens": 1024,
+      "kvPages": 320
+    },
+    {
+      "id": "worldsense-skill-4k",
+      "usages": ["agent", "tool-calling", "world-state"],
+      "maxInputTokens": 4096,
+      "maxOutputTokens": 256,
+      "kvPages": 272
+    },
+    {
+      "id": "agent-8k",
+      "usages": ["agent", "tool-calling"],
+      "maxInputTokens": 8192,
+      "maxOutputTokens": 1024,
+      "kvPages": 576
+    },
+    {
+      "id": "agent-12k",
+      "usages": ["agent", "tool-calling", "workspace"],
+      "maxInputTokens": 12288,
+      "maxOutputTokens": 1536,
+      "kvPages": 864
+    },
+    {
+      "id": "agent-16k",
+      "usages": ["agent", "tool-calling", "workspace"],
+      "maxInputTokens": 16384,
+      "maxOutputTokens": 2048,
+      "kvPages": 1152
+    }
+  ],
+  "weights": {
+    "bundled": false,
+    "format": "safetensors",
+    "source": "Qwen/Qwen3-1.7B",
+    "config_file": "config.json",
+    "tokenizer_file": "tokenizer.json"
+  }
+}

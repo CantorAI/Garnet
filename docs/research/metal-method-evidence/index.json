@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T22:42:26.627334+00:00",
-  "source_commit": "a07ed0e21c3e85f5be2a81bbd000ac27bc85963c",
+  "generated_at_utc": "2026-10-16T22:52:17.490995+00:00",
+  "source_commit": "0fbcfcafc8e3abb9a4cce088eadaaf173b0dcd5a",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -46,11 +46,14 @@
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen35/vl_4b/README.md",
+    "results/20261016/worldsense-m5-mixed-chunk/source/xModel/README.md",
+    "results/20261016/worldsense-m5-mixed-chunk/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-mixed-chunk/source/xModel/qwen35/vl_4b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 198,
+  "report_count": 199,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5374,6 +5377,70 @@
       ],
       "verification_records": [],
       "evidence_directories": []
+    },
+    {
+      "experiment_id": "results/20261016/worldsense-m5-mixed-chunk",
+      "title": "WS-M5-09: VLM64 / reasoner32 — rejected",
+      "report_path": "results/20261016/worldsense-m5-mixed-chunk/README.md",
+      "report_sha256": "af6a5edbd86c3e2d809ff3c51ebbe72beea7c7f3d1fc2529b328572b2bc5b6e6",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-09: VLM64 / reasoner32 — rejected\n\nVLM64 / dense reasoner32 versus16/16, using original BF16/FP32 kernels, same checkpoints, image resolution, capacity and output limits. This distinct model-specific batching method was declared before timing after WS08 broad-workload failure. Both chunk-keyed graph sets remain warm and share weights; larger activation/cache storage is a cost. No quantization, image or answer cache.\n\nNative matrix reference passes. Direct native/XLang3 correctness checks pass for all32 VLM and28 reasoner state bits and generated tokens, with all state values finite, capacity rejection and successful subsequent inference recovery. These runs are not speed evidence. Both checkpoints, sources/build flags and environment were fingerprinted before the real WorldSense screen.\n\nFixed-car WorldSense/Galaxy current-event ABBA screen: both policies warm, four measured calls per policy/model,20 returned model records including warmups. Golden tokens/text, image/Skill hashes, input-token counts, actual plans, exact caller-prompt SHA-256 and effective non-chunk budgets all match. Four-B TTFT improves39.47%,total15.54%,decode decreases0.16%. Reasoner TTFT improves3.93%,total increases0.50%,decode decreases3.42%. Native Skill median13.8908 to12.3632 seconds. The declared2%decode-preservation gate fails; TERMINAL REJECTED, no unchanged favorable retry or full confirmation. No production profile/kernel was promoted. Original library/live assignments restored.\n\nThis is a small descriptive screen, not statistical proof that the unchanged decode kernel caused the regression. The per-component gate is retained as declared; do not reinterpret the overall Skill gain as a pass. One car frame, one M5, correlated repeated calls. These timings exclude video decoding, scheduling, event persistence and retrieval/ranking. RSS/swap is not peak GPU memory. Exact frames and Skill specs are ../worldsense-m5-inputs/. Caller-prompt hashes exclude the serving template; source/checkpoint identities fix that template/tokenizer separately. Controller CPython handles lifecycle only; timed HTTP clients and serving use XLang3/native code with native C++ image preparation.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "CMakeCache.txt",
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "build.log",
+        "calls.csv",
+        "cases-paired-2.json",
+        "cases.json",
+        "cohort-manifest.json",
+        "confirmation-cases.json",
+        "confirmation-protocol.json",
+        "controller.log",
+        "controller.py",
+        "decision.json",
+        "environment.json",
+        "file-manifest.json",
+        "flags.make",
+        "model-assets.json",
+        "model-identity-verification.json",
+        "paired-1.cantor-stderr.log",
+        "paired-1.cantor.log",
+        "paired-1.client.log",
+        "paired-1.json",
+        "prepare.py",
+        "production-restore-verification.json",
+        "protocol.json",
+        "reasoner-state-guard.json",
+        "reasoner-state-guard.log",
+        "reasoner_state_guard.py",
+        "reconstruction.json",
+        "report-body.txt",
+        "server-paired-1.log",
+        "server-restored-control.log",
+        "source-overlay.patch",
+        "starting-source-manifest.json",
+        "state-guard.json",
+        "state-guard.log",
+        "state_guard.py",
+        "tests.log"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-mixed-chunk/model-identity-verification.json",
+          "sha256": "c9dafb4050f80edf6a1b7990f4a34feadc8cb8af92624ec6471fc4ab745981b6"
+        },
+        {
+          "path": "results/20261016/worldsense-m5-mixed-chunk/production-restore-verification.json",
+          "sha256": "3dcb44f9d16e796afe2592799a7e339ab6c81d04c7c4b5f16becdd4faabeaf72"
+        }
+      ],
+      "evidence_directories": [
+        "source"
+      ]
     },
     {
       "experiment_id": "results/20261016/worldsense-m5-shared-half",
