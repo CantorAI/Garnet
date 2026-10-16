@@ -1448,6 +1448,65 @@ audit before installing any selected source change. Current source/driver
 remain frozen while live.
 [Repeat scope, costs and archive identity](../../results/20261016/vector-vision-native/README.md#confirmation-passes-native-screen-on-mac-windows-archive-audit-pending).
 
+### 2026-10-16 UTC — two actual follow-up experiments complete; both stop before integration
+
+Compact component97616 exits0 in51.396588375s, archived33-file28e0d5b2...,
+queue94685 exits0 after independent Mac raw audit. All16 group/batch original
+bit/padding/FP64 checks pass,6400 samples retained. No learned group passes
+both-batch>=3% GPU ANDwall plusownnull5%. Some coder/text B2 groups improve,
+but B1 gains/nulls fail; VL misses required gain. No filtered/null-normalized
+windows, hardware-cause claim, favorable repeat or native integration.
+[Complete observed limitations and archived identity](../../results/20261016/compact-fused-projection-groups/README.md#actual-initial-result-numerical-pass-no-selection).
+
+Synthetic MPS probe98524 exits0 in28.241084708s,20-fileee9d6968... archive,
+queue94813 exits0 after independent Mac raw audit. All32 finite precision/scale
+diagnostics and six synthetic shapes/original bounds/padding pass;2,826,240
+host source-bit reconstructions and2400 timings. Three products cost2.806–
+2.897xGPU and1.972–2.238xwall before GPU splitting; null within5%. Stop this
+separate-product MPS strategy, no learned/native selection or favorable-repeat
+search. Finite numeric feasibility does not prove general internal accumulator
+dtype or model admission; no fused-Metal cost claim. Windows transfer/raw audits
+pending with all measured jobs terminal; do not treat pending copied files as
+complete until SCP session reports0.
+[Actual capability/cost scope](../../results/20261016/half-triplet-lower-bound/README.md#actual-mps-result-numeric-feasibility-unfavorable-cost).
+
+### 2026-10-16 UTC — both-host repeat audit complete; validated vision source retained in branch
+
+SCP67223 completes0 before extraction. Windows verifies e7536a9b...5615 files
+and all72 repeat outputs, original gates/routes/clocks/source regeneration.
+Both-host initial/repeat decisions agree: native confirmation passes. Initial
+and repeat total144 complete outputs. Integrate exactly eight validated source
+files into feature/qwen35-metal only after asserting current before hashes and
+all tested after hashes. Runtime is guarded strict float4 vision context with
+original scalar fallback and published actual dispatch counts, under existing
+serial-vision option. No weight copies, input caching or arithmetic change.
+Remote defaultc186 and frozen d52 comparison builds stay untouched; source
+identities recorded in branch-source-integration.json. Full2x/halfTTFT goal
+remains active and requires fresh repeated matched vLLM evidence.
+
+Windows also independently audits compact33-file28e0d5b2... (16 checks,
+104093 validated executions,6400 timings, original worst FP64 .0090262) and
+MPS20-fileee9d6968... (32 finite diagnostics,6synthetic shapes,2400 timings).
+No compact group selected; no learned/native integration for separate MPS
+triplets. Keep all negative raw data/source/decisions. All measured jobs and
+controllers are terminal and archived; no GPU work overlaps evidence transfer.
+Next optimization work must address remaining decode and prefill GPU gaps;
+neither component failure nor this modest retained VL improvement completes
+or narrows the original goal.
+[Full repeat/cost tables and exact integrated source hashes](../../results/20261016/vector-vision-native/README.md#both-host-confirmation-audit-and-branch-integration).
+
+### 2026-10-16 UTC — final controller provenance preserved; this chain quiescent
+
+Archive all four successful current/repaired controllers, snapshots, commands,
+resume records and wrapper dependencies after verifying their exact PIDs are
+gone and exit0.96-file63348bf4... bundle also transferred terminal0 and audited
+on Windows. Old failed controllers remain separately in252aeda0..., without
+rewritten statuses. This chain has no live GPU/measurement/controller jobs.
+The retained native vector source is installed in this investigation branch;
+remaining full goal work is active, not blocked or complete. Do not poll stale
+PID files as evidence of a live wait on the next continuation.
+[Final controller artifact](../../results/20261016/vector-vision-native/final-controllers/archive-verification.json).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

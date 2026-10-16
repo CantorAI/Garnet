@@ -1,7 +1,8 @@
 # Three exact half-storage activation planes: prefill feasibility
 
-Status: CPU representation study executed; synthetic MPS lower-bound probe
-prepared and queued. No GPU precision, model compatibility or speed claim yet.
+Status: CPU representation and synthetic MPS probe executed. Finite numeric
+checks pass; the three-separate-product strategy is substantially slower.
+No learned-model precision/compatibility or inference speed claim.
 
 Motivation: retained-control prefill GPU spans are83.781/144.813ms for VL
 B1/B2; text/coder also spend substantial TTFT in prefill. Existing native
@@ -100,3 +101,29 @@ wrappers resume as new queue94813 at
 queue94685. Probe source, diagnostics, source reconstruction and sampling are
 unchanged; the CPU evidence still pins847f1dc1.... No failed capability test is
 being retried: no capability process has yet launched. All old statuses remain.
+
+## Actual MPS result: numeric feasibility, unfavorable cost
+
+Actual probe98524 exits0 in28.241084708s; queue94813 exits0 after terminal
+archive and independent Mac raw audit. Archive20 files, SHA256:
+`ee9d69680b18baacb6b1319d91ce1a2cacf4fb86d9f1dd4a160654eaac5383ad`.
+Windows archive/raw audit is pending transfer. All32 finite product/alpha/beta
+diagnostic outputs pass; all six synthetic shape checks,2,826,240 host input-bit
+reconstructions and full GPU output/padding/bounds checks pass. Preserve2400
+timed executions across candidate and identical-control null. No general
+internal accumulator dtype proof follows from these finite tests.
+
+Across the six synthetic shapes, three products take2.806–2.897x control GPU
+time and1.972–2.238x wall time, before any GPU decomposition cost. Own null GPU
+fractions .986197–1.007810 and wall .975252–1.023099 are within5%. This
+particular three-separate-MPS-product strategy has no useful timing headroom;
+do not pursue learned/native integration or seek a favorable unchanged repeat.
+These timings do not describe a fused custom Metal implementation or model
+inference. Exact CPU representation is compatible only within its admitted
+range, and the original FP32 fallback remains unimplemented. Preserve both
+the positive finite numeric capability and the negative cost result for paper
+methods/limitations. No fresh vLLM ratio or full target-count update.
+
+Windows archive/raw audit also passes20 files,32 diagnostic outputs,all six
+synthetic shapes and2400 timings. [Complete GPU audit](gpu/verification.json).
+No learned/native integration or unchanged repeat is selected for this route.

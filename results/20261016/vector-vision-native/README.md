@@ -1,6 +1,6 @@
 # Ordered float4 vision context: private native integration
 
-Status: both full native cohorts pass the predeclared screen on Mac; validation/initial cohort also audited on Windows. Confirmation Windows audit pending; full goal unmet.
+Status: both complete native cohorts and full validation audited on Mac/Windows. Confirmed vision source integrated into investigation branch; full matched-vLLM goal unmet.
 
 Motivation: full repeated matched FP32 comparison still misses half-TTFT for
 Qwen3.5-0.8B B1/B2 by about 28.3% of Garnet's current TTFT. Decode already exceeds
@@ -204,3 +204,50 @@ measurements finish. Retained serving c186 remains unchanged; d52 is a confirmed
 native candidate, not a fresh vLLM ratio or proof of the overall target.
 Compact component97616 is now actually executing after the complete native
 chain; synthetic MPS probe remains queued behind it.
+
+## Both-host confirmation audit and branch integration
+
+Windows independently verifies the5615-file confirmation archive, all72 outputs,
+actual routes, complete sources/clocks and regenerated comparator files. Both
+native cohorts total144 complete output checks.
+[Confirmation audit](comparison/repeat/verification.json),
+[complete two-cohort decision](comparison/decision-repeat.json).
+
+| Repeat native model | Batch | Decode TPS control / candidate | Warm TTFT ms control / candidate | Decode fraction | TTFT fraction | Mean worker peak RSS delta MiB |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Repeat native Qwen3-0.6B | 1 | 73.8951 / 75.3784 | 35.8427 / 36.7988 | 1.020074 | 1.026676 | 4.086 |
+| Repeat native Qwen3-0.6B | 2 | 70.0753 / 69.7995 | 57.0404 / 57.9397 | 0.996063 | 1.015768 | 8.289 |
+| Repeat native Qwen2.5-Coder-0.5B-Instruct | 1 | 87.8236 / 87.9499 | 27.1535 / 26.9444 | 1.001438 | 0.992300 | 2.969 |
+| Repeat native Qwen2.5-Coder-0.5B-Instruct | 2 | 84.8444 / 84.4924 | 44.1178 / 44.1630 | 0.995851 | 1.001025 | -2.672 |
+| Repeat native Qwen3.5-0.8B | 1 | 61.4103 / 61.2250 | 179.4877 / 174.9992 | 0.996983 | 0.974993 | 15.531 |
+| Repeat native Qwen3.5-0.8B | 2 | 55.1113 / 55.2091 | 297.7506 / 287.7258 | 1.001774 | 0.966331 | 22.617 |
+
+| Repeat first native model | Batch | Initialization s control / candidate | First-after-init TTFT ms control / candidate |
+| --- | ---: | ---: | ---: |
+| Repeat first native Qwen3-0.6B | 1 | 3.500374 / 3.490125 | 127.237 / 127.776 |
+| Repeat first native Qwen3-0.6B | 2 | 3.524034 / 3.529401 | 143.815 / 147.008 |
+| Repeat first native Qwen2.5-Coder-0.5B-Instruct | 1 | 2.830239 / 2.823645 | 107.164 / 107.278 |
+| Repeat first native Qwen2.5-Coder-0.5B-Instruct | 2 | 2.824639 / 2.828084 | 123.192 / 122.094 |
+| Repeat first native Qwen3.5-0.8B | 1 | 5.437676 / 5.452250 | 272.258 / 265.433 |
+| Repeat first native Qwen3.5-0.8B | 2 | 5.452736 / 5.459426 | 394.058 / 384.348 |
+
+Integrate exactly the eight validated source files into `feature/qwen35-metal`,
+after asserting each local before hash and every installed after hash against
+the M4-tested archive. This installs the guarded strict float4 context route,
+scalar fallback and actual graph/frame counters under the existing serial
+vision build option. No new weight storage, input reuse or precision change.
+[Branch source integration identities](branch-source-integration.json).
+
+The tested d52 library remains private and frozen. The remote c186 default
+comparison library and original/GPT-OSS/Pi checkouts remain untouched. Rejected
+compact fusion and separate MPS triplets are not installed. This source
+integration accepts the native improvement only; the original overall goal
+still requires fresh repeated matched vLLM-Metal measurements and all six
+decode/TTFT targets. No old vLLM ratios are recomputed from these native times.
+
+Final successful controller/provenance bundle also audited on Windows:96 files,
+four controllers terminal0, SHA256
+`63348bf439dbd1ae79ee805a01cc71d23f7c3c83e4fbab3f70b9372769bdb9a8`.
+[Controller commands, snapshots and resume evidence](final-controllers/archive-verification.json).
+All GPU/numerical/measurement/controller jobs in this chain are terminal and
+archived. There is no running job to restart or infer from an old PID file.

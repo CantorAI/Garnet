@@ -1,0 +1,49 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "source_sha256": {
+    "test2026/metal/mps_half_triplet_lower_bound.mm": "847f1dc136dcbab13ff537b600ca575e3a7b174fe789bfe692dbc2a2fd01baee",
+    "test2026/metal/run_mps_half_triplet_lower_bound.py": "c7410a13d1314e50b6bd88cd316a4dbf7984fcb9ace4a83f95581eed1c32b461",
+    "test2026/metal/run_constant_bf16_probe.py": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87",
+    "test2026/metal/compare_vllm_metal.py": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "versions": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90\n",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n"
+  },
+  "lower_bound_exclusions": [
+    "GPU source decomposition",
+    "learned checkpoint weights",
+    "actual model activations",
+    "ownership/native integration",
+    "general MPS internal accumulator dtype proof"
+  ],
+  "precision": {
+    "storage_planes": "three precomputed FP16 matrices",
+    "source": "bounded normal FP32 patterns, exact bit reconstruction",
+    "result": "FP32 MPS result matrix",
+    "diagnostics": "finite distinguishing product and alpha/beta fixtures, not an internal-instruction dtype audit"
+  },
+  "models": {
+    "Qwen3-0.6B": {
+      "inner": 1024,
+      "columns": 3072,
+      "config_sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "inner": 896,
+      "columns": 4864,
+      "config_sha256": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff"
+    },
+    "Qwen3.5-0.8B": {
+      "inner": 1024,
+      "columns": 3584,
+      "config_sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204"
+    }
+  },
+  "binary_sha256": "9ec2dae7535b738c71e9f934edd278e69bfe54dce13f1ee0c7bc655b7659e11e"
+}

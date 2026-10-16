@@ -1,0 +1,14 @@
+{
+  "name": "Qwen2.5-Coder-0.5B-Instruct-b1-control-0",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/test2026/metal/run_matched_garnet.py",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/build-coalesced-bf16-body",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/logs/vector-vision-native-confirm-20261016/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-case.json"
+  ],
+  "exit_code": 0
+}

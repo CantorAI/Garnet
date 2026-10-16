@@ -1,0 +1,57 @@
+{
+  "branch": "feature/qwen35-metal",
+  "base_commit": "ffa599b4c0949924531e0ea8aa5a583fd7f387fe",
+  "changes": {
+    "src/backends/metal/metal_context.mm": {
+      "local_before_sha256": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+      "validated_before_sha256": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+      "after_sha256": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41"
+    },
+    "src/backends/metal/metal_context.h": {
+      "local_before_sha256": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5",
+      "validated_before_sha256": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5",
+      "after_sha256": "426a4795b1d109b4bd7ef9faf5c5b77363213668b8349b7e903a5f486ad9f159"
+    },
+    "src/backends/metal/compiled_graph.cpp": {
+      "local_before_sha256": "90b4da60370633158120a66a0752d841a676495fb8e21894bd197e1eaede3fad",
+      "validated_before_sha256": "90b4da60370633158120a66a0752d841a676495fb8e21894bd197e1eaede3fad",
+      "after_sha256": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd"
+    },
+    "src/backends/metal/compiled_graph.h": {
+      "local_before_sha256": "26a1a34264d02e8ec0053f601b2d8bae2b4a91da65d3cb4977618d11fada7ce6",
+      "validated_before_sha256": "26a1a34264d02e8ec0053f601b2d8bae2b4a91da65d3cb4977618d11fada7ce6",
+      "after_sha256": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3"
+    },
+    "src/entry/metal_main.cpp": {
+      "local_before_sha256": "8fe8c437fd6940788c752df5e4d298165de9a3b9a2242d5e8ba30168fc6dc483",
+      "validated_before_sha256": "8fe8c437fd6940788c752df5e4d298165de9a3b9a2242d5e8ba30168fc6dc483",
+      "after_sha256": "4dc7d6f716c77e0b0c35085a62c63bd22d8f7f96ad734ec899ba68d4528dfab8"
+    },
+    "test2026/metal/frame_worker_garnet.py": {
+      "local_before_sha256": "ec3e83593fad05438e4901cff8c7cfee174f973d6556abbaf3d4cab74a15ce35",
+      "validated_before_sha256": "ec3e83593fad05438e4901cff8c7cfee174f973d6556abbaf3d4cab74a15ce35",
+      "after_sha256": "f8db7fb265d2ccfb87313a438dfe94851619c5ecade26b19d97b83ef09551c3e"
+    },
+    "test2026/metal/run_matched_garnet.py": {
+      "local_before_sha256": "a10814a171a5d9dcc2745f39c9aba18cc669a37eb87a325ad272f150241d2d50",
+      "validated_before_sha256": "a10814a171a5d9dcc2745f39c9aba18cc669a37eb87a325ad272f150241d2d50",
+      "after_sha256": "9d8d7afda20b192d4a7423be459623b630358aa8bc3c732e350df3ea00ccdc31"
+    },
+    "src/backends/metal/serial_vision_prefetch_shader.h": {
+      "local_before_sha256": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526",
+      "validated_before_sha256": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526",
+      "after_sha256": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea"
+    }
+  },
+  "branch_source_integrated": true,
+  "measured_library_sha256": "d52c37e09edf7afb61889037863b1cb338f9ac0b6d98ea62043c3a016af5b55e",
+  "validation_archive_sha256": "239dbf64f81578b7616bc7728c542b0032ca32318ec30d9314c596a1fbbf72d6",
+  "native_cohort_archive_sha256": [
+    "4391422a668b2e4b551c981635e252e00e5274f3ffa8eabd7259a325759bded5",
+    "e7536a9bca8493fc0b61589a8ef54953490f8e150dee0d094ce5d75452de6b90"
+  ],
+  "both_host_audits_pass": true,
+  "remote_default_library_changed": false,
+  "scope": "Exact tested native vector changes integrated into investigation branch only. Frozen c186/d52 builds and original/GPTOss/Pi checkouts untouched. No fresh vLLM ratio or overall goal completion.",
+  "full_goal_met": false
+}

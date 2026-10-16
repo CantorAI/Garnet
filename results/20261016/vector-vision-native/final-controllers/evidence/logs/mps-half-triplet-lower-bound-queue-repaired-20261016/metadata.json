@@ -1,0 +1,19 @@
+{
+  "upstream_pid": 94685,
+  "source_sha256": {
+    "queue_mps_half_triplet_lower_bound_repaired.py": "c3667268232a70ffe77e4fb17b140ae5c4c9ef129707e4beadc3e06f467bbed6",
+    "launch_mps_half_triplet_lower_bound_repaired.py": "cf1697674b38ca986065de6adf6fd1ee0079e1d8fda687aa12e565d6cbe39c4a",
+    "run_mps_half_triplet_lower_bound.py": "c7410a13d1314e50b6bd88cd316a4dbf7984fcb9ace4a83f95581eed1c32b461",
+    "mps_half_triplet_lower_bound.mm": "847f1dc136dcbab13ff537b600ca575e3a7b174fe789bfe692dbc2a2fd01baee",
+    "archive_mps_half_triplet_lower_bound.py": "bb3e2418df0219aabbdaebd1f943326f78989d3e31510ede73c88c49998da840",
+    "verify_mps_half_triplet_lower_bound.py": "b49f9619da637dd2a00905a11775acdf77a5e77d301b2e10d6befc5d1d62cb29"
+  },
+  "command": [
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/queue_mps_half_triplet_lower_bound_repaired.py",
+    "/Users/zsdx/garnet-metal-investigation",
+    "/Users/zsdx/garnet-metal-investigation/logs/mps-half-triplet-lower-bound-queue-repaired-20261016",
+    "94685",
+    "--worker"
+  ],
+  "full_goal_met": false
+}

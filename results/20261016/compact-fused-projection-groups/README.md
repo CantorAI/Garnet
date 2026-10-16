@@ -1,6 +1,6 @@
 # Compact-aware independent decode projections
 
-Status: implementation prepared and queued; not yet GPU executed or timed.
+Status: actual initial component completes and passes original numerical checks; no learned group passes the prospective both-batch gain/null screen. No repeat or native integration.
 This experiment targets remaining decode gaps: about0.8% text B1 and7.6% coder
 B1 in the last repeated matched comparison. No inference speedup is established.
 
@@ -93,3 +93,27 @@ watches exact93884 using new dependency-only wrappers. Original component
 runner, shader generator, precision/gain/null gates, cases and sampling are
 unchanged. No GPU experiment has yet executed here; all old failure statuses
 remain preserved. Repaired helper files freeze while queued.
+
+## Actual initial result: numerical pass, no selection
+
+Component97616 exits0 in51.396588375s. Repaired queue94685 exits0 after
+terminal archive, independent Mac raw audit and predeclared decision. Archive
+33 files, SHA256:
+`28e0d5b2ca20a30347368c47ed88eb7718b4073fd3a2a26dd7509a9f38776548`.
+All16 group/batch original output/padding-bit checks and unchanged FP64 bounds
+pass;6400 timings remain. All eight groups and all null windows are retained.
+Windows artifact/raw audit is pending transfer; no model or vLLM gain follows.
+
+No learned group qualifies in BOTH batches. Text B1 gate/up GPU/wall fractions
+1.005035/1.003054, B2 .931431/.954678; coder B1 .969690/.956895 but its
+null GPU fraction .913587 fails the5% gate. Coder B2 .925013/.951680 passes
+its own null, which alone does not select the pair. VL gate/up B1
+1.001461/.997875, B2 .985406/.993170 misses the3% gain rule. Attention groups
+also fail gain/null requirements. Do not normalize by the null, filter windows
+or attribute drift to an unmeasured hardware cause. No favorable unchanged
+repeat, selected group, native implementation or decode target-count update.
+
+Windows archive/raw regeneration audit also passes33 files,16 group/batch
+checks,104093 validated executions,6400 timings and worst original FP64
+fraction0.00902619627882109. [Raw audit](initial/verification.json),
+[full negative decision](decision-initial.json). No integration or repeat.

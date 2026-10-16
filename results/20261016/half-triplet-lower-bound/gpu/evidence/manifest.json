@@ -1,0 +1,98 @@
+{
+  "jobs": {
+    "mps-half-triplet-lower-bound-20261016": {
+      "exit_code": 0,
+      "wall_seconds": 28.241084708366543
+    }
+  },
+  "omitted_binaries": {
+    "logs/mps-half-triplet-lower-bound-20261016/jobs/mps_half_triplet_lower_bound_probe": {
+      "bytes": 72608,
+      "sha256": "9ec2dae7535b738c71e9f934edd278e69bfe54dce13f1ee0c7bc655b7659e11e"
+    }
+  },
+  "files": {
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/background_service_checks.json": {
+      "bytes": 7095,
+      "sha256": "da63971b7696c638004a9375e9cb11a7964f0e61f0611fe3e0225c0dcd28f7f4"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/exit.json": {
+      "bytes": 52,
+      "sha256": "beb3cd0ec3a2e7a1e4b19d8151818a23eda230a7d52fe6e9a3b2722b880971de"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/background_service_checks.json": {
+      "bytes": 29960,
+      "sha256": "9d2db649e457d7721ea23031a6360a9f8700dc20bf11aba05e057c1e1e517a52"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/compile-monitor.json": {
+      "bytes": 234,
+      "sha256": "fb0b238ff8f00ad6ddae4d8197aa3088a76a321dd0d86ae10ce0e1df51b9ee76"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/configs/Qwen2.5-Coder-0.5B-Instruct.json": {
+      "bytes": 659,
+      "sha256": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/configs/Qwen3-0.6B.json": {
+      "bytes": 726,
+      "sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/configs/Qwen3.5-0.8B.json": {
+      "bytes": 2907,
+      "sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/metadata.json": {
+      "bytes": 2256,
+      "sha256": "5e7c01300f6099f1e98c648353d2ff678962c56ca10c0734712128db967c2d41"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/probe-monitor.json": {
+      "bytes": 2375,
+      "sha256": "7e7849ee5b912aa7d6b47ec0223c27ec9730ef412619675e303953288eee9b5b"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/probe.log": {
+      "bytes": 202902,
+      "sha256": "55c2ea0101f199ac388467c727db93818f36a0045e8dc265b1b7b518c58ade82"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12897,
+      "sha256": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/source-snapshot/test2026/metal/mps_half_triplet_lower_bound.mm": {
+      "bytes": 10627,
+      "sha256": "847f1dc136dcbab13ff537b600ca575e3a7b174fe789bfe692dbc2a2fd01baee"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/source-snapshot/test2026/metal/run_mps_half_triplet_lower_bound.py": {
+      "bytes": 4188,
+      "sha256": "c7410a13d1314e50b6bd88cd316a4dbf7984fcb9ace4a83f95581eed1c32b461"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/statuses.json": {
+      "bytes": 747,
+      "sha256": "3823949a826870b5b7279c399f568eeb8ee3ed8d40ff65935d3db238617177bb"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/jobs/summary.json": {
+      "bytes": 8680,
+      "sha256": "9e9ef502f656626fb0a5f3138eb38c1cdfd2127cec7ad5943f24c89b5fd57c1d"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/output.log": {
+      "bytes": 162,
+      "sha256": "d3d8896a9bdcde8cf0b248b75a28ed229e0b35b2cb2eb998e15b66e12e4c2c5f"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/pid.json": {
+      "bytes": 14,
+      "sha256": "f6a2928e774f99d0e46240f0569b7bf31f407e14ab3be3b799b3f443ec6341b2"
+    },
+    "evidence/logs/mps-half-triplet-lower-bound-20261016/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  "full_goal_met": false,
+  "scope": "One terminal synthetic precomputed-plane lower-bound cohort; diagnostics/source retained. No learned model, internal accumulator dtype, or full-model gain claim."
+}

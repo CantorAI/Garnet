@@ -194,7 +194,7 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
 }
 void MetalCompiledGraph::Clear() {
     visionParallelDispatches_=0;
-    visionPrefetchDispatches_=0;mlpGraphDispatches_=0;
+    visionPrefetchDispatches_=0;visionVectorDispatches_=0;mlpGraphDispatches_=0;
     resetKVPrefix_[0]=resetKVPrefix_[1]=false;
     visionGlobalAlphaDispatches_=0;++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();outputStorageGroups_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
@@ -1056,7 +1056,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput,const MetalM
 X::Value MetalCompiledGraph::Run(X::Value inputs) {
     std::lock_guard<std::mutex> lock(mutex_);
     visionParallelDispatches_=0;
-    visionPrefetchDispatches_=0;mlpGraphDispatches_=0;
+    visionPrefetchDispatches_=0;visionVectorDispatches_=0;mlpGraphDispatches_=0;
     visionGlobalAlphaDispatches_=0;
     auto start=std::chrono::steady_clock::now();
     PrepareInputs(inputs);
@@ -1067,6 +1067,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
         visionGlobalAlphaDispatches_=gpu_->LastVisionGlobalAlphaDispatches();
         visionParallelDispatches_=gpu_->LastVisionParallelDispatches();
         visionPrefetchDispatches_=gpu_->LastVisionPrefetchDispatches();
+        visionVectorDispatches_=gpu_->LastVisionVectorDispatches();
         mlpGraphDispatches_=gpu_->LastMlpGraphDispatches();
     }catch(...){gpu_->Abort();throw;}
     auto result=gpu_->Download(slots_[output_].matrix);auto& output=slots_[output_];

@@ -1,0 +1,47 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact_fused_projection_group_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact_fused_projection_group_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact_fused_projection_group_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact-fused-projections.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact_fused_projection_group_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact-fused-projections.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact_fused_projection_group_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/compact-fused-projections.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-20261016/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0
+  }
+]

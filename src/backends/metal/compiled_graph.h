@@ -34,7 +34,7 @@ class MetalCompiledGraph {
     double compileMs_=0,inferenceMs_=0;
     size_t visionGlobalAlphaDispatches_=0;
     size_t visionParallelDispatches_=0;
-    size_t visionPrefetchDispatches_=0,mlpGraphDispatches_=0;
+    size_t visionPrefetchDispatches_=0,visionVectorDispatches_=0,mlpGraphDispatches_=0;
     bool resetKVPrefix_[2]={false,false};
     bool ready_=false,bf16Projections_=false;
     std::mutex mutex_;
@@ -65,6 +65,7 @@ public:
     size_t LastVisionGlobalAlphaDispatches() const {return visionGlobalAlphaDispatches_;}
     size_t LastVisionParallelDispatches() const {return visionParallelDispatches_;}
     size_t LastVisionPrefetchDispatches() const {return visionPrefetchDispatches_;}
+    size_t LastVisionVectorDispatches() const {return visionVectorDispatches_;}
     size_t LastMlpGraphDispatches() const {return mlpGraphDispatches_;}
     BEGIN_PACKAGE(MetalCompiledGraph)
         APISET().AddFunc<3>("build",&MetalCompiledGraph::Build);
@@ -79,6 +80,7 @@ public:
         APISET().AddProp("vision_global_alpha_dispatches",&MetalCompiledGraph::LastVisionGlobalAlphaDispatches);
         APISET().AddProp("vision_parallel_dispatches",&MetalCompiledGraph::LastVisionParallelDispatches);
         APISET().AddProp("vision_prefetch_dispatches",&MetalCompiledGraph::LastVisionPrefetchDispatches);
+        APISET().AddProp("vision_vector_dispatches",&MetalCompiledGraph::LastVisionVectorDispatches);
         APISET().AddProp("mlp_prefill_graph_dispatches",&MetalCompiledGraph::LastMlpGraphDispatches);
     END_PACKAGE
 };

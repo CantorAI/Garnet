@@ -86,7 +86,7 @@ public:
         info+="; interleaved_screen_index";
 #endif
 #ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
-        info+="; serial_vision_prefetch";
+        info+="; serial_vision_prefetch; vector_vision_context4";
 #endif
 #ifdef GARNET_METAL_VISION_GLOBAL_ALPHA
         info+="; vision_global_alpha";

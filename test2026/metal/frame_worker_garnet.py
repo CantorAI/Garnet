@@ -144,6 +144,8 @@ try:
             parallel_vision_context_enabled='parallel_vision_context' in garnet.backend_info(),
             vision_parallel_dispatches=vision.graph.vision_parallel_dispatches if 'parallel_vision_context' in garnet.backend_info() else 0,
             serial_vision_prefetch_enabled='serial_vision_prefetch' in garnet.backend_info(),
+            vector_vision_context_enabled='vector_vision_context4' in garnet.backend_info(),
+            vision_vector_dispatches=vision.graph.vision_vector_dispatches if 'vector_vision_context4' in garnet.backend_info() else 0,
             vision_prefetch_dispatches=vision.graph.vision_prefetch_dispatches if 'serial_vision_prefetch' in garnet.backend_info() else 0,
             weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:

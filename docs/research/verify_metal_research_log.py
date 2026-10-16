@@ -281,6 +281,31 @@ def main():
         assert cells[0].strip()=='First native '+r['model'] and int(cells[1])==r['batch']
         first=r['first_request_after_initialization']
         assert [c.strip() for c in cells[2:]]==[' / '.join(f"{first[k]['initialization_s']:.6f}" for k in ('control','candidate')),' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate'))];vector_native_numbers+=4
+    vector_repeat=json.loads((p/'comparison/decision-repeat.json').read_text())
+    assert vector_repeat['native_confirmation_pass'] and not vector_repeat['promote'] and not vector_repeat['full_goal_met']
+    repeat_audit=json.loads((p/'comparison/repeat/verification.json').read_text())
+    assert repeat_audit['full_output_requests']==72 and repeat_audit['audit_path_repair_only'] and repeat_audit['actual_vector_vision_routes']
+    repeat_profiles=vector_repeat['trials'][1]['profiles'];rows=[line.split('|')[1:-1] for line in native_text.splitlines() if line.startswith('| Repeat native Qwen')]
+    assert len(rows)==len(repeat_profiles)==6;vector_repeat_numbers=0
+    for cells,r in zip(rows,repeat_profiles):
+        assert cells[0].strip()=='Repeat native '+r['model'] and int(cells[1])==r['batch']
+        table_values=[' / '.join(f"{r['means'][k][metric]:.4f}" for k in ('control','candidate')) for metric in ('decode_tps','ttft_ms')]
+        table_values += [f"{r[k]:.6f}" for k in ('decode_ratio','ttft_fraction')]+[f"{r['added_mean_worker_peak_rss_gib']*1024:.3f}"]
+        assert [c.strip() for c in cells[2:]]==table_values;vector_repeat_numbers+=7
+    rows=[line.split('|')[1:-1] for line in native_text.splitlines() if line.startswith('| Repeat first native Qwen')];assert len(rows)==6
+    for cells,r in zip(rows,repeat_profiles):
+        assert cells[0].strip()=='Repeat first native '+r['model'] and int(cells[1])==r['batch']
+        first=r['first_request_after_initialization']
+        assert [c.strip() for c in cells[2:]]==[' / '.join(f"{first[k]['initialization_s']:.6f}" for k in ('control','candidate')),' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate'))];vector_repeat_numbers+=4
+    integration=json.loads((p/'branch-source-integration.json').read_text());assert integration['branch_source_integrated'] and integration['both_host_audits_pass'] and not integration['remote_default_library_changed'] and not integration['full_goal_met']
+    assert len(integration['changes'])==8 and integration['measured_library_sha256']==vector_repeat['candidate_library_sha256']
+    for name,info in integration['changes'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==info['after_sha256']
+    compact_audit=json.loads((ROOT/'results/20261016/compact-fused-projection-groups/initial/verification.json').read_text())
+    assert compact_audit['verified_files']==33 and compact_audit['group_batch_checks']==16 and compact_audit['validated_executions']==104093 and compact_audit['timed_executions']==6400
+    compact_decision=json.loads((ROOT/'results/20261016/compact-fused-projection-groups/decision-initial.json').read_text());assert not compact_decision['repeat_admitted'] and not compact_decision['native_integration_groups']
+    triplet_audit=json.loads((ROOT/'results/20261016/half-triplet-lower-bound/gpu/verification.json').read_text())
+    assert triplet_audit['verified_files']==20 and triplet_audit['precision_diagnostic_outputs']==32 and triplet_audit['synthetic_shape_checks']==6 and triplet_audit['timed_executions']==2400
+    assert all(r['gpu_fraction']>2.8 and r['wall_fraction']>1.97 for r in triplet_audit['profiles'] if r['candidate']==1)
     retained_phases=json.loads((p/'retained-control-phase-analysis.json').read_text())
     assert retained_phases['source_archive_sha256']=='1861996b1455f4a6aa7e81fb89bac30a2be2526d359eb332cc974d31aa6e520e'
     assert len(retained_phases['raw_file_sha256'])==18 and not retained_phases['full_goal_met']
@@ -325,7 +350,9 @@ def main():
                   vector_calibrated_component_table_values_checked=vector_calibrated_numbers,
                   retained_control_phase_table_values_checked=retained_phase_numbers,
                   half_triplet_cpu_profiles_checked=24,half_triplet_finite_edge_cases_checked=4590,
-                  vector_native_initial_table_values_checked=vector_native_numbers,status='passed',
+                  vector_native_initial_table_values_checked=vector_native_numbers,
+                  vector_native_repeat_table_values_checked=vector_repeat_numbers,validated_branch_source_files=8,
+                  compact_group_checks_audited=16,synthetic_triplet_shape_checks_audited=6,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

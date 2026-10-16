@@ -1,0 +1,242 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+    "src/backends/metal/coalesced_body_block_shader.h": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa",
+    "test2026/metal/concurrent_bf16_group_gpu.mm": "aa90d6eea6ccee69efec3bded272bc524f9756adf3b88056bf875fbf209ea913",
+    "test2026/metal/make_compact_fused_projection_groups.py": "62de5345cc14b4696028ffae403bcb40ed0a233be70ad6c266c35334b1ce2641",
+    "test2026/metal/run_concurrent_bf16_groups.py": "bb7d95651fa236dbc329f57ff96cd61e68f9a4f8adb8a38348d3b3486455d599",
+    "test2026/metal/run_compact_fused_projection_groups.py": "894bbcdf9757a624bd40603f43179e11b3f99c2aa87ac5d5d6adf5f037473520",
+    "test2026/metal/run_constant_bf16_probe.py": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87",
+    "test2026/metal/compare_vllm_metal.py": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba",
+    "test2026/metal/verify_concurrent_bf16_groups.py": "e64f12ae032a8b8df18acfd1d0c34099996c44f43c07f748527bd1d1f18fe8f8",
+    "test2026/metal/verify_compact_fused_projection_groups.py": "e12ead6146f8b5fd94a1e7e2f5e05d0ab932731f83c587cf7547c095ef7499b5"
+  },
+  "policies": {
+    "0": "Retained compact64/raw128/small64 separate encoders",
+    "1": "Compact-aware grouped64, separate outputs",
+    "2": "Same retained pipelines and geometry null"
+  },
+  "numerical_bounds": "Every candidate complete output and padding bit-exact versus original shader; original FP64 gamma(ceil(K/32)+32)*sumabs+1e-7",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "versions": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90\n",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n"
+  },
+  "assets": {
+    "Qwen3-0.6B": {
+      "groups": [
+        {
+          "name": "mlp-gate-up",
+          "cases": [
+            {
+              "name": "matrix-2",
+              "tensor": "model.layers.0.mlp.gate_proj.weight",
+              "columns": 3072,
+              "inner": 1024,
+              "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b",
+              "float_key": false
+            },
+            {
+              "name": "matrix-3",
+              "tensor": "model.layers.0.mlp.up_proj.weight",
+              "columns": 3072,
+              "inner": 1024,
+              "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d",
+              "float_key": false
+            }
+          ]
+        },
+        {
+          "name": "attention-qkv",
+          "cases": [
+            {
+              "name": "matrix-6",
+              "tensor": "model.layers.0.self_attn.q_proj.weight",
+              "columns": 2048,
+              "inner": 1024,
+              "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53",
+              "float_key": false
+            },
+            {
+              "name": "matrix-4",
+              "tensor": "model.layers.0.self_attn.k_proj.weight",
+              "columns": 1024,
+              "inner": 1024,
+              "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4",
+              "float_key": true
+            },
+            {
+              "name": "matrix-7",
+              "tensor": "model.layers.0.self_attn.v_proj.weight",
+              "columns": 1024,
+              "inner": 1024,
+              "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2",
+              "float_key": false
+            }
+          ]
+        },
+        {
+          "name": "irregular-readonly-pair",
+          "cases": [
+            {
+              "name": "synthetic-37",
+              "tensor": "synthetic finite BF16 tail fixture",
+              "columns": 19,
+              "inner": 37,
+              "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+              "float_key": false
+            },
+            {
+              "name": "synthetic-37",
+              "tensor": "synthetic finite BF16 tail fixture",
+              "columns": 19,
+              "inner": 37,
+              "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+              "float_key": false
+            }
+          ]
+        }
+      ],
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "groups": [
+        {
+          "name": "mlp-gate-up",
+          "cases": [
+            {
+              "name": "matrix-2",
+              "tensor": "model.layers.0.mlp.gate_proj.weight",
+              "columns": 4864,
+              "inner": 896,
+              "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b",
+              "float_key": false
+            },
+            {
+              "name": "matrix-3",
+              "tensor": "model.layers.0.mlp.up_proj.weight",
+              "columns": 4864,
+              "inner": 896,
+              "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416",
+              "float_key": false
+            }
+          ]
+        },
+        {
+          "name": "attention-qkv",
+          "cases": [
+            {
+              "name": "matrix-6",
+              "tensor": "model.layers.0.self_attn.q_proj.weight",
+              "columns": 896,
+              "inner": 896,
+              "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c",
+              "float_key": false
+            },
+            {
+              "name": "matrix-4",
+              "tensor": "model.layers.0.self_attn.k_proj.weight",
+              "columns": 128,
+              "inner": 896,
+              "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896",
+              "float_key": true
+            },
+            {
+              "name": "matrix-7",
+              "tensor": "model.layers.0.self_attn.v_proj.weight",
+              "columns": 128,
+              "inner": 896,
+              "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d",
+              "float_key": false
+            }
+          ]
+        },
+        {
+          "name": "irregular-readonly-pair",
+          "cases": [
+            {
+              "name": "synthetic-37",
+              "tensor": "synthetic finite BF16 tail fixture",
+              "columns": 19,
+              "inner": 37,
+              "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+              "float_key": false
+            },
+            {
+              "name": "synthetic-37",
+              "tensor": "synthetic finite BF16 tail fixture",
+              "columns": 19,
+              "inner": 37,
+              "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+              "float_key": false
+            }
+          ]
+        }
+      ],
+      "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44"
+    },
+    "Qwen3.5-0.8B": {
+      "groups": [
+        {
+          "name": "mlp-gate-up",
+          "cases": [
+            {
+              "name": "matrix-7",
+              "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+              "columns": 3584,
+              "inner": 1024,
+              "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140",
+              "float_key": false
+            },
+            {
+              "name": "matrix-8",
+              "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+              "columns": 3584,
+              "inner": 1024,
+              "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367",
+              "float_key": false
+            }
+          ]
+        },
+        {
+          "name": "irregular-readonly-pair",
+          "cases": [
+            {
+              "name": "synthetic-37",
+              "tensor": "synthetic finite BF16 tail fixture",
+              "columns": 19,
+              "inner": 37,
+              "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+              "float_key": false
+            },
+            {
+              "name": "synthetic-37",
+              "tensor": "synthetic finite BF16 tail fixture",
+              "columns": 19,
+              "inner": 37,
+              "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+              "float_key": false
+            }
+          ]
+        }
+      ],
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+    }
+  },
+  "native_shader_sha256": "bc4ad74428d411a75d8ce698c9a3f9112abe908251ff4b3573f1fb6158b1c46f",
+  "generated_harness_sha256": "3749b49ff5df62b687763799692b732423e2e3ea00d580847f268f35e9963f81",
+  "timing_design": {
+    "common_warmup_ms": 2000,
+    "rounds": 10,
+    "window_order": "ABBA",
+    "samples_per_window": 5,
+    "warm_calls_per_window": 3,
+    "all_samples_retained": true
+  },
+  "binary_sha256": "5a60fd1aeaad8f8e3bfb0a30edbfd97dd45158a10a6d6f39e0c93ca37a2c9768"
+}

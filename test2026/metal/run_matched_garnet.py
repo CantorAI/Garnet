@@ -121,6 +121,7 @@ try:
             decode_deferred_zero_bytes=decoder.session.deferred_zero_bytes if deferred_state_zero_enabled else 0,
             decode_deferred_zero_states=decoder.session.deferred_zero_states if deferred_state_zero_enabled else 0,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),vision_global_alpha_dispatches=0,
+            vector_vision_context_enabled='vector_vision_context4' in garnet.backend_info(),vision_vector_dispatches=0,
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')

@@ -1,0 +1,29 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/mps_half_triplet_lower_bound.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/mps-half-triplet-lower-bound-20261016/jobs/mps_half_triplet_lower_bound_probe"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "probe",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/mps-half-triplet-lower-bound-20261016/jobs/mps_half_triplet_lower_bound_probe"
+    ],
+    "exit_code": 0
+  }
+]
