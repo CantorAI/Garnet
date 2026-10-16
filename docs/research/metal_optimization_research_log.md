@@ -1846,7 +1846,7 @@ writes. No packed weights/output views, input cache or speculation. Require
 alias/readiness/foreign writer guards and original fallback behavior.
 
 Primitive 46016 exits 0 in 10.590449334 s: all 60 changed synthetic cases and
-3,710,720 original FP32 output bits pass, including partial rotary, unusual
+3,710,720 original FP32 values match bit for bit, including partial rotary, unusual
 head sizes, normalized/unnormalized modes and offset variants. Learned 46457
 exits 0 in 119.748470250 s: actual native Q/K projection fixtures and checkpoint
 norm weights cover every separate full-attention layer, 232 decode/prefill
@@ -1868,6 +1868,78 @@ all endpoints/samples and unchanged own-null exclusion. Longer work changes
 timing granularity and workload; it is not confirmation of the first cohort.
 No new calibration, native integration or fresh vLLM benchmark has run yet.
 [Complete method, raw evidence, all endpoint clocks and limitations](../../results/20261016/paired-norm-rope/README.md).
+
+### 2026-10-16 UTC — fixed carried-chain calibration confirms text and coder component decode
+
+Preserve the unstable one-pair cohort and change the measurement workload:
+32 dependent pairs per command batch, each consuming the previous output,
+with independent allocations and all stage outputs retained/bit-checked.
+Weights/positions remain those of one learned layer across the chain; this
+is not a model stack. The normalization arithmetic/context stays unchanged.
+Regenerate the distinct C++ and driver from frozen sources and record hashes.
+
+Initial 48751 exits 0 in 149.624152750 s. All 232 numerical profiles/928 changed
+cases and 1,514,274,816 original FP32 values match bit for bit; all 24 endpoint nulls
+are within 5%. Keep all 9,600 timing samples, 1,920 ABBA windows, 2 s warmups
+and original first/last layers/all four row profiles. Declare >=5% GPU AND wall
+gain at all four endpoints per model/workload, with every own-null within 5%.
+All three decode workloads pass initially; every prefill workload fails.
+
+Complete unchanged confirmation 51322 exits 0 in 148.896526375 s. All source,
+context, generated harness, flags, assets/config and design identities match;
+all numerical coverage repeats. Only text/coder decode passes both cohorts.
+VL decode fails repeat layer 3/rows 2 own-null wall fraction 1.060406, despite
+favorable comparison; exclude it without a third repeat. Coder prefill and VL
+prefill also have repeat exclusions, and initial failures remain failures.
+Across both complete cohorts, 3,028,549,632 numerical-stage FP32 values match bit for bit and
+19,200 timing samples are audited on Mac and Windows. Preserve the local
+premature-extraction error: wait for the original SCP session to exit 0,
+then extract/audit the same bytes; no runtime, sample or source was repaired.
+[Full table, fixed selection rule, exclusions and archive hashes](../../results/20261016/paired-norm-rope-chain/README.md).
+
+### 2026-10-16 UTC — private row1/2 norm RoPE native build starts full34 validation
+
+Copy accepted d52 source to a fresh private root, 1,411 files, with 12 exact
+transformations/5 added helpers. Select only confirmed text/coder rows 1/2;
+this matrix rule also includes tiny prefill chunks, while serving benchmark
+prefill and all VL shapes retain original operations. Recognize only adjacent
+Q/K norm/RoPE with shared controls and matching original parameters, retain
+both original output writes and projection paths, profiling/fallback behavior,
+and publish actual graph/session/prefill/every-decode counters. No model cache,
+speculation, packed weights or output views. Feature defaults OFF.
+
+The actual private library builds: 0c0faf71...308d0d. Linked vector and paired
+primitives, CTest, full vision grid and trained real-head stages pass; actual
+54126 is still live in original dense tails, 9 completed stages, not a full34
+success. Require all original30 afresh plus linked paired primitive compile/
+execution and text/coder trained rows/fallbacks: 16 added profiles/48 carried
+steps, original hidden/key/value bounds, private states, invalid/pause/reset/
+close controls, explicit/resident equality and 36 serving/12 fallback routes.
+Preflight all stage checkpoints25/31/34 and complete independent auditor before
+launch. All 12 local before/after and 5 added-source identities match Mac prep.
+
+Finalizer 58273 watches only the verified check PID, archives terminal failure
+or success, then audits successful full34 data and publishes a gate only after
+complete correctness. No model benchmark has run. Freeze consumed source,
+library and drivers until terminal archive. Prospective native retention
+requires two complete all-six-profile cohorts, >=1% decode gain at the same
+currently unmet B1 text/coder profile in both, every decode fraction >=.98,
+every TTFT fraction <=1.02 and all original outputs/routes. Init/first/warm/RSS
+stay separate; fresh matched vLLM measurements remain mandatory.
+[Frozen native preparation, commands, limits and current job](../../results/20261016/paired-norm-rope-native/README.md).
+
+Prepare unused native comparison/launch/archive/audit/analysis helpers while
+the exact correctness job runs; do not modify its consumed files. Local
+comparator and original complete72-output auditor expansion/AST preflights
+pass with actual prefill/every-decode pair counts. Copy only the six unused
+helpers to Mac. The model launch requires a terminal successful finalizer,
+exact archive/gate hashes and a complete raw34 re-audit, then the exclusive
+quiet guard. No model performance job is started by this preparation.
+
+At 05:19:54 UTC, fresh process-handle observation confirms 54126 and 58273
+live, 16 completed stages all exit 0, including dense tails, private KV,
+serving and mixed-image tests. No terminal record or published full34 gate is
+present. Save the exact observation; an incomplete suite remains incomplete.
 
 ## Continuing this record
 

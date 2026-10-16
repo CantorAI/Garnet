@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -444,6 +444,23 @@ def main():
         assert cells[0].strip()==r['model'] and int(cells[1])==r['layer'] and int(cells[2])==r['rows']
         values=[r['fractions'][kind][field] for kind in ('comparison','null') for field in ('gpu_ms','wall_ms')]
         assert [v.strip() for v in cells[3:7]]==[f'{v:.6f}' for v in values] and cells[7].strip()==('Yes' if r['null_within_five_percent'] else 'No')
+    chain=ROOT/'results/20261016/paired-norm-rope-chain';chain_decision=json.loads((chain/'decision-repeat.json').read_text())
+    assert chain_decision['complete_learned_profiles']==464 and chain_decision['timing_samples']==19200 and chain_decision['original_stage_output_bits_checked']==3028549632 and not chain_decision['native_performance_proven']
+    assert chain_decision['confirmed_workloads']==[dict(model='Qwen2.5-Coder-0.5B-Instruct',kind='decode'),dict(model='Qwen3-0.6B',kind='decode')]
+    cohorts=[json.loads((chain/label/'analysis.json').read_text()) for label in ('initial','repeat')]
+    assert [sum(v['null_within_five_percent'] for v in c['profiles']) for c in cohorts]==[24,21]
+    rows=[line.split('|')[1:-1] for line in (chain/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(rows)==30
+    for cells,w in zip(rows[:6],chain_decision['workloads']):
+        assert cells[0].strip()==w['model'] and cells[1].strip()==w['kind'] and [v.strip() for v in cells[2:]]==['Pass' if w['initial_pass'] else 'Fail','Pass' if w['repeat_pass'] else 'Fail','Yes' if w['confirmed'] else 'No']
+    for cells,a,b in zip(rows[6:],cohorts[0]['profiles'],cohorts[1]['profiles']):
+        assert cells[0].strip()==a['model']==b['model'] and int(cells[1])==a['layer']==b['layer'] and int(cells[2])==a['rows']==b['rows']
+        values=[v['fractions']['comparison'][field] for v in (a,b) for field in ('gpu_ms','wall_ms')]
+        assert [v.strip() for v in cells[3:7]]==[f'{v:.6f}' for v in values] and [v.strip() for v in cells[7:]]==['Yes' if v['profile_screen_pass'] else 'No' for v in (a,b)]
+    paired_native=ROOT/'results/20261016/paired-norm-rope-native';paired_prep=json.loads((paired_native/'preparation.json').read_text());paired_factory=runpy.run_path(str(ROOT/'test2026/metal/make_paired_norm_rope_native.py'));paired_ops=paired_factory['operations'](paired_prep['selected_models'])
+    assert len(paired_ops)==len(paired_prep['changes'])==12 and len(paired_prep['added_sources'])==5 and paired_prep['selection']==chain_decision
+    for name,operation in paired_ops.items():
+        p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==paired_prep['changes'][name]['before'] and hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==paired_prep['changes'][name]['after']
+    for name,sha in paired_prep['added_sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -468,7 +485,9 @@ def main():
                   rejected_qkv_table_values_checked=2,half_inverse_cpu_table_values_checked=9,
                   half_inverse_actual_compiler_hosts=2,qv_rejected_component_table_values_checked=48,
                   qv_preparation_cost_table_values_checked=9,qv_output_view_table_values_checked=48,
-                  paired_norm_rope_table_values_checked=96,paired_norm_rope_learned_profiles=232,status='passed',
+                  paired_norm_rope_table_values_checked=96,paired_norm_rope_learned_profiles=232,
+                  paired_chain_table_values_checked=96,paired_chain_learned_profiles=464,
+                  paired_native_private_transformations_regenerated=12,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

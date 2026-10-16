@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T04:52:27.926912+00:00
+Generated UTC: 2026-10-16T05:23:48.014641+00:00
 
-Base HEAD at generation: `de19bed22ff90a463f9f818fced76c00337e106e`. Reports indexed: **178**.
+Base HEAD at generation: `397cbbf1b2773908cc11832d1ee999ee737499ee`. Reports indexed: **180**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -162,6 +162,8 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
 | [results/20261016/paired-norm-rope](../../../results/20261016/paired-norm-rope/README.md) | Paired query and key normalization and RoPE |
+| [results/20261016/paired-norm-rope-chain](../../../results/20261016/paired-norm-rope-chain/README.md) | Chained paired normalization and RoPE measurements |
+| [results/20261016/paired-norm-rope-native](../../../results/20261016/paired-norm-rope-native/README.md) | Private native paired normalization and RoPE investigation |
 | [results/20261016/prepared-half-inverse](../../../results/20261016/prepared-half-inverse/README.md) | Exact half inverse CPU verification |
 | [results/20261016/prepared-qkv-native](../../../results/20261016/prepared-qkv-native/README.md) | Private native text Q/K/V fusion after repeated component selection |
 | [results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |

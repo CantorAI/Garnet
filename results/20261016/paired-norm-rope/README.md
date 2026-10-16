@@ -6,6 +6,11 @@ Do not admit native integration, an unchanged favorable repeat, or a model
 speed claim from this cohort. Preserve all results before a separate timing
 calibration with longer GPU work in each command batch.
 
+The subsequent carried-chain calibration is complete and confirms text/coder
+decode as component candidates, with VL and prefill excluded. It is a distinct
+workload; the one-pair data below remains unchanged.
+[Complete calibration and unchanged confirmation](../paired-norm-rope-chain/README.md).
+
 Combine Q and K normalization/RoPE into one dispatch with independent output
 buffers. Retain the original per-head arithmetic body verbatim: same 32-lane
 SIMD sum, rsqrt, FP32 operations and precise sine/cosine calls. Threadgroups
@@ -17,7 +22,7 @@ serving code and native libraries remain unchanged.
 ## Executed numerical prerequisites
 
 Primitive PID 46016 exits 0 in 10.590449334 s. All 60 changed-input cases and
-3,710,720 original FP32 output-bit comparisons pass, including normalized and
+3,710,720 original FP32 values match bit for bit, including normalized and
 unnormalized modes, offsets 0/1 and +/-0.25, partial rotary dimensions,
 nonstandard head sizes, pending/foreign writer rejection, aliases,
 abort/recovery and unsupported rotary fallback. The exact original arithmetic
@@ -30,8 +35,8 @@ all 68 learned Q/K norm matrices and coder's 48 all-ones placeholders.
 All 58 separate full-attention layers are covered, including the two VL
 triples excluded by the earlier half-union experiments. Four decode/prefill
 row profiles per layer produce 232 profiles and 928 changed-input cases.
-All 47,321,088 original FP32 output-bit comparisons pass. The timing stage
-additionally validates 7,385,088 output bits at its 24 endpoint profiles.
+All 47,321,088 original FP32 values match bit for bit. The timing stage
+additionally validates 7,385,088 FP32 values bit for bit at its 24 endpoint profiles.
 [Complete learned source, numerical and timing audit](initial/verification.json).
 
 Host fixtures are reused only for kernel-level alternating measurements.
@@ -99,7 +104,8 @@ independent output allocations. This changes timing granularity and workload;
 it is not an unchanged confirmation of these measurements. Keep original
 arithmetic/output-bit gates, all endpoints and samples, own-null exclusion,
 separate clocks and an independent repeated cohort before native admission.
-The calibration is planned, not executed in this report.
+The separate calibration is now recorded in the linked report; it is not an
+unchanged confirmation of this one-pair cohort.
 
 Frozen archives, independently extracted, regenerated and audited on Mac
 and Windows:
