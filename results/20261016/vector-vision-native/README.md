@@ -71,3 +71,27 @@ python3 ROOT/source/test2026/metal/launch_vector_vision_native_checks.py CANDIDA
 python3 ROOT/source/test2026/metal/finalize_vector_vision_native_checks.py CANDIDATE ROOT/logs/vector-vision-native-finalize-20261016 64007
 python3 ROOT/source/test2026/metal/continue_vector_vision_native.py CANDIDATE ROOT/logs/vector-vision-native-continuation-20261016 66876
 ```
+
+## Retained-control clock breakdown for next optimization priorities
+
+This is a derived description of the earlier frozen selective-NDArray cohort's
+retained c186 control, not a current vector timing result. Verify18 raw files
+against that archive manifest, four warm control requests/profile and all six
+complete profiles. [Raw-source identities and phase means](retained-control-phase-analysis.json).
+Source archive SHA256:
+`1861996b1455f4a6aa7e81fb89bac30a2be2526d359eb332cc974d31aa6e520e`.
+
+| Model | Batch | TTFT ms | Vision wall ms | Prefill wall ms | Prefill GPU ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| phase Qwen2.5-Coder-0.5B-Instruct | 1 | 26.806 | — | — | 22.932 |
+| phase Qwen2.5-Coder-0.5B-Instruct | 2 | 43.772 | — | — | 39.010 |
+| phase Qwen3-0.6B | 1 | 35.638 | — | — | 30.964 |
+| phase Qwen3-0.6B | 2 | 55.890 | — | — | 49.873 |
+| phase Qwen3.5-0.8B | 1 | 178.289 | 58.630 | 89.603 | 83.781 |
+| phase Qwen3.5-0.8B | 2 | 296.004 | 113.156 | 151.072 | 144.813 |
+
+GPU spans overlap CPU encode/wait and must never be added to those clocks.
+Vision/assembly/prefill are worker intervals; TTFT also spans frontend/IPC.
+Their residual does not isolate a causal frontend bottleneck. These observations
+support prioritizing prefill GPU work alongside vision and decode; they cannot
+predict a candidate's end-to-end gain. No existing timing or vLLM ratio changes.

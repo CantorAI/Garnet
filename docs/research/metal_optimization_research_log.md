@@ -1306,6 +1306,49 @@ passes. A guessed standalone guard filename was absent. These inspection
 failures launched no inference and supply no performance evidence.
 [Native design, tests and prospective rule](../../results/20261016/vector-vision-native/README.md).
 
+### 2026-10-16 UTC — compact-aware grouped decode prepared and queued
+
+While exact vector validation64007 remains live, implement a separate decode
+component in new unused helpers. This addresses residual textB1/coderB1 gaps
+without altering the consumed validation source/driver. Different from earlier
+raw128 mixed fusion: compact64/current small64 control, one fused64 grid,
+unchanged independent output buffers, original compact/raw/small per-output
+accumulation/reduction; raw large group stride8 preserves two-SIMD coverage.
+Dense special FP32-key raw route retained. Reject unsupported interleaved-only
+control rather than substituting another kernel. CPU fallback/compact bit
+roundtrip gates, exact four-input-scale output/padding parity and original FP64
+envelope remain mandatory. Weight setup duration/bytes separate from timings.
+
+Prospective2s alternating conditioning,10 complete ABBA rounds x5 samples,
+three window warm calls, all records retained; identical-pipeline null arm.
+Learned group must improve GPU ANDwall >=3% BOTH B1/B2, own-null GPU ANDwall
+within5%, all16 numerical group/batch cases, one unchanged complete confirmation.
+All groups including irregular/negative outcomes retained; no blanket native
+policy or matched-vLLM gain from components. Generated source/runner syntax
+checks pass locally; no actual packing/compile/GPU numerical/timing claim.
+
+Queue73358 watches exact native continuation67688, verified live, waiting for
+terminal/archive/audits before any compilation/GPU use. It then archives/audits
+each cohort and applies the predeclared repeat gate. New consumed helpers frozen
+while queued; existing live numerical/full-model chain remains untouched.
+[Complete design, control, exclusions and command](../../results/20261016/compact-fused-projection-groups/README.md).
+
+### 2026-10-16 UTC — retained control phase analysis identifies prefill work
+
+Derive all six c186 warm control clock descriptions from frozen1861996b...,
+checking18 raw file hashes and four warm rows/profile against the existing
+72-output audit. VL B1 TTFT178.289ms, vision58.630ms, prefill wall89.603ms,
+prefill GPU83.781ms; B2 TTFT296.004ms, vision113.156ms, prefill wall151.072ms,
+GPU144.813ms. Text/coder prefill GPU spans also remain material. GPU spans
+overlap encode/wait, never add them; worker components exclude frontend/IPC,
+whose residual is not an isolated causal measurement. This motivates prefill
+GPU work alongside vision/decode, without predicting new speed or updating
+matched ratios. No fresh GPU execution in this analysis.
+Initial local helper matched a generated `.executed.py` as a profile directory
+and failed before output; add a directory filter and rerun successfully. No
+raw benchmark edits or failed-analysis timing admitted.
+[Source identities, complete table and limits](../../results/20261016/vector-vision-native/README.md#retained-control-clock-breakdown-for-next-optimization-priorities).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

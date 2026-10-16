@@ -260,6 +260,17 @@ def main():
         assert int(cells[0])==width and int(cells[1])==r['batch']
         assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction','null_gpu_fraction','null_wall_fraction')]
         vector_calibrated_numbers+=4
+    p=ROOT/'results/20261016/vector-vision-native'
+    retained_phases=json.loads((p/'retained-control-phase-analysis.json').read_text())
+    assert retained_phases['source_archive_sha256']=='1861996b1455f4a6aa7e81fb89bac30a2be2526d359eb332cc974d31aa6e520e'
+    assert len(retained_phases['raw_file_sha256'])==18 and not retained_phases['full_goal_met']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| phase Qwen')]
+    assert len(rows)==len(retained_phases['profiles'])==6;retained_phase_numbers=0
+    for cells,row in zip(rows,retained_phases['profiles']):
+        assert cells[0].strip()=='phase '+row['model'] and int(cells[1])==row['batch'] and row['warm_requests']==4
+        intervals=row['wall_intervals_ms'];values=[intervals.get(k) for k in ('ttft_ms','vision_ms','prefill_wall_ms')]+[row['prefill_profile_ms']['gpu_ms']]
+        assert [c.strip() for c in cells[2:]]==['—' if value is None else f'{value:.3f}' for value in values]
+        retained_phase_numbers+=sum(value is not None for value in values)
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -282,7 +293,8 @@ def main():
                   ndarray_selective_component_table_values_checked=selective_numbers,compact_escape_cpu_table_values_checked=compact_numbers,
                   retained_control_guard_preflight_requests=36,selective_native_table_values_checked=selective_native_numbers,
                   vector_initial_table_values_checked=vector_initial_numbers,vector_null_calibration_table_values_checked=vector_calibration_numbers,
-                  vector_calibrated_component_table_values_checked=vector_calibrated_numbers,status='passed',
+                  vector_calibrated_component_table_values_checked=vector_calibrated_numbers,
+                  retained_control_phase_table_values_checked=retained_phase_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))
