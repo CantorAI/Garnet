@@ -917,6 +917,21 @@ pass only. Metal/C++ uncompiled; nothing copied to Mac or launched. Keep the
 current validation/native chain exclusive and frozen. Goal active/unmet.
 [Prepared scope, source differences and future admission rule](../../results/20261015/vector-vision-context/README.md).
 
+### 2026-10-15 — native NDArray header route/payload budget calculated
+
+During the verified live validation wait, compute route/payload arithmetic from
+byte-verified frozen checkpoint headers; require matching full-checkpoint SHA
+identities against actual trained component metadata. Planned physical rows
+24/44,26/52,80/160 predict186 NDArray prefill calls for VL B1, zero for all
+other profiles and decode. That path adds1,990,459,392 logical FP32 weight
+bytes (~1.854GiB), excluding MPS internals and metadata/owner overhead. This
+is not measured RSS or proof that subsequent requests retain stable keys.
+Record the cost before timing, rather than claiming a memory saving from
+deferred aliases. Actual counters, outputs and RSS remain benchmark gates.
+No Mac source/driver mutation or competing inference. Qwen3.5 trained layer
+checks have completed and text layer validation continues. Goal active/unmet.
+[Header provenance, complete tensor list and limitations](../../results/20261015/ndarray-native/header-coverage.json).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

@@ -90,6 +90,18 @@ The expanded comparison and all original-gate verifier transformations pass
 CPU-only syntax/needle checks locally; expanded comparison also passes on Mac.
 These checks do not establish actual trained inference or performance.
 
+An independent [header coverage calculation](header-coverage.json) uses
+byte-verified checkpoint headers from the older frozen native archive and
+requires their full-checkpoint SHA identities to match the trained NDArray
+component. Under the unchanged physical plans it predicts186 NDArray prefill
+calls for VL B1 and zero for the other five workloads and all decode steps.
+The corresponding exact-F32 weight payload is1,990,459,392 bytes (about1.854GiB).
+This is added logical storage, not measured RSS/unique GPU memory, and excludes
+MPS internal packing and owner/view metadata. It assumes the path is actually
+used for every expected projection; actual counts, repeated-key stability and
+measured memory still require the native cohort. A cap of256 entries alone
+does not prove that all subsequent requests reuse the same keys.
+
 Measure all six original model/batch profiles, even though only VL B1 should
 execute row80 NDArray. Run control/candidate/candidate/control as four separate
 sequential workers per profile, with three fresh requests per worker:72 complete

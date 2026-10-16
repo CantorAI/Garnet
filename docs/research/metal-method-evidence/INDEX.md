@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T23:52:27.988051+00:00
+Generated UTC: 2026-10-15T23:58:02.757336+00:00
 
-Base HEAD at generation: `134439a89401dcdcd06aa3866ab61dac06f55d77`. Reports indexed: **158**.
+Base HEAD at generation: `6bd536c3ca878b0ab07cbc7f84b185a18585e5ba`. Reports indexed: **158**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
