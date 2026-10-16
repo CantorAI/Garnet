@@ -1,0 +1,1893 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-S",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "-B",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "-DGARNET_METAL=ON",
+      "-DGARNET_METAL_XMODEL=ON",
+      "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+      "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+      "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+      "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+      "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+      "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+      "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+      "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+      "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+      "-DGARNET_METAL_SCREENED_HEAD=ON",
+      "-DGARNET_METAL_PREFILL_STREAM=ON",
+      "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+      "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+      "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+      "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+      "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+      "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+      "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+      "-DGARNET_METAL_DELTA_VALUE_TILE64=ON",
+      "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+      "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.011237458791584,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "-S",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "-B",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "-DGARNET_METAL=ON",
+          "-DGARNET_METAL_XMODEL=ON",
+          "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+          "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+          "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+          "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+          "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+          "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+          "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+          "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+          "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+          "-DGARNET_METAL_SCREENED_HEAD=ON",
+          "-DGARNET_METAL_PREFILL_STREAM=ON",
+          "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+          "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+          "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+          "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+          "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+          "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+          "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+          "-DGARNET_METAL_DELTA_VALUE_TILE64=ON",
+          "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+          "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-DCMAKE_BUILD_TYPE=Release"
+        ],
+        "evidence": "attempts/configure/case0-attempt0",
+        "status": {
+          "name": "configure",
+          "command": [
+            "/opt/homebrew/bin/cmake",
+            "-S",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "-B",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "-DGARNET_METAL=ON",
+            "-DGARNET_METAL_XMODEL=ON",
+            "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+            "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+            "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+            "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+            "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+            "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+            "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+            "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+            "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+            "-DGARNET_METAL_SCREENED_HEAD=ON",
+            "-DGARNET_METAL_PREFILL_STREAM=ON",
+            "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+            "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+            "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+            "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+            "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+            "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+            "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+            "-DGARNET_METAL_DELTA_VALUE_TILE64=ON",
+            "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+            "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+            "-DCMAKE_BUILD_TYPE=Release"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.3959507909603417
+        }
+      }
+    ]
+  },
+  {
+    "name": "build",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "--parallel",
+      "4"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 14.646987250074744,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "--build",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "--parallel",
+          "4"
+        ],
+        "evidence": "attempts/build/case0-attempt0",
+        "status": {
+          "name": "build",
+          "command": [
+            "/opt/homebrew/bin/cmake",
+            "--build",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "--parallel",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.027698624879122
+        }
+      }
+    ]
+  },
+  {
+    "name": "vector-vision-primitive-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/vector_vision_native_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.699375708121806,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/usr/bin/xcrun",
+          "clang++",
+          "-std=c++17",
+          "-fobjc-arc",
+          "-O3",
+          "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+          "-framework",
+          "Foundation",
+          "-framework",
+          "Metal",
+          "-framework",
+          "MetalPerformanceShaders",
+          "-o",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/vector_vision_native_gpu"
+        ],
+        "evidence": "attempts/vector-vision-primitive-compile/case0-attempt0",
+        "status": {
+          "name": "vector-vision-primitive-compile",
+          "command": [
+            "/usr/bin/xcrun",
+            "clang++",
+            "-std=c++17",
+            "-fobjc-arc",
+            "-O3",
+            "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+            "-framework",
+            "Foundation",
+            "-framework",
+            "Metal",
+            "-framework",
+            "MetalPerformanceShaders",
+            "-o",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/vector_vision_native_gpu"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.3881651670672
+        }
+      }
+    ]
+  },
+  {
+    "name": "vector-vision-primitive",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/vector_vision_native_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.69146979181096,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/vector_vision_native_gpu"
+        ],
+        "evidence": "attempts/vector-vision-primitive/case0-attempt0",
+        "status": {
+          "name": "vector-vision-primitive",
+          "command": [
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/vector_vision_native_gpu"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 2.077424291986972
+        }
+      }
+    ]
+  },
+  {
+    "name": "delta-value64-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/delta_value_tiles_native.mm",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.006021000444889,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/usr/bin/xcrun",
+          "clang++",
+          "-std=c++17",
+          "-fobjc-arc",
+          "-O3",
+          "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/delta_value_tiles_native.mm",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+          "-framework",
+          "Foundation",
+          "-framework",
+          "Metal",
+          "-framework",
+          "MetalPerformanceShaders",
+          "-o",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe"
+        ],
+        "evidence": "attempts/delta-value64-compile/case0-attempt0",
+        "status": {
+          "name": "delta-value64-compile",
+          "command": [
+            "/usr/bin/xcrun",
+            "clang++",
+            "-std=c++17",
+            "-fobjc-arc",
+            "-O3",
+            "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/delta_value_tiles_native.mm",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+            "-framework",
+            "Foundation",
+            "-framework",
+            "Metal",
+            "-framework",
+            "MetalPerformanceShaders",
+            "-o",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.385869957972318
+        }
+      }
+    ]
+  },
+  {
+    "name": "delta-value64-primitive",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/selected-component/original-recurrence.metal"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.036377958022058,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/selected-component/original-recurrence.metal"
+        ],
+        "evidence": "attempts/delta-value64-primitive/case0-attempt0",
+        "status": {
+          "name": "delta-value64-primitive",
+          "command": [
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/selected-component/original-recurrence.metal"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.4221057081595063
+        }
+      }
+    ]
+  },
+  {
+    "name": "ctest",
+    "command": [
+      "/opt/homebrew/bin/ctest",
+      "--test-dir",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "--output-on-failure"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 11.906591833103448,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/ctest",
+          "--test-dir",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "--output-on-failure"
+        ],
+        "evidence": "attempts/ctest/case0-attempt0",
+        "status": {
+          "name": "ctest",
+          "command": [
+            "/opt/homebrew/bin/ctest",
+            "--test-dir",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "--output-on-failure"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 6.301236249972135
+        }
+      }
+    ]
+  },
+  {
+    "name": "vision-full-grid",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_serial_vision_grid.py",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/full-grid",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 18.081904166843742,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_serial_vision_grid.py",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/full-grid",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill"
+        ],
+        "evidence": "attempts/vision-full-grid/case0-attempt0",
+        "status": {
+          "name": "vision-full-grid",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_serial_vision_grid.py",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/full-grid",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 11.775869749952108
+        }
+      }
+    ]
+  },
+  {
+    "name": "screened-real-heads",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_screened_head_real.py",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/trained-heads",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 14.794882624875754,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_screened_head_real.py",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/trained-heads",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill"
+        ],
+        "evidence": "attempts/screened-real-heads/case0-attempt0",
+        "status": {
+          "name": "screened-real-heads",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_screened_head_real.py",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/trained-heads",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 8.484560917131603
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-exact-tails",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 483.95520199975,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "0"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "0"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 27.312167250085622
+        }
+      },
+      {
+        "case_index": 1,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "1"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case1-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "1"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 27.962346791755408
+        }
+      },
+      {
+        "case_index": 2,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "2"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case2-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "2"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 81.79336804104969
+        }
+      },
+      {
+        "case_index": 3,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "3"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case3-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "3"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 81.9808677919209
+        }
+      },
+      {
+        "case_index": 4,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "4"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case4-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 27.459251582622528
+        }
+      },
+      {
+        "case_index": 5,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "5"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case5-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "5"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 28.163520582951605
+        }
+      },
+      {
+        "case_index": 6,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "6"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case6-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "6"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 81.64197987504303
+        }
+      },
+      {
+        "case_index": 7,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "7"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case7-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "7"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 81.79216583399102
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 105.14772900007665,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "0"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "0"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.910520124714822
+        }
+      },
+      {
+        "case_index": 1,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "1"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "1"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 5.615894583053887
+        }
+      },
+      {
+        "case_index": 2,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "2"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "2"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.109539750032127
+        }
+      },
+      {
+        "case_index": 3,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "3"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "3"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.825723459012806
+        }
+      },
+      {
+        "case_index": 4,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "4"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.904310999903828
+        }
+      },
+      {
+        "case_index": 5,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "5"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "5"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 5.611531792208552
+        }
+      },
+      {
+        "case_index": 6,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "6"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "6"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.821774292271584
+        }
+      },
+      {
+        "case_index": 7,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "7"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "7"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.824676875025034
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-private-kv",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 48.8445115420036,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-private-kv/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-private-kv",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 43.14440424973145
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-private-kv",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 14.891109541989863,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-private-kv",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.140901666600257
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-private-kv",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 30.121522582601756,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/Qwen3.5-0.8B-private-kv/case0-attempt0",
+        "status": {
+          "name": "Qwen3.5-0.8B-private-kv",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 24.382339875213802
+        }
+      }
+    ]
+  },
+  {
+    "name": "serving",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_decoder_model.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.015692125074565,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_decoder_model.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+        ],
+        "evidence": "attempts/serving/case0-attempt0",
+        "status": {
+          "name": "serving",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_decoder_model.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.281978208106011
+        }
+      }
+    ]
+  },
+  {
+    "name": "mixed-image-pipeline",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_image_pipeline.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.874935209285468,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_image_pipeline.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+        ],
+        "evidence": "attempts/mixed-image-pipeline/case0-attempt0",
+        "status": {
+          "name": "mixed-image-pipeline",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_image_pipeline.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 2.126527207903564
+        }
+      }
+    ]
+  },
+  {
+    "name": "qwen35-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_chunk_graph.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 81.40093600004911,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_chunk_graph.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+          "bf16"
+        ],
+        "evidence": "attempts/qwen35-layers/case0-attempt0",
+        "status": {
+          "name": "qwen35-layers",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_chunk_graph.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 75.64091887511313
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 151.51427779113874,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-layers/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-layers",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 145.74476608308032
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 29.967711209319532,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-layers",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 24.180306958034635
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-head",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 13.58493237476796,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/Qwen3.5-0.8B-head/case0-attempt0",
+        "status": {
+          "name": "Qwen3.5-0.8B-head",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 7.803503999952227
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-head",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.735062999650836,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-head/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-head",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.958207958843559
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-head",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.748132166918367,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-head",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.950766291934997
+        }
+      }
+    ]
+  },
+  {
+    "name": "vision-small",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_vision_graph.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.106663375161588,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_vision_graph.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+        ],
+        "evidence": "attempts/vision-small/case0-attempt0",
+        "status": {
+          "name": "vision-small",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_vision_graph.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.309012915939093
+        }
+      }
+    ]
+  },
+  {
+    "name": "vision-pretrained",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_pretrained_vision_graph.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 8.669016915839165,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_pretrained_vision_graph.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/vision-pretrained/case0-attempt0",
+        "status": {
+          "name": "vision-pretrained",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_pretrained_vision_graph.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 2.863341874908656
+        }
+      }
+    ]
+  },
+  {
+    "name": "qwen35-extended-prefill",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_qwen35_extended_prefill_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 169.27608329197392,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_qwen35_extended_prefill_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/qwen35-extended-prefill/case0-attempt0",
+        "status": {
+          "name": "qwen35-extended-prefill",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_qwen35_extended_prefill_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 163.4713254161179
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-prefix-recovery",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen3-0.6B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.271413499955088,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen3-0.6B"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-prefix-recovery/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-prefix-recovery",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen3-0.6B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.4303308329544961
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-screened-recovery",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen3-0.6B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 13.730907542165369,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen3-0.6B"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-screened-recovery/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-screened-recovery",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3-0.6B",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen3-0.6B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 7.862556708976626
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prefix-recovery",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.289773333352059,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen2.5-Coder-0.5B-Instruct"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-prefix-recovery/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-prefix-recovery",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen2.5-Coder-0.5B-Instruct"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.430698832962662
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-screened-recovery",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 12.98248358303681,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen2.5-Coder-0.5B-Instruct"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-screened-recovery/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-screened-recovery",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen2.5-Coder-0.5B-Instruct"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 7.13494325010106
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-prefix-recovery",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.326172333210707,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/Qwen3.5-0.8B-prefix-recovery/case0-attempt0",
+        "status": {
+          "name": "Qwen3.5-0.8B-prefix-recovery",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_prefix_reset_session_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/prefix-recovery-Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.4395392909646034
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-screened-recovery",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 18.035120625048876,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/Qwen3.5-0.8B-screened-recovery/case0-attempt0",
+        "status": {
+          "name": "Qwen3.5-0.8B-screened-recovery",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_interleaved_head_session_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/screened-recovery-Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 12.16699383314699
+        }
+      }
+    ]
+  },
+  {
+    "name": "wide-batch-trained-reference",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_wide_batch_prefill_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/wide-reference"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 97.88040708331391,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_wide_batch_prefill_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+          "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/wide-reference"
+        ],
+        "evidence": "attempts/wide-batch-trained-reference/case0-attempt0",
+        "status": {
+          "name": "wide-batch-trained-reference",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/test_wide_batch_prefill_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/models/Qwen3.5-0.8B",
+            "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/wide-reference"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 92.02959733270109
+        }
+      }
+    ]
+  }
+]

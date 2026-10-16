@@ -1,0 +1,26 @@
+[
+  {
+    "name": "delta-value64-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/source/test2026/metal/delta_value_tiles_native.mm",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/logs/delta-value-tile64-native-checks-20261016/jobs/delta_value_tiles_native_probe"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 1.385869957972318
+  }
+]

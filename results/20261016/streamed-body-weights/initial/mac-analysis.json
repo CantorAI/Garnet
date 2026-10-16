@@ -1,0 +1,244 @@
+{
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 0.3528016898781061,
+            "wall_ms": 0.70043626
+          },
+          "candidate": {
+            "gpu_ms": 0.3484054049476981,
+            "wall_ms": 0.6848491800000001
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 0.26621665339916945,
+            "wall_ms": 0.53087834
+          },
+          "candidate": {
+            "gpu_ms": 0.26826206129044294,
+            "wall_ms": 0.53116327
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9875389346011156,
+          "wall_ms": 0.9777466118044774
+        },
+        "comparison": {
+          "gpu_ms": 1.0076832454512399,
+          "wall_ms": 1.0005367143063324
+        }
+      },
+      "own_null_stable": true,
+      "within_preservation": true,
+      "unmet_b1_gain": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 0.3103199601173401,
+            "wall_ms": 0.58648039
+          },
+          "candidate": {
+            "gpu_ms": 0.295597524382174,
+            "wall_ms": 0.5586942
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 0.38243292830884457,
+            "wall_ms": 0.75808458
+          },
+          "candidate": {
+            "gpu_ms": 0.3712504357099533,
+            "wall_ms": 0.72557253
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9525572388911138,
+          "wall_ms": 0.9526221328559682
+        },
+        "comparison": {
+          "gpu_ms": 0.9707595979029805,
+          "wall_ms": 0.9571128989327286
+        }
+      },
+      "own_null_stable": true,
+      "within_preservation": true,
+      "unmet_b1_gain": null
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 0.34065292682498693,
+            "wall_ms": 0.67363838
+          },
+          "candidate": {
+            "gpu_ms": 0.3323804307729006,
+            "wall_ms": 0.66306705
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 0.26184292044490576,
+            "wall_ms": 0.52261499
+          },
+          "candidate": {
+            "gpu_ms": 0.2632600488141179,
+            "wall_ms": 0.53410036
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9757157640499698,
+          "wall_ms": 0.98430711444915
+        },
+        "comparison": {
+          "gpu_ms": 1.0054121316963784,
+          "wall_ms": 1.021976732814342
+        }
+      },
+      "own_null_stable": true,
+      "within_preservation": false,
+      "unmet_b1_gain": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 0.29591206926852465,
+            "wall_ms": 0.56536753
+          },
+          "candidate": {
+            "gpu_ms": 0.2839783579111099,
+            "wall_ms": 0.55317792
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 0.3380204224959016,
+            "wall_ms": 0.6572654
+          },
+          "candidate": {
+            "gpu_ms": 0.34312792122364044,
+            "wall_ms": 0.67575216
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9596714274381776,
+          "wall_ms": 0.9784394940402751
+        },
+        "comparison": {
+          "gpu_ms": 1.0151100300095057,
+          "wall_ms": 1.0281267810537418
+        }
+      },
+      "own_null_stable": true,
+      "within_preservation": false,
+      "unmet_b1_gain": null
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 0.6875687371939421,
+            "wall_ms": 0.98879538
+          },
+          "candidate": {
+            "gpu_ms": 0.6884654052555561,
+            "wall_ms": 0.99742959
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 0.7707004249095917,
+            "wall_ms": 1.08919967
+          },
+          "candidate": {
+            "gpu_ms": 0.7632870972156525,
+            "wall_ms": 1.07341041
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0013041140661418,
+          "wall_ms": 1.0087320492941623
+        },
+        "comparison": {
+          "gpu_ms": 0.9903810515028472,
+          "wall_ms": 0.9855037965628469
+        }
+      },
+      "own_null_stable": true,
+      "within_preservation": true,
+      "unmet_b1_gain": null
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 0.6652825092896819,
+            "wall_ms": 0.9610954
+          },
+          "candidate": {
+            "gpu_ms": 0.6635375181213021,
+            "wall_ms": 0.96279162
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 0.8008075226098299,
+            "wall_ms": 1.11407883
+          },
+          "candidate": {
+            "gpu_ms": 0.7974958512932062,
+            "wall_ms": 1.10934296
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9973770674202108,
+          "wall_ms": 1.001764882029401
+        },
+        "comparison": {
+          "gpu_ms": 0.9958645851554554,
+          "wall_ms": 0.9957490710060436
+        }
+      },
+      "own_null_stable": true,
+      "within_preservation": true,
+      "unmet_b1_gain": null
+    }
+  ],
+  "unchanged_confirmation_admitted": false,
+  "native_integration_admitted": false,
+  "all_numeric_and_original_bits_pass": true,
+  "statistic": "Candidate/control arithmetic means of all 100 raw samples per policy and null/comparison profile; no filtering or null normalization.",
+  "full_goal_met": false,
+  "scope": "Both unmet B1 models require >=5% GPU and wall gain; all six profiles preserve both clocks within2% and own-nulls within5%. One complete unchanged confirmation required before any native/model performance claim."
+}

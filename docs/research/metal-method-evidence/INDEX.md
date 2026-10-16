@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T06:16:43.803496+00:00
+Generated UTC: 2026-10-16T06:58:27.381105+00:00
 
-Base HEAD at generation: `4547d69fbc49d8797d7a9e05ef67b44116b5a1b4`. Reports indexed: **192**.
+Base HEAD at generation: `2217bbf6250866840670cad196511f22b49c8268`. Reports indexed: **203**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -158,6 +158,15 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
 | [results/20261016/delta-value-tiles-addresses](../../../results/20261016/delta-value-tiles-addresses/README.md) | Wider delta value tiles CPU prerequisite |
 | [results/20261016/delta-value-tiles-gpu](../../../results/20261016/delta-value-tiles-gpu/README.md) | Wider delta value tiles GPU component investigation |
+| [results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
+| [results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/README.md) | xModel |
 | [results/20261016/delta-value-tiles-native](../../../results/20261016/delta-value-tiles-native/README.md) | Private native width64 recurrent prefill investigation |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
 | [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
@@ -186,6 +195,8 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/prepared-union-qv](../../../results/20261016/prepared-union-qv/README.md) | QV fusion with the original key projection |
 | [results/20261016/prepared-union-qv-views](../../../results/20261016/prepared-union-qv-views/README.md) | QV output views without a scatter dispatch |
 | [results/20261016/qkv-union-half-admission](../../../results/20261016/qkv-union-half-admission/README.md) | Separate Q/K/V exact union: full learned CPU eligibility |
+| [results/20261016/streamed-body-weights](../../../results/20261016/streamed-body-weights/README.md) | Streamed decoded body weights component screen |
+| [results/20261016/streamed-body-weights-preparation](../../../results/20261016/streamed-body-weights-preparation/README.md) | Streamed decoded weight lifetime preparation |
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |

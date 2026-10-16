@@ -1,0 +1,37 @@
+// Link the real candidate library; compare public API output/state with original width16 Metal.
+#import <Foundation/Foundation.h>
+#import <Metal/Metal.h>
+#include "metal_context.h"
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <stdexcept>
+#include <vector>
+struct P{uint64_t batch,chunk,heads,keyDim,valueDim,pStride,sStride,aStride,oStride,nextStride;};
+static void need(bool value,const char* message){if(!value)throw std::runtime_error(message);}
+static void finish(id<MTLCommandBuffer> cb){[cb commit];[cb waitUntilCompleted];if(cb.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error(cb.error.localizedDescription.UTF8String);}
+static std::vector<float> values(size_t count,uint32_t seed,float scale){std::vector<float> out(count);for(auto& x:out){seed=seed*1664525u+1013904223u;x=float(int((seed>>8)%65521)-32760)*scale;}return out;}
+int main(int argc,char** argv){@autoreleasepool{try{
+ need(argc==2,"Expected original recurrence shader");auto device=MTLCreateSystemDefaultDevice();need(device!=nil,"No Metal device");auto queue=[device newCommandQueue];NSError* error=nil;auto source=[NSString stringWithContentsOfFile:[NSString stringWithUTF8String:argv[1]] encoding:NSUTF8StringEncoding error:&error];need(source!=nil,"Original shader missing");
+ auto lib=[device newLibraryWithSource:source options:nil error:&error];if(!lib)throw std::runtime_error(error.localizedDescription.UTF8String);auto pipeline=[device newComputePipelineStateWithFunction:[lib newFunctionWithName:@"gated_delta_chunk_value16"] error:&error];if(!pipeline)throw std::runtime_error(error.localizedDescription.UTF8String);need(pipeline.threadExecutionWidth==32&&pipeline.maxTotalThreadsPerThreadgroup>=128,"Original geometry unavailable");
+ Garnet::MetalContext gpu,other;size_t checks=0,selected=0,fallback=0,words=0;
+ for(size_t batch:{1,2,3})for(size_t chunk:{1,16,80})for(size_t heads:{2,16})for(size_t width:{96,128,256}){
+  const size_t qw=heads*128,vw=heads*width,pw=2*qw+vw+2*heads,sw=heads*128*width;bool admitted=batch<=2&&chunk==80&&heads==16&&width==128;
+  auto state=values(batch*sw,931,.000001f);auto s=gpu.Upload(state,batch,sw),prepared=gpu.Allocate(batch*chunk,pw),active=gpu.Allocate(batch,chunk),out=gpu.Allocate(batch*chunk,vw),next=gpu.Allocate(batch,sw);
+  std::vector<float> expected,expectedState,lastPrepared,lastActive;
+  for(size_t step=0;step<3;++step){
+   auto input=values(batch*chunk*pw,13+uint32_t(step)*991,.00001f);std::vector<float> mask(batch*chunk,1);
+   for(size_t row=0;row<batch;++row)for(size_t token=0;token<chunk;++token){size_t base=(row*chunk+token)*pw;for(size_t head=0;head<heads;++head){input[base+2*qw+vw+head]=-.1f-float((head+token+step)%11)*.03f;input[base+2*qw+vw+heads+head]=.2f+float((head+token+step)%7)*.1f;}if((row+token+step)%5==0)mask[row*chunk+token]=0;}
+   auto pb=[device newBufferWithBytes:input.data() length:input.size()*4 options:MTLResourceStorageModeShared],sb=[device newBufferWithBytes:state.data() length:state.size()*4 options:MTLResourceStorageModeShared],ab=[device newBufferWithBytes:mask.data() length:mask.size()*4 options:MTLResourceStorageModeShared],ob=[device newBufferWithLength:batch*chunk*vw*4 options:MTLResourceStorageModeShared],nb=[device newBufferWithLength:batch*sw*4 options:MTLResourceStorageModeShared];need(pb&&sb&&ab&&ob&&nb,"Reference allocation failed");P p{batch,chunk,heads,128,width,pw,sw,chunk,vw,sw};auto cb=[queue commandBuffer];auto enc=[cb computeCommandEncoder];[enc setComputePipelineState:pipeline];[enc setBuffer:pb offset:0 atIndex:0];[enc setBuffer:sb offset:0 atIndex:1];[enc setBuffer:ab offset:0 atIndex:2];[enc setBuffer:ob offset:0 atIndex:3];[enc setBuffer:nb offset:0 atIndex:4];[enc setBytes:&p length:sizeof(p) atIndex:5];[enc dispatchThreadgroups:MTLSizeMake(batch*heads*width/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[enc endEncoding];finish(cb);expected.resize(batch*chunk*vw);expectedState.resize(batch*sw);std::memcpy(expected.data(),ob.contents,expected.size()*4);std::memcpy(expectedState.data(),nb.contents,expectedState.size()*4);
+   gpu.Update(prepared,input);gpu.Update(active,mask);gpu.Begin();need(gpu.LastDeltaValueTile64Dispatches()==0,"Begin retained tile counter");gpu.EncodeGatedDeltaChunk(prepared,s,active,out,next,chunk,heads,128,width);need(gpu.LastDeltaValueTile64Dispatches()==size_t(admitted),"Selected/fallback tile route mismatch");for(auto output:{out,next}){bool rejected=false;try{gpu.Download(output);}catch(const std::logic_error&){rejected=true;}need(rejected,"Pending state/output readable");}gpu.SubmitAndWait();auto actual=gpu.Download(out),actualState=gpu.Download(next);need(actual.size()==expected.size()&&actualState.size()==expectedState.size(),"Output shape changed");need(!std::memcmp(actual.data(),expected.data(),expected.size()*4)&&!std::memcmp(actualState.data(),expectedState.data(),expectedState.size()*4),"Original recurrent output/state bits changed");for(float x:actual)need(std::isfinite(x),"Nonfinite output");for(float x:actualState)need(std::isfinite(x),"Nonfinite state");words+=actual.size()+actualState.size();++checks;if(admitted)++selected;else ++fallback;
+   // Carry the same verified original state into both paths on the next step.
+   if(step!=2){state=expectedState;gpu.Update(s,state);}lastPrepared=input;lastActive=mask;
+  }
+  gpu.Begin();gpu.EncodeGatedDeltaChunk(prepared,s,active,out,next,chunk,heads,128,width);gpu.Abort();need(gpu.LastDeltaValueTile64Dispatches()==0,"Abort retained counter");for(auto output:{out,next}){bool rejected=false;try{gpu.Download(output);}catch(const std::logic_error&){rejected=true;}need(rejected,"Aborted output readable");}
+  gpu.Begin();gpu.EncodeGatedDeltaChunk(prepared,s,active,out,next,chunk,heads,128,width);gpu.SubmitAndWait();auto recovered=gpu.Download(out),recoveredState=gpu.Download(next);need(!std::memcmp(recovered.data(),expected.data(),expected.size()*4)&&!std::memcmp(recoveredState.data(),expectedState.data(),expectedState.size()*4),"Abort recovery bits changed");
+  gpu.Begin();bool rejected=false;try{gpu.EncodeGatedDeltaChunk(prepared,s,active,out,s,chunk,heads,128,width);}catch(const std::invalid_argument&){rejected=true;}need(rejected&&gpu.LastDeltaValueTile64Dispatches()==0,"In-place state alias accepted");gpu.Abort();
+  auto missing=gpu.Allocate(batch*chunk,pw);gpu.Begin();rejected=false;try{gpu.EncodeGatedDeltaChunk(missing,s,active,out,next,chunk,heads,128,width);}catch(const std::logic_error&){rejected=true;}need(rejected&&gpu.LastDeltaValueTile64Dispatches()==0,"Uninitialized producer accepted");gpu.Abort();
+  gpu.Begin();gpu.EncodeGatedDeltaChunk(prepared,s,active,out,next,chunk,heads,128,width);other.Begin();rejected=false;try{other.EncodeGatedDeltaChunk(prepared,s,active,out,next,chunk,heads,128,width);}catch(const std::logic_error&){rejected=true;}need(rejected&&other.LastDeltaValueTile64Dispatches()==0,"Foreign writer accepted");other.Abort();gpu.SubmitAndWait();
+ }
+ need(checks==162&&selected==6&&fallback==156,"Coverage differs");std::printf("{\"kind\":\"complete\",\"checks\":%zu,\"selected\":%zu,\"fallback\":%zu,\"original_fp32_words_checked\":%zu,\"carried_steps\":3,\"pending_abort_recovery_alias_uninitialized_foreign\":true,\"model_performance_measured\":false}\n",checks,selected,fallback,words);return 0;
+}catch(const std::exception& error){std::fprintf(stderr,"delta_value_tiles_native_failed: %s\n",error.what());return 1;}}}

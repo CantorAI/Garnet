@@ -1,0 +1,15 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tile64-native-investigation-20261016/build-delta-value-tile64-prefill",
+      "--parallel",
+      "4"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 9.027698624879122
+  }
+]

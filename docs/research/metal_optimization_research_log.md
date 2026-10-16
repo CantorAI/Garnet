@@ -2097,6 +2097,99 @@ No native model timing exists yet. No serving source or matched-vLLM target
 count changes; the full 2x decode/half-TTFT goal remains active.
 [Private policy, exact preparation, observed processes/results and commands](../../results/20261016/delta-value-tiles-native/README.md).
 
+### 2026-10-16 UTC — VPN recovery preserves exact native jobs and reaches 24 stages
+
+Read-only SSH observations time out over the current route and the previous
+verified address. Local VPN adapters remain up; the target peer briefly reports
+offline. Neither a transport timeout nor peer state proves any job terminal.
+Do not restart or mutate the consumed native source/tools. After the route
+recovers, all three exact process handles remain live; check 94442 and finalizer
+98584 birth times match their original watcher metadata. At 06:26:11 UTC,
+24 whole stages pass, including text/coder tails, private KV, serving, mixed
+images, layers, heads and trained vision. Full32 and native timings remain
+unproven; counters/performance gates are unchanged.
+[Recovery observation and stage list](../../results/20261016/delta-value-tiles-native/network-recovery-observation.json).
+
+### 2026-10-16 UTC — streamed decoded-weight lifetime source preparation only
+
+While the Mac native jobs/tools stay frozen, prepare a distinct Windows-only
+decode hypothesis. Keep accepted four-output/64-thread geometry, original
+payload/tag/raw loads and reconstruction, K/j and SIMD reduction order. Consume
+each reconstructed float4 immediately in its compact/raw branch rather than
+retaining four vectors until a later loop. The compiler may already perform
+this lifetime shortening; no register/occupancy or speed claim follows from
+the source change. It is not the prior two/eight-output or explicit-FMA method.
+
+Generate isolated source/header/counter and draft safety/numeric harness, and
+reverse the shader moves to the original text. Preserve a local generator
+assertion failure: two policy loop strings plus a separately named warm loop
+were mistaken for three identical strings. Fix only those occurrence/policy
+bounds before any execution. Add a separate prepared numeric/timing probe with
+original exact-bit/FP64/finite/comparison gates, all-model numeric gating before
+timing, fixed64 threads, 2 s common warmup, own-null before comparison, 10 ABBA
+rounds and all 2,400 planned samples retained. No sample has run; the exclusive
+runner, compiler/GPU validation and admission screen remain future work.
+Source preparation and its byte record are not numerical/performance evidence.
+No Mac deployment, serving modification or target-count update occurs.
+[Prepared sources, provenance, authoring failure and limitations](../../results/20261016/streamed-body-weights-preparation/README.md).
+
+### 2026-10-16 UTC — complete native width64 prefill screen rejected after full32 success
+
+Check 94442 exits 0 in 1,452.645279584 s with all 32 stages fresh. Finalizer 98584
+archives/audits all 1,880 files and publishes the full32 gate. Preserve original
+bounds, 162 linked original-bit cases, 74,805,120 output/state words and all 48
+trained graph/session route steps: 12 selected/36 fallback. Worst trained-bound
+ratio 0.5999873838 and wide ratio 0.5432836183 stay <=1. No reused stages.
+
+Behind terminal archive/raw re-audit/quiet guards, complete native model cohort
+22203 exits 0 in 192.920540834 s. All 72 complete outputs and actual routes pass;
+archive 6,092 files with 1,410 source and 1,241 external-tool records. Continuation
+1941 rejects the fixed model screen and exits 0, then is itself archived before
+any next deployment. Mac/Windows full32, full72 and decisions are identical.
+
+VL B1 TTFT fraction 0.998322 misses the .99 limit; B2 fraction 0.988069 passes.
+Coder B2 TTFT fraction 1.037333 exceeds the all-profile 1.02 preservation limit.
+All decode fractions stay >=.98. Reject without confirmation/promotion/favorable
+retry. The changed kernel is unselected for coder, so the observed regression
+does not establish causation. Prior component gains are not TTFT gains. Keep
+init/first-after-init/warm and worker RSS separately, with caches unflushed.
+Source, full native timings and both terminal controllers are frozen on both
+hosts; accepted d52 and matched-vLLM target counts remain unchanged.
+[Complete tables, hashes, independent audits and fixed rejection](../../results/20261016/delta-value-tiles-native/README.md#terminal-full32-audit-and-native-model-rejection).
+
+### 2026-10-16 UTC — streamed weight lifetime GPU component correct but unselected
+
+After the native controller is terminal/archived and all transfers finish,
+deploy the prepared variant into a separate private tools directory. Require
+the exact prior-controller archive and current d52 identity. Preserve original
+coalesced control, same 64 threads, unchanged data/FP32 math and all unsupported
+paths. Counters assert the new kernel only in candidate calls. Finish all-model
+numeric mode before any timing; no whole-model inference occurs in this probe.
+
+Controller 26445 exits 0 in 35.186062542 s including compile/setup/numeric/timing.
+All 29 matrix fixtures (text/coder layer0, VL layers0/3), 20 selected matrices,
+24 original-bit/FP64 numeric profiles, 680,832 original FP32 output values and
+63 ownership/tail/fallback/prefill/abort/recovery safety profiles pass. Keep all
+2,400 raw clock samples, 2 s warmup/profile, own-null before comparison, 10 ABBA
+rounds, 3 warm calls and 5 samples/window. Original error bounds are unchanged.
+
+All six own-nulls pass the fixed 5% rule. Text B1 GPU/wall fractions are
+1.007683/1.000537, coder B1 1.005412/1.021977; neither meets the required >=5%
+gain on both clocks. Coder B2 wall fraction 1.028127 also fails 2% preservation.
+Reject without confirmation or native integration; do not select favorable B2
+or VL endpoints after the fact. Actual register allocation/assembly identity is
+unmeasured. The pre-execution thresholds and post-execution/pre-inspection raw
+mean aggregation are identified separately; no formal preregistration claimed.
+
+The 58-file terminal archive and all generated/native/template sources, defines,
+raw slice/checkpoint identities, actual dispatch, safety, monitor and clock
+records audit identically on Mac/Windows, with the same rejection. Post-run
+environment confirms M4/16 GiB; compiler/Python/macOS observations are scoped
+after execution. Setup/packing are outside kernel intervals; init/RSS and actual
+model decode/TTFT gains remain unmeasured for this variant. No serving or target
+count update. Preserve the earlier Windows-only preparation separately.
+[All endpoint clocks, costs, source records and original gates](../../results/20261016/streamed-body-weights/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

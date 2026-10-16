@@ -1,10 +1,10 @@
 # Private native width64 recurrent prefill investigation
 
-Status: the private library builds, the actual linked primitive and CTest pass,
-and nine complete validation stages have exited 0 at the saved observation.
-The full 32-stage correctness suite is still running. No complete native model
-timing or new matched-vLLM result is established. Accepted serving source stays
-on d52.
+Status: all 32 fresh native stages and all 72 complete native outputs pass
+identical independent Mac/Windows audits. The first native model cohort fails
+the predeclared TTFT retention/preservation screen. Reject without confirmation
+or promotion; accepted serving source remains d52. No new matched-vLLM target
+count is established.
 
 The [two complete component cohorts](../delta-value-tiles-gpu/README.md) select
 only width-64 prefill. Copy accepted d52 into a new private tree with 1,410
@@ -66,6 +66,15 @@ the suite is within text exact-tail cases. No full32 gate or model performance
 job exists. [Exact process/stage/primitive observation](latest-observation.json),
 [earlier observation](observation.json).
 
+SSH later times out over both saved VPN routes while the local adapters remain
+up; the Mac's VPN peer briefly reports offline. Do not infer process termination
+or restart any job. At 06:26:11 UTC, the connection recovers and all three exact
+processes are live. The check and finalizer birth times match their original
+watcher metadata. Twenty-four whole stages pass, including both text/coder
+tail suites, private KV, serving, mixed-image pipeline, layers, heads and
+trained vision checks. No full32 gate or native model timing exists at that
+observation. [Recovery and exact stage record](network-recovery-observation.json).
+
 The finalizer watches that exact check process, archives terminal success or
 failure, then independently regenerates/audits all 32 successful stages. The
 archive explicitly includes the original vector/MLP auditor dependencies and
@@ -113,5 +122,70 @@ python3 ROOT/source/test2026/metal/continue_delta_value_tiles_native.py CANDIDAT
 ```
 
 The model comparison helpers' comparator, outer and inner independent 72-output
-auditors regenerate and parse locally without executing inference. They are
-prepared/armed, not a performance result. Full matched-vLLM goal remains active.
+auditors regenerated and parsed locally without executing inference. That
+preflight established preparation only; terminal measurements are recorded
+below. Full matched-vLLM goal remains active.
+
+## Terminal full32 audit and native model rejection
+
+Check 94442 exits 0 in 1,452.645279584 seconds with all 32 stages fresh and no
+reused compile/validation stages. Finalizer 98584 exits 0 after the complete
+1,880-file archive audit. The full audit regenerates all 12 changes and the
+executed driver, retains all original checks and passes every 48 trained-route
+step: 12 selected and 36 fallback. Worst original trained-bound ratio is
+0.5999873838; worst wide-reference ratio is 0.5432836183, each <=1.
+[Windows full32 audit](checks/verification.json),
+[identical Mac full32 audit](checks/mac-verification.json).
+
+The first six-profile native cohort 22203 exits 0 in 192.920540834 seconds.
+Continuation 1941 archives it, audits all 72 complete outputs and actual routes,
+then rejects the fixed screen and exits 0. Its 1,312.108444209-second duration
+includes waiting for correctness; it is not inference latency. The 6,092-file
+archive preserves 1,410 source files and 1,241 external tools. Complete raw
+checks and the same native decision reproduce independently on both hosts.
+[Complete native model audit](initial/verification.json),
+[identical Mac model audit](initial/mac-verification.json),
+[fixed initial decision](decision-initial.json),
+[terminal controller](continuation/archive-verification.json).
+
+VL B1 warm TTFT fraction 0.998322 misses the required <=.99; VL B2 fraction
+0.988069 passes. Coder B2 fraction 1.037333 exceeds the 1.02 preservation limit.
+All decode fractions stay >=.98. Reject without confirmation, promotion or a
+favorable retry. The changed kernel is not selected for coder, so its observed
+latency difference does not establish a causal width64 regression. Do not
+replace complete-model measurements with the prior 9–13% component kernel gain.
+
+Warm decode TPS is per row; aggregate throughput is TPS times batch. Each
+policy has four warm complete requests, with initialization and first-after-init
+separate. These are one complete native cohort, not repeated matched-vLLM ratios.
+
+| Native model | Batch | Decode TPS control / candidate | TTFT ms control / candidate | Decode fraction | TTFT fraction |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B | 1 | 73.9653 / 74.8021 | 36.0923 / 36.5307 | 1.011313 | 1.012148 |
+| Qwen3-0.6B | 2 | 71.4519 / 71.0217 | 56.7331 / 56.3283 | 0.993979 | 0.992865 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 87.7866 / 88.6825 | 27.7902 / 27.3399 | 1.010205 | 0.983798 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 83.6361 / 84.1895 | 43.0413 / 44.6482 | 1.006617 | 1.037333 |
+| Qwen3.5-0.8B | 1 | 60.3426 / 61.5050 | 174.8774 / 174.5839 | 1.019265 | 0.998322 |
+| Qwen3.5-0.8B | 2 | 55.3409 / 54.8818 | 291.6713 / 288.1915 | 0.991704 | 0.988069 |
+
+| Setup model | Batch | Init seconds control / candidate | First TTFT ms control / candidate | Mean individual-worker peak RSS delta MiB |
+| --- | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B | 1 | 3.547632 / 3.504776 | 130.1541 / 129.2086 | -7.1562 |
+| Qwen3-0.6B | 2 | 3.530979 / 3.531000 | 142.7121 / 143.2173 | -29.0703 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 2.835301 / 2.826777 | 107.0367 / 105.2469 | 2.3125 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 2.836665 / 2.836302 | 118.8019 / 118.7585 | 6.6172 |
+| Qwen3.5-0.8B | 1 | 5.490732 / 5.492733 | 266.0298 / 266.1791 | 6.3828 |
+| Qwen3.5-0.8B | 2 | 5.474836 / 5.481856 | 378.8402 / 385.9722 | -6.6172 |
+
+Peak RSS spans initialization and all worker activity; the difference does not
+isolate this kernel's allocations. Hardware caches remain unflushed, and
+first-after-init is not a hardware-cold observation. All consumed processes are
+confirmed terminal and archived before starting the next isolated experiment.
+
+| Archive | SHA256 |
+| --- | --- |
+| Fresh full32 checks, 1,880 files | `a847754655e4bb477102db80678b72d687cf6c739cff9fcf6f74d715eef7ecda` |
+| Complete native cohort, 6,092 files | `6e2a1cf78b3ebda2ee3cff23eb9fb2d5ad4aa44deb7568150a490289097473a4` |
+| Terminal continuation, 1,270 files | `b22c3531007f4d234e276820c22418bce688558993937006fc8de1e2af8a2054` |
+| Terminal finalizer, 17 files | `a674015d4245b03847be10d056770a28f9819f4e9ab504abf027a90527aa0fa6` |
+

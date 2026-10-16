@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native','streamed-body-weights-preparation','streamed-body-weights')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -501,6 +501,30 @@ def main():
     for name,sha in tile_prep['added_sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha
     observed=json.loads((tile_native/'latest-observation.json').read_text());primitive=observed['native_primitive'];assert primitive['checks']==162 and primitive['selected']==6 and primitive['fallback']==156 and primitive['original_fp32_words_checked']==74805120 and primitive['pending_abort_recovery_alias_uninitialized_foreign']
     assert len(observed['completed_stages'])==9 and all(v['exit_code']==0 for v in observed['completed_stages']) and not observed['full32_gate_exists'] and not observed['native_model_profiles_exist']
+    recovered=json.loads((tile_native/'network-recovery-observation.json').read_text());assert len(recovered['completed_stages'])==24 and all(v['exit_code']==0 for v in recovered['completed_stages']) and recovered['checks']['birth_matches_original_watcher'] and recovered['finalizer']['birth_matches_original_watcher'] and not recovered['full32_gate_exists'] and not recovered['native_profiles_exist']
+    streamed=ROOT/'results/20261016/streamed-body-weights-preparation';prepared=json.loads((streamed/'preparation.json').read_text());calibrated=json.loads((streamed/'calibrated-preparation.json').read_text());streamed_proof=json.loads((streamed/'manifest.json').read_text())
+    for name,info in streamed_proof['files'].items():assert (streamed/name).stat().st_size==info['bytes'] and hashlib.sha256((streamed/name).read_bytes()).hexdigest()==info['sha256']
+    assert prepared['literal_source_reversal_pass'] and prepared['geometry']['threads']==64 and prepared['geometry']['outputs_per_simd']==4 and calibrated['timing_design']['expected_total_samples']==2400
+    assert all(not prepared[k] for k in ('gpu_compiled','gpu_executed','numerical_equivalence_proven','performance_measured','mac_deployed','full_goal_met')) and all(not calibrated[k] for k in ('gpu_compiled','gpu_executed','model_performance_measured','mac_deployed','full_goal_met'))
+    tile_full=json.loads((tile_native/'checks/verification.json').read_text());assert tile_full==json.loads((tile_native/'checks/mac-verification.json').read_text()) and tile_full['validation_stages']==32 and tile_full['delta_value_tile64_trained_steps']==48 and tile_full['delta_value_tile64_trained_selected_routes']==12 and tile_full['delta_value_tile64_trained_fallback_routes']==36 and not tile_full['reused_validation_stages']
+    tile_gate=json.loads((tile_native/'checks/gate.json').read_text());assert hashlib.sha256((tile_native/'checks/mac-verification.json').read_bytes()).hexdigest()==tile_gate['full_audit_sha256'] and tile_gate['archive_sha256']==json.loads((tile_native/'checks/archive-verification.json').read_text())['archive_sha256']
+    tile_model=json.loads((tile_native/'initial/verification.json').read_text());assert tile_model==json.loads((tile_native/'initial/mac-verification.json').read_text()) and tile_model['full_output_requests']==72 and tile_model['actual_delta_value_tile64_routes'] and tile_model['complete_delta_value_tile64_route_requests']==72
+    tile_native_decision=json.loads((tile_native/'decision-initial.json').read_text());assert tile_native_decision==json.loads((tile_native/'continuation/evidence/validation-audits/delta-value-tile64-native-results/decision-initial.json').read_text()) and not tile_native_decision['repeat_admitted'] and not tile_native_decision['promote']
+    tile_native_profiles=tile_native_decision['trials'][0]['profiles'];rows=[line.split('|')[1:-1] for line in (tile_native/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(rows)==12
+    for cells,r in zip(rows[:6],tile_native_profiles):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch'];a,b=r['means']['control'],r['means']['candidate']
+        assert cells[2].strip()==f"{a['decode_tps']:.4f} / {b['decode_tps']:.4f}" and cells[3].strip()==f"{a['ttft_ms']:.4f} / {b['ttft_ms']:.4f}" and [v.strip() for v in cells[4:]]==[f"{r['decode_ratio']:.6f}",f"{r['ttft_fraction']:.6f}"]
+    for cells,r in zip(rows[6:],tile_native_profiles):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch'];a,b=r['first_request_after_initialization']['control'],r['first_request_after_initialization']['candidate']
+        assert cells[2].strip()==f"{a['initialization_s']:.6f} / {b['initialization_s']:.6f}" and cells[3].strip()==f"{a['ttft_ms']:.4f} / {b['ttft_ms']:.4f}" and cells[4].strip()==f"{r['added_mean_worker_peak_rss_gib']*1024:.4f}"
+    streamed_gpu=ROOT/'results/20261016/streamed-body-weights';streamed_audit=json.loads((streamed_gpu/'initial/verification.json').read_text());streamed_decision=json.loads((streamed_gpu/'initial/analysis.json').read_text())
+    assert streamed_audit==json.loads((streamed_gpu/'initial/mac-verification.json').read_text()) and streamed_decision==json.loads((streamed_gpu/'initial/mac-analysis.json').read_text())
+    assert (streamed_audit['first_layer_matrices'],streamed_audit['selected_matrices'],streamed_audit['numeric_profiles'],streamed_audit['original_output_values_checked'],streamed_audit['safety_profiles'],streamed_audit['timing_samples'])==(29,20,24,680832,63,2400) and not streamed_decision['unchanged_confirmation_admitted'] and not streamed_decision['native_integration_admitted']
+    rows=[line.split('|')[1:-1] for line in (streamed_gpu/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(rows)==6
+    for cells,r in zip(rows,streamed_decision['profiles']):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch'];c,n=r['fractions']['comparison'],r['fractions']['null']
+        assert cells[2].strip()==f"{c['gpu_ms']:.6f}" and cells[3].strip()==f"{c['wall_ms']:.6f}" and cells[4].strip()==f"{n['gpu_ms']:.6f} / {n['wall_ms']:.6f}"
+        assert cells[5].strip()==('Yes' if r['own_null_stable'] else 'No') and cells[6].strip()==('Yes' if r['own_null_stable'] and r['within_preservation'] and r['unmet_b1_gain'] is not False else 'No')
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -532,6 +556,8 @@ def main():
                   delta_value_tile_cpu_profiles_checked=12,status='passed',
                   delta_value_tile_gpu_endpoint_table_values_checked=64,delta_value_tile_gpu_numeric_profiles=416,
                   delta_value_tile_private_native_transformations_regenerated=12,
+                  streamed_body_weight_preparation_files_checked=len(streamed_proof['files']),
+                  delta_value_tile_rejected_native_table_values_checked=66,streamed_body_weight_endpoint_values_checked=24,
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

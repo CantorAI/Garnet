@@ -1,0 +1,84 @@
+{
+  "common_frontend": "combined threaded decode and exact-coordinate strip resize on both builds",
+  "scope": "Full native ABBA: width64 chunk80 recurrence versus accepted d52, all six profiles and complete outputs. Init/first/warm and RSS separate; no fresh vLLM ratio.",
+  "library_sha256": {
+    "control": "d52c37e09edf7afb61889037863b1cb338f9ac0b6d98ea62043c3a016af5b55e",
+    "candidate": "03ac447d4db2c18e03f8090e79eefa1e0519358e09d9b89a66e1d37e28bf9ebb"
+  },
+  "source_sha256": {
+    "compare_delta_value_tiles_native.py": "7161d48844a85384af38960c87260dbc040096656c6de4d434e58461444a48cc",
+    "run_matched_garnet.py": "abaf4551d1ee76f9009c6a7929eff2622a617e45486295186c865a825f2cfd3c",
+    "run_threaded_striped_frame_process.py": "3cad4eab6c29e190eeda96a6e7a78ef52e24494c7c5931b61d7530e0650342ff",
+    "frame_worker_garnet.py": "d5dbb6a28bbe32857175680bbd735e30e161a3b8227c5cfc7de7f2bba1cc6fe0",
+    "compare_parallel_vision.py": "f8aca690ddeecac00bff849bc38e8548ddc4b4b00e2c5d19e5b509065b113456",
+    "compare_vision_global_alpha.py": "c38705239b1bb9238ef5d5ed22de66a91cfaf8adc7c2d49450b739238a26c156",
+    "run_screened_head_profiles.py": "45bd0bc92d8267856106a9352f356d89bfe242371bb372ebae08e8d25decb470",
+    "run_screened_head_session_reference.py": "e4923445b271e6d7ea0c894c612d2f8a00b243ea9967891438d72b9def33cd33",
+    "frame_threaded_striped.py": "36bb745eb06c211708d72096bedd41a37204dafc29b8a7228c3fde7233e9f722",
+    "frame_webp_threaded.py": "1a58a8eabdc4db083e68cc53a5f1f1310222aa8726fc2000bab89f69a8294a43",
+    "frame_preprocessing_striped.py": "70c506c27338502a0f09c0ff16c6a1349365648302e50a8e9f193b67a8c1cba9",
+    "run_webp_thread_frame_process.py": "625de16554c095a5ec4219d899606a9b1db5af50c7c2c29ad7ad57a527027717",
+    "run_matched_frame_process.py": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7",
+    "frame_preprocessing.py": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95",
+    "compare_screened_head.py": "75fe5a975206e7bb993ec4f8b9897307ce3bdf57ada9e5ce2e0e4e9236e71999",
+    "compare_dirty_prefix_reset.py": "7ea69979182c68a07065f01fd9d9990cc0250d50d5a5c72edb17776f145bb263",
+    "run_screened_prefill_reset_profiles.py": "c21c369e060c712f03f6ec3fb3d8aafc27fc6b9a1730b0bb01d43c7093ef6996",
+    "compare_screened_prefill_reset.py": "a95f9598fe0f61a9c37d72455aea304f196c0552982d76a7a75f6887306da7bb",
+    "run_serial_vision_profiles.py": "17cbe05a1f371816d32e3caa11f649ca227637a554b44a00e2b3ba1e45ea1248"
+  },
+  "assets": {
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "model.safetensors": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+      "config.json": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff",
+      "tokenizer.json": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+    }
+  },
+  "threaded_decoder_sha256": "3c86ac196227b3729477cd24704ea4cea4e796fe5f9933c7a5a20361a32804a3",
+  "vector_vision": {
+    "width": 4,
+    "tokens": 216,
+    "hidden": 768,
+    "heads": 12,
+    "rows": [
+      216,
+      432
+    ],
+    "original_fma_order": true,
+    "scalar_fallback": true,
+    "added_weight_storage": false
+  },
+  "delta_value_tile64": {
+    "batch": [
+      1,
+      2
+    ],
+    "chunk": 80,
+    "heads": 16,
+    "key_dim": 128,
+    "value_dim": 128,
+    "tile": 64,
+    "threads_per_group": 128,
+    "original_values": true,
+    "fp32_arithmetic": true,
+    "original_arithmetic": true,
+    "extra_weights": false
+  },
+  "coalesced_body": {
+    "threads": 64,
+    "lossless_storage": true,
+    "fp32_arithmetic": true,
+    "original_raw_fallback": true,
+    "model_workloads_unchanged": true
+  },
+  "wide_batch_prefill": {
+    "candidate_vl_b2_plan": [
+      80
+    ],
+    "control_vl_b2_plan": [
+      80
+    ],
+    "logical_inputs_unchanged": true,
+    "physical_total_slots": 80,
+    "no_fresh_vllm_ratio": true
+  }
+}
