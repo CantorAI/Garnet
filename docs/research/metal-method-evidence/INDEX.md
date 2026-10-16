@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T02:44:55.495537+00:00
+Generated UTC: 2026-10-16T03:23:56.491116+00:00
 
-Base HEAD at generation: `ffa599b4c0949924531e0ea8aa5a583fd7f387fe`. Reports indexed: **166**.
+Base HEAD at generation: `14cdbc33f256b1b4bcefa5e542031af1ce4c0ac7`. Reports indexed: **169**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -157,9 +157,12 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/compact-fused-projection-groups](../../../results/20261016/compact-fused-projection-groups/README.md) | Compact-aware independent decode projections |
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
+| [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
+| [results/20261016/prepared-union-mlp](../../../results/20261016/prepared-union-mlp/README.md) | Prepared exact union weights and activation-only output |
+| [results/20261016/qkv-union-half-admission](../../../results/20261016/qkv-union-half-admission/README.md) | Separate Q/K/V exact union: full learned CPU eligibility |
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |

@@ -1,0 +1,3740 @@
+{
+  "models": [
+    {
+      "model": "Qwen3-0.6B",
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "layers": 28,
+      "pairs": [
+        {
+          "layer": 0,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.0.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 628658920,
+              "original_bytes": 6291456,
+              "raw_sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.0.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 634950376,
+              "original_bytes": 6291456,
+              "raw_sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 1,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.1.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 660120808,
+              "original_bytes": 6291456,
+              "raw_sha256": "a1881a4e95cf2c15045d3a1437259ac58f2171cc515a7cbe6c219289c501bebc",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.1.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 666412264,
+              "original_bytes": 6291456,
+              "raw_sha256": "61b2e72ac18dfe023ea117c22c1d78ff87121475670b0c79d2a2adac91baaca9",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 2,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.2.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1006201576,
+              "original_bytes": 6291456,
+              "raw_sha256": "acc931d195fa240c0188e670f4f5f11e37aba8d5216946a0d6f6edb6764b0ea8",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.2.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1012493032,
+              "original_bytes": 6291456,
+              "raw_sha256": "a730161497ad7f8b0ac6ebc75c6df8ec1720ce90593fd2fbba4eafc28e147358",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 3,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.3.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1289358568,
+              "original_bytes": 6291456,
+              "raw_sha256": "9d9a150d5ca0dcfd516cb6b6300ee2938ec676221874b12ef7dc086a8b81a496",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.3.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1295650024,
+              "original_bytes": 6291456,
+              "raw_sha256": "317d048b5fb0f2fcc331ea79083700cbc063cd2dded65425633dfabcadc29c81",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 4,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.4.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1320820456,
+              "original_bytes": 6291456,
+              "raw_sha256": "89d0b941319913ddb5ae50d9352bc4a9d2b23b36246b9fdeb2fe1571a12fb6dd",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.4.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1327111912,
+              "original_bytes": 6291456,
+              "raw_sha256": "a0b6b9f2f83ebc5b05df571cb096f2651af3f8762e5a3e11add28df83cbed26d",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 5,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.5.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1352282344,
+              "original_bytes": 6291456,
+              "raw_sha256": "d1a6ce04a3a95deac9f867768a01f918404560a20eb694b150d0ee92e2f8dedd",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.5.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1358573800,
+              "original_bytes": 6291456,
+              "raw_sha256": "8efc298fcbc73fa4303bdaf129eba79ec87f741cd6980ec2adb14460d040aa03",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 6,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.6.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1383744232,
+              "original_bytes": 6291456,
+              "raw_sha256": "cc63348945eea96db8466fe01d820cf8df11c747b95dbc568a00225a7041f6ea",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.6.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1390035688,
+              "original_bytes": 6291456,
+              "raw_sha256": "9be2357cb3a98a3dbf1a73e50faf02fc832a43f2f1d50a7502507444eed87e34",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 7,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.7.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1415206120,
+              "original_bytes": 6291456,
+              "raw_sha256": "65fb0c434e2bd4260c1122b9c678d740c5c2b2d33e57d3712f8e0354ba758f90",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.7.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1421497576,
+              "original_bytes": 6291456,
+              "raw_sha256": "16dac8618ab45682943acce7a431ac477df7aacfd0081c26981598e1a85f9c63",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 8,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.8.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1446668008,
+              "original_bytes": 6291456,
+              "raw_sha256": "016d75a7eeac700cfd98c1a2ca85fb2c8d0bb92f0382630c03e4cffd25701539",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.8.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1452959464,
+              "original_bytes": 6291456,
+              "raw_sha256": "ad71d732248fdabb0f7ddecb3d32e569a4609675416e892b99d42fd6cf00a284",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 9,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.9.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1478129896,
+              "original_bytes": 6291456,
+              "raw_sha256": "9c872b82a8736a1e89a73ebef049bab0890b9cea99b7c0fea9fc50c0d74aece0",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.9.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1484421352,
+              "original_bytes": 6291456,
+              "raw_sha256": "3172d0cb0e9916da69a7423b10e57cfffb3b8382230b9411444f5d8bcd3cf4a2",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 10,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.10.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 691582696,
+              "original_bytes": 6291456,
+              "raw_sha256": "ff8822759d2eb4223e924d5033bac644e53a5563eada738a93e34ac88c24f63d",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.10.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 697874152,
+              "original_bytes": 6291456,
+              "raw_sha256": "d257ff906a5116ba560d37b3ff4dbc7a08cae9355e5ea29efd79bc47afbab1e6",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 11,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.11.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 723044584,
+              "original_bytes": 6291456,
+              "raw_sha256": "8e100cf850d89d10fbef0c6c46b15ddaae7b4e74e2e90d875cf1800fe3087788",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.11.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 729336040,
+              "original_bytes": 6291456,
+              "raw_sha256": "852df3bd43b7ddf4b463d2e118196ba6c5063dc17a3025154d06335e9c1c6c8b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 12,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.12.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 754506472,
+              "original_bytes": 6291456,
+              "raw_sha256": "48ca942089cb89fb923a5fa1c08e4136245d42b1c1f4f2c44a4b328dfd7c60b0",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.12.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 760797928,
+              "original_bytes": 6291456,
+              "raw_sha256": "f13a504828fea61a8269792367ed1809df71abe0797480afeae6fb66ca52a87d",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 13,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.13.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 785968360,
+              "original_bytes": 6291456,
+              "raw_sha256": "af41242e86c0752656bfa855be94fd188d8e85d9169fd6d0a3e7d3f63f7c1b1c",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.13.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 792259816,
+              "original_bytes": 6291456,
+              "raw_sha256": "45b12f77edb5e2f84f41ffd6b3068a41a07339d3e207daa2d4cebdb923704939",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 14,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.14.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 817430248,
+              "original_bytes": 6291456,
+              "raw_sha256": "fb373eaff416e27f84353f1c3ffaffeecfb9de47bad43fd793d2535a17c690af",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.14.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 823721704,
+              "original_bytes": 6291456,
+              "raw_sha256": "e2053577f36619265653633bb14438b4c2748f0d4ea2e78f4b526cead827450b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 15,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.15.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 848892136,
+              "original_bytes": 6291456,
+              "raw_sha256": "27759f9f59cda0397e9e57934d82e00206dbe3b5f5112d648413d2f84fe2c31f",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.15.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 855183592,
+              "original_bytes": 6291456,
+              "raw_sha256": "60eed6cb6a896c30ea6b5b966bcda04800041039e77214b49cff05b84fe26245",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 16,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.16.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 880354024,
+              "original_bytes": 6291456,
+              "raw_sha256": "48fac248a8143ccdb489bcd1043f1b5e4f8da011fe2aa206b0a163f5b28a395c",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.16.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 886645480,
+              "original_bytes": 6291456,
+              "raw_sha256": "c2a26990c3c8b76c498932cbea3c8515c67811ca36f0f965fd57cd57bf279e29",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 17,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.17.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 911815912,
+              "original_bytes": 6291456,
+              "raw_sha256": "51495d55dd819b4bc40408627a7d9b0f660db2e74e91d8b5683e1393a800a502",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.17.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 918107368,
+              "original_bytes": 6291456,
+              "raw_sha256": "8bc3b8d26c2a6e560d209f52ca8a13216096b184589dfe810a223c93c729b4f7",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 18,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.18.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 943277800,
+              "original_bytes": 6291456,
+              "raw_sha256": "40673fd4253a061b1fb475481a502f82ff60a47cea1ad983ae02064d78c1501e",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.18.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 949569256,
+              "original_bytes": 6291456,
+              "raw_sha256": "86b3b64878f7d41e9100591d164b95bafc64218dfce01498c899d821bfc86ffd",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 19,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.19.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 974739688,
+              "original_bytes": 6291456,
+              "raw_sha256": "e87f8b43957d7d3761aa0544f38e0afc1c65273e354c01786ef2354eef528152",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.19.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 981031144,
+              "original_bytes": 6291456,
+              "raw_sha256": "52d62b5b17f5d732f0f64d8ce1086f09b2dd64c89ccaaf762c927589108253dd",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 20,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.20.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1037663464,
+              "original_bytes": 6291456,
+              "raw_sha256": "d6544a96fe54123835601edb2dc5fe832248eaab124964f7db7be77bb14792dc",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.20.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1043954920,
+              "original_bytes": 6291456,
+              "raw_sha256": "3fde3568f8a4d176360b040a2dfcb2cd920d8a2347049e352215b335f09553c1",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 21,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.21.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1069125352,
+              "original_bytes": 6291456,
+              "raw_sha256": "2895589fc32bc4fa48889b7a17820864d8f20cb2d5c1fe6731cabc4494ddcd83",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.21.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1075416808,
+              "original_bytes": 6291456,
+              "raw_sha256": "8bfd3ba0d0bfd17380664b9fa5790a6f28859fd0c0fd8ff662042d3c6e6cf295",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 22,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.22.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1100587240,
+              "original_bytes": 6291456,
+              "raw_sha256": "d275eef4a88b310ca9b135c61a8535c7e8ccb68f116a0cb6dedccb4797a37127",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.22.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1106878696,
+              "original_bytes": 6291456,
+              "raw_sha256": "69fc6216d3f71edf19a3c5633f82d5383d25623b0dcfd98558aad835a9abb888",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 23,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.23.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1132049128,
+              "original_bytes": 6291456,
+              "raw_sha256": "de1e64ad1d2329d76dd06672cdc8cbc8b97cea45f8d861bd99a05cffa742d4cd",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.23.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1138340584,
+              "original_bytes": 6291456,
+              "raw_sha256": "8cf2bbd7d3ec00a34c5141f3d3277ddc0bbef5db8adf55aa4929ecd988352b71",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 24,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.24.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1163511016,
+              "original_bytes": 6291456,
+              "raw_sha256": "35763efcec6b751191e887293ee4700f43777c374e8051ed6da65d97c9c9db45",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.24.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1169802472,
+              "original_bytes": 6291456,
+              "raw_sha256": "bddae62e32ab2ff3fcacff336450ea6f981742e21b22fa3558fd0333ae47c347",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 25,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.25.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1194972904,
+              "original_bytes": 6291456,
+              "raw_sha256": "b7ac38bb1fe346841cead73bc75641e9451e82adbfe23fcbe7533a786ec976a2",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.25.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1201264360,
+              "original_bytes": 6291456,
+              "raw_sha256": "be4581e36e5f81206b31e862df41c99be46a1130ad39abb0911015aec70fa462",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 26,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 15,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.26.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1226434792,
+              "original_bytes": 6291456,
+              "raw_sha256": "7dd8e48b82a5370c39bab92089dffe57808be10eb689e6aa3c5bf7109637270e",
+              "independent_common_scale": 15,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.26.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1232726248,
+              "original_bytes": 6291456,
+              "raw_sha256": "e5830767e7d0a16acd3d7040e0c08548b2247b88bca9b2159d02ae4198573cdf",
+              "independent_common_scale": 15,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 27,
+          "rows": 3072,
+          "inner": 1024,
+          "union_scale": 15,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.27.mlp.gate_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1257896680,
+              "original_bytes": 6291456,
+              "raw_sha256": "46ab6deef800a2b8b145904069ec06eec2370127dc998f1eadbdb587d6653a9e",
+              "independent_common_scale": 15,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.27.mlp.up_proj.weight",
+              "rows": 3072,
+              "inner": 1024,
+              "data_offset": 1264188136,
+              "original_bytes": 6291456,
+              "raw_sha256": "b78699ef5a9d93056b0cb63c0d8a47d048620dbe87c934fce4948f989f8635fc",
+              "independent_common_scale": 15,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 6291456,
+          "original_half_weight_payload_bytes": 12582912,
+          "joined_half_weight_payload_bytes": 12582912,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        }
+      ],
+      "old_equal_scale_pairs": 17,
+      "union_pairs": 28,
+      "newly_eligible_layers": [
+        2,
+        5,
+        8,
+        10,
+        11,
+        13,
+        15,
+        18,
+        19,
+        20,
+        24
+      ],
+      "fallback_layers": []
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+      "layers": 24,
+      "pairs": [
+        {
+          "layer": 0,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.0.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 281019680,
+              "original_bytes": 8716288,
+              "raw_sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.0.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 289735968,
+              "original_bytes": 8716288,
+              "raw_sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 1,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.1.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 310844448,
+              "original_bytes": 8716288,
+              "raw_sha256": "75f940c5b42a8e22c8f510f84f1fd53962de67ab852bea1002fe9e9cd379128b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.1.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 319560736,
+              "original_bytes": 8716288,
+              "raw_sha256": "39fb5ee2b754c007cc45ef8a007546bfdc72e001d9c6fa33531f0c44c27943a1",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 2,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.2.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 638916896,
+              "original_bytes": 8716288,
+              "raw_sha256": "52c60b8843987d0e20a52ef493e7d7535b409544b3f65b8fa7847ba4798d4433",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.2.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 647633184,
+              "original_bytes": 8716288,
+              "raw_sha256": "d21e096f4bba75ba792fdd471f2abb7618bcda3f94efd00ce7c4f1279bfbd506",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 3,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.3.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 788040736,
+              "original_bytes": 8716288,
+              "raw_sha256": "9c380a661809ad621e7219bcaa5df724527fe836527f17edb9275ee5f0a196bd",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.3.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 796757024,
+              "original_bytes": 8716288,
+              "raw_sha256": "9c6608c18e2917a47c41bb3a3bb25863b3c7105e72e8c3dd375eda974f4cf1fd",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 4,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.4.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 817865504,
+              "original_bytes": 8716288,
+              "raw_sha256": "f1b525fde6934342049a10662db5b44d700a94ac0cc06e8cc0cb262784d0ca9b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.4.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 826581792,
+              "original_bytes": 8716288,
+              "raw_sha256": "5cebe6dca0e68ddf9ef6fdf12da2650e4651e15366f5118b2acac2cdf9fa8cfd",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 5,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.5.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 847690272,
+              "original_bytes": 8716288,
+              "raw_sha256": "b7c3903a063b5f24a07ecf00fe8bcc5c6be2249a404483fe386bbafd33f607a7",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.5.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 856406560,
+              "original_bytes": 8716288,
+              "raw_sha256": "d746cafd3c54a42f81a95ae3af6c3995050bfa5b41db5d645ec268acb715f421",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 6,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.6.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 877515040,
+              "original_bytes": 8716288,
+              "raw_sha256": "af0046b7f9779cceed2b764f167f63967ac67028219439bac1734d9be899094b",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.6.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 886231328,
+              "original_bytes": 8716288,
+              "raw_sha256": "2cfb2f764642b8f3d3948e570e8bc071003a2d852f169fec46b572b936ef8b8f",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 7,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.7.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 907339808,
+              "original_bytes": 8716288,
+              "raw_sha256": "2eeb3b451b3a725b1b7b0a5063f65dc8d32c6aa5235273ee2bed22f5065a78d6",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.7.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 916056096,
+              "original_bytes": 8716288,
+              "raw_sha256": "12d58c3c1be62d4297c712496a334dbe3a3712e7dc7c06c061010b59f11b0535",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 8,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": false,
+          "sides": [
+            {
+              "tensor": "model.layers.8.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 937164576,
+              "original_bytes": 8716288,
+              "raw_sha256": "55691f703704750f80bea1f3dfe4c76d30c6180a32b314a52ca9703273cf36e8",
+              "independent_common_scale": 17,
+              "independent_common_ready": false
+            },
+            {
+              "tensor": "model.layers.8.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 945880864,
+              "original_bytes": 8716288,
+              "raw_sha256": "ae12fa451a7733b6cf5126dfef3aa720a5de1f3b365def54f089c5e2e51a7e67",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": false,
+              "bitwise_roundtrip": false,
+              "unrepresentable_values": 1,
+              "unrepresentable_rows": 1
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 4358144,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 9,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.9.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 966989344,
+              "original_bytes": 8716288,
+              "raw_sha256": "32e461f978885da36ae84a265c938e76fc111e635ec3f8a615875a910b259ab1",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.9.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 975705632,
+              "original_bytes": 8716288,
+              "raw_sha256": "ac9d0eb750d62ebe11cd6a0be59a94082665b519245002ab7448154cc825c28f",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 10,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.10.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 340669216,
+              "original_bytes": 8716288,
+              "raw_sha256": "d8a92cc45b18ff029ce1a33092dad1c5221a01e1d391c9e5951b6c8c38c58800",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.10.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 349385504,
+              "original_bytes": 8716288,
+              "raw_sha256": "b56fec2a46f3cce9f51549cb4878a7b80000743fac4b2170357e18dacba26fe2",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 11,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.11.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 370493984,
+              "original_bytes": 8716288,
+              "raw_sha256": "11b435788f9d12a2d93e9552cbaef4413d363349f30b2c7d37ddb2afad51b911",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.11.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 379210272,
+              "original_bytes": 8716288,
+              "raw_sha256": "623e35bba5300e52a3b4216cd32e939715e30be33533c15a5a39a75de0611dfb",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 12,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.12.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 400318752,
+              "original_bytes": 8716288,
+              "raw_sha256": "92bb24c5f05fd0237b6159bcbd9f04e47f4223336e8336fc4c51569ea1ca0243",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.12.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 409035040,
+              "original_bytes": 8716288,
+              "raw_sha256": "7839ab850d3aa5c999ccb7aed7d07602a6c2a7d6023239d0826e340cd88808e5",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 13,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.13.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 430143520,
+              "original_bytes": 8716288,
+              "raw_sha256": "2e357e8e6a2b756ddbb13b36380cbea25f5ba08bd42f0e6873f24da8e1552960",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.13.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 438859808,
+              "original_bytes": 8716288,
+              "raw_sha256": "d9c783834d4c93d147c90a1690dbe42414aef7213e500827fcc13be51533b5af",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 14,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.14.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 459968288,
+              "original_bytes": 8716288,
+              "raw_sha256": "ef5a217947e91d81924686fb620075ca1f4b76bd4f8a25f03c37cfd275d3ccd8",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.14.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 468684576,
+              "original_bytes": 8716288,
+              "raw_sha256": "b2581a66aac247d4a8149e8a09595d1f3cec6188b712c494dedbb2e127fa345a",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 15,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.15.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 489793056,
+              "original_bytes": 8716288,
+              "raw_sha256": "72287b0f9708384ef69dd8c0de0bd2e06f6e53806eda6e0689ebe4cdee6dce2c",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.15.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 498509344,
+              "original_bytes": 8716288,
+              "raw_sha256": "f97861d928f49d05c9572c3f8780c294fc18e3ad7d4a5c698af96b1d35fd6d8c",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 16,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.16.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 519617824,
+              "original_bytes": 8716288,
+              "raw_sha256": "e65cba9bec3c51aaae52d4b39887d84b66d8405f52c33394fd138713e4371b57",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.16.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 528334112,
+              "original_bytes": 8716288,
+              "raw_sha256": "35e76fef307ca37adbc1a21021a162a4fbf6a504ebd8b26e27136ccb8763c340",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 17,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.17.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 549442592,
+              "original_bytes": 8716288,
+              "raw_sha256": "d9ae2299ca591d8c3e7430c792482b5f475e335ebae2127d242a654d17ad571f",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.17.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 558158880,
+              "original_bytes": 8716288,
+              "raw_sha256": "bf2a6c57ad9ab9cd78e1bb2445bdae5107b18fa240abf4675c290758240e71d4",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 18,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.18.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 579267360,
+              "original_bytes": 8716288,
+              "raw_sha256": "f72d9334335981596650530277ef3f98eea53c2d4cc3d879a586f0add0364952",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.18.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 587983648,
+              "original_bytes": 8716288,
+              "raw_sha256": "ea0578124dc397c4ef3747557365660aab8df050bfcf478c03c9e9433dfd50a2",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 19,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.19.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 609092128,
+              "original_bytes": 8716288,
+              "raw_sha256": "a01f5ec892287928bf7db19505325d78f979c4726125fcd12ed9d280c18adde6",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.19.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 617808416,
+              "original_bytes": 8716288,
+              "raw_sha256": "547f674e1ef1c98a2857b462056eee3fb0b41eef5f643300ae1423e28d696c95",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 20,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.20.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 668741664,
+              "original_bytes": 8716288,
+              "raw_sha256": "713a810b872f5575a41c68056e051afcdf59c6d154e2b8d0dbfb450f7a60bd12",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.20.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 677457952,
+              "original_bytes": 8716288,
+              "raw_sha256": "f624a78ee8f7085651c136bb31be9928fdcf2466e5a3f213faf120bb8ce46d1b",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 21,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.21.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 698566432,
+              "original_bytes": 8716288,
+              "raw_sha256": "9f7cdbda723901d313e88c4d5a196e3b1c49c3a37851db6bce29a64c65da0d5a",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.21.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 707282720,
+              "original_bytes": 8716288,
+              "raw_sha256": "bc45a121e275b3854364a9be1aaf86501ccd69e464462a898cec627511d53c5a",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 22,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.22.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 728391200,
+              "original_bytes": 8716288,
+              "raw_sha256": "c5754620c736d1646cf3dbd34f5fbcc437f7088acdd21cac472602de62957644",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.22.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 737107488,
+              "original_bytes": 8716288,
+              "raw_sha256": "f75b7c60e3182cd86a253750b450699316bb9f50fb6b3e652c0d175cbf83d60c",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 23,
+          "rows": 4864,
+          "inner": 896,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": true,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.layers.23.mlp.gate_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 758215968,
+              "original_bytes": 8716288,
+              "raw_sha256": "9666ef614d97aab9bf13cf83aa4ce4b8110254e80f1bf85acd092fca68dc60ac",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.layers.23.mlp.up_proj.weight",
+              "rows": 4864,
+              "inner": 896,
+              "data_offset": 766932256,
+              "original_bytes": 8716288,
+              "raw_sha256": "98a588de8de972db2a6fe19d92c8358d50ac97deed71db142e480f9042489de4",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 8716288,
+          "original_half_weight_payload_bytes": 17432576,
+          "joined_half_weight_payload_bytes": 17432576,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        }
+      ],
+      "old_equal_scale_pairs": 13,
+      "union_pairs": 23,
+      "newly_eligible_layers": [
+        5,
+        6,
+        10,
+        11,
+        15,
+        17,
+        18,
+        19,
+        20,
+        22
+      ],
+      "fallback_layers": [
+        8
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "layers": 24,
+      "pairs": [
+        {
+          "layer": 0,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 537057896,
+              "original_bytes": 7340032,
+              "raw_sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 544397928,
+              "original_bytes": 7340032,
+              "raw_sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 1,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.1.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 580168328,
+              "original_bytes": 7340032,
+              "raw_sha256": "eec1554d574f568c1111fcacdfcce1ee9c96b30d68e104de5d6e73f620a52610",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.1.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 587508360,
+              "original_bytes": 7340032,
+              "raw_sha256": "740e3ead3094791179bb65898f034e0755eafbda8da9509ed441dab450d4ecad",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 2,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.2.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1035167624,
+              "original_bytes": 7340032,
+              "raw_sha256": "92b1c17f4299d458400adbf94d5625402c519c65e2e75154821ac95913579307",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.2.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1042507656,
+              "original_bytes": 7340032,
+              "raw_sha256": "045550db57e546e0bbf8d92ff749728b3a109c36feea700f600e954f9a85c2d3",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 3,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1223228392,
+              "original_bytes": 7340032,
+              "raw_sha256": "50d2f4c60e786596e464958bb515ec5573c3ddb53604930e3e2244f107f71f11",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1230568424,
+              "original_bytes": 7340032,
+              "raw_sha256": "f141786356fc0b59f4e1aa8cc3afb084d283e384c98cd47dbd1812b6c9ac1f0f",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 4,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.4.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1281019912,
+              "original_bytes": 7340032,
+              "raw_sha256": "992c80a1b8374007902cbac7a616ad8d695ec9e63f519c016b665e41011222cc",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.4.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1288359944,
+              "original_bytes": 7340032,
+              "raw_sha256": "2318c49e37ef0ae946f9f9b3d6ebca0a29929c1b05ac7db8c147cf4c1fd9f888",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 5,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.5.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1324130344,
+              "original_bytes": 7340032,
+              "raw_sha256": "d65832085f8a787945c1c6fbba55239a6f8b4f13ce1bd7a5184e458419427283",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.5.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1331470376,
+              "original_bytes": 7340032,
+              "raw_sha256": "5f0c880e4d6b0127cda55cd017f73f782406dc050f1d750e5585ce102dddde1e",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 6,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.6.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1367240776,
+              "original_bytes": 7340032,
+              "raw_sha256": "b36b767f35d7e97bf2443c53e8ee9ff5b36ef4a1e881ceea8b815b403276ee29",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.6.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1374580808,
+              "original_bytes": 7340032,
+              "raw_sha256": "547463551165093b8b8bdec370a9148af50f9f6e5d38bc2ab4f207b72d2d4044",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 7,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.7.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1389264968,
+              "original_bytes": 7340032,
+              "raw_sha256": "ccff86cc93b91a5be46dbd61cebbfadc32a0e31e7d767b0436a37764d6d94547",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.7.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1396605000,
+              "original_bytes": 7340032,
+              "raw_sha256": "9c8a6ffbeb9957d7a52939b037099d34e6445e2255e2b4fb3baedabea93f742a",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 8,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.8.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1447056488,
+              "original_bytes": 7340032,
+              "raw_sha256": "47ea617b14d9e3787fe7fb8e44eec9655dc8f3c75b150d0b2bfebd13028a4e91",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.8.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1454396520,
+              "original_bytes": 7340032,
+              "raw_sha256": "3fe6752c0557e1e497a15e1e840907a05ddd1a216c540f4b6ed3546bc4f50c39",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 9,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.9.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1490166920,
+              "original_bytes": 7340032,
+              "raw_sha256": "d358d3350cff9257c1ab0ee1644fa384e0cc1139c94c6b10170ba2c4284c8454",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.9.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1497506952,
+              "original_bytes": 7340032,
+              "raw_sha256": "a2d38250a3cfcd53088206f52b83b6a7cb21ea56560f0dee8ee7d9eb8a2ff052",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 10,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.10.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 623278760,
+              "original_bytes": 7340032,
+              "raw_sha256": "acc39380cf3b0553da8333bffac94461fd05ea8cc4fecf0f96ff2f9e6f73ef06",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.10.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 630618792,
+              "original_bytes": 7340032,
+              "raw_sha256": "793b2b2e9ad00cefec77ce9c76586612ff2b5705e56323f7ecf2a5e82b9aed0e",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 11,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.11.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 645302952,
+              "original_bytes": 7340032,
+              "raw_sha256": "59a7d0c382716854528f2b4cfae1223cdaa5e43052c1747ce2a58785c91dacee",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.11.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 652642984,
+              "original_bytes": 7340032,
+              "raw_sha256": "dab36859f9c0914874ca74f932cd380e6634babcba4750a95075bfb9e97d3c9b",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 12,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.12.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 703094472,
+              "original_bytes": 7340032,
+              "raw_sha256": "dc73c370a6af841769f183399d1ce8c8f7e26cc90daba1f048709030f81b0ba9",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.12.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 710434504,
+              "original_bytes": 7340032,
+              "raw_sha256": "0f290b628c01776d8afd46ed1db1d096722942f7112fc0f30e9baee41fb40fb5",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 13,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 18,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.13.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 746204904,
+              "original_bytes": 7340032,
+              "raw_sha256": "848f24b29888174053ce57ae02fe67c8d0f03fc94e75412ef821f0f7fb1159bc",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.13.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 753544936,
+              "original_bytes": 7340032,
+              "raw_sha256": "8d66273c144a88ed841d0f15ef0bb0d65b5238a506d4ac1ee66f86dcf1993707",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 14,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.14.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 789315336,
+              "original_bytes": 7340032,
+              "raw_sha256": "6327f2e91f44b5f5ae73cfaab781219ca035699280ca7fa8f2c044a1d0d54965",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.14.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 796655368,
+              "original_bytes": 7340032,
+              "raw_sha256": "f63c0b1e4ae22e9aa8c99d3d63a642b127a4f747eb9128eff0c339481e2c62d9",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 15,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.15.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 811339528,
+              "original_bytes": 7340032,
+              "raw_sha256": "46661cd3ffaa3fc096b0785581b41a848e40d8247ba4cb7ced946cc4fde06a48",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.15.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 818679560,
+              "original_bytes": 7340032,
+              "raw_sha256": "aa16ebc91dcb4702fe78227d9eea187cc044eb49ae8196e228cad737dd71e715",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 16,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.16.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 869131048,
+              "original_bytes": 7340032,
+              "raw_sha256": "09149700806a4bb83986f73459d3b8ac636018a4a2411927073bc49c6895c3e8",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.16.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 876471080,
+              "original_bytes": 7340032,
+              "raw_sha256": "8c4eb5f3102c29f255f26e7e82a6223c410f229a4b3ea4dedab73d776a9f6080",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 17,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.17.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 912241480,
+              "original_bytes": 7340032,
+              "raw_sha256": "f8756b1cb7504eacc713c4e2c9d2128e3b7c0ff63248756d5a1a216ffe694300",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.17.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 919581512,
+              "original_bytes": 7340032,
+              "raw_sha256": "b69569389e39e255195d13e2af84a10c49b4415e4c83cb5a0840628ee8f80948",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 18,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.18.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 955351912,
+              "original_bytes": 7340032,
+              "raw_sha256": "4717af00990d4ec5e61e0f6f1da6d63a0c559dd829acf65130c74df02d2643b3",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.18.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 962691944,
+              "original_bytes": 7340032,
+              "raw_sha256": "eb176a1dd3a08f18cb0a5dfda15811bb1b6008416c4765f7be13352a5b813605",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 19,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.19.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 977376104,
+              "original_bytes": 7340032,
+              "raw_sha256": "118bfa194557dc70eb6663356fad68adcc98c4a7e4cad9203576e7b6d59f2ec4",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.19.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 984716136,
+              "original_bytes": 7340032,
+              "raw_sha256": "f731d77e73d6ba23b6ab5c938f79995f380ea23381a72eb3e01dd015023a51ba",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 20,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.20.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1078278056,
+              "original_bytes": 7340032,
+              "raw_sha256": "52f9e1ac66d6777ea869cd9c9a968f1fe60a61feea23164755a52e1971c1716e",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.20.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1085618088,
+              "original_bytes": 7340032,
+              "raw_sha256": "b686d984a503dca9d88012f9be8f14e042c2ca0be541d62c6dac186cd3fc5533",
+              "independent_common_scale": 19,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 21,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.21.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1121388488,
+              "original_bytes": 7340032,
+              "raw_sha256": "eff487ff19905e18d39bcc76dde0c2c140a258efebd44f4384f0ad0ae705a8ee",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.21.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1128728520,
+              "original_bytes": 7340032,
+              "raw_sha256": "da385b3dfc14547a39b8cd2fe9f906d8caa3ebb088144175638356aef55fd311",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 22,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 17,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.22.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1164498920,
+              "original_bytes": 7340032,
+              "raw_sha256": "dde22f42876bc15cae8778a29a573f150d4d042a09af00b8d1abe94d6207d93d",
+              "independent_common_scale": 17,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.22.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1171838952,
+              "original_bytes": 7340032,
+              "raw_sha256": "84d1a8b4bf6a468ed531ce11ef7a13cd7e332716ca3d1d19c16714d4b8ad9b73",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        },
+        {
+          "layer": 23,
+          "rows": 3584,
+          "inner": 1024,
+          "union_scale": 16,
+          "prior_equal_scale_eligible": false,
+          "union_admitted": true,
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.23.mlp.gate_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1186523112,
+              "original_bytes": 7340032,
+              "raw_sha256": "57e66633224761ad56da16da7cc0f476e42decd9df64a64ded4a343b8e87487b",
+              "independent_common_scale": 16,
+              "independent_common_ready": true
+            },
+            {
+              "tensor": "model.language_model.layers.23.mlp.up_proj.weight",
+              "rows": 3584,
+              "inner": 1024,
+              "data_offset": 1193863144,
+              "original_bytes": 7340032,
+              "raw_sha256": "cb3830f5121ca0cb4b974b7904a382f9555975c2e84c71863e868e434e86aa6f",
+              "independent_common_scale": 18,
+              "independent_common_ready": true
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "exact_roundtrip_values": 7340032,
+          "original_half_weight_payload_bytes": 14680064,
+          "joined_half_weight_payload_bytes": 14680064,
+          "scope": "Logical packed half payload estimate only; no native allocation, setup time, GPU or inference claim"
+        }
+      ],
+      "old_equal_scale_pairs": 0,
+      "union_pairs": 24,
+      "newly_eligible_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "fallback_layers": []
+    }
+  ],
+  "scope": "CPU full-layer exact common-scale gate/up eligibility; no GPU or inference timing.",
+  "full_goal_met": false
+}

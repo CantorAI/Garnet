@@ -1,0 +1,31 @@
+{
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/launch_prepared_union_mlp_learned.py",
+    "/Users/zsdx/garnet-metal-investigation",
+    "/Users/zsdx/garnet-metal-investigation/logs/prepared-union-mlp-learned-confirm-20261016",
+    "learned"
+  ],
+  "initial_archive_sha256": "a3e4df6ecb8626299ec3c5cfeb3c9deec172a21801208035398d5c709293ed5e",
+  "initial_verification_sha256": "abe609df163089a06b895af683efc4b7ef3ea1cb26af08d23ce63e5e530519da",
+  "initial_decision_sha256": "bf1496473b575652dce5fb0897f46e5488516454fd511cd0ba2d1cfb99bdb710",
+  "initial_models": [
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "endpoint_profiles": 4,
+      "component_screen_pass": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "endpoint_profiles": 4,
+      "component_screen_pass": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "endpoint_profiles": 4,
+      "component_screen_pass": false
+    }
+  ],
+  "all_measured_sources_unchanged": true,
+  "full_goal_met": false
+}

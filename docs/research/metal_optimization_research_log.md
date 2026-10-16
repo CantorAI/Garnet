@@ -1507,6 +1507,105 @@ remaining full goal work is active, not blocked or complete. Do not poll stale
 PID files as evidence of a live wait on the next continuation.
 [Final controller artifact](../../results/20261016/vector-vision-native/final-controllers/archive-verification.json).
 
+### 2026-10-16 UTC — all-layer union eligibility and prepared-context primitive
+
+The preceding status-only turn changed no evidence. Revalidate the authoritative
+archives before continuing: both hosts independently pass the 38-file prepared
+context primitive audit, and the full learned CPU admission audit passes.
+Neither changes the latest matched-vLLM target counts.
+
+Hypothesis: prepare a common-scale gate/up union before inference, broadening
+coverage beyond pairs with identical independent scales, then encode one MPS
+product and one activation-only kernel. Preserve the original independent
+weights and required fallbacks. Compared with the previous lazy joined method,
+this explicitly separates CPU packing/setup from encoding and avoids separate
+gate/up output writes. It adds a union weight buffer and scratch; lazy first
+GPU compilation remains possible. No full-model gain is inferred.
+
+All 76 learned pairs / 152 matrices receive independent NumPy and original C++
+codec checks. Of 561,512,448 values, 561,512,447 restore to the original bits;
+one coder layer8 value rejects its entire pair. Union admission is text28/28,
+coder23/24 and VL24/24, versus prior equal-scale coverage17/28,13/24 and0/24.
+Host execution times are28.6250 seconds for NumPy and3.7440 seconds for original
+C++ including compilation. Logical duplicate payload estimates if all admitted
+pairs are prepared:336/382.375/336 MiB; not measured RSS or memory savings.
+[CPU provenance, raw offsets and both-host audit](../../results/20261016/joined-union-half-admission/README.md).
+
+Private prepared-context primitive PID914 exits0 in11.2132 seconds including
+quiet interval and compilation. Twenty-four changed-input exact dyadic cases
+cover all six serving physical row counts, intermediate products, activation
+bits, pending/foreign ownership, alias, abort/recovery, unsupported shapes,
+nonexact weights and bounded128-pair/2-reject ownership controls. Both-host
+audit regenerates the exact generated source from frozen d52 context/factory.
+No learned GPU or inference performance admission from this synthetic test.
+[Primitive evidence, costs and prospective learned design](../../results/20261016/prepared-union-mlp/README.md).
+
+Before learned GPU measurements, declare all76 pairs/both batches/four changed
+structured-input patterns under original numerical bounds, then only first
+and last layers of each model for timing (12 profiles). Common2-second warmup,
+10ABBA rounds,3 warm calls and5 retained samples/window. Each own-null precedes
+the comparison; means use every sample, never null normalization. A model needs
+>=5% GPU AND wall reduction at both endpoints/both batches, own-null within5%,
+all numerical/fallback checks, then one unchanged confirmation. Full graph
+liveness/correctness and native/matched comparator repeats are separate gates.
+Learned PID1987 launched after archived prerequisites; compile exits0, numeric
+screen is actually executing. Sources remain frozen until terminal archive.
+
+### 2026-10-16 UTC — prepared union learned component completes; confirmation rejects integration
+
+Initial1987 exits0 in120.124820292s and is frozen43-filea3e4df6e... before
+analysis. Mac audit verifies all152 numerical profiles,608 changed-input cases,
+849,807,360 checks; original bounds and required coder layer8 fallback pass.
+Twelve predetermined first/last-layer profiles retain4800 timing samples,
+including own-null controls. Only coder meets all four required5% GPU/wall
+gains and own-null gates. This admits one unchanged complete confirmation,
+not a full-model improvement. Sources and design are checked unchanged before
+launching4097; initial archive/audit/decision hashes are captured at launch.
+
+Confirmation4097 exits0 in119.978341708s; freeze44-file954c6ff4... before audit.
+All original numerical/fallback gates pass unchanged, and all repeat nulls
+pass. Coder last-layer B2 candidate/control GPU .976858 and wall .969217 miss
+the .95 requirement, despite passing other endpoints. Text B1 and VL first-layer
+B2 also miss. Initial VL first-layer B1 null GPU1.063222 was outside5%; it
+remains an exclusion, not a correction or inferred hardware cause. The combined
+initial/repeat rule selects no model. Do not choose favorable layers, lower
+the threshold or rerun unchanged seeking a third favorable cohort.
+
+Both-host audits pass304 all-layer profiles and9600 retained timing samples,
+regenerating private source/header, compile flags, asset identities and guards.
+Full tables, costs, warnings and failures are retained. First-shape preparation
+costs~343..486ms/pair initially, plus original uploads; hypothetical retained
+duplicate payload336/382.375/336MiB. No full-model startup sum or RSS inference.
+This exact prepared activation-only version stops before graph integration;
+accepted vector serving sources and matched target counts remain unchanged.
+All jobs are terminal/archived; no live measurement is inferred from PID files.
+[Complete two-cohort tables, controls, source identities and decision](../../results/20261016/prepared-union-mlp/README.md#two-terminal-learned-cohorts-numerically-valid-no-repeated-selection).
+
+### 2026-10-16 UTC — distinct heterogeneous Q/K/V union CPU prerequisite passes
+
+Inspect current lowering: Q, K and V projections are consecutive from the same
+input, before bias/normalization/rope consumers. New hypothesis joins three
+unequal-width outputs, then scatters to the existing independent outputs. It
+does not repeat the rejected activation-only MLP method or its component data.
+Include current FP32-stored text/coder key matrices in learned-value checks;
+exact packing does not itself admit a changed MPS arithmetic route.
+
+Actual CPU6423 exits0 in12.951632625s including NumPy, compilation and original
+C++ codec. All58 separate triples/174 matrices checked: text28/28 and coder24/24
+admitted; VL4/6. Preserve original fallback for VL dense layers7 and23, each
+with one rejected common-scale value. Existing18 VL combined linear-attention
+layers remain outside this separate-projection hypothesis.173,670,398 values
+roundtrip to original FP32 bits;2reject.52 original FP32 key matrices included.
+Logical extra union payload estimates224/47.25/40MiB; no GPU allocation or
+full-model RSS claim. No source integration or performance result follows.
+
+Freeze20-file31424748... archive after terminal; both Mac/Windows independent
+provenance audits pass with regenerated exact original-C++ arity/count adaptation.
+Next safe work is new private primitive and all-learned GPU numerical screening,
+including original FP32-key controls and both mandatory fallbacks, before any
+predeclared timing experiment. No active measured jobs remain in this chain.
+[Full eligibility, source identities and remaining GPU requirements](../../results/20261016/qkv-union-half-admission/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

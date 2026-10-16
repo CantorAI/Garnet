@@ -1,0 +1,11 @@
+{
+  "source_sha256": {
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_joined_union_half_admission_cpp.py": "2164c8715bcfaab13517059ae86358eb2ddbff87079145c4ffeb401e5164b2d9",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/joined_union_half_admission_cpu.mm": "3f39affa8b822ba152797989ba1b34e4b64d9671a9a060f692b6fd5b0a67767d",
+    "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+  },
+  "prior_report_sha256": "bb703844e4a4feaa4d633fadd203071dff9c74394441c61ff368f03ed2a84deb",
+  "scope": "Compile original native codec and crosscheck every paired learned weight on CPU.",
+  "full_goal_met": false,
+  "binary_sha256": "db97ff30fde1b29b0d076eb1715de5426d2e2a9fabbc677b76741d891efd9abb"
+}

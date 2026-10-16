@@ -1,0 +1,110 @@
+{
+  "files": {
+    "evidence/logs/qkv-union-half-admission-20261016/Qwen2.5-Coder-0.5B-Instruct-header.json": {
+      "bytes": 32280,
+      "sha256": "bd808652be103f0e4e29786b9aa8829e0f38607880486926c7246ee2de577a76"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/Qwen3-0.6B-header.json": {
+      "bytes": 35552,
+      "sha256": "399d16f500e925c7e923fe05966c6df6862ab64da60916843119e802f1801bca"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/Qwen3.5-0.8B-header.json": {
+      "bytes": 59840,
+      "sha256": "c894b6055113f9d5a9c5c68e703662de8ba27df5a9631b47f10b75ac3fe0b083"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/audit.log": {
+      "bytes": 40782,
+      "sha256": "d1a78aa4cf08a8ca178d995a3a17ad8adbc5bd6ddf7de497dab8569a59af5dfc"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/compile.log": {
+      "bytes": 750,
+      "sha256": "b4a37c0b5c8ec09f3c95dd49c504179f26aca34925f25913fb9ceac3d2aebb07"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/exit.json": {
+      "bytes": 51,
+      "sha256": "6fb8ccf55dfe5dd3fd42c9c8a5fd4308bbe2a471e991b53cfa734993822fed4c"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/metadata.json": {
+      "bytes": 1599,
+      "sha256": "ec4f72bf5889c99d56141bfb869fcddc123d9dfc2b40b66d7ea9c20316584743"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/pid.json": {
+      "bytes": 13,
+      "sha256": "d2dd47a349747ea4195e79208c4cc63aeb1505f4895a4070da10a9e187a33216"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/qkv_union_half_admission_cpu.mm": {
+      "bytes": 4099,
+      "sha256": "3c2db0d4d8e4f2d2c14be3d87f7453d500d6867ec7612211d92cf65875538f32"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/report.json": {
+      "bytes": 126527,
+      "sha256": "f616f5c6389672a0e735329e800749640f873eafc845b40c39409fb0958de5d1"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/source-snapshot/audit_ndarray_weight_admission.py": {
+      "bytes": 7448,
+      "sha256": "53bcbbb83172330236afba625b9bb856127c9b4369a89ff62af2173d2c4372bc"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/source-snapshot/audit_qkv_union_half_admission.py": {
+      "bytes": 5938,
+      "sha256": "ad972e66ddb906b1d9109367e1b46a37c5f7b272f0488a888462861c5b1d53d6"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/source-snapshot/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/source-snapshot/joined_union_half_admission_cpu.mm": {
+      "bytes": 4085,
+      "sha256": "3f39affa8b822ba152797989ba1b34e4b64d9671a9a060f692b6fd5b0a67767d"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/source-snapshot/report.json": {
+      "bytes": 136146,
+      "sha256": "bb703844e4a4feaa4d633fadd203071dff9c74394441c61ff368f03ed2a84deb"
+    },
+    "evidence/logs/qkv-union-half-admission-20261016/statuses.json": {
+      "bytes": 821,
+      "sha256": "9d177b30712baa1ce937dee4db33def6961e2146d673c81c71f2749c9576f895"
+    },
+    "evidence/tools/archive_qkv_union_half_admission.py": {
+      "bytes": 1999,
+      "sha256": "0bfe2a7e7cdbca6a04e575889e83996f999be20a0d38e71c52bf05258d765b41"
+    },
+    "evidence/tools/verify_qkv_union_half_admission.py": {
+      "bytes": 5163,
+      "sha256": "8c8c98e2b7ddedba79fb043032904ea25660fa9695506eed29a3db91a0f37039"
+    },
+    "evidence/work/qkv-union-half-admission-20261016.launch.json": {
+      "bytes": 342,
+      "sha256": "de0fb004976748531d26bd698c7c91c9d25e09de6d1f2b7751e589338eef9360"
+    },
+    "evidence/work/qkv-union-half-admission-20261016.launch.log": {
+      "bytes": 466,
+      "sha256": "73c454eb690b10218fa43d393d1063ae3767e444e3705cfcf5cdf69585be9cb1"
+    }
+  },
+  "omitted": {
+    "logs/qkv-union-half-admission-20261016/qkv_union_half_admission_cpu": {
+      "bytes": 56304,
+      "sha256": "290ecb18206ae8c97f52c1c0464f138b3f5081d9eb826a87361a575a0a72a90c"
+    },
+    "models/Qwen3-0.6B/model.safetensors": {
+      "bytes": 1503300328,
+      "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    },
+    "models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors": {
+      "bytes": 988097824,
+      "sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44"
+    },
+    "models/Qwen3.5-0.8B/model.safetensors": {
+      "bytes": 1746942600,
+      "sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+    }
+  },
+  "jobs": {
+    "qkv-union-half-admission-20261016": {
+      "exit_code": 0,
+      "wall_seconds": 12.95163262495771
+    }
+  },
+  "scope": "CPU full learned separate QKV common-scale admission only; no GPU arithmetic, graph/liveness, speed or model claim.",
+  "full_goal_met": false
+}

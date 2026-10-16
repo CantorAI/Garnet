@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -337,6 +337,38 @@ def main():
         assert int(cells[1])==r['batch']
         assert [cell.strip() for cell in cells[2:]]==[f'{values[key]:.3f}' for key in ('prepare_ms','encode_ms','gpu_ms','wall_window_per_step_ms')]
         phase_numbers+=4
+    union=ROOT/'results/20261016/joined-union-half-admission'
+    union_audit=json.loads((union/'verification.json').read_text())
+    assert (union_audit['pairs'],union_audit['matrices'],union_audit['union_admitted_pairs'],union_audit['rejected_weight_values'])==(76,152,75,1)
+    assert union_audit['captured_original_cpp_roundtrip_values']==561512447
+    rows=[line.split('|')[1:-1] for line in (union/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(union_audit['models'])==3
+    for cells,model in zip(rows,union_audit['models']):
+        assert cells[0].strip()==model['model']
+        assert [int(v.strip()) for v in cells[1:4]]==[model['pairs'],model['old_equal_scale_pairs'],model['union_pairs']]
+    primitive=json.loads((ROOT/'results/20261016/prepared-union-mlp/primitive/verification.json').read_text())
+    assert primitive['original_dyadic_cases']==24 and primitive['cache_admitted_pairs']==128 and primitive['cache_rejected_pairs']==2
+    assert primitive['regenerated_context_and_header'] and primitive['pending_foreign_alias_abort_recovery_controls'] and not primitive['full_goal_met']
+    prepared=ROOT/'results/20261016/prepared-union-mlp'
+    decision=json.loads((prepared/'decision-repeat.json').read_text())
+    assert not decision['confirmed_models'] and decision['complete_numerical_profiles']==304 and decision['retained_timing_samples']==9600
+    cohorts=[json.loads((prepared/label/'decision.json').read_text()) for label in ('initial','repeat')]
+    rows=[line.split('|')[1:-1] for line in (prepared/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==12
+    for cells,first,second in zip(rows,cohorts[0]['profiles'],cohorts[1]['profiles']):
+        assert cells[0].strip()==first['model']==second['model'] and int(cells[1])==first['layer']==second['layer'] and int(cells[2])==first['rows']==second['rows']
+        values=[v['fractions']['comparison'][field] for v in (first,second) for field in ('gpu_ms','wall_ms')]
+        assert [v.strip() for v in cells[3:]]==[f'{v:.6f}' for v in values]
+    costs=json.loads((prepared/'cost-summary.json').read_text())
+    assert costs['source_sha256']==hashlib.sha256((ROOT/'test2026/metal/summarize_prepared_union_mlp_costs.py').read_bytes()).hexdigest()
+    assert len(costs['cohorts'])==2 and all(sum(v['admitted_layers'] for v in trial['models'])==75 for trial in costs['cohorts'])
+    qkv=ROOT/'results/20261016/qkv-union-half-admission';qkv_audit=json.loads((qkv/'verification.json').read_text())
+    assert (qkv_audit['groups'],qkv_audit['matrices'],qkv_audit['admitted_groups'],qkv_audit['rejected_values'],qkv_audit['retained_fp32_key_matrices'])==(58,174,56,2,52)
+    assert qkv_audit['captured_original_roundtrip_values']==173670398
+    rows=[line.split('|')[1:-1] for line in (qkv/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==3
+    for cells,model in zip(rows,qkv_audit['models']):
+        assert cells[0].strip()==model['model'] and [int(v.strip()) for v in cells[1:]]==[model['separate_groups'],model['admitted_groups'],model['existing_combined_layers']]
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -352,7 +384,10 @@ def main():
                   half_triplet_cpu_profiles_checked=24,half_triplet_finite_edge_cases_checked=4590,
                   vector_native_initial_table_values_checked=vector_native_numbers,
                   vector_native_repeat_table_values_checked=vector_repeat_numbers,validated_branch_source_files=8,
-                  compact_group_checks_audited=16,synthetic_triplet_shape_checks_audited=6,status='passed',
+                  compact_group_checks_audited=16,synthetic_triplet_shape_checks_audited=6,
+                  union_learned_pairs_cpu_audited=76,prepared_union_primitive_cases_audited=24,
+                  prepared_union_learned_table_values_checked=48,prepared_union_complete_numerical_profiles=304,
+                  qkv_union_cpu_groups_audited=58,qkv_union_cpu_table_values_checked=9,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

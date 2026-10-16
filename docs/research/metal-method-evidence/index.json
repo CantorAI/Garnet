@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T02:44:55.495537+00:00",
-  "source_commit": "ffa599b4c0949924531e0ea8aa5a583fd7f387fe",
+  "generated_at_utc": "2026-10-16T03:23:56.491116+00:00",
+  "source_commit": "14cdbc33f256b1b4bcefa5e542031af1ce4c0ac7",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 166,
+  "report_count": 169,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -4199,6 +4199,37 @@
       ]
     },
     {
+      "experiment_id": "results/20261016/joined-union-half-admission",
+      "title": "Exact common-scale union: all learned feed-forward pairs",
+      "report_path": "results/20261016/joined-union-half-admission/README.md",
+      "report_sha256": "48160e0621f2355810f53aac1aca1f31a501c046239f3d92d8ec7c3fbcde5a00",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Exact common-scale union: all learned feed-forward pairs\n\nCPU eligibility prerequisite only; no inference speed or GPU arithmetic claim.\nThe original codec and an independent NumPy implementation inspect all 76\ngate/up pairs (152 matrices) from the three frozen checkpoints. The common\nscale comes from the maximum magnitude across both matrices; no learned value\nis rounded, clipped or omitted. The original C++ codec restores the admitted\nvalues to their original FP32 bits.\n\n| Model | Pairs | Prior equal-scale eligible | Union eligible | Required original fallback |\n| --- | ---: | ---: | ---: | --- |\n| Qwen3-0.6B | 28 | 17 | 28 | None |\n| Qwen2.5-Coder-0.5B-Instruct | 24 | 13 | 23 | Layer 8 |\n| Qwen3.5-0.8B | 24 | 0 | 24 | None |\n\nOriginal-codec checks restore 561,512,447 individual values exactly and reject\none value. Its entire coder layer-8 pair must fall back. Fully admitted pairs\ncontain 552,796,160 values. NumPy takes 28.6250 seconds; independent C++ checking,\nincluding compilation, takes 3.7440 seconds. These are host checks, not inference.\n\nPairing alone leaves the logical half payload unchanged. A safe prototype that\nretains the original independent buffers adds an estimated 336 MiB for text,\n382.375 MiB for coder and 336 MiB for VL if all admitted pairs are prepared.\nThose are payload estimates, not measured process RSS or memory savings.\n\nThe terminal 23-file archive is independently verified on Mac and Windows:\nSHA256 `f753aebd6121680da5ca162bb1caed5661f304068ba6f23608e6cc5c5755e466`.\n[Full evidence](evidence/manifest.json), [audit](verification.json).\nCommands, offsets, checkpoint and source hashes are retained in the evidence.\nThe overall matched-vLLM goal remains unmet.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [
+        "f753aebd6121680da5ca162bb1caed5661f304068ba6f23608e6cc5c5755e466"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "archive-verification.json",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/joined-union-half-admission/archive-verification.json",
+          "sha256": "05cfb72d84664a4c836258a82c1f96cf9a0f30a97965f2cfdaceaa7d66df2f7c"
+        },
+        {
+          "path": "results/20261016/joined-union-half-admission/verification.json",
+          "sha256": "6f7914767cf00c8a34be336af7a5a1f5d56726ae1a259730a000b8f4b6db5e43"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
+    },
+    {
       "experiment_id": "results/20261016/ndarray-selective-native",
       "title": "Selective no-exact-half NDArray: rejected after complete native inference",
       "report_path": "results/20261016/ndarray-selective-native/README.md",
@@ -4285,6 +4316,67 @@
         {
           "path": "results/20261016/ndarray-weight-admission/verification.json",
           "sha256": "91e99179cccf34351a2fa0ff93856aead4ba65bd8d47cb64c0c2bdffa6febcec"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/prepared-union-mlp",
+      "title": "Prepared exact union weights and activation-only output",
+      "report_path": "results/20261016/prepared-union-mlp/README.md",
+      "report_sha256": "7114be1564aa06a0583082c52ced19d5372e6659df0bebf42bfbcb8946302500",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Prepared exact union weights and activation-only output\n\nFinal status: two complete learned cohorts audited on Mac and Windows; no model\npasses the declared repeat rule. Reject this version before native integration.\n\nPrivate generated context only; no serving runtime integration or model speed\nclaim. Generate from the retained validated d52 vector-vision context. Preserve\nthe original independent weights. Before Begin, prepare an exact common-scale\njoined weight buffer, MPS product and scratch for each selected row count.\nEncode one joined product and one activation kernel, writing only the activation.\nThis removes an independent MPS product and avoids materializing separate gate\nand up outputs; no claim about MPS's internal GPU kernel count follows.\n\nCosts: the prototype duplicates the half weight payload, scans and bit-checks\nevery value during preparation, and allocates joined scratch. Lazy first GPU\ncompilation may still occur. Future graph integration must prove gate/up slots\nare internal, unobserved and dead after the activation; unsupported cases retain\nthe original operation. No mutation of shared original half buffers is allowed.\n\n## Primitive completed\n\nActual M4 execution PID914 exits0 in 11.2132 seconds including quiet interval,\ncompilation and execution. Twenty-four changed-input dyadic cases cover physical\nrows 24/44, 26/52 and 80/160. Original output bits match, joined intermediates\nmatch, and pending reads, foreign writers, alias, abort/recovery, unsupported\nshapes, nonexact weights and bounded 128-pair ownership controls pass. The\ninitial small fixture allocates 512 extra weight bytes shared across shapes.\nThis is synthetic coverage, not learned-matrix or full-model validation.\n\nThe 38-file archive SHA256 is\n`98db64683fec2df9d3f553ac9211f9031dae0a0365e136f8ddd85dc3324a85c6`.\nBoth-host audits regenerate the exact private context/header, check compile\ndefines, source closure, exclusivity monitors and complete primitive output.\n[Primitive audit](primitive/verification.json),\n[frozen source and commands](primitive/evidence/manifest.json).\n\n## Learned component design, declared before learned GPU execution\n\nRequire every one of the 76 learned pairs at both serving physical row counts\nand four changed-input patterns. All 75 CPU-admitted pairs must pass GPU checks;\ncoder layer8 must reject preparation and execute the original path unchanged.\nInputs are structured dyadic vectors with exact power-of-two row/variant\nscales, not captured model activations. Independent FP64 dot/sumabs references\nuse the original gamma(ceil(K/32)+32)*sumabs+1e-7 bound AND the original\n5e-6+5e-5*abs(reference) comparison. Check both projections, candidate joined\nintermediates and stage-rounded FP32 activation references. No tolerance change.\nComplete numerical screening precedes any learned timing admission.\n\nTime first AND last layers of each model, selected before observing data, at\nboth batch shapes: twelve profiles. Do not select favorable interior layers.\nFor each profile, perform a same-original-pipeline A/B null comparison, followed\nby original versus candidate. Each uses 2 seconds common alternating warmup,\n10 ABBA rounds, 3 warm calls and 5 recorded samples per window. Retain every\nsample; do not normalize results by the null. Update inputs outside the clocks;\nrecord GPU, CPU encode and submit/wait wall clocks separately. Recheck complete\noutputs outside recorded clocks after each window. Report preparation, uploads,\nfirst executions and allocated extra union payload independently.\n\nProspective component admission: a model must achieve at least 5% GPU AND wall\nreduction at both selected layers and both batches, every own-null GPU/wall\nfraction must be within 0.95..1.05, and all numerical/fallback gates must pass.\nOnly a passing complete initial screen admits one unchanged confirmation.\nComponent success still requires full graph correctness, all-six-profile native\nrepeats and fresh matched-vLLM cohorts before claiming the overall goal.\n\n## Actual all-layer numeric stage complete; timing running\n\nLearned launcher PID1987 has compiled the private context and completed all\n152 layer/batch profiles, 608 changed-input cases and 849,807,360 individual\nprojection/activation reference checks. All original bounds pass: worst gamma\nratio0.0176357, projection-comparison ratio0.0653276 and activation ratio0.0385515.\nLearned control/candidate values agree for these structured inputs (worst\ncomparison ratio0). Eight changed-input fallback checks cover coder layer8 at\nboth batches. Numeric process peak RSS596,000,768 bytes; not a full-model RSS.\n\nThe predetermined endpoint timing process is running after this numerical gate.\nThese live observations are provisional until terminal archive and independent\naudits. No timing result, model admission or full goal progress ratio is claimed.\n\n## Two terminal learned cohorts: numerically valid, no repeated selection\n\nInitial PID1987 exits0 in120.124820292 seconds; unchanged confirmation PID4097\nexits0 in119.978341708 seconds. Freeze both before analysis/source changes.\nInitial archive43 files, SHA256\n`a3e4df6ecb8626299ec3c5cfeb3c9deec172a21801208035398d5c709293ed5e`;\nrepeat44 files, SHA256\n`954c6ff4e22f70437a8156d6b7ec952a774fe8b4fe619f3bf6b7edf35f111a36`.\nTransfers complete0 before Windows extraction. Both-host independent audits\nregenerate context/header, verify all source/compile/asset identities and\nexclusive guards, all304 layer/batch numeric profiles, and9600 timing samples.\nEach full numerical cohort has608 changed-input cases and849,807,360 individual\nchecks. Additional timing-stage numeric screening has48 cases and69,525,504\nchecks per cohort. These are repeated structured inputs, not unique model\nactivations. The original tolerances remain unchanged.\n\nThe following fractions are candidate/control arithmetic means of every\nrecorded sample. Lower is better; required GPU AND wall fraction<=0.95 at\nboth endpoints and both batches, with every own-null within0.95..1.05.\nLayers are zero-based; physical rows map to the declared B1/B2 profiles.\n\n| Endpoint model | Layer | Rows | Initial GPU | Initial wall | Repeat GPU | Repeat wall |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n| Qwen2.5-Coder-0.5B-Instruct | 0 | 26 | 0.838410 | 0.864298 | 0.824714 | 0.831429 |\n| Qwen2.5-Coder-0.5B-Instruct | 0 | 52 | 0.916942 | 0.915905 | 0.933141 | 0.939184 |\n| Qwen2.5-Coder-0.5B-Instruct | 23 | 26 | 0.809837 | 0.822815 | 0.835965 | 0.862516 |\n| Qwen2.5-Coder-0.5B-Instruct | 23 | 52 | 0.947080 | 0.930774 | 0.976858 | 0.969217 |\n| Qwen3-0.6B | 0 | 24 | 0.935938 | 0.923065 | 0.961168 | 0.949840 |\n| Qwen3-0.6B | 0 | 44 | 0.842058 | 0.869012 | 0.829997 | 0.824799 |\n| Qwen3-0.6B | 27 | 24 | 0.968933 | 0.952249 | 0.986149 | 0.966083 |\n| Qwen3-0.6B | 27 | 44 | 0.840838 | 0.846905 | 0.854716 | 0.871630 |\n| Qwen3.5-0.8B | 0 | 80 | 0.898458 | 0.902285 | 0.941691 | 0.932140 |\n| Qwen3.5-0.8B | 0 | 160 | 0.973318 | 0.978288 | 0.956978 | 0.949684 |\n| Qwen3.5-0.8B | 23 | 80 | 0.907381 | 0.902236 | 0.884475 | 0.881370 |\n| Qwen3.5-0.8B | 23 | 160 | 0.995034 | 0.988676 | 0.943999 | 0.936526 |\n\nInitial coder passes all four profiles, admitting exactly one unchanged full\nconfirmation. Text misses its last-layer B1 gain; VL misses B2 gains and has\nan initial first-layer B1 own-null GPU fraction1.063222 (outside5%). All repeat\nown-nulls pass. Repeat coder last-layer B2 gains only2.314%GPU/3.078%wall, below\n5%; repeat text B1 also misses. Repeat VL first-layer B2 GPU gain4.302% misses.\nDo not normalize by nulls, rescue initially failed models with repeat values,\nselect favorable layers, relax thresholds or seek a third unchanged repeat.\nNo hardware-cause attribution is established. No model is selected.\n\n[Initial complete raw audit](initial/verification.json),\n[initial complete means/nulls](initial/decision.json),\n[repeat complete raw audit](repeat/verification.json),\n[repeat complete means/nulls](repeat/decision.json),\n[two-cohort unchanged-source decision](decision-repeat.json).\n\n## Costs and limitations\n\nActual first-shape CPU preparation ranges in the initial full numeric cohort:\ntext342.700..350.692ms/pair, coder474.971..485.724ms/pair and\nVL399.267..409.199ms/pair. A second shape reuses each packed buffer and takes\n0.0176..0.1174ms; rejected coder layer8 preparation still costs52.3..52.5ms.\nOriginal per-pair upload costs remain separately recorded. These per-pair\ncontexts are not a full-model initialization benchmark and the times must not\nbe added to prior startup measurements. Private numeric/timing processes peak\nat596,000,768/206,815,232 bytes initially and584,056,832/199,229,440 bytes on\nrepeat. No full-model RSS or shared-memory-saving claim follows.\n\nLogical extra full-model weight payloads, if all admitted pairs were retained,\nare336 MiB text,382.375 MiB coder and336 MiB VL. The actual component holds one\npair at a time; it does not measure simultaneous full-model memory. Original\nindependent weights, all graph outputs and the accepted vector serving branch\nremain unchanged. [Derived cost ranges and source identity](cost-summary.json).\n\nCompile output retains one Objective-C auto/id deduction warning and two\nexisting deprecated fastMathEnabled warnings; compile and both execution\nstages exit0. Raw warnings are preserved, not edited after measurement.\n\nExecuted commands (ROOT=`/Users/zsdx/garnet-metal-investigation`):\n\n```text\npython3 ROOT/source/test2026/metal/launch_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-20261016 learned\npython3 ROOT/source/test2026/metal/archive_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-20261016 ROOT/prepared-union-mlp-learned-20261016.tar.gz\npython3 ROOT/source/test2026/metal/verify_prepared_union_mlp_learned.py INITIAL_EXTRACT INITIAL_EXTRACT/verification.json\npython3 ROOT/source/test2026/metal/analyze_prepared_union_mlp_learned.py INITIAL_EXTRACT INITIAL_EXTRACT/decision.json\npython3 ROOT/source/test2026/metal/launch_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-confirm-20261016 learned\npython3 ROOT/source/test2026/metal/archive_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-confirm-20261016 ROOT/prepared-union-mlp-learned-confirm-20261016.tar.gz\npython3 ROOT/source/test2026/metal/verify_prepared_union_mlp_learned.py REPEAT_EXTRACT REPEAT_EXTRACT/verification.json\npython3 ROOT/source/test2026/metal/analyze_prepared_union_mlp_learned.py REPEAT_EXTRACT REPEAT_EXTRACT/decision.json\npython3 ROOT/source/test2026/metal/confirm_prepared_union_mlp_learned.py INITIAL_EXTRACT REPEAT_EXTRACT REPEAT_EXTRACT/decision-repeat.json\n```\n\nThe repeat launch records initial archive/audit/decision hashes and verifies\nevery measured source unchanged before launching. No native graph integration,\nnew matched-vLLM ratio, target-count update or overall goal completion follows.\n",
+      "commands_as_documented": [
+        "python3 ROOT/source/test2026/metal/launch_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-20261016 learned\npython3 ROOT/source/test2026/metal/archive_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-20261016 ROOT/prepared-union-mlp-learned-20261016.tar.gz\npython3 ROOT/source/test2026/metal/verify_prepared_union_mlp_learned.py INITIAL_EXTRACT INITIAL_EXTRACT/verification.json\npython3 ROOT/source/test2026/metal/analyze_prepared_union_mlp_learned.py INITIAL_EXTRACT INITIAL_EXTRACT/decision.json\npython3 ROOT/source/test2026/metal/launch_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-confirm-20261016 learned\npython3 ROOT/source/test2026/metal/archive_prepared_union_mlp_learned.py ROOT ROOT/logs/prepared-union-mlp-learned-confirm-20261016 ROOT/prepared-union-mlp-learned-confirm-20261016.tar.gz\npython3 ROOT/source/test2026/metal/verify_prepared_union_mlp_learned.py REPEAT_EXTRACT REPEAT_EXTRACT/verification.json\npython3 ROOT/source/test2026/metal/analyze_prepared_union_mlp_learned.py REPEAT_EXTRACT REPEAT_EXTRACT/decision.json\npython3 ROOT/source/test2026/metal/confirm_prepared_union_mlp_learned.py INITIAL_EXTRACT REPEAT_EXTRACT REPEAT_EXTRACT/decision-repeat.json\n"
+      ],
+      "archive_hashes_as_documented": [
+        "954c6ff4e22f70437a8156d6b7ec952a774fe8b4fe619f3bf6b7edf35f111a36",
+        "98db64683fec2df9d3f553ac9211f9031dae0a0365e136f8ddd85dc3324a85c6",
+        "a3e4df6ecb8626299ec3c5cfeb3c9deec172a21801208035398d5c709293ed5e"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "cost-summary.json",
+        "decision-repeat.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": [
+        "initial",
+        "primitive",
+        "repeat"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/qkv-union-half-admission",
+      "title": "Separate Q/K/V exact union: full learned CPU eligibility",
+      "report_path": "results/20261016/qkv-union-half-admission/README.md",
+      "report_sha256": "bfa5f894f8ba39d1f81aba1d1923c09b124d4cc3fa6dca42f5af1323e3c3672d",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Separate Q/K/V exact union: full learned CPU eligibility\n\nCPU prerequisite completed and audited on Mac and Windows. No GPU arithmetic,\nnumerical-envelope, model-latency or decode speed claim follows.\n\nHypothesis: Garnet lowers separate dense attention Q, K and V projections\nconsecutively from the same input. Their unequal output widths can share one\nprepared exact common-scale half weight buffer and one F32-input MPS product,\nfollowed by a scatter to the three existing outputs. This is a distinct\noperator from the rejected gate/up activation-only experiment. It may reduce\ntwo product encodes but adds joined scratch, output traffic and preparation.\nInternal MPS GPU kernel counts are not asserted.\n\nThe audit includes52 key matrices retained in FP32 storage by current text/coder\npolicy. An exact weight roundtrip alone does not prove that changing their\nMPS route preserves original numerical envelopes or full-model outputs.\nThose require subsequent GPU checks before any timing or native integration.\n\n| Model | Separate Q/K/V triples | Exact common union | Existing combined linear layers |\n| --- | ---: | ---: | ---: |\n| Qwen3-0.6B | 28 | 28 | 0 |\n| Qwen2.5-Coder-0.5B-Instruct | 24 | 24 | 0 |\n| Qwen3.5-0.8B | 6 | 4 | 18 |\n\nActual learned output widths Q/K/V are2048/1024/1024 for text,\n896/128/128 for coder and4096/512/512 for VL dense attention. All share the\nrespective model input width. VL dense layers7 and23 each contain one value\nrejected at the common scale; their entire triples require original fallback.\nThe18 already combined VL linear-attention layers are outside this separate\nprojection hypothesis and remain untouched.\n\nActual CPU PID6423 exits0 in12.951632625 seconds, including NumPy scans,\ncompilation and the original C++ codec. The C++ checker is generated from the\nprevious frozen pair checker by changing only arity2->3, counts76/152->58/174,\nand pair/group names. It retains the original exact codec, raw learned-slice\nSHA checks and every admitted value's original FP32-bit roundtrip.\nAcross174 matrices,173,670,398 values restore exactly and2 reject. No learned\nvalue is clipped, rounded away or omitted to admit a group.\n\nIf independent original weights remain allocated, extra common-union payload\nfor all admitted groups would be224 MiB text,47.25 MiB coder and40 MiB VL.\nThese are logical estimates, not a GPU allocation or full-model RSS measurement.\nNo original weight cache is mutated or serving source integrated.\n\nFreeze20 files, archive SHA256\n`3142474829315dd54bbc8bb84ffa3b7d56ec0299c16c5e581d473afd1ca9c825`.\nSCP exits0 before Windows extraction. Both-host auditors regenerate the exact\nC++ transformation, check full learned shape/offset/hash coverage, baseline\nFP32-key flags, original codec, compile-only Foundation dependency and every\ncaptured eligibility/roundtrip count. Raw checkpoints are omitted by complete\nhash; the Windows provenance auditor does not rerun their arithmetic.\n[Frozen sources/commands](evidence/manifest.json),\n[independent provenance audit](verification.json),\n[complete CPU report](evidence/logs/qkv-union-half-admission-20261016/report.json).\n\nExecuted audit (ROOT=`/Users/zsdx/garnet-metal-investigation`):\n\n```text\npython3 ROOT/source/test2026/metal/audit_qkv_union_half_admission.py ROOT ROOT/logs/qkv-union-half-admission-20261016\npython3 ROOT/source/test2026/metal/archive_qkv_union_half_admission.py ROOT ROOT/qkv-union-half-admission-20261016.tar.gz\npython3 ROOT/source/test2026/metal/verify_qkv_union_half_admission.py EXTRACT EXTRACT/verification.json\n```\n\nNext: private prepared-context primitive with ownership/alias/pending/abort\ncontrols; all58 triples at both serving physical row counts and changed inputs,\nincluding actual original FP32-key baselines and mandatory fallback groups.\nRetain original gamma/sumabs and5e-6+5e-5 comparison bounds. Declare timing\nselection and sample design before GPU performance execution. No unchanged\nrepeat of the rejected MLP version, relaxed envelope or old-vLLM/new-native\nratio can establish the overall goal.\n",
+      "commands_as_documented": [
+        "python3 ROOT/source/test2026/metal/audit_qkv_union_half_admission.py ROOT ROOT/logs/qkv-union-half-admission-20261016\npython3 ROOT/source/test2026/metal/archive_qkv_union_half_admission.py ROOT ROOT/qkv-union-half-admission-20261016.tar.gz\npython3 ROOT/source/test2026/metal/verify_qkv_union_half_admission.py EXTRACT EXTRACT/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [
+        "3142474829315dd54bbc8bb84ffa3b7d56ec0299c16c5e581d473afd1ca9c825"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "archive-verification.json",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/qkv-union-half-admission/archive-verification.json",
+          "sha256": "28855f37678338541f0d296af8887f195ea0f19cf70586f845da14b932553f8d"
+        },
+        {
+          "path": "results/20261016/qkv-union-half-admission/verification.json",
+          "sha256": "e160761ad0a5feb9707f3960ac5ca19b4e6a57682337fd75bb4341b7ccc05be6"
         }
       ],
       "evidence_directories": [
