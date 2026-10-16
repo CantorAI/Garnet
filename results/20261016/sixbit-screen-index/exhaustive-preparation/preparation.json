@@ -1,0 +1,47 @@
+{
+  "scope": "Reproduce source/layout preflight and exhaust all 24-bit words across uint3 load boundaries.",
+  "layout_cases": [
+    {
+      "rows": 1,
+      "inner": 128,
+      "padded_rows": 4,
+      "index_bytes": 384
+    },
+    {
+      "rows": 3,
+      "inner": 128,
+      "padded_rows": 4,
+      "index_bytes": 384
+    },
+    {
+      "rows": 4,
+      "inner": 896,
+      "padded_rows": 4,
+      "index_bytes": 2688
+    },
+    {
+      "rows": 5,
+      "inner": 1024,
+      "padded_rows": 8,
+      "index_bytes": 6144
+    },
+    {
+      "rows": 17,
+      "inner": 37,
+      "padded_rows": 20,
+      "index_bytes": 555
+    }
+  ],
+  "all_24bit_words_checked_at_each_of_four_positions": true,
+  "word_comparisons": 67108864,
+  "generated_sha256": {
+    "metal_context.h": "09520c795bcecb49113dc760f35961e58375d9cfd7c958681dcbdcd52f96ea7d",
+    "metal_context.mm": "d14cc2274f09f3e3fa48c476a293c28da480a36ff8b12b61be7f057b1d46145d",
+    "screened_head_index.h": "028df1144d3163a2b4bf70b7dbd41fb52686d48ac9319f151b65b6df297c23a7",
+    "screened_head_native_impl.h": "d99ba181835ea808f7e0af54a80b86713433fed0e1e2dd3dd66d166965ac7309",
+    "nibble_screened_head_shader.h": "8b7097afd86c715edc3698a17d32e0f6649374f1938ec203ab26ecec91cb79f9",
+    "nibble_screen_index_gpu.mm": "146aa7b9b1afec3ac321c045b9b2eec4c8a3e534fe19cb36ca5112206de794d9"
+  },
+  "gpu_executed": false,
+  "full_goal_met": false
+}

@@ -1,0 +1,1748 @@
+{
+  "verified_files": 159,
+  "trial": "nibble-screen-index-20261016",
+  "regenerated_sources": 6,
+  "source_files": 20,
+  "original_full_captured_queries": 51,
+  "numeric_policy_queries": 102,
+  "unsafe_policy_queries": 66,
+  "ownership_profiles": 102,
+  "original_score_values_checked": 47488512,
+  "timing_samples": 19200,
+  "all_models_numeric_before_timing": true,
+  "packing": [
+    {
+      "model": "Qwen3-0.6B",
+      "index_bytes": 155582464,
+      "inner": 1024,
+      "kind": "packing",
+      "rows": 151936,
+      "upload_and_index_ms": 779.772875,
+      "policy": 0
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "index_bytes": 77791232,
+      "inner": 1024,
+      "kind": "packing",
+      "rows": 151936,
+      "upload_and_index_ms": 818.934958,
+      "policy": 1
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "index_bytes": 136134656,
+      "inner": 896,
+      "kind": "packing",
+      "rows": 151936,
+      "upload_and_index_ms": 680.456458,
+      "policy": 0
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "index_bytes": 68067328,
+      "inner": 896,
+      "kind": "packing",
+      "rows": 151936,
+      "upload_and_index_ms": 717.124042,
+      "policy": 1
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "index_bytes": 254279680,
+      "inner": 1024,
+      "kind": "packing",
+      "rows": 248320,
+      "upload_and_index_ms": 1266.08775,
+      "policy": 0
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "index_bytes": 127139840,
+      "inner": 1024,
+      "kind": "packing",
+      "rows": 248320,
+      "upload_and_index_ms": 1339.24625,
+      "policy": 1
+    }
+  ],
+  "pruning": [
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 97871,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 54065,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150880,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1056,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 30892,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 121044,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 125459,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 26477,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150909,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1027,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 80267,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 71669,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 121129,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 30807,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150898,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1038,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 28158,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 123778,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 109387,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 42549,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150864,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1072,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 278,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 151658,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 195742,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 108130,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301760,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2112,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 61784,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 242088,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 250918,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 52954,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301818,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2054,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 160534,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 143338,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 242258,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 61614,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301796,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2076,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 56316,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 247556,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 218774,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 85098,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301728,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2144,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 556,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 303316,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301776,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-mixed-first-last",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2096,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 98149,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-mixed-first-last",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 205723,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150911,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1025,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 27780,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 124156,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150905,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1031,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 22087,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 129849,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 145718,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 6218,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 52539,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 99397,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 145713,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 6223,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150908,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1028,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 21826,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 130110,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 148975,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 2961,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 150912,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 149700,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 2236,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301822,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2050,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 55560,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 248312,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301810,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2062,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 44174,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 259698,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 291436,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 12436,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 105078,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 198794,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 291426,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 12446,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301816,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2056,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 43652,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 260220,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 297950,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 5922,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301824,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 299400,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 4472,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 301823,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-mixed-first-last",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2049,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 177480,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-mixed-first-last",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 126392,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247296,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 188428,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 59892,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247250,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1070,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 9514,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 238806,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247291,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1029,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 30490,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 217830,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247296,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 224090,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 24230,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247296,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 100849,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 147471,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247294,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1026,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 64906,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 183414,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247296,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 170545,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 77775,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 247296,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 1024,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 183958,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b1-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 1,
+      "kept": 64362,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494592,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 376856,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step0",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 119784,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494500,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2140,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 19028,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step1",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 477612,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494582,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2058,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 60980,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step2",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 435660,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494592,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 448180,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step3",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 48460,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494592,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 201698,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step4",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 294942,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494588,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2052,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 129812,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step5",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 366828,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494592,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 341090,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step6",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 155550,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494592,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 367916,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-step7",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 128724,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 0,
+      "rejected_below_exact_seed": true,
+      "rejected": 494592,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-mixed-first-last",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 2048,
+      "all_original_scores_checked": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "rejected_below_exact_seed": true,
+      "rejected": 372386,
+      "greedy_and_error_flags_match": true,
+      "pattern": -1,
+      "query": "b2-mixed-first-last",
+      "retained_bits_exact": true,
+      "kind": "check",
+      "batch": 2,
+      "kept": 124254,
+      "all_original_scores_checked": true
+    }
+  ],
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 2.1001344465184957,
+            "wall_ms": 2.41697293125
+          },
+          "candidate": {
+            "gpu_ms": 2.0949338632635772,
+            "wall_ms": 2.410407175
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 2.1056768647395074,
+            "wall_ms": 2.42261739875
+          },
+          "candidate": {
+            "gpu_ms": 3.345073949894868,
+            "wall_ms": 3.7025464275
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9975236903220459,
+          "wall_ms": 0.9972834796099249
+        },
+        "comparison": {
+          "gpu_ms": 1.588597949623522,
+          "wall_ms": 1.5283248726812606
+        }
+      },
+      "own_null_stable": true,
+      "preservation_pass": false,
+      "unmet_b1_gain": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 2.1078960521845147,
+            "wall_ms": 2.4174297525
+          },
+          "candidate": {
+            "gpu_ms": 2.107450888142921,
+            "wall_ms": 2.4206052525
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 2.125413846806623,
+            "wall_ms": 2.44702725
+          },
+          "candidate": {
+            "gpu_ms": 3.3867475582519546,
+            "wall_ms": 3.7715164775
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9997888111981934,
+          "wall_ms": 1.001313585222783
+        },
+        "comparison": {
+          "gpu_ms": 1.5934532295159607,
+          "wall_ms": 1.5412646007517896
+        }
+      },
+      "own_null_stable": true,
+      "preservation_pass": false,
+      "unmet_b1_gain": null
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 1.8142472876934335,
+            "wall_ms": 2.1377635475
+          },
+          "candidate": {
+            "gpu_ms": 1.8146696861367673,
+            "wall_ms": 2.14113753
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 1.8220763572026044,
+            "wall_ms": 2.151798625
+          },
+          "candidate": {
+            "gpu_ms": 2.5393393798731267,
+            "wall_ms": 2.8843665975
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.000232822970826,
+          "wall_ms": 1.001578276748121
+        },
+        "comparison": {
+          "gpu_ms": 1.3936514624292262,
+          "wall_ms": 1.3404444839721004
+        }
+      },
+      "own_null_stable": true,
+      "preservation_pass": false,
+      "unmet_b1_gain": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 1.8970592675032094,
+            "wall_ms": 2.22813812
+          },
+          "candidate": {
+            "gpu_ms": 1.8981720769079402,
+            "wall_ms": 2.234847755
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 1.910092608886771,
+            "wall_ms": 2.2481913175
+          },
+          "candidate": {
+            "gpu_ms": 2.7006292185978964,
+            "wall_ms": 3.06239461125
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0005865970683117,
+          "wall_ms": 1.003011319154667
+        },
+        "comparison": {
+          "gpu_ms": 1.4138734457340587,
+          "wall_ms": 1.3621592554922763
+        }
+      },
+      "own_null_stable": true,
+      "preservation_pass": false,
+      "unmet_b1_gain": null
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 3.395672344486229,
+            "wall_ms": 3.71442332875
+          },
+          "candidate": {
+            "gpu_ms": 3.388119374285452,
+            "wall_ms": 3.70772328375
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 3.4049260418396443,
+            "wall_ms": 3.727603425
+          },
+          "candidate": {
+            "gpu_ms": 5.426799334818497,
+            "wall_ms": 5.79877569
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9977757070074675,
+          "wall_ms": 0.9981962085613287
+        },
+        "comparison": {
+          "gpu_ms": 1.5938082848596784,
+          "wall_ms": 1.5556310660917478
+        }
+      },
+      "own_null_stable": true,
+      "preservation_pass": false,
+      "unmet_b1_gain": null
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "null": {
+          "control": {
+            "gpu_ms": 3.547194945276715,
+            "wall_ms": 3.86690958875
+          },
+          "candidate": {
+            "gpu_ms": 3.548714113421738,
+            "wall_ms": 3.86937057625
+          }
+        },
+        "comparison": {
+          "control": {
+            "gpu_ms": 3.55433999968227,
+            "wall_ms": 3.8785651975
+          },
+          "candidate": {
+            "gpu_ms": 5.688680992461741,
+            "wall_ms": 6.0655591775
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0004282730914031,
+          "wall_ms": 1.0006364223014574
+        },
+        "comparison": {
+          "gpu_ms": 1.6004886963459501,
+          "wall_ms": 1.5638667570702864
+        }
+      },
+      "own_null_stable": true,
+      "preservation_pass": false,
+      "unmet_b1_gain": null
+    }
+  ],
+  "sampled_process_rss_bytes": {
+    "Qwen3-0.6B-numeric": 1192689664,
+    "Qwen3-0.6B-timing": 1340424192,
+    "Qwen2.5-Coder-0.5B-Instruct-numeric": 1175093248,
+    "Qwen2.5-Coder-0.5B-Instruct-timing": 1175404544,
+    "Qwen3.5-0.8B-numeric": 1993490432,
+    "Qwen3.5-0.8B-timing": 1987297280
+  },
+  "unchanged_confirmation_admitted": false,
+  "native_integration_admitted": false,
+  "statistic": "Per-batch arithmetic means of all 800 intervals/arm/phase over eight ordinary captured steps; no filtering or null normalization",
+  "scope": "Captured-query greedy head component only; index4/8 is rejection storage, final seed/refinement original BF16/FP32. No inference throughput/TTFT, universal-bound certification or fresh vLLM result.",
+  "full_goal_met": false
+}

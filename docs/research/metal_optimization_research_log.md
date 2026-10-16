@@ -2249,6 +2249,51 @@ packing/shared scratch reuse is insufficient in this implementation; preserve
 the selected MPS/BF16 route. Register scheduling and exact GPU causes unmeasured.
 [All12 GPU/wall/null rows, protocol, selection provenance, costs and commands](../../results/20261016/wide-block-packed-prefill/README.md).
 
+## 2026 10 16 Smaller rejection indexes preserve answers but fail speed gates
+
+Mechanism: reduce the private greedy-head approximate rejection index from eight
+bits to four/six while retaining original BF16/FP32 exact seed/refinement,
+upward residual/original/reconstructed norms, strict bounds and unsafe-query
+fallback. This is not a reduced-precision final-logit model. Fixed1,024-row seed
+and original inputs/queries stay unchanged; all retained and rejected original
+scores are checked before timing.
+
+Four-bit PID32841 exits0 in144.568587seconds.51original full-query bit checks,
+102policy checks,66unsafe checks and102ownership cases pass, comparing47,488,512
+scores.19,200timed samples, six stable grouped own-nulls; GPU fractions1.393651–
+1.600489 and wall1.340444–1.563867 all regress. Mean kept rows per request row
+rise from roughly1,026–1,036 to62,644–126,723. The survivor inflation is consistent with these regressions; timings do not
+isolate its contribution from unpacking and scheduling costs. Reject confirmation/integration.
+[Four-bit protocol, raw score/clock arrays, costs and both-host audits](../../results/20261016/nibble-screen-index/README.md).
+
+Six bits pack four output tags into24bits and load three32-bit words per four K
+terms. It is chosen from four-bit survivor evidence before six-bit timing.
+Initial PID35707 exits0, but the agent-started prior-archive SCP overlaps its
+execution. Before reading speed ratios, record unconditional exclusion of this
+entire timing cohort. Preserve all records; no original failed result is hidden
+or reclassified from observed speed. Only after actual transfer terminal0 and
+initial terminal/archive/audit, run one fresh clean initial with identical source,
+math, cases, sampling and thresholds. No transfer overlaps the clean run.
+
+Clean PID38347 exits0 in130.993883seconds. Same complete original/safety counts
+and19,200samples pass data audits. Every grouped null is within5%. Coder B1 GPU
+improves3.304% but wall rises0.396%; text B1 GPU improves1.184% but wall rises2.084%.
+B2 text/coder and both VL profiles regress. Both required5% GPU ANDwall gains
+fail; no clean confirmation or integration admitted. Six-bit payload saves25%,
+but added unpacking/survivor/encoding costs are not causally separated. A later
+Windows-only exhaustive24bit-word proof checks67,108,864words at four positions;
+it changes no measured source or result and is not a GPU tail/model proof.
+
+All three complete cohorts and source generators are frozen on Mac. Windows
+independently reconstructs all manifest files, borrowing only byte-identical
+captured arrays from the fully verified four-bit archive to avoid duplicate
+large transfers. Distinguish verified transport/file bytes from full original
+six-bit gzip hashes observed on Mac. An external verifier-only Windows path
+normalization repair changes no GPU predicate or threshold. All original
+selected libraries and matched target counts remain unchanged; no fresh vLLM
+ratio, TTFT or whole-model decode gain is claimed.
+[Six-bit clean decision, excluded-overlap chronology, complete clocks, storage/preparation/RSS and archive proofs](../../results/20261016/sixbit-screen-index/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

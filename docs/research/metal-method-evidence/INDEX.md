@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T07:12:01.956791+00:00
+Generated UTC: 2026-10-16T07:37:19.912216+00:00
 
-Base HEAD at generation: `23c88bcec273d5b2ee9133bdd170043557eb39c6`. Reports indexed: **205**.
+Base HEAD at generation: `028e5c1039c5ae84b88a2ab67a163786bd44e0a8`. Reports indexed: **207**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -174,6 +174,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
+| [results/20261016/nibble-screen-index](../../../results/20261016/nibble-screen-index/README.md) | Four bit greedy head rejection index rejected |
 | [results/20261016/paired-norm-rope](../../../results/20261016/paired-norm-rope/README.md) | Paired query and key normalization and RoPE |
 | [results/20261016/paired-norm-rope-chain](../../../results/20261016/paired-norm-rope-chain/README.md) | Chained paired normalization and RoPE measurements |
 | [results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
@@ -196,6 +197,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/prepared-union-qv](../../../results/20261016/prepared-union-qv/README.md) | QV fusion with the original key projection |
 | [results/20261016/prepared-union-qv-views](../../../results/20261016/prepared-union-qv-views/README.md) | QV output views without a scatter dispatch |
 | [results/20261016/qkv-union-half-admission](../../../results/20261016/qkv-union-half-admission/README.md) | Separate Q/K/V exact union: full learned CPU eligibility |
+| [results/20261016/sixbit-screen-index](../../../results/20261016/sixbit-screen-index/README.md) | Six bit greedy head rejection index rejected by clean timing |
 | [results/20261016/streamed-body-weights](../../../results/20261016/streamed-body-weights/README.md) | Streamed decoded body weights component screen |
 | [results/20261016/streamed-body-weights-preparation](../../../results/20261016/streamed-body-weights-preparation/README.md) | Streamed decoded weight lifetime preparation |
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |

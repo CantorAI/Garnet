@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native','streamed-body-weights-preparation','streamed-body-weights','block-packed-prefill','wide-block-packed-prefill')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native','streamed-body-weights-preparation','streamed-body-weights','block-packed-prefill','wide-block-packed-prefill','nibble-screen-index','sixbit-screen-index')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -546,6 +546,24 @@ def main():
         for name,sha in metadata['source_sha256'].items():
             local=ROOT/'test2026/metal'/Path(name).name
             if local.name.startswith(('make_block_packed_','make_wide_block_packed_','run_block_packed_','run_wide_block_packed_')):assert hashlib.sha256(local.read_bytes()).hexdigest()==sha
+    screen_tables=0
+    for screen_name,screen_folder in (('nibble-screen-index','initial'),('sixbit-screen-index','clean-initial')):
+        screen=ROOT/'results/20261016'/screen_name;screen_audit=json.loads((screen/screen_folder/'verification.json').read_text());assert screen_audit==json.loads((screen/screen_folder/'mac-verification.json').read_text())
+        assert (screen_audit['regenerated_sources'],screen_audit['original_full_captured_queries'],screen_audit['numeric_policy_queries'],screen_audit['unsafe_policy_queries'],screen_audit['ownership_profiles'],screen_audit['original_score_values_checked'],screen_audit['timing_samples'])==(6,51,102,66,102,47488512,19200) and not screen_audit['unchanged_confirmation_admitted'] and not screen_audit['native_integration_admitted']
+        screen_rows=[line.split('|')[1:-1] for line in (screen/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(screen_rows)==(6 if screen_name=='nibble-screen-index' else 9)
+        for cells,v in zip(screen_rows[:6],screen_audit['profiles']):
+            assert cells[0].strip()==v['model'] and int(cells[1])==v['batch'];c,n=v['fractions']['comparison'],v['fractions']['null'];assert [w.strip() for w in cells[2:6]]==[f'{x:.6f}' for x in (c['gpu_ms'],c['wall_ms'],n['gpu_ms'],n['wall_ms'])] and v['own_null_stable'] and v['unmet_b1_gain'] is not True
+            current=[r for r in screen_audit['pruning'] if r['model']==v['model'] and r['batch']==v['batch'] and r['query'].startswith(('b1-step','b2-step'))]
+            assert cells[6].strip()==' / '.join(f"{sum(r['kept'] for r in current if r['policy']==policy)/8/v['batch']:.3f}" for policy in (0,1));screen_tables+=6
+        if screen_name=='sixbit-screen-index':
+            for cells in screen_rows[6:]:
+                packs=[v for v in screen_audit['packing'] if v['model']==cells[0].strip()];a=next(v for v in packs if v['policy']==0);b=next(v for v in packs if v['policy']==1)
+                assert cells[1].strip()==f"{a['index_bytes']} / {b['index_bytes']}" and cells[2].strip()==f"{a['upload_and_index_ms']:.3f} / {b['upload_and_index_ms']:.3f}";screen_tables+=4
+    six=ROOT/'results/20261016/sixbit-screen-index';excluded=json.loads((six/'overlap-exclusion.json').read_text());terminal=json.loads((six/'transfer-terminal-observation.json').read_text());equivalence=json.loads((six/'cohort-equivalence.json').read_text())
+    assert excluded['exclude_all_timing_from_selection'] and not excluded['clock_ratios_inspected'] and terminal['transfer_exit_code']==0 and equivalence['excluded_cohort_never_used_for_speed_selection'] and not equivalence['clean_initial_admitted'] and not equivalence['confirmation_run']
+    assert json.loads((six/'exhaustive-preparation/preparation.json').read_text())['word_comparisons']==67108864
+    for name in ('excluded-overlap','clean-initial'):
+        transport=json.loads((six/name/'transport-verification.json').read_text());audit=json.loads((six/name/'verification.json').read_text());assert audit==json.loads((six/name/'mac-verification.json').read_text()) and transport['verified_original_manifest_files']==audit['verified_files'] and transport['borrowed_identical_array_files']==102 and not transport['original_full_archive_bytes_verified_on_windows']
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -579,7 +597,7 @@ def main():
                   delta_value_tile_private_native_transformations_regenerated=12,
                   streamed_body_weight_preparation_files_checked=len(streamed_proof['files']),
                   delta_value_tile_rejected_native_table_values_checked=66,streamed_body_weight_endpoint_values_checked=24,
-                  block_packed_numeric_table_values_checked=24,wide_block_packed_clock_table_values_checked=48,
+                  block_packed_numeric_table_values_checked=24,wide_block_packed_clock_table_values_checked=48,screen_index_table_values_checked=screen_tables,
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

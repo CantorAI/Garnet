@@ -1,0 +1,19 @@
+{
+  "identical_fields": [
+    "source_sha256",
+    "generated_sha256",
+    "defines",
+    "reference_library_sha256",
+    "assets",
+    "numeric_design",
+    "timing_design",
+    "admission"
+  ],
+  "source_files": 21,
+  "generated_files": 6,
+  "different_output_directories_expected": true,
+  "excluded_cohort_never_used_for_speed_selection": true,
+  "clean_initial_admitted": false,
+  "confirmation_run": false,
+  "full_goal_met": false
+}
