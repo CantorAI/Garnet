@@ -33,7 +33,9 @@ class Model:
             raise ValueError('Metal serving capacity must be between 64 and 8192 tokens')
         self.tokenizer = garnet.tokenizer()
         self.tokenizer.open(root)
-        checkpoint = os.path.join(root, 'model.safetensors')
+        index = os.path.join(root, 'model.safetensors.index.json')
+        checkpoint = index if os.path.isfile(index) else os.path.join(root, 'model.safetensors')
+        self.checkpoint = checkpoint
         cls = MetalDecoder if self.visual else DenseMetalDecoder
         self.decoder = cls(checkpoint, self.text_config, 1, self.capacity)
         self.decoder.enable_prefill(16, 'shared')
@@ -72,7 +74,7 @@ class Model:
             if self.grid != [gh, gw]:
                 if self.vision is not None:
                     self.vision.close()
-                self.vision = MetalImageEncoder(os.path.join(self.root, 'model.safetensors'),
+                self.vision = MetalImageEncoder(self.checkpoint,
                                                 self.config['vision_config'], gh, gw, 1)
                 self.grid = [gh, gw]
             embedding = self.vision.encode_file(stem + '.f32')
