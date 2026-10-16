@@ -131,6 +131,26 @@ Both widths pass the original gain/null rule in this new initial cohort:
 both serving batches improve GPU ANDwall by>=5%, with own-null within5% and
 every original numerical shape passing. Admit one unchanged complete
 three-policy confirmation, PID60693 at
-`logs/vector-vision-calibrated-confirm-20261016`. It is running and unproven.
-No width chosen, native integration, complete-model TTFT or fresh vLLM gain
-is established by this initial synthetic result.
+`logs/vector-vision-calibrated-confirm-20261016`.
+
+## Confirmation passes; width4 selected for native investigation
+
+PID60693 exits0 in169.352535625s. Both-host archive/raw audits verify37 files,
+72 original numerical records, zero failures and14,400 timed submissions.
+Archive SHA256:
+`e0caf4a4e40e5d2b8b72984734f2509b5671ef87f92f9f6276e4f00ceefbbf77`.
+[Confirmation audit](repeat/verification.json),
+[two-cohort decision](decision-repeat.json).
+
+| Width | Batch | GPU fraction | Wall fraction | Own-null GPU fraction | Own-null wall fraction |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2 | 1 | 0.638116 | 0.753389 | 0.992744 | 0.972613 |
+| 2 | 2 | 0.634705 | 0.675877 | 1.000306 | 1.011905 |
+| 4 | 1 | 0.623559 | 0.726689 | 0.992744 | 0.972613 |
+| 4 | 2 | 0.604956 | 0.658583 | 1.000306 | 1.011905 |
+
+Both widths pass both fresh cohorts with identical sources/environment and
+original numerical/gain/null gates. Predeclared geometric-mean wall selection
+chooses width4:0.690318881 versus width2:0.712403945. This admits private native
+integration only. No complete-model TTFT, fresh vLLM gain or target-count change
+is established by these component results.

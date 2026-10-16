@@ -1274,6 +1274,38 @@ one unchanged full3-policy confirmationPID60693 after terminal/archive/audits;
 it is running. Retainedc186 unchanged; no freshvLLM ratio or new target pass.
 [All raw prospective data, decisions and limits](../../results/20261016/vector-vision-calibrated/README.md#initial-candidate-cohort-passes-confirmation-pending).
 
+### 2026-10-16 UTC — calibrated confirmation selects width4; native correctness running
+
+Full confirmation60693 exits0 in169.352535625s; both-host37-file archive/raw
+audits pass72 original numerical records and14,400 submissions, no dropped
+windows or relaxed bounds. Width4 repeatB1 GPU/wall .623559/.726689, B2
+.604956/.658583; nullB1 .992744/.972613, B2 1.000306/1.011905.
+Both widths qualify in both complete fresh cohorts. Predeclared geometric-mean
+wall choice selects width4 .690318881 versus width2 .712403945. Selection
+admits private native integration; no full-model or freshvLLM gain yet.
+[Confirmation raw evidence and two-cohort decision](../../results/20261016/vector-vision-calibrated/README.md#confirmation-passes-width4-selected-for-native-investigation).
+
+Create private `vector-vision-native-investigation-20261016` source closure:
+1406 files, eight transformations. Exact selected shader appended to strict
+prefetch library; adjacent outputs vectorized without changing FMA order.
+Guard shape/FP32/alignment/thread limits, preserve scalar fallback, add actual
+graph/frame dispatch counters. No new model weights or input reuse; baseline
+c186 remains retained. Before native timings predeclare both VL batches >=2%
+warmTTFT reduction in two complete cohorts, decode regression <=2%, original
+correctness unchanged; this gate does not replace the full2x/halfTTFT goal.
+
+Launch fresh30 original numerical and actual native primitive stages,
+PID64007. Configure/build and primitive compilation/execution are terminal0;
+new native primitive verifies96 original-FMA bit cases:8 serving/88 fallback,
+four changed-input patterns, pending-output rejection and abort/reset/recovery.
+Other trained numerical stages remain running, so no full correctness or
+performance claim. No live-job consumed source/driver modified.
+Two ad hoc read-only process-guard probes initially omitted imports and failed
+with NameError before guard completion; full original import closure then
+passes. A guessed standalone guard filename was absent. These inspection
+failures launched no inference and supply no performance evidence.
+[Native design, tests and prospective rule](../../results/20261016/vector-vision-native/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

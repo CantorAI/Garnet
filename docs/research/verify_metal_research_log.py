@@ -251,10 +251,11 @@ def main():
         assert cells[0].strip()==label and int(cells[1])==r['batch']
         assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction')]
         vector_calibration_numbers+=2
-    vector_candidate=json.loads((p/'decision-initial.json').read_text());assert vector_candidate['repeat_admitted'] and not vector_candidate['promote']
+    vector_candidate=json.loads((p/'decision-repeat.json').read_text());assert vector_candidate['repeat_admitted'] and not vector_candidate['promote']
+    assert vector_candidate['native_integration_vector_width']==4 and len(vector_candidate['trials'])==2
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith(('| 2 |','| 4 |'))]
-    groups=[(c['vector_width'],r) for c in vector_candidate['trials'][0]['candidates'] for r in c['serving']]
-    assert len(rows)==len(groups)==4;vector_calibrated_numbers=0
+    groups=[(c['vector_width'],r) for t in vector_candidate['trials'] for c in t['candidates'] for r in c['serving']]
+    assert len(rows)==len(groups)==8;vector_calibrated_numbers=0
     for cells,(width,r) in zip(rows,groups):
         assert int(cells[0])==width and int(cells[1])==r['batch']
         assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction','null_gpu_fraction','null_wall_fraction')]

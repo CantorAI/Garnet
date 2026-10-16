@@ -1,0 +1,129 @@
+{
+  "trials": [
+    {
+      "label": "initial",
+      "candidates": [
+        {
+          "variant": 1,
+          "vector_width": 2,
+          "all24_numerical_pass": true,
+          "serving": [
+            {
+              "batch": 1,
+              "gpu_fraction": 0.6324535333162256,
+              "wall_fraction": 0.7297403975575741,
+              "null_gpu_fraction": 1.010532168718194,
+              "null_wall_fraction": 1.0083673886400648,
+              "screen_pass": true
+            },
+            {
+              "batch": 2,
+              "gpu_fraction": 0.645435039200782,
+              "wall_fraction": 0.693186950057094,
+              "null_gpu_fraction": 1.0018154293638493,
+              "null_wall_fraction": 0.998156591616632,
+              "screen_pass": true
+            }
+          ],
+          "qualified": true
+        },
+        {
+          "variant": 2,
+          "vector_width": 4,
+          "all24_numerical_pass": true,
+          "serving": [
+            {
+              "batch": 1,
+              "gpu_fraction": 0.6152116384609017,
+              "wall_fraction": 0.7310719378551164,
+              "null_gpu_fraction": 1.010532168718194,
+              "null_wall_fraction": 1.0083673886400648,
+              "screen_pass": true
+            },
+            {
+              "batch": 2,
+              "gpu_fraction": 0.6021471798378606,
+              "wall_fraction": 0.6490524442411296,
+              "null_gpu_fraction": 1.0018154293638493,
+              "null_wall_fraction": 0.998156591616632,
+              "screen_pass": true
+            }
+          ],
+          "qualified": true
+        }
+      ]
+    },
+    {
+      "label": "repeat",
+      "candidates": [
+        {
+          "variant": 1,
+          "vector_width": 2,
+          "all24_numerical_pass": true,
+          "serving": [
+            {
+              "batch": 1,
+              "gpu_fraction": 0.6381163843985745,
+              "wall_fraction": 0.7533887370208823,
+              "null_gpu_fraction": 0.9927438434457205,
+              "null_wall_fraction": 0.9726130011822535,
+              "screen_pass": true
+            },
+            {
+              "batch": 2,
+              "gpu_fraction": 0.6347053933646029,
+              "wall_fraction": 0.6758765390401966,
+              "null_gpu_fraction": 1.0003056093488445,
+              "null_wall_fraction": 1.0119054110873102,
+              "screen_pass": true
+            }
+          ],
+          "qualified": true
+        },
+        {
+          "variant": 2,
+          "vector_width": 4,
+          "all24_numerical_pass": true,
+          "serving": [
+            {
+              "batch": 1,
+              "gpu_fraction": 0.6235590180926622,
+              "wall_fraction": 0.7266886005660267,
+              "null_gpu_fraction": 0.9927438434457205,
+              "null_wall_fraction": 0.9726130011822535,
+              "screen_pass": true
+            },
+            {
+              "batch": 2,
+              "gpu_fraction": 0.6049562810932444,
+              "wall_fraction": 0.6585833636960005,
+              "null_gpu_fraction": 1.0003056093488445,
+              "null_wall_fraction": 1.0119054110873102,
+              "screen_pass": true
+            }
+          ],
+          "qualified": true
+        }
+      ]
+    }
+  ],
+  "repeat_admitted": true,
+  "qualified": [
+    {
+      "variant": 2,
+      "vector_width": 4,
+      "geomean_serving_wall_fraction": 0.690318880639712
+    },
+    {
+      "variant": 1,
+      "vector_width": 2,
+      "geomean_serving_wall_fraction": 0.7124039445481156
+    }
+  ],
+  "native_integration_vector_width": 4,
+  "promote": false,
+  "fresh_vllm_run": false,
+  "target_count_update": false,
+  "full_goal_met": false,
+  "scope": "Predeclared synthetic component screen only. All24 original numerical checks per width; >=5% GPU AND wall gain at both serving batches, own null within5%, repeated unchanged. No trained/full-model speed claim."
+}

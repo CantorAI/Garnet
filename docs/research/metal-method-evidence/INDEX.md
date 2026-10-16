@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T01:54:10.269880+00:00
+Generated UTC: 2026-10-16T02:04:34.565228+00:00
 
-Base HEAD at generation: `935ad1a1dfd6dadd5f5bb2e8e67c9630b54c52da`. Reports indexed: **163**.
+Base HEAD at generation: `5dd20c849d4cbdb345478960b4f2e238fe9b0ef4`. Reports indexed: **164**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -159,6 +159,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
+| [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
 | [test2026/metal/results/20261012/vllm-metal/prefill-tiles](../../../test2026/metal/results/20261012/vllm-metal/prefill-tiles/README.md) | Validated wide prefill tiles |
