@@ -2190,6 +2190,65 @@ model decode/TTFT gains remain unmeasured for this variant. No serving or target
 count update. Preserve the earlier Windows-only preparation separately.
 [All endpoint clocks, costs, source records and original gates](../../results/20261016/streamed-body-weights/README.md).
 
+## 2026 10 16 Contiguous BF16 prefill blocks rejected
+
+Hypothesis: a K-major N64/K32 BF16 copy gives coalesced tile loads, while M32/M64
+FP32 SIMD matrix tiles reuse input/result shared storage and skip inactive
+M64 accumulator bands. This is different from the earlier four-output packed
+prefill layout. Additional packing is lossless; no checkpoint, arithmetic
+precision, prompt, output cap, batch or error threshold changes.
+
+Actual Mac PID28401 completed in72.469517seconds, exit0, using the accepted d52
+context and exact defines in a private standalone build.25 Windows CPU layout
+cases cover204,800 padded arbitrary BF16 words, and actual Mac weight upload
+verifies every packed/padded word against its original. The generation hashes
+match Windows. All29 checkpoint matrices,20selected, run B1/B2 at the original
+physical prefill rows and four patterns:48profiles and75,601,920 FP32 outputs.
+Six comparisons fail the original5e-6+5e-5*abs(control) limit; worst normalized
+ratio1.905077547. The unchanged FP64 envelope passes, worst0.075892469, which
+does not override the separate control-comparison failures.
+
+Both complete policies were excluded before any timing, with no favorable
+per-profile subset, repeat or integration. The planned all-six5% GPU/wall screen
+and own-null protocol therefore supply no measured speed result. Additional
+BF16 storage totals126.9375MiB across separately executed model projection sets;
+upload/preparation totals487.0775ms, with no full-model or peak-RSS extrapolation.
+The50-file frozen archive and all source/numeric/route/guard records reproduce
+identically on Mac/Windows. No GPU ownership/abort/tail suite or vision-tower,
+sequential-network or matched vLLM comparison was attempted. The goal counts
+remain4/6decode,2/6TTFT,0/6both consistently.
+[Methods, original failures, setup cost, commands and audits](../../results/20261016/block-packed-prefill/README.md).
+
+## 2026 10 16 Wide output block tiles correct but slower
+
+Follow-up to the rejected all-eligible tiles: fixed output columns>1024, keep all
+other original projection routes. The hypothesis targets wide gate/up, query and
+linear matrices for more contiguous output-tile work; it does not establish why
+the first design failed comparison. This is an evidence-informed selection,
+chosen before any new timing, with the same six workload profiles and bounds.
+
+Actual Mac PID29834 exited0 in129.259064seconds after complete three-model numeric
+mode and separate own-null/comparison timing.29matrices,12selected,48numerical
+profiles,75,601,920 outputs all pass, comparison ratio0.0, original FP64 bound
+unchanged. The original BF16 word/padding roundtrip is also checked at upload.
+M32/M64 use the same N64/K32 packed layout, FP32 accumulation and256threads.
+
+All4,800 timing samples retained:12 complete model/batch/policy profiles, all own
+nulls within5%, GPU fractions1.453310–2.131512, wall1.228141–1.754453. Every profile
+fails the preservation/gain screen, so both policies are rejected with no repeat
+or integration. The pre-execution screen targets the four outstanding prefill
+TTFT workloads for5% GPU/wall improvement and requires every profile within2%,
+plus an unchanged full confirmation; it does not shrink the full matched goal.
+
+Additional buffers total84.625MiB and upload/preparation427.354077ms across
+separate numeric processes; no full-model or peak-RSS estimate. The63-file archive
+and both independently run audits agree on all sources, original checks, clocks
+and rejection. External audit code was separate from immutable consumed runtime
+sources. No fresh matched goal ratio or target count is claimed. Contiguous
+packing/shared scratch reuse is insufficient in this implementation; preserve
+the selected MPS/BF16 route. Register scheduling and exact GPU causes unmeasured.
+[All12 GPU/wall/null rows, protocol, selection provenance, costs and commands](../../results/20261016/wide-block-packed-prefill/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

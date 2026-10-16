@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native','streamed-body-weights-preparation','streamed-body-weights')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native','streamed-body-weights-preparation','streamed-body-weights','block-packed-prefill','wide-block-packed-prefill')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -525,6 +525,27 @@ def main():
         assert cells[0].strip()==r['model'] and int(cells[1])==r['batch'];c,n=r['fractions']['comparison'],r['fractions']['null']
         assert cells[2].strip()==f"{c['gpu_ms']:.6f}" and cells[3].strip()==f"{c['wall_ms']:.6f}" and cells[4].strip()==f"{n['gpu_ms']:.6f} / {n['wall_ms']:.6f}"
         assert cells[5].strip()==('Yes' if r['own_null_stable'] else 'No') and cells[6].strip()==('Yes' if r['own_null_stable'] and r['within_preservation'] and r['unmet_b1_gain'] is not False else 'No')
+    block=ROOT/'results/20261016/block-packed-prefill';block_audit=json.loads((block/'initial/verification.json').read_text());assert block_audit==json.loads((block/'initial/mac-verification.json').read_text())
+    assert (block_audit['regenerated_sources'],block_audit['matrices'],block_audit['selected_matrices'],block_audit['numeric_profiles'],block_audit['numeric_failures'],block_audit['fp32_values_compared'],block_audit['timing_samples'])==(4,29,20,48,6,75601920,0)
+    assert all(not v['numeric_admitted'] and not v['unchanged_confirmation_admitted'] and not v['native_integration_admitted'] for v in block_audit['policies'].values())
+    block_rows=[line.split('|')[1:-1] for line in (block/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(block_rows)==6
+    for cells in block_rows:
+        model=cells[0].strip();batch=int(cells[1]);sub=[v for v in block_audit['checks'] if v['model']==model and v['batch']==batch];block_expected=[]
+        for policy in (1,2):
+            current=[v for v in sub if v['policy']==policy];assert len(current)==4;block_expected.extend([str(sum(not v['passed'] for v in current)),f"{max(v['comparison_worst'] for v in current):.6f}"])
+        assert [v.strip() for v in cells[2:]]==block_expected
+    wide_block=ROOT/'results/20261016/wide-block-packed-prefill';wide_audit=json.loads((wide_block/'initial/verification.json').read_text());assert wide_audit==json.loads((wide_block/'initial/mac-verification.json').read_text())
+    assert (wide_audit['matrices'],wide_audit['selected_matrices'],wide_audit['numeric_profiles'],wide_audit['numeric_failures'],wide_audit['fp32_values_compared'],wide_audit['timing_samples'])==(29,12,48,0,75601920,4800) and wide_audit['worst_comparison_ratio']==0
+    assert all(v['numeric_admitted'] and not v['unchanged_confirmation_admitted'] and not v['native_integration_admitted'] for v in wide_audit['policies'].values())
+    wide_rows=[line.split('|')[1:-1] for line in (wide_block/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(wide_rows)==len(wide_audit['timing_profiles'])==12
+    for cells,v in zip(wide_rows,wide_audit['timing_profiles']):
+        assert cells[0].strip()==v['model'] and int(cells[1])==v['batch'] and int(cells[2])==v['policy'] and not v['passed'];c,n=v['fractions']['comparison'],v['fractions']['null']
+        assert [w.strip() for w in cells[3:]]==[f'{x:.6f}' for x in (c['gpu_ms'],c['wall_ms'],n['gpu_ms'],n['wall_ms'])] and all(.95<=x<=1.05 for x in n.values())
+    for block_folder in (block,wide_block):
+        evidence=block_folder/'initial/evidence';trial=next(iter(json.loads((evidence/'manifest.json').read_text())['jobs']));metadata=json.loads((evidence/'logs'/trial/'jobs/metadata.json').read_text())
+        for name,sha in metadata['source_sha256'].items():
+            local=ROOT/'test2026/metal'/Path(name).name
+            if local.name.startswith(('make_block_packed_','make_wide_block_packed_','run_block_packed_','run_wide_block_packed_')):assert hashlib.sha256(local.read_bytes()).hexdigest()==sha
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -558,6 +579,7 @@ def main():
                   delta_value_tile_private_native_transformations_regenerated=12,
                   streamed_body_weight_preparation_files_checked=len(streamed_proof['files']),
                   delta_value_tile_rejected_native_table_values_checked=66,streamed_body_weight_endpoint_values_checked=24,
+                  block_packed_numeric_table_values_checked=24,wide_block_packed_clock_table_values_checked=48,
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

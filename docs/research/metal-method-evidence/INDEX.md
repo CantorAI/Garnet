@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T06:58:27.381105+00:00
+Generated UTC: 2026-10-16T07:12:01.956791+00:00
 
-Base HEAD at generation: `2217bbf6250866840670cad196511f22b49c8268`. Reports indexed: **203**.
+Base HEAD at generation: `23c88bcec273d5b2ee9133bdd170043557eb39c6`. Reports indexed: **205**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -154,6 +154,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/wide-batch-prefill](../../../results/20261015/wide-batch-prefill/README.md) | Exact 160-row VL batch-2 prefill investigation |
 | [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
 | [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |
+| [results/20261016/block-packed-prefill](../../../results/20261016/block-packed-prefill/README.md) | K32 N64 block packed prefill rejected by numerical gate |
 | [results/20261016/compact-fused-projection-groups](../../../results/20261016/compact-fused-projection-groups/README.md) | Compact-aware independent decode projections |
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
 | [results/20261016/delta-value-tiles-addresses](../../../results/20261016/delta-value-tiles-addresses/README.md) | Wider delta value tiles CPU prerequisite |
@@ -199,6 +200,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/streamed-body-weights-preparation](../../../results/20261016/streamed-body-weights-preparation/README.md) | Streamed decoded weight lifetime preparation |
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
+| [results/20261016/wide-block-packed-prefill](../../../results/20261016/wide-block-packed-prefill/README.md) | Wide output block packed prefill rejected by timing |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
 | [test2026/metal/results/20261012/vllm-metal/prefill-tiles](../../../test2026/metal/results/20261012/vllm-metal/prefill-tiles/README.md) | Validated wide prefill tiles |
