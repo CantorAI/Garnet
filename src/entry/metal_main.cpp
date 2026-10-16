@@ -5,9 +5,57 @@
 #include "../backends/metal/decoder_session.h"
 #include "model_tensor_io.h"
 #include "tokenizer_api.h"
+#include <filesystem>
+#include <fstream>
+#include <atomic>
+#include <chrono>
 namespace Garnet {
 class GarnetMetalAPI {
+    X::Module Serving(X3PackageHost* host) {
+        const std::string root = GARNET_METAL_SOURCE_ROOT;
+        if (x3_runtime_add_import_root(host->runtime, root.c_str()) != X3_STATUS_OK ||
+                x3_runtime_add_import_root(host->runtime, (root + "/runtime").c_str()) != X3_STATUS_OK)
+            throw X::Error(x3_runtime_last_error(host->runtime));
+        return X::Module(host, "metal_serving");
+    }
 public:
+    std::string ServeModel(X::Value root, X::Value xmodel, X::Value cache,
+            X::Value profile, X::Value model) {
+        auto module = Serving(root.host());
+        return module["serve_model"](root, xmodel, cache, profile, model).ToString();
+    }
+    std::string ServeStatus(X::Value model) {
+        auto module = Serving(model.host());
+        return module["serve_status_json"](model).ToString();
+    }
+    std::string InferJson(X::Value prompt, X::Value image, X::Value limit, X::Value model) {
+        auto module = Serving(prompt.host());
+        std::filesystem::path temporary;
+        std::string imagePath;
+        if (image.IsBin()) {
+            uint64_t size = 0;
+            const auto* data = static_cast<const char*>(image.BytesData(&size));
+            if (data && size) {
+                static std::atomic<uint64_t> sequence{0};
+                const auto folder = std::filesystem::temp_directory_path() / "garnet-metal-images";
+                std::filesystem::create_directories(folder);
+                temporary = folder / (std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())
+                    + "-" + std::to_string(sequence++) + ".jpg");
+                std::ofstream out(temporary, std::ios::binary);
+                out.write(data, static_cast<std::streamsize>(size));
+                if (!out) throw X::Error("cannot stage Garnet Metal image input");
+                imagePath = temporary.string();
+            }
+        } else if (image.IsString()) imagePath = image.ToString();
+        try {
+            const auto result = module["infer_json"](prompt, imagePath, limit, model).ToString();
+            if (!temporary.empty()) std::filesystem::remove(temporary);
+            return result;
+        } catch (...) {
+            if (!temporary.empty()) std::filesystem::remove(temporary);
+            throw;
+        }
+    }
     std::string BackendInfo() const {
         auto info="Garnet Metal/MPS "+MetalContext::AvailableDeviceName();
 #ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
@@ -109,6 +157,9 @@ public:
         APISET().AddClass<0,ModelTensorIO>("tensor_io");
         APISET().AddClass<0,CPUTokenizer>("tokenizer");
         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
+        APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
+        APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
+        APISET().AddFunc<4>("infer_json",&GarnetMetalAPI::InferJson);
         APISET().AddFunc<0>("shutdown",&GarnetMetalAPI::Shutdown);
     END_PACKAGE
 };
