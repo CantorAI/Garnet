@@ -1091,6 +1091,48 @@ waits exact23582, archives terminal success/failure, then audits a successful
 full30 without rerunning GPU stages. Controller identities frozen separately;
 no concurrent inference, driver/source mutations, promotion or goal completion.
 
+### 2026-10-16 UTC — guarded full native pipeline queued after exact validation handle
+
+Prior turn made progress: full checkpoint evidence, repeated selective component
+screen and actual native failure/repair; no new matched goal pass. Revalidate
+exact23582/25901 live before new work. Prepared full6 native profiles retain
+all original72 output/clock predicates. Derive new selective and retained common
+half counts from frozenf9505c75... admission report; exact168/143/182 counts
+per eligible text/coder/VL chunk, newVL1 prefill/0decode, others0. Offline exact
+AST formula preflight matches36 real old retained-control requests; no old
+timings reused, candidate counts remain predictions pending execution.
+
+New continuationPID33009 waits exact25901, then only terminal/archive/audited
+full30 can launch guarded original6 native ABBA. Archive/audit before applying
+both-VL>=3% warm-TTFT initial screen; only passing initial permits one unchanged
+fresh full6 confirmation. No promotion or goal completion from this pipeline.
+First full30 audit preserved; repeat only CPU evidence audit with explicit
+archiveSHA before native launch, original fields must match. Correct per-batch
+physical-row metadata80/160; distinct expanded-script filename per profile;
+independent profile auditor regenerates comparators and checks source/counters.
+All live serving/external drivers frozen. Retainedc186, goal active/unmet.
+[Prepared pipeline and limits](../../results/20261016/ndarray-selective-native/README.md#full-model-comparison-prepared-and-gated).
+
+### 2026-10-16 UTC — CPU exponent-escape study: modest modeled ranked packet saving
+
+Actual CPU-only first-layer analysis exits0 in4.830290125s. Freeze11-file
+archive94fba9ef...; Mac/Windows provenance/histogram/budget audits pass. Full
+checkpoint and29fixture slice hashes verified. Retained large-body geometry
+admits20 matrices (6text/3coder/11VL),129984 blocks,125525 compact4459raw.
+Seven-exponent window plus original exponent escapes reconstructs64268800
+compact entries exactly as a CPU expression; no actual packet/GPU kernel.
+
+Correct descriptive budget adds identical4-byte raw-fallback metadata omitted
+from initial fraction denominators; retain original report. Ranked/aligned
+packet/control fractions .985794610/.983626959/.985190216; ideal free-rank
+.938683336/.936669964/.938101777. Original master/fallback buffers remain;
+variable addressing/lookup unimplemented, no GPU traffic/RSS/model speed claim.
+Prioritize no GPU candidate from1.4--1.6% ranked payload estimates alone; ideal
+~6% excludes lookup work. Decision is after descriptive CPU results, not a
+predeclared speed gate or universal rejection. CPU analysis overlaps only native
+numerical validation, no timed inference comparison; preserve commands/scope.
+[Histograms, corrected table, source identities and decision](../../results/20261016/compact11-escape-cpu/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

@@ -1,0 +1,16 @@
+{
+  "source_sha256": {
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_compact11_escape_cpu.py": "cee365d5934421e31f3853c24ee031d1c1467734246648baf75d18e33ca2c776",
+    "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/coalesced_body_block_shader.h": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa",
+    "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59"
+  },
+  "command": [
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_compact11_escape_cpu.py",
+    "/Users/zsdx/garnet-metal-investigation",
+    "/Users/zsdx/garnet-metal-investigation/logs/compact11-escape-cpu-20261016"
+  ],
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+  "numpy": "2.3.4",
+  "scope": "CPU-only exact BF16 exponent statistics for a possible 11-bit-plus-escape decoder.\n\nNo GPU use, inference, packet implementation, speed or memory-RSS claim.\nAll original first-layer fixtures are retained; decode admission matches the\ncurrent large-body geometry. Byte budgets are hypothetical, not GPU traffic.\n",
+  "full_goal_met": false
+}

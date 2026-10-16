@@ -1,0 +1,43 @@
+{
+  "models": [
+    {
+      "model": "Qwen3-0.6B",
+      "eligible_matrices": 6,
+      "blocks": 28672,
+      "retained_packet_bytes": 22389248,
+      "ideal_packet_bytes": 21016414,
+      "ranked_packet_bytes": 22071200,
+      "ideal_packet_fraction": 0.9386833358583548,
+      "ranked_packet_fraction": 0.985794609984221,
+      "common_raw_fallback_metadata_bytes": 3976
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "eligible_matrices": 3,
+      "blocks": 25536,
+      "retained_packet_bytes": 19940096,
+      "ideal_packet_bytes": 18677289,
+      "ranked_packet_bytes": 19613616,
+      "ideal_packet_fraction": 0.9366699638758008,
+      "ranked_packet_fraction": 0.9836269594690016,
+      "common_raw_fallback_metadata_bytes": 3536
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "eligible_matrices": 11,
+      "blocks": 75776,
+      "retained_packet_bytes": 59159808,
+      "ideal_packet_bytes": 55497921,
+      "ranked_packet_bytes": 58283664,
+      "ideal_packet_fraction": 0.9381017768008983,
+      "ranked_packet_fraction": 0.9851902156274747,
+      "common_raw_fallback_metadata_bytes": 10324
+    }
+  ],
+  "correction": "Initial CPU ratios omit the identical 4-byte metadata read for each raw-fallback block in both arms; retain those original bytes and add the common term here.",
+  "ranked_gpu_probe_admitted": false,
+  "ideal_gpu_probe_admitted": false,
+  "decision": "Prioritization after descriptive CPU results, not a predeclared speed gate: ranked/aligned estimated payload saving is small; ideal assumes free escape rank/address lookup that is not implemented. No runtime candidate selected.",
+  "scope": "Static packet model only, including common raw-fallback metadata. Neither GPU traffic/cache behavior nor process RSS, numerical GPU output or model speed is measured. Variable offsets/rank lookup are unimplemented; original master buffers remain.",
+  "full_goal_met": false
+}

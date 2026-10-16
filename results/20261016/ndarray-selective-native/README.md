@@ -109,3 +109,48 @@ A local extraction attempted before SCP13062 completed received Windows file-loc
 After that exact transfer reached terminal exit0, extraction and both-host
 failure audits succeeded. This local workflow mistake does not change the
 captured CTest failure or require rerunning the failed GPU dataset.
+
+## Full-model comparison prepared and gated
+
+New continuation PID33009 waits exact controller25901. Only terminal full30,
+frozen archive and successful independent audit permit dispatch of the original
+six native ABBA profiles, sequentially. It then freezes/audits72 complete outputs
+and applies the existing both-VL >=3% TTFT screen. A fresh unchanged six-profile
+confirmation is dispatched only if that initial screen passes; failed screens
+stop without searching favorable repeats. Source/drivers stay frozen through
+terminal/archive. The controller cannot promote or mark the full goal complete.
+
+Comparator preserves original matched prompts, outputs, preprocessing, chunk
+plans,32-bit arithmetic, original bounds and all clock/reset/ownership checks.
+It copies the exact captured full checkpoint admission report into every profile,
+checks its SHA and learned tensor shapes/checkpoint identity, and derives both
+the selective calls and retained common-half calls from that report. Every
+candidate VL image must execute1 NDArray prefill/zero decode plus182 common-half
+calls; text/coder must keep0 NDArray and their original168/143 common-half calls
+per eligible chunk. Actual values must still prove these predictions.
+
+A local [guard preflight](profile-guard-preflight.json) evaluates the exact AST
+guard expressions against36 frozen actual retained-control requests from the
+previous complete cohort. All observed common-half counts agree; new candidate
+counts are explicitly unexecuted expectations in that preflight. This avoids
+the old broad-NDArray assumption that any new route eliminates common half.
+The old data is used only to check guards, never reused for new timing ratios.
+
+The controller's first full30 audit is preserved. Before profiling, repeat the
+same CPU-only evidence audit with the explicit archive argument to include its
+SHA in a separate file; compare all original audit fields unchanged. No GPU
+stage is repeated. Generated comparison scripts get distinct filenames for
+each profile. The frozen standalone native auditor also regenerates them,
+checks every original output/clock predicate, all72 retained common-half
+counters, source closures, initialization/first/warm TTFT and worker peak RSS.
+
+```text
+python3 continue_ndarray_selective_native.py CANDIDATE OUTPUT 25901
+python3 launch_ndarray_selective_native_profiles.py CANDIDATE OUTPUT profiles
+python3 archive_ndarray_selective_native_profiles.py CANDIDATE ARCHIVE TRIAL
+python -X utf8 test2026/metal/verify_ndarray_selective_native_profiles.py EXTRACTED_RESULTS AUDIT_JSON TRIAL
+python -X utf8 test2026/metal/analyze_ndarray_selective_native_results.py RESULT_ROOT initial
+```
+
+Prepared/dispatched watcher is not evidence of full30 or performance success.
+No fresh vLLM comparison or goal-target update has occurred.
