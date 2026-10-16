@@ -31,11 +31,12 @@ def prepare_frame(image,config,processor,batch,budget=65536):
 if __name__ == '__main__':
     import sys, json
     from pathlib import Path
-    model, image_path, stem = sys.argv[1:]
+    model, image_path, stem = sys.argv[1:4]
+    budget = int(sys.argv[4]) if len(sys.argv) > 4 else 65536
     config = json.loads((Path(model)/'config.json').read_text())
     processor = json.loads((Path(model)/'preprocessor_config.json').read_text())
     with Image.open(image_path) as image:
-        values, rgb, size = prepare_frame(image, config['vision_config'], processor, 1)
+        values, rgb, size = prepare_frame(image, config['vision_config'], processor, 1, budget)
     values.tofile(stem + '.f32')
     patch = config['vision_config']['patch_size']
     Path(stem + '.json').write_text(json.dumps({'grid':[size[0]//patch,size[1]//patch]}))

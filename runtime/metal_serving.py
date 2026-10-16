@@ -20,13 +20,20 @@ _lock = threading.RLock()
 
 
 class Model:
-    def __init__(self, root, cache, profile, name):
+    def __init__(self, root, xmodel, cache, profile, name):
         self.root, self.name = root, name
         self.cache = cache or os.path.join(root, 'metal-cache')
         os.makedirs(self.cache, exist_ok=True)
         with open(os.path.join(root, 'config.json')) as stream:
             self.config = json.loads(stream.read())
         self.visual = 'vision_config' in self.config
+        self.xmodel = os.path.basename(os.path.normpath(xmodel)) if xmodel else ''
+        self.image_pixels = int(profile.get('imagePixels', profile.get('maxPixels', 65536)))
+        if self.image_pixels < 4096 or self.image_pixels > 1048576:
+            raise ValueError('Metal imagePixels must be between 4096 and 1048576')
+        self.prefill_chunk = int(profile.get('prefillChunk', 16))
+        if self.prefill_chunk not in (2, 4, 8, 16, 32, 64):
+            raise ValueError('Unsupported Metal prefillChunk')
         self.text_config = self.config['text_config'] if self.visual else self.config
         self.capacity = int(profile.get('maxInputTokens', 1536)) + int(profile.get('maxOutputTokens', 512))
         if self.capacity < 64 or self.capacity > 8192:
@@ -37,8 +44,21 @@ class Model:
         checkpoint = index if os.path.isfile(index) else os.path.join(root, 'model.safetensors')
         self.checkpoint = checkpoint
         cls = MetalDecoder if self.visual else DenseMetalDecoder
-        self.decoder = cls(checkpoint, self.text_config, 1, self.capacity)
-        self.decoder.enable_prefill(16, 'shared')
+        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > 65536:
+            raise ValueError('Metal prefill chunk times hidden size exceeds the packed width limit')
+        self.model_factory = None
+        if self.visual and self.xmodel == 'vl_4b':
+            from xModel.qwen35.vl_4b import model
+            self.model_factory = model
+            self.decoder = model.create_decoder(checkpoint, self.config, self.capacity)
+        else:
+            if self.visual and self.text_config.get('hidden_size') == 2560:
+                raise ValueError('Qwen3.5-4B requires xmodelRoot xModel/qwen35/vl_4b')
+            self.decoder = cls(checkpoint, self.text_config, 1, self.capacity)
+        if self.visual:
+            self.decoder.enable_prefill(self.prefill_chunk, 'shared', bool(profile.get('linearChunk', False)))
+        else:
+            self.decoder.enable_prefill(self.prefill_chunk, 'shared')
         self.vision, self.grid = None, None
         self.stops = [self.tokenizer.token_id('<|im_end|>'), self.tokenizer.token_id('<|endoftext|>')]
         eos = self.text_config.get('eos_token_id')
@@ -67,15 +87,14 @@ class Model:
                 raise RuntimeError('Set GARNET_METAL_FRONTEND_PYTHON to a Python with NumPy and Pillow')
             stem = os.path.join(self.cache, 'request-frame')
             subprocess.run([python, os.path.join(ROOT, 'runtime', 'metal_prepare_image.py'),
-                            self.root, image, stem], check=True, timeout=60)
+                            self.root, image, stem, str(self.image_pixels)], check=True, timeout=60)
             with open(stem + '.json') as stream:
                 metadata = json.loads(stream.read())
             gh, gw = metadata['grid']
             if self.grid != [gh, gw]:
                 if self.vision is not None:
                     self.vision.close()
-                self.vision = MetalImageEncoder(self.checkpoint,
-                                                self.config['vision_config'], gh, gw, 1)
+                self.vision = self.model_factory.create_vision(self.checkpoint, self.config, gh, gw) if self.model_factory else MetalImageEncoder(self.checkpoint, self.config['vision_config'], gh, gw, 1)
                 self.grid = [gh, gw]
             embedding = self.vision.encode_file(stem + '.f32')
             append_text('<|vision_start|>')
@@ -111,7 +130,7 @@ def serve_model(root, xmodel, cache, profile, name):
     with _lock:
         try:
             if name not in _models:
-                _models[name] = Model(root, cache, json.loads(profile) if profile else {}, name)
+                _models[name] = Model(root, xmodel, cache, json.loads(profile) if profile else {}, name)
             return serve_status_json(name)
         except Exception as error:
             return json.dumps(dict(ready=False, model_id=name, error_message=str(error)))
