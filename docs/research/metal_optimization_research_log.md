@@ -1133,6 +1133,147 @@ predeclared speed gate or universal rejection. CPU analysis overlaps only native
 numerical validation, no timed inference comparison; preserve commands/scope.
 [Histograms, corrected table, source identities and decision](../../results/20261016/compact11-escape-cpu/README.md).
 
+### 2026-10-16 UTC — exact validation still live; vector next-step preparation only
+
+Revalidate exact23582/25901/33009 via process handles, not lock-file presence.
+Prior goal turn made progress through CPU evidence and guarded native pipeline.
+Fresh30 now passes dense tails/layers, all privateKV, trained vision, extended
+Qwen3.5 prefill and all prefix/screened recovery suites; final trained wide
+batch gate still executes. Partial successes are not full30 or model speed proof.
+
+While that exclusive job runs, prepare only unused vector-vision launcher,
+synthetic-only terminal archiver and fixed predeclared analyzer. Copy them and
+the earlier vector generators/auditor to Mac; local/Mac generation/AST passes,
+no Metal compile/GPU probe dispatched. Launcher requires current native chain
+terminal success, archived/independently audited72-output cohorts, retainedc186
+hash and quiet guard. Analyzer requires identical complete sources/variants/
+environment across confirmation, all24 numerical cases per width, >=5% GPU
+ANDwall at both216/12/64 serving batches and matchingnullwithin5%. This changes
+no predeclared numerical/gain bound and makes no vector speed claim.
+[Prepared vector protocol](../../results/20261015/vector-vision-context/README.md).
+
+Review existing joined-prefill/compact-joined and single-dispatch projection
+reports before proposing more projection fusion: joined warm effects were small
+and memory/first-use costs material; compact allocation did not repeat its
+initial latency gain. Raw grouped QKV was mixed, including coderB1 regression.
+Do not repeat those unchanged methods or call unimplemented Q/V view/packing
+ideas tested optimizations. Current immediate decision still requires the
+selective native cohort and original broader matched target.
+
+### 2026-10-16 UTC — selective full30 and full native cohort audited; reject promotion
+
+Fresh30 PID23582 exits0 in1426.546372500s; freeze1732-file142964df... archive.
+Mac/Windows audits pass all original stages,7CTests/80coalesced cases, cache256/
+fallback14/abort/nativehalf,51headqueries78rows,4vision,6+6recoveries and4wide
+profiles12carriedsteps, worst original bound.5432836183473805. No reused stages.
+Candidatef6e855e0..., retainedc186 unchanged. Exact new full30 driver/source
+regeneration passes on both hosts. Controllers25901 then33009 execute in order.
+
+Native PID49121 exits0 in192.727560875s. Freeze5484-file1861996b... before
+interpretation. Both-host audits verify72 complete outputs,1287 serving-source
+and1068 external-tool identities, all original gates, exact72 common-half
+counts and regenerated comparators. ActualVL1NDpre/0decode+182common retained;
+other profiles0ND. All original image/patch/prompt/cap/stops preserved.
+
+VL B1 warm178.288667 ->179.360740ms (fraction1.006013); B2 296.004115 ->
+296.515594ms (1.001728). Both fail declared>=3% TTFT screen; no favorable
+confirmation or promotion. Decode ratios1.000584/.998940, near control in one
+cohort; do not claim repeated equivalence/regression. Preserve all6 timing,
+init/first and mean worker peak RSS rows. Lower observedVL peak RSS does not
+prove saving: logical F32 allocation24MiB remains, time-l peak spans init and
+inference. Cold hardware not asserted, component first-layer gain not extrapolated.
+No freshvLLM ratio, matched target counts unchanged, goal active/unmet.
+[All complete native data and decision](../../results/20261016/ndarray-selective-native/README.md).
+
+### 2026-10-16 UTC — vector vision initial numerically exact, null calibration rejects selection
+
+Only after native terminal/archive/audits and SCP20205 terminal0/local full
+audits, dispatch vectorPID53012. It exits0 in38.676133083s,33-filee2ec3e35...
+archive. Both-host audits:72 original shape/variant records,0numeric failures,
+11520timed submissions. Full output/padding bit identity and oldFP64 bound pass.
+Apparent vector2 GPU/wall fractions B1 .678234/.764214, B2 .719771/.757169;
+vector4 B1 .669169/.780027, B2 .660777/.700194. But B1 same-pipeline null
+1.118033/1.117906 exceeds original5% calibration. Neither width qualifies;
+no unchanged favorable repeat, no trained/native gain claim.
+
+All null windows retained: B1 round0 GPUmeans1.578144/1.599190/1.416550/
+.954771ms; round1 .798069/.786873/.800398/.786079. Both arms use the same
+pipeline object/geometry. Nonstationary timing observed; no instrumented
+frequency/thermal cause. Never filter round0 or normalize candidate by null.
+[Original failed screen, raw windows and bounds](../../results/20261015/vector-vision-context/README.md).
+
+### 2026-10-16 UTC — new prospective calibration-only design, before candidate recollection
+
+Predeclare separate fixed2s conditioning (old.25s),10ABBA rounds x5 samples
+(old2x20), all measured samples retained. Scalar/vector shaders byte-identical,
+all original24 shapes/four changed inputs/bit+FP64 gates unchanged. First two
+fresh cohorts run variant0 only,4800timings each; both serving batches must
+haveGPU ANDwall nullwithin5% in both cohorts before any new candidate gains.
+Initial failure stops this design, not repeated until favorable. New candidate
+cohorts, only if admitted, retain all72 original records and old5%gain+null5%
+both-batch repeated screen. Olde2ec failed cohort remains failed, never reused.
+
+Local/Mac generation preflights confirm identical shaders, only timing-harness
+changes. Launch initial null-onlyPID54090; no new vector candidate executes.
+No tolerance relaxation, source mutation of live drivers, model/VLLM gain or
+goal completion implied by new sampling design.
+[Prospective design and limits](../../results/20261016/vector-vision-calibrated/README.md).
+
+### 2026-10-16 UTC — null-only GPU dataset complete; parser failure preserved and repaired
+
+Null setupPID54090 exits1 in61.967176416s. Compiler and actualvariant0 GPU
+exit0, all24 original bit/FP64 checks and4800samples exist, but Python summary
+parser retained old8windows/2rounds/20samples rather than new40/10/5. No summary
+or null-gate result admitted. Freeze32-file7af5fad7... before editing source.
+Mac/Windows failure audits regenerate shader/harness and verify every raw
+numerical/window/sample and guard; do not calculate/select from failed ratios.
+
+After terminal/archive/audits, fix only three summary-count assertions. Generated
+shader and C++ harness match frozen failure bit-for-bit; no GPU algorithm,
+conditioning, sample or numerical/5% gate changes. Require two fresh corrected
+null cohorts, exclude all failed-setup timing data. Initial repairedPID55356
+launched; sources frozen until terminal/archive. Current native/vision methods
+remain unpromoted, retainedc186, full goal still active/unmet.
+
+Documentation checker variable-shadow defect in newly added table code was
+caught from reports_verified=2 despite163-report inventory; rename local table
+list to retain the inventory set. Recheck reports_verified=163 and all table/
+link/source hashes. This changes no benchmark evidence or numerical predicate.
+[Failure provenance and repair limits](../../results/20261016/vector-vision-calibrated/README.md#preserved-parser-failure-and-fresh-setup).
+
+### 2026-10-16 UTC — two fresh null calibrations pass; new full candidate collection starts
+
+Corrected initialPID55356 exits0 in61.974344042s;33-filea0dc7f65... archive.
+Confirmation56568 exits0 in62.002792667s;33-file8ca90d1b... archive. Both-host
+audits pass24 original shape/numerical records and4800timings each, onlyvariant0.
+All captured sources/shader/harness/variants/environment/timing design match.
+Initial B1 GPU/wall .978676390/.970951999; B2 1.003489961/1.002114045.
+Repeat B1 1.003273801/1.004098940; B2 .997444067/1.000960291. Both meet5%
+in both cohorts, no sample removal, old failed setup excluded entirely.
+
+Only after terminal/archive/audits, launch fresh full3-policy candidatePID57747
+atvector-vision-calibrated-20261016. Candidate gains are still unproven; all72
+original numerical checks and new complete timing records required. Same
+>=5%GPU ANDwall both-serving-batch + ownnullwithin5% screen, unchanged fresh
+confirmation before any width choice; olde2ec cohort never reused. No trained
+vision/native/VLLM gain or goal completion from a null gate.
+[Calibrated prospective study and all source/artifact identities](../../results/20261016/vector-vision-calibrated/README.md#actual-independent-null-calibration).
+
+### 2026-10-16 UTC — prospective full vector initial passes; unchanged confirmation running
+
+Full candidatePID57747 exits0 in169.318523958s; freeze37-filebcdc7fd2... archive.
+Both-host raw/regeneration audits:72 original shape/variant records, no numerical
+failures, full bit/padding identity and FP64 bound unchanged,14400timings.
+Source/shape/conditioning/10x5 sampling preserved, no filtered warm windows.
+
+Width2 initialB1 GPU/wall .632454/.729740, B2 .645435/.693187;
+width4 B1 .615212/.731072, B2 .602147/.649052. Own null B1
+1.010532/1.008367, B2 1.001815/.998157. Both widths qualify in initial
+new cohort, but no repeated width selection or model benefit yet. Admit exactly
+one unchanged full3-policy confirmationPID60693 after terminal/archive/audits;
+it is running. Retainedc186 unchanged; no freshvLLM ratio or new target pass.
+[All raw prospective data, decisions and limits](../../results/20261016/vector-vision-calibrated/README.md#initial-candidate-cohort-passes-confirmation-pending).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

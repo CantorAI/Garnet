@@ -1,0 +1,2960 @@
+{
+  "profiles": [
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00312654925,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.014977483078831,
+          "wall_ms": 0.23972918000000001
+        },
+        "candidate": {
+          "gpu_ms": 0.01233417540789,
+          "wall_ms": 0.23421163
+        }
+      },
+      "gpu_fraction": 0.8235145613566394,
+      "wall_fraction": 0.976984236962726
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00282500627,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0104066682979402,
+          "wall_ms": 0.21316883
+        },
+        "candidate": {
+          "gpu_ms": 0.0119791412726013,
+          "wall_ms": 0.22472626
+        }
+      },
+      "gpu_fraction": 1.1511024402471193,
+      "wall_fraction": 1.054217260562907
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0224423724,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0101362261921175,
+          "wall_ms": 0.21281414
+        },
+        "candidate": {
+          "gpu_ms": 0.0120995799079538,
+          "wall_ms": 0.22447959
+        }
+      },
+      "gpu_fraction": 1.1936967149927173,
+      "wall_fraction": 1.0548152016590626
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00299830982,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.019721244461836,
+          "wall_ms": 0.34614538
+        },
+        "candidate": {
+          "gpu_ms": 0.022859992459423,
+          "wall_ms": 0.36671789
+        }
+      },
+      "gpu_fraction": 1.1591556761877282,
+      "wall_fraction": 1.0594331491583102
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00848603677,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.02534579019994,
+          "wall_ms": 0.35484626
+        },
+        "candidate": {
+          "gpu_ms": 0.029527088627214,
+          "wall_ms": 0.38468243
+        }
+      },
+      "gpu_fraction": 1.1649701348543435,
+      "wall_fraction": 1.0840819627068916
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00220633915,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.011780806817112001,
+          "wall_ms": 0.22337381
+        },
+        "candidate": {
+          "gpu_ms": 0.011795437894761,
+          "wall_ms": 0.22161966
+        }
+      },
+      "gpu_fraction": 1.0012419419039915,
+      "wall_fraction": 0.9921470202795931
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0140578116,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.022754603996884,
+          "wall_ms": 0.26841036
+        },
+        "candidate": {
+          "gpu_ms": 0.019716667011383998,
+          "wall_ms": 0.25645212
+        }
+      },
+      "gpu_fraction": 0.8664913269457023,
+      "wall_fraction": 0.9554479193724117
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00268844817,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0742812687531,
+          "wall_ms": 0.43843918
+        },
+        "candidate": {
+          "gpu_ms": 0.063334167934951,
+          "wall_ms": 0.42923295
+        }
+      },
+      "gpu_fraction": 0.8526263619091436,
+      "wall_fraction": 0.9790022643505537
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00962958271,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.091726672835646,
+          "wall_ms": 0.4475617
+        },
+        "candidate": {
+          "gpu_ms": 0.092580420896401,
+          "wall_ms": 0.46087162
+        }
+      },
+      "gpu_fraction": 1.0093075223853887,
+      "wall_fraction": 1.029738737698065
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00420873352,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.13780871406197,
+          "wall_ms": 0.38612584
+        },
+        "candidate": {
+          "gpu_ms": 0.14058500994002,
+          "wall_ms": 0.39963833
+        }
+      },
+      "gpu_fraction": 1.0201460110628529,
+      "wall_fraction": 1.0349950420308571
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0185075334,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.5148387653754,
+          "wall_ms": 0.96180705
+        },
+        "candidate": {
+          "gpu_ms": 0.50742997787889,
+          "wall_ms": 0.95171583
+        }
+      },
+      "gpu_fraction": 0.9856094995272786,
+      "wall_fraction": 0.9895080619340438
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00843558549,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 1.19249294046287,
+          "wall_ms": 1.56340294
+        },
+        "candidate": {
+          "gpu_ms": 1.20505247730708,
+          "wall_ms": 1.57648454
+        }
+      },
+      "gpu_fraction": 1.010532168718194,
+      "wall_fraction": 1.0083673886400648
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00442776081,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0105858361348486,
+          "wall_ms": 0.22010586
+        },
+        "candidate": {
+          "gpu_ms": 0.0104370759800088,
+          "wall_ms": 0.21773501
+        }
+      },
+      "gpu_fraction": 0.9859472456455205,
+      "wall_fraction": 0.9892285920965486
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00282500627,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.014676274731752901,
+          "wall_ms": 0.28284708
+        },
+        "candidate": {
+          "gpu_ms": 0.0171512598171831,
+          "wall_ms": 0.29107377
+        }
+      },
+      "gpu_fraction": 1.1686385087951126,
+      "wall_fraction": 1.029085292307066
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0224423724,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.023178341798484,
+          "wall_ms": 0.39443658
+        },
+        "candidate": {
+          "gpu_ms": 0.026454571634536,
+          "wall_ms": 0.41001048
+        }
+      },
+      "gpu_fraction": 1.141348758445968,
+      "wall_fraction": 1.039483913991953
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00299830982,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.015576630830767,
+          "wall_ms": 0.25020997
+        },
+        "candidate": {
+          "gpu_ms": 0.013977084308867,
+          "wall_ms": 0.24381588
+        }
+      },
+      "gpu_fraction": 0.8973111361963737,
+      "wall_fraction": 0.9744451030468531
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00991286873,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.015697898343199,
+          "wall_ms": 0.2538587
+        },
+        "candidate": {
+          "gpu_ms": 0.013940399512644,
+          "wall_ms": 0.24728416
+        }
+      },
+      "gpu_fraction": 0.8880424122942278,
+      "wall_fraction": 0.9741015769796347
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00308603734,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.017667119391261,
+          "wall_ms": 0.2626
+        },
+        "candidate": {
+          "gpu_ms": 0.016953349113462,
+          "wall_ms": 0.25716541
+        }
+      },
+      "gpu_fraction": 0.9595989441180736,
+      "wall_fraction": 0.9793046839299314
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0191747891,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.066807502880691,
+          "wall_ms": 0.4538721
+        },
+        "candidate": {
+          "gpu_ms": 0.065249153412885,
+          "wall_ms": 0.43773585
+        }
+      },
+      "gpu_fraction": 0.9766740350917021,
+      "wall_fraction": 0.9644475833610393
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00276793507,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.095331259071807,
+          "wall_ms": 0.40146421
+        },
+        "candidate": {
+          "gpu_ms": 0.090680425055311,
+          "wall_ms": 0.39719329
+        }
+      },
+      "gpu_fraction": 0.9512139663130555,
+      "wall_fraction": 0.9893616419755076
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0121861675,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.103053310886004,
+          "wall_ms": 0.34761954
+        },
+        "candidate": {
+          "gpu_ms": 0.09997998364270701,
+          "wall_ms": 0.36191369
+        }
+      },
+      "gpu_fraction": 0.9701773070959684,
+      "wall_fraction": 1.0411200992901608
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00758917028,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.50018044654283,
+          "wall_ms": 0.91276998
+        },
+        "candidate": {
+          "gpu_ms": 0.49604038707916,
+          "wall_ms": 0.87949912
+        }
+      },
+      "gpu_fraction": 0.9917228682322841,
+      "wall_fraction": 0.9635495680960059
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0234021594,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 0.81879958044712,
+          "wall_ms": 1.14765251
+        },
+        "candidate": {
+          "gpu_ms": 0.8260624948891,
+          "wall_ms": 1.18252081
+        }
+      },
+      "gpu_fraction": 1.008870198050192,
+      "wall_fraction": 1.0303822800858076
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 0,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00870350367,
+        "max_abs_error": 0
+      },
+      "label": "same-scalar-prefetch8-null",
+      "means": {
+        "control": {
+          "gpu_ms": 1.9214924937116,
+          "wall_ms": 2.28266294
+        },
+        "candidate": {
+          "gpu_ms": 1.9249808276071,
+          "wall_ms": 2.27845506
+        }
+      },
+      "gpu_fraction": 1.0018154293638493,
+      "wall_fraction": 0.998156591616632
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00312654925,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.025736223906275,
+          "wall_ms": 0.3527633
+        },
+        "candidate": {
+          "gpu_ms": 0.019406685605647,
+          "wall_ms": 0.34915876
+        }
+      },
+      "gpu_fraction": 0.7540611115415137,
+      "wall_fraction": 0.9897819869583939
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00282500627,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.020413324236872,
+          "wall_ms": 0.36354115
+        },
+        "candidate": {
+          "gpu_ms": 0.023501305840904,
+          "wall_ms": 0.3891204
+        }
+      },
+      "gpu_fraction": 1.1512728435701944,
+      "wall_fraction": 1.0703613607427935
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0224423724,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.012417100369931,
+          "wall_ms": 0.22276332
+        },
+        "candidate": {
+          "gpu_ms": 0.0110987341031481,
+          "wall_ms": 0.22001713
+        }
+      },
+      "gpu_fraction": 0.893826559542401,
+      "wall_fraction": 0.9876721625445339
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00299830982,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0118116801604596,
+          "wall_ms": 0.2277108
+        },
+        "candidate": {
+          "gpu_ms": 0.0117441453039537,
+          "wall_ms": 0.22736961
+        }
+      },
+      "gpu_fraction": 0.9942823666414556,
+      "wall_fraction": 0.9985016520955529
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00848603677,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0172737240791364,
+          "wall_ms": 0.2614317
+        },
+        "candidate": {
+          "gpu_ms": 0.0186500139534394,
+          "wall_ms": 0.26039543
+        }
+      },
+      "gpu_fraction": 1.0796753420396077,
+      "wall_fraction": 0.9960361731190212
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00220633915,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.028552948497234,
+          "wall_ms": 0.41091957
+        },
+        "candidate": {
+          "gpu_ms": 0.022624144330613,
+          "wall_ms": 0.38426748
+        }
+      },
+      "gpu_fraction": 0.7923575504927157,
+      "wall_fraction": 0.9351403730905296
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0140578116,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.029668323695663,
+          "wall_ms": 0.33624668
+        },
+        "candidate": {
+          "gpu_ms": 0.031452486291525,
+          "wall_ms": 0.34675919
+        }
+      },
+      "gpu_fraction": 1.0601369532759553,
+      "wall_fraction": 1.0312642789513935
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00268844817,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0351074943319,
+          "wall_ms": 0.27412169
+        },
+        "candidate": {
+          "gpu_ms": 0.026995395310227,
+          "wall_ms": 0.2662816
+        }
+      },
+      "gpu_fraction": 0.7689354032223815,
+      "wall_fraction": 0.9713992351353153
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00962958271,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.082372510805726,
+          "wall_ms": 0.39428671
+        },
+        "candidate": {
+          "gpu_ms": 0.072971233166748,
+          "wall_ms": 0.37616378
+        }
+      },
+      "gpu_fraction": 0.8858687498169052,
+      "wall_fraction": 0.9540361631767909
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00420873352,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.25468831416213,
+          "wall_ms": 0.64774455
+        },
+        "candidate": {
+          "gpu_ms": 0.16565833706412,
+          "wall_ms": 0.51550954
+        }
+      },
+      "gpu_fraction": 0.6504355632063468,
+      "wall_fraction": 0.7958531492082798
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0185075334,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.25945918168869,
+          "wall_ms": 0.53815203
+        },
+        "candidate": {
+          "gpu_ms": 0.2231766376645,
+          "wall_ms": 0.48935957
+        }
+      },
+      "gpu_fraction": 0.860160878531856,
+      "wall_fraction": 0.9093333160891357
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00843558549,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.90101417154053,
+          "wall_ms": 1.23422375
+        },
+        "candidate": {
+          "gpu_ms": 0.5698495963588,
+          "wall_ms": 0.90066293
+        }
+      },
+      "gpu_fraction": 0.6324535333162256,
+      "wall_fraction": 0.7297403975575741
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00442776081,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.014582942239942099,
+          "wall_ms": 0.29501874
+        },
+        "candidate": {
+          "gpu_ms": 0.0149324908852584,
+          "wall_ms": 0.29163591
+        }
+      },
+      "gpu_fraction": 1.0239696927797532,
+      "wall_fraction": 0.9885335080747751
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00282500627,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.017172088846567,
+          "wall_ms": 0.35809246
+        },
+        "candidate": {
+          "gpu_ms": 0.020034587942059,
+          "wall_ms": 0.36182334
+        }
+      },
+      "gpu_fraction": 1.1666948686946879,
+      "wall_fraction": 1.0104187616795952
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0224423724,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0161620927974668,
+          "wall_ms": 0.28532543
+        },
+        "candidate": {
+          "gpu_ms": 0.014717034064234,
+          "wall_ms": 0.27506793
+        }
+      },
+      "gpu_fraction": 0.9105896277579043,
+      "wall_fraction": 0.9640498219874759
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00299830982,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.011720815673469,
+          "wall_ms": 0.22982750999999998
+        },
+        "candidate": {
+          "gpu_ms": 0.0135829020291583,
+          "wall_ms": 0.23522083
+        }
+      },
+      "gpu_fraction": 1.1588700315375047,
+      "wall_fraction": 1.0234668164833705
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00991286873,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.013538724742837,
+          "wall_ms": 0.22606246
+        },
+        "candidate": {
+          "gpu_ms": 0.012135407887398,
+          "wall_ms": 0.22450085
+        }
+      },
+      "gpu_fraction": 0.8963479292108764,
+      "wall_fraction": 0.9930921303784804
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00308603734,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.031510428525514,
+          "wall_ms": 0.38908170999999997
+        },
+        "candidate": {
+          "gpu_ms": 0.026223729364577,
+          "wall_ms": 0.3818108
+        }
+      },
+      "gpu_fraction": 0.8322238253073468,
+      "wall_fraction": 0.9813126399593547
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0191747891,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.055752499029039,
+          "wall_ms": 0.39520875
+        },
+        "candidate": {
+          "gpu_ms": 0.058567938394847,
+          "wall_ms": 0.41713297
+        }
+      },
+      "gpu_fraction": 1.0504988908988917,
+      "wall_fraction": 1.0554750369266874
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00276793507,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0645658141002,
+          "wall_ms": 0.29910703
+        },
+        "candidate": {
+          "gpu_ms": 0.047271656803788,
+          "wall_ms": 0.28296957
+        }
+      },
+      "gpu_fraction": 0.7321468405931796,
+      "wall_fraction": 0.9460478745685115
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0121861675,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.136156664229944,
+          "wall_ms": 0.41910755
+        },
+        "candidate": {
+          "gpu_ms": 0.114094153977904,
+          "wall_ms": 0.40271785
+        }
+      },
+      "gpu_fraction": 0.8379623180634008,
+      "wall_fraction": 0.9608938087610208
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00758917028,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.3954270714894,
+          "wall_ms": 0.7302837
+        },
+        "candidate": {
+          "gpu_ms": 0.25783082470298,
+          "wall_ms": 0.60339873
+        }
+      },
+      "gpu_fraction": 0.6520312929811422,
+      "wall_fraction": 0.826252496118974
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0234021594,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.86662292946127,
+          "wall_ms": 1.23772753
+        },
+        "candidate": {
+          "gpu_ms": 0.76596290338779,
+          "wall_ms": 1.16032076
+        }
+      },
+      "gpu_fraction": 0.883847954339202,
+      "wall_fraction": 0.9374605734106926
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 1,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00870350367,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector2-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 1.9295700034125,
+          "wall_ms": 2.26999246
+        },
+        "candidate": {
+          "gpu_ms": 1.2454120907932,
+          "wall_ms": 1.57352915
+        }
+      },
+      "gpu_fraction": 0.645435039200782,
+      "wall_fraction": 0.693186950057094
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00312654925,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.023451256565744,
+          "wall_ms": 0.3630383
+        },
+        "candidate": {
+          "gpu_ms": 0.022397087886924,
+          "wall_ms": 0.34811666
+        }
+      },
+      "gpu_fraction": 0.955048520497624,
+      "wall_fraction": 0.9588978903878738
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00282500627,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.024931235238912,
+          "wall_ms": 0.38788626
+        },
+        "candidate": {
+          "gpu_ms": 0.02922082785517,
+          "wall_ms": 0.40295208
+        }
+      },
+      "gpu_fraction": 1.1720569628881812,
+      "wall_fraction": 1.038840818955536
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0224423724,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.011061271652587,
+          "wall_ms": 0.21939671
+        },
+        "candidate": {
+          "gpu_ms": 0.013660411350431,
+          "wall_ms": 0.22680962
+        }
+      },
+      "gpu_fraction": 1.2349765722674495,
+      "wall_fraction": 1.0337876990042376
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00299830982,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0136128906160544,
+          "wall_ms": 0.23027671
+        },
+        "candidate": {
+          "gpu_ms": 0.011076685041199,
+          "wall_ms": 0.22152755
+        }
+      },
+      "gpu_fraction": 0.8136908870872496,
+      "wall_fraction": 0.9620058841382613
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00848603677,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.014611240476366,
+          "wall_ms": 0.25663254
+        },
+        "candidate": {
+          "gpu_ms": 0.016113752499221,
+          "wall_ms": 0.26317375
+        }
+      },
+      "gpu_fraction": 1.1028326120075393,
+      "wall_fraction": 1.0254886227599975
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00220633915,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.024975389242173,
+          "wall_ms": 0.37900998
+        },
+        "candidate": {
+          "gpu_ms": 0.030001667328181,
+          "wall_ms": 0.40955209
+        }
+      },
+      "gpu_fraction": 1.2012492392919631,
+      "wall_fraction": 1.0805839202439997
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0140578116,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.029252506792547,
+          "wall_ms": 0.32471247
+        },
+        "candidate": {
+          "gpu_ms": 0.032267905771739,
+          "wall_ms": 0.33005668
+        }
+      },
+      "gpu_fraction": 1.1030817290489534,
+      "wall_fraction": 1.016458283847245
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00268844817,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.035140421241519,
+          "wall_ms": 0.27320966
+        },
+        "candidate": {
+          "gpu_ms": 0.025686244480311,
+          "wall_ms": 0.27486417
+        }
+      },
+      "gpu_fraction": 0.7309600617411572,
+      "wall_fraction": 1.006055825405295
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00962958271,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.075496700592343,
+          "wall_ms": 0.36799043
+        },
+        "candidate": {
+          "gpu_ms": 0.075861690565937,
+          "wall_ms": 0.37984922
+        }
+      },
+      "gpu_fraction": 1.0048345155580352,
+      "wall_fraction": 1.03222581087231
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00420873352,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.24772124830632,
+          "wall_ms": 0.63213833
+        },
+        "candidate": {
+          "gpu_ms": 0.15803087968377,
+          "wall_ms": 0.57622997
+        }
+      },
+      "gpu_fraction": 0.6379383309434834,
+      "wall_fraction": 0.9115567632166839
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0185075334,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.25786001235253,
+          "wall_ms": 0.53210292
+        },
+        "candidate": {
+          "gpu_ms": 0.22083205636592,
+          "wall_ms": 0.49008458
+        }
+      },
+      "gpu_fraction": 0.8564028767051027,
+      "wall_fraction": 0.9210334346595955
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 1,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00843558549,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.90386373456571,
+          "wall_ms": 1.22631624
+        },
+        "candidate": {
+          "gpu_ms": 0.55606748908756,
+          "wall_ms": 0.89652539
+        }
+      },
+      "gpu_fraction": 0.6152116384609017,
+      "wall_fraction": 0.7310719378551164
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00442776081,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.0169520732015354,
+          "wall_ms": 0.29612838
+        },
+        "candidate": {
+          "gpu_ms": 0.0191595731303024,
+          "wall_ms": 0.2972354
+        }
+      },
+      "gpu_fraction": 1.130220056421598,
+      "wall_fraction": 1.0037383110663016
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00282500627,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.025204974226647,
+          "wall_ms": 0.39474709
+        },
+        "candidate": {
+          "gpu_ms": 0.021926243789492,
+          "wall_ms": 0.37098503
+        }
+      },
+      "gpu_fraction": 0.8699173263312173,
+      "wall_fraction": 0.9398043440928215
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0224423724,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.017712060362098,
+          "wall_ms": 0.29993621
+        },
+        "candidate": {
+          "gpu_ms": 0.019483761861925,
+          "wall_ms": 0.31000871
+        }
+      },
+      "gpu_fraction": 1.1000279732344556,
+      "wall_fraction": 1.0335821406825139
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 4,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00299830982,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.011860402300955,
+          "wall_ms": 0.22633505
+        },
+        "candidate": {
+          "gpu_ms": 0.011778343468905,
+          "wall_ms": 0.22551957
+        }
+      },
+      "gpu_fraction": 0.9930812775175938,
+      "wall_fraction": 0.9963970229091782
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00991286873,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.015252069570127,
+          "wall_ms": 0.23748085
+        },
+        "candidate": {
+          "gpu_ms": 0.016985815018421,
+          "wall_ms": 0.25109082
+        }
+      },
+      "gpu_fraction": 1.1136727996369586,
+      "wall_fraction": 1.0573097578183672
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00308603734,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.031965812668209,
+          "wall_ms": 0.40022707
+        },
+        "candidate": {
+          "gpu_ms": 0.027138311415912,
+          "wall_ms": 0.38963993
+        }
+      },
+      "gpu_fraction": 0.8489792422171673,
+      "wall_fraction": 0.9735471666121934
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0191747891,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.052265436388559,
+          "wall_ms": 0.36662339
+        },
+        "candidate": {
+          "gpu_ms": 0.061524165794246,
+          "wall_ms": 0.3966167
+        }
+      },
+      "gpu_fraction": 1.1771482273075167,
+      "wall_fraction": 1.081809592126678
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 24,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00276793507,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.06520457565785,
+          "wall_ms": 0.30944209
+        },
+        "candidate": {
+          "gpu_ms": 0.040297103114422,
+          "wall_ms": 0.29152087
+        }
+      },
+      "gpu_fraction": 0.6180103575226721,
+      "wall_fraction": 0.9420853834072798
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0121861675,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.135059957392558,
+          "wall_ms": 0.41876335
+        },
+        "candidate": {
+          "gpu_ms": 0.113581214100122,
+          "wall_ms": 0.39537375
+        }
+      },
+      "gpu_fraction": 0.8409688281626875,
+      "wall_fraction": 0.9441460194642154
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 2,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00758917028,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.42583958711479003,
+          "wall_ms": 0.78479335
+        },
+        "candidate": {
+          "gpu_ms": 0.26507252361626,
+          "wall_ms": 0.62617915
+        }
+      },
+      "gpu_fraction": 0.6224703659239802,
+      "wall_fraction": 0.7978904892606443
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 8,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.0234021594,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 0.86070623248783,
+          "wall_ms": 1.22587997
+        },
+        "candidate": {
+          "gpu_ms": 0.75105377938604,
+          "wall_ms": 1.1227741900000001
+        }
+      },
+      "gpu_fraction": 0.8726017670572167,
+      "wall_fraction": 0.9158924343955144
+    },
+    {
+      "check": {
+        "kind": "check",
+        "batch": 2,
+        "tokens": 216,
+        "heads": 12,
+        "dim": 64,
+        "generations": 4,
+        "variant": 2,
+        "passed": true,
+        "bits_exact": true,
+        "fp64_worst_ratio": 0.00870350367,
+        "max_abs_error": 0
+      },
+      "label": "ordered-vector4-prefetch8",
+      "means": {
+        "control": {
+          "gpu_ms": 1.9433924788609,
+          "wall_ms": 2.28112539
+        },
+        "candidate": {
+          "gpu_ms": 1.1702083004642,
+          "wall_ms": 1.48057001
+        }
+      },
+      "gpu_fraction": 0.6021471798378606,
+      "wall_fraction": 0.6490524442411296
+    }
+  ],
+  "checks": [
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00312654925,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00282500627,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0224423724,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00299830982,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00848603677,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00220633915,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0140578116,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00268844817,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00962958271,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00420873352,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0185075334,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00843558549,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00442776081,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00282500627,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0224423724,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00299830982,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00991286873,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00308603734,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0191747891,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00276793507,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0121861675,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00758917028,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0234021594,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 0,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00870350367,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00312654925,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00282500627,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0224423724,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00299830982,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00848603677,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00220633915,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0140578116,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00268844817,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00962958271,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00420873352,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0185075334,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00843558549,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00442776081,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00282500627,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0224423724,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00299830982,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00991286873,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00308603734,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0191747891,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00276793507,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0121861675,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00758917028,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0234021594,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 1,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00870350367,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00312654925,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00282500627,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0224423724,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00299830982,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00848603677,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00220633915,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0140578116,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00268844817,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00962958271,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00420873352,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0185075334,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 1,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00843558549,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00442776081,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00282500627,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0224423724,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 4,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00299830982,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00991286873,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00308603734,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0191747891,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 24,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00276793507,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0121861675,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 2,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00758917028,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 8,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.0234021594,
+      "max_abs_error": 0
+    },
+    {
+      "kind": "check",
+      "batch": 2,
+      "tokens": 216,
+      "heads": 12,
+      "dim": 64,
+      "generations": 4,
+      "variant": 2,
+      "passed": true,
+      "bits_exact": true,
+      "fp64_worst_ratio": 0.00870350367,
+      "max_abs_error": 0
+    }
+  ],
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "full_goal_met": false
+}

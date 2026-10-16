@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -211,6 +211,54 @@ def main():
         compact_numbers+=5
     guard=json.loads((ROOT/'results/20261016/ndarray-selective-native/profile-guard-preflight.json').read_text())
     assert guard['observed_control_requests']==len(guard['checked'])==36 and not guard['full_goal_met']
+    p=ROOT/'results/20261016/ndarray-selective-native'
+    decision=json.loads((p/'comparison/decision-initial.json').read_text())
+    audit=json.loads((p/'comparison/initial/verification.json').read_text())
+    assert audit['full_output_requests']==72 and audit['actual_ndarray_prefill_routes']
+    assert not decision['repeat_admitted'] and not decision['promote'] and not decision['full_goal_met']
+    profiles=decision['trials'][0]['profiles'];text=(p/'README.md').read_text()
+    rows=[line.split('|')[1:-1] for line in text.splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(profiles)==6;selective_native_numbers=0
+    for cells,r in zip(rows,profiles):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch']
+        table_values=[' / '.join(f"{r['means'][k][metric]:.4f}" for k in ('control','candidate')) for metric in ('decode_tps','ttft_ms')]
+        table_values += [f"{r[k]:.6f}" for k in ('decode_ratio','ttft_fraction')]
+        table_values += [f"{r['added_mean_worker_peak_rss_gib']*1024:.3f}"]
+        assert [c.strip() for c in cells[2:]]==table_values
+        selective_native_numbers+=7
+    rows=[line.split('|')[1:-1] for line in text.splitlines() if line.startswith('| init Qwen')];assert len(rows)==6
+    for cells,r in zip(rows,profiles):
+        assert cells[0].strip()=='init '+r['model'] and int(cells[1])==r['batch']
+        first=r['first_request_after_initialization']
+        table_values=[' / '.join(f"{first[k]['initialization_s']:.6f}" for k in ('control','candidate')),
+                  ' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate'))]
+        assert [c.strip() for c in cells[2:]]==table_values;selective_native_numbers+=4
+    p=ROOT/'results/20261015/vector-vision-context'
+    decision=json.loads((p/'decision-initial.json').read_text());assert not decision['repeat_admitted'] and not decision['qualified']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith(('| 2 |','| 4 |'))]
+    groups=[(c['vector_width'],s) for c in decision['trials'][0]['candidates'] for s in c['serving']]
+    assert len(rows)==len(groups)==4;vector_initial_numbers=0
+    for cells,(width,r) in zip(rows,groups):
+        assert int(cells[0])==width and int(cells[1])==r['batch']
+        assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction','null_gpu_fraction','null_wall_fraction')]
+        vector_initial_numbers+=4
+    p=ROOT/'results/20261016/vector-vision-calibrated'
+    calibration=json.loads((p/'calibration-decision.json').read_text());assert calibration['candidate_probe_admitted'] and not calibration['full_goal_met']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| calibration-')]
+    groups=[(t['label'],r) for t in calibration['trials'] for r in t['serving']];assert len(rows)==len(groups)==4
+    vector_calibration_numbers=0
+    for cells,(label,r) in zip(rows,groups):
+        assert cells[0].strip()==label and int(cells[1])==r['batch']
+        assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction')]
+        vector_calibration_numbers+=2
+    vector_candidate=json.loads((p/'decision-initial.json').read_text());assert vector_candidate['repeat_admitted'] and not vector_candidate['promote']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith(('| 2 |','| 4 |'))]
+    groups=[(c['vector_width'],r) for c in vector_candidate['trials'][0]['candidates'] for r in c['serving']]
+    assert len(rows)==len(groups)==4;vector_calibrated_numbers=0
+    for cells,(width,r) in zip(rows,groups):
+        assert int(cells[0])==width and int(cells[1])==r['batch']
+        assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction','null_gpu_fraction','null_wall_fraction')]
+        vector_calibrated_numbers+=4
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -231,7 +279,9 @@ def main():
                   phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,ndarray_component_table_values_checked=ndarray_numbers,
                   ndarray_native_table_values_checked=ndarray_native_numbers,weight_admission_table_values_checked=admission_numbers,
                   ndarray_selective_component_table_values_checked=selective_numbers,compact_escape_cpu_table_values_checked=compact_numbers,
-                  retained_control_guard_preflight_requests=36,status='passed',
+                  retained_control_guard_preflight_requests=36,selective_native_table_values_checked=selective_native_numbers,
+                  vector_initial_table_values_checked=vector_initial_numbers,vector_null_calibration_table_values_checked=vector_calibration_numbers,
+                  vector_calibrated_component_table_values_checked=vector_calibrated_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

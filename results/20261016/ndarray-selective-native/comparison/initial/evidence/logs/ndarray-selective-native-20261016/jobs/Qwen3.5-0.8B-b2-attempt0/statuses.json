@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Qwen3.5-0.8B-b2-control-0",
+    "command": [
+      "/usr/bin/time",
+      "-l",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/build-coalesced-bf16-body",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-candidate-0",
+    "command": [
+      "/usr/bin/time",
+      "-l",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/build-ndarray-selective-prefill-packedguard",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-candidate-1",
+    "command": [
+      "/usr/bin/time",
+      "-l",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/build-ndarray-selective-prefill-packedguard",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-control-1",
+    "command": [
+      "/usr/bin/time",
+      "-l",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/build-coalesced-bf16-body",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016/logs/ndarray-selective-native-20261016/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,6 @@
+compiled Garnet decoder layer 0 linear_attention ms 1.193833
+compiled Garnet decoder layer 1 full_attention ms 1.035625
+Garnet Metal/MPS Apple M4; dense_key_split_k; qwen35_extended_prefill; qwen35_wide_batch_prefill; interleaved_bf16_body; coalesced_bf16_body; ndarray_prefill_selective_80_160; resident_kv_inplace; attention_prefix; prefill_stream; dirty_prefix_reset; global_half_alpha; screened_head; screen_seed_1024; interleaved_screen_index; serial_vision_prefetch image-to-mixed-decoder/head batch 1 PASS two requests, 14 steps each
+compiled Garnet decoder layer 0 linear_attention ms 1.183583
+compiled Garnet decoder layer 1 full_attention ms 1.010458
+Garnet Metal/MPS Apple M4; dense_key_split_k; qwen35_extended_prefill; qwen35_wide_batch_prefill; interleaved_bf16_body; coalesced_bf16_body; ndarray_prefill_selective_80_160; resident_kv_inplace; attention_prefix; prefill_stream; dirty_prefix_reset; global_half_alpha; screened_head; screen_seed_1024; interleaved_screen_index; serial_vision_prefetch image-to-mixed-decoder/head batch 2 PASS two requests, 14 steps each

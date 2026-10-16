@@ -1,0 +1,31 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "limits": "Synthetic component only, not full pretrained vision or generated outputs; no inference TPS/TTFT claim",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+    "test2026/metal/run_vector_vision_context.py": "60b0b9060ff8ae59701a2e4c1f8308df69dde631054d4e060bbaee52fd03698a",
+    "test2026/metal/make_vector_vision_context.py": "99f362105a6136d97f9356d41921e879e3f04630cfcede4002692044f1c3151e",
+    "test2026/metal/make_serial_vision_context.py": "7a5929654da778e4fae6828916da05d21decb8ca87b88b7978b0a4a943a06128",
+    "test2026/metal/run_serial_vision_context.py": "2a105e1ff6c370072089ae13b618cac4b9db3614775992b4046d30df169525a4",
+    "src/backends/metal/serial_vision_prefetch_shader.h": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526",
+    "test2026/metal/vision_fused_context_gpu.mm": "b2354d709cf825e4731a11240c46ac444c19ee473fa95180c34b7482c2a8afe3",
+    "test2026/metal/run_constant_bf16_probe.py": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87",
+    "test2026/metal/compare_vllm_metal.py": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "versions": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n"
+  },
+  "variants": [
+    "same-scalar-prefetch8-null",
+    "ordered-vector2-prefetch8",
+    "ordered-vector4-prefetch8"
+  ],
+  "shader_sha256": "3eee73915af44ff64e89205e2f5bf849016d806a9e86c739bc8cc903220d0dd3",
+  "harness_sha256": "3eca5f2b4586aff8d193333737682c8dfb4706c9948b144398ec9dbe248b8492",
+  "binary_sha256": "8a3e15af2d96b484b869204eddd18a11accc0d3a6f1bd942594902560b7237df"
+}

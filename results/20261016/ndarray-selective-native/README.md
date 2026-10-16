@@ -1,12 +1,11 @@
-# Selective no-exact-half NDArray: isolated native validation
+# Selective no-exact-half NDArray: rejected after complete native inference
 
-Status: initial PID22114 failed one original CTest after successful compile
-and selective cache primitive. Failure archived/audited; packed-layout guard
-repaired in a new isolated source/build. Fresh full30 PID23582 is running.
-Live observation: repaired compile, selective primitive and all seven CTests
-have passed; subsequent trained gates are running. This is partial validation.
-Complete validation and performance remain unproven until terminal evidence
-is archived and audited. Retained serving library
+Status: repaired fresh30 validation and all six complete native ABBA profiles
+executed successfully, archived and independently audited on Mac and Windows.
+All72 complete outputs match, but neither active VL batch improves warm TTFT.
+The candidate fails the declared >=3% both-VL screen: reject promotion, no
+favorable confirmation search. Initial packed-layout failure remains preserved.
+Retained serving library
 `c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`
 and defaults remain selected. Overall three-model matched target is unmet.
 
@@ -110,9 +109,9 @@ After that exact transfer reached terminal exit0, extraction and both-host
 failure audits succeeded. This local workflow mistake does not change the
 captured CTest failure or require rerunning the failed GPU dataset.
 
-## Full-model comparison prepared and gated
+## Full-model comparison protocol
 
-New continuation PID33009 waits exact controller25901. Only terminal full30,
+Continuation PID33009 waited exact controller25901. Only terminal full30,
 frozen archive and successful independent audit permit dispatch of the original
 six native ABBA profiles, sequentially. It then freezes/audits72 complete outputs
 and applies the existing both-VL >=3% TTFT screen. A fresh unchanged six-profile
@@ -152,5 +151,75 @@ python -X utf8 test2026/metal/verify_ndarray_selective_native_profiles.py EXTRAC
 python -X utf8 test2026/metal/analyze_ndarray_selective_native_results.py RESULT_ROOT initial
 ```
 
-Prepared/dispatched watcher is not evidence of full30 or performance success.
-No fresh vLLM comparison or goal-target update has occurred.
+Prepared/dispatched watcher alone was not evidence of full30 or performance
+success; terminal proof follows. No fresh vLLM comparison or goal-target update.
+
+## Actual full30 validation
+
+PID23582 exits0 in1426.546372500s, with no reused stages or compilation.
+Seven CTests,80 coalesced primitive cases, selective cache256/fallback14/abort/
+both-shape/native-half primitive,51 trained head queries/78 rows, four vision
+grid profiles,6 prefix and6 screened recovery cases pass. Four original trained
+wide-state profiles cover12 carried steps; worst unchanged bound ratio
+0.5432836183473805. Both hosts regenerate8 serving transforms and the exact
+owned-primitive guard/runner; four external drivers match their frozen identities.
+
+Validation archive1732 files, SHA256
+`142964dfa29ca98baba5fcfb035660fe47acd8bf725750a3ebc7ce392a9d6833`.
+[Validation audit](validation/verification.json), [manifest](validation/evidence/manifest.json).
+Candidate library SHA256
+`f6e855e094c6247b6721d99bd35358c241c7ddf7412648c056e5d1b853120f5a`.
+
+## Actual native cohort: no useful warm-TTFT gain
+
+PID49121 exits0 in192.727560875s; continuation33009 completes0 after preserving
+the decision. Archive5484 files, SHA256
+`1861996b1455f4a6aa7e81fb89bac30a2be2526d359eb332cc974d31aa6e520e`.
+Mac/Windows audits verify72 complete matching outputs,1287 serving-source and
+1068 external-tool identities, fresh30 re-audit, regenerated comparator scripts
+and all72 exact retained-common-half counts. Actual candidate VL requests have
+one NDArray prefill/zero decode dispatch and182 retained common-half calls;
+text/coder have zero NDArray calls. Every image is freshly encoded with original
+bytes/patches/preprocessing, and all original prompt/cap/stop/reset/clock
+predicates remain. [Full audit](comparison/initial/verification.json),
+[manifest](comparison/initial/evidence/manifest.json), [decision](comparison/decision-initial.json).
+
+| Model | Batch | Control / candidate row tokens/s | Control / candidate warm TTFT ms | Decode ratio | TTFT fraction | Mean worker peak RSS delta MiB |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B | 1 | 74.4606 / 74.0983 | 35.6377 / 35.8788 | 0.995134 | 1.006765 | 10.195 |
+| Qwen3-0.6B | 2 | 71.0286 / 71.2139 | 55.8904 / 56.3598 | 1.002609 | 1.008398 | -7.141 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 87.5421 / 87.4113 | 26.8057 / 27.2197 | 0.998506 | 1.015444 | -2.227 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 84.1795 / 84.6472 | 43.7718 / 43.6996 | 1.005555 | 0.998350 | 1.117 |
+| Qwen3.5-0.8B | 1 | 61.2870 / 61.3228 | 178.2887 / 179.3607 | 1.000584 | 1.006013 | -21.273 |
+| Qwen3.5-0.8B | 2 | 55.4342 / 55.3754 | 296.0041 / 296.5156 | 0.998940 | 1.001728 | -23.508 |
+
+Warm means use4 non-first requests across2 fresh workers per build, in ABBA
+order. Ratios compare candidate with retained native control, not vLLM. Batch2
+aggregate decode throughput is twice row tokens/s; the derived decision records
+both units. RSS is mean worker/process-family peak from macOS time-l across
+initialization and inference, not unique GPU allocation or current per-frame
+memory. Observed lower VL peaks do not demonstrate a memory-saving algorithm:
+the candidate allocates24MiB logical FP32 weights and retains original masters.
+
+| Initialization / first-use profile | Batch | Control / candidate initialization s | Control / candidate first-after-init TTFT ms |
+| --- | ---: | ---: | ---: |
+| init Qwen3-0.6B | 1 | 3.526715 / 3.512973 | 132.452 / 129.387 |
+| init Qwen3-0.6B | 2 | 3.523170 / 3.531250 | 147.902 / 144.214 |
+| init Qwen2.5-Coder-0.5B-Instruct | 1 | 2.812672 / 2.812738 | 108.733 / 108.218 |
+| init Qwen2.5-Coder-0.5B-Instruct | 2 | 2.819440 / 2.809050 | 121.449 / 119.952 |
+| init Qwen3.5-0.8B | 1 | 5.498277 / 5.462383 | 270.907 / 276.072 |
+| init Qwen3.5-0.8B | 2 | 5.460577 / 5.490927 | 405.277 / 395.391 |
+
+Initialization and first-after-init clocks are separate; no constructed sum is
+presented as an observed startup clock. OS/driver caches are unflushed, so these
+are fresh-worker first-use observations, not proven hardware-cold measurements.
+The broad candidate's multi-second first-use penalty is absent here, but coverage
+and pointer-access changes differ together; no isolated hoisting causal claim.
+
+VL warm TTFT is0.601%/0.173% higher in this single cohort, failing the predeclared
+>=3% reduction in both profiles. This is a failed improvement screen, not proof
+of a repeatable regression. Inactive text/coder timing differences cannot be
+attributed to execution of the new operation. Do not extrapolate first-layer
+component gains to a frame containing many other projections/vision work.
+Rejectf6e promotion, retainc186, no unchanged favorable repeat, no new vLLM ratio.
+The full three-model 2x decode/half-TTFT goal remains active and unmet.

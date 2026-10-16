@@ -1,0 +1,150 @@
+{
+  "files": {
+    "evidence/logs/vector-vision-context-20261016/background_service_checks.json": {
+      "bytes": 7096,
+      "sha256": "2a5f96f48372bb927bc8aec02b48d65d1a054f770b35c3b6eb019b4c3b4343cd"
+    },
+    "evidence/logs/vector-vision-context-20261016/exit.json": {
+      "bytes": 51,
+      "sha256": "42f85795715e9b6d4f54988ef32b20446de51334fc7837406fbe445116718250"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs.executed.py": {
+      "bytes": 3805,
+      "sha256": "1b9df3ef4cd5f196797363d7b7e6020b8d5ff118f7d38dbaba552cc99bbdb2e8"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/background_service_checks.json": {
+      "bytes": 44941,
+      "sha256": "ecc8dee8738e6221ea2c787237130d60ff57f4f11c1fe423d3db4837ddf32e0a"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/compile-monitor.json": {
+      "bytes": 231,
+      "sha256": "75105ee7a4ecec5afaf9ca7ac54ea3de3ad745e1626334dd716eeac33f7ece33"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/compile.log": {
+      "bytes": 840,
+      "sha256": "d56ec806d9ae56917390ec70f4f416725f39f6f946c181b76c50eb5a7c19dc45"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/metadata.json": {
+      "bytes": 2117,
+      "sha256": "2f36434c8c8436c50c72595d2e335bbee918e4aa40c851f5f2de0342dfa8cd43"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 197416,
+      "sha256": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/src/backends/metal/serial_vision_prefetch_shader.h": {
+      "bytes": 2133,
+      "sha256": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12897,
+      "sha256": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/make_serial_vision_context.py": {
+      "bytes": 6023,
+      "sha256": "7a5929654da778e4fae6828916da05d21decb8ca87b88b7978b0a4a943a06128"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/make_vector_vision_context.py": {
+      "bytes": 3626,
+      "sha256": "99f362105a6136d97f9356d41921e879e3f04630cfcede4002692044f1c3151e"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/run_serial_vision_context.py": {
+      "bytes": 3613,
+      "sha256": "2a105e1ff6c370072089ae13b618cac4b9db3614775992b4046d30df169525a4"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/run_vector_vision_context.py": {
+      "bytes": 1492,
+      "sha256": "60b0b9060ff8ae59701a2e4c1f8308df69dde631054d4e060bbaee52fd03698a"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/source-snapshot/test2026/metal/vision_fused_context_gpu.mm": {
+      "bytes": 7085,
+      "sha256": "b2354d709cf825e4731a11240c46ac444c19ee473fa95180c34b7482c2a8afe3"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/statuses.json": {
+      "bytes": 1477,
+      "sha256": "92ea25796add7c6ab2d01d59ffed86523f4d96cc7d832079e95e6a7c5342eec8"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/summary.json": {
+      "bytes": 68364,
+      "sha256": "605e25f5f02d6e85a7f4892dac3ba1529baaa4baee18fb6244373a43769cdcec"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/variant-0-monitor.json": {
+      "bytes": 1228,
+      "sha256": "e95fb1a6ca9194ecd2fdea7e8b3336429857cd403198fbab682d7684e396c261"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/variant-0.log": {
+      "bytes": 150848,
+      "sha256": "1f17dcc190976f0ae05f6232c1980bf7d5fd4268ac0ed70059b7395b64d2cac5"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/variant-1-monitor.json": {
+      "bytes": 1147,
+      "sha256": "43216d8a947521cb93df00d987383982b525dce143eafe246fb9451bdcc5c29f"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/variant-1.log": {
+      "bytes": 150621,
+      "sha256": "67c8179dfb83860a91883895e314e7508a200d4ec6a036eab6e7dab7f7fb8a87"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/variant-2-monitor.json": {
+      "bytes": 1147,
+      "sha256": "0cbaccfebcfd6461ed99727cf8238397a5e86b23bcef934eb18a60110926b455"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/variant-2.log": {
+      "bytes": 150419,
+      "sha256": "d041f3fd013ea33e2718891819fef2e2281a464c5f2c1926af70745d814d76ff"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/vector-vision.metal": {
+      "bytes": 11482,
+      "sha256": "3eee73915af44ff64e89205e2f5bf849016d806a9e86c739bc8cc903220d0dd3"
+    },
+    "evidence/logs/vector-vision-context-20261016/jobs/vector_vision_context_gpu.mm": {
+      "bytes": 8916,
+      "sha256": "3eca5f2b4586aff8d193333737682c8dfb4706c9948b144398ec9dbe248b8492"
+    },
+    "evidence/logs/vector-vision-context-20261016/output.log": {
+      "bytes": 259,
+      "sha256": "2509a0ac841a2806ea922a8a21e890f73511703467e11d39a9bfe4654080b2ea"
+    },
+    "evidence/logs/vector-vision-context-20261016/pid.json": {
+      "bytes": 14,
+      "sha256": "0b9acf70c36506fd44c864502f7328178928c520dc88cf3d9c689094f82cb603"
+    },
+    "evidence/logs/vector-vision-context-20261016/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/tools/analyze_vector_vision_context.py": {
+      "bytes": 3577,
+      "sha256": "f453e633694461fadd0433eac0dc82a07b7848636b5ddeb844f3090df54e463e"
+    },
+    "evidence/tools/archive_vector_vision_component.py": {
+      "bytes": 2137,
+      "sha256": "751397ec2cb4b6013b50224fc304127e5a0673875fe8cd92ab74ab31155b8cc5"
+    },
+    "evidence/tools/launch_vector_vision_context.py": {
+      "bytes": 1641,
+      "sha256": "7bacbb7f9de7efdbddf88af7d401827af12e08a4deeb740d08847658540a9eea"
+    },
+    "evidence/tools/verify_vector_vision_context.py": {
+      "bytes": 5154,
+      "sha256": "110f45a0e3c0f7fc2cc1172f87e68aac2a26e06d55a18b460bc239be5543ef28"
+    }
+  },
+  "omitted": {
+    "logs/vector-vision-context-20261016/jobs/vector_vision_context_gpu": {
+      "bytes": 72520,
+      "sha256": "8a3e15af2d96b484b869204eddd18a11accc0d3a6f1bd942594902560b7237df"
+    }
+  },
+  "jobs": {
+    "vector-vision-context-20261016": {
+      "exit_code": 0,
+      "wall_seconds": 38.67613308317959
+    }
+  },
+  "scope": "Synthetic component only; exact scalar control, vector candidates and null. Terminal failures preserved. No model performance claim.",
+  "full_goal_met": false
+}

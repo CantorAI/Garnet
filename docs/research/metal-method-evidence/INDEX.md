@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T01:13:25.098045+00:00
+Generated UTC: 2026-10-16T01:54:10.269880+00:00
 
-Base HEAD at generation: `3c93cf030e77ffb3320b0cb2a3804df49ed60ba7`. Reports indexed: **162**.
+Base HEAD at generation: `935ad1a1dfd6dadd5f5bb2e8e67c9630b54c52da`. Reports indexed: **163**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -150,14 +150,15 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/threaded-striped-frame](../../../results/20261015/threaded-striped-frame/README.md) | Combined threaded WebP decode and exact striped resize |
 | [results/20261015/two-body](../../../results/20261015/two-body/README.md) | Two-output SIMD decode: repeated component signals, no model gain established |
 | [results/20261015/two-matrix-probe](../../../results/20261015/two-matrix-probe/README.md) | Per-matrix two-output probe: three dispatch candidates selected |
-| [results/20261015/vector-vision-context](../../../results/20261015/vector-vision-context/README.md) | Adjacent-dimension vision vectorization: local preparation only |
+| [results/20261015/vector-vision-context](../../../results/20261015/vector-vision-context/README.md) | Adjacent-dimension vision vectorization: bit-exact, initial calibration failed |
 | [results/20261015/wide-batch-prefill](../../../results/20261015/wide-batch-prefill/README.md) | Exact 160-row VL batch-2 prefill investigation |
 | [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
 | [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
-| [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: isolated native validation |
+| [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
+| [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
 | [test2026/metal/results/20261012/vllm-metal/prefill-tiles](../../../test2026/metal/results/20261012/vllm-metal/prefill-tiles/README.md) | Validated wide prefill tiles |

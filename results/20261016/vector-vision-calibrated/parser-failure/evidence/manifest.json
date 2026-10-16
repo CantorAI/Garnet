@@ -1,0 +1,146 @@
+{
+  "files": {
+    "evidence/logs/vector-vision-calibration-20261016/background_service_checks.json": {
+      "bytes": 7094,
+      "sha256": "61cd3f596c5a10ed6fba6603b0f8ee1aec7ef91f9f2cb5503db44f79caf6d0fa"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/exit.json": {
+      "bytes": 51,
+      "sha256": "e0cead6511831d4a48dc1885987ebdac9cbf56b9c3f5e44d54c1a9456405b250"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs.calibrated.executed.py": {
+      "bytes": 4170,
+      "sha256": "25722a4295a18dfb3af118f817841c45c28e9d29704934f532a5b4c4b7d62983"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/background_service_checks.json": {
+      "bytes": 70965,
+      "sha256": "a603152256684769e184b8a5d48eb2c3eff1210bb9c0106b22c5132af61c4d69"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/compile-monitor.json": {
+      "bytes": 235,
+      "sha256": "09b0c04b3c694af4d838f347ded7a57348ac3b641f88ed7bf04e44a1b6b9d223"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/compile.log": {
+      "bytes": 844,
+      "sha256": "3b7a2e12cfa4df6d3b5a9661869bffc380a4dd199205a4163aff053cdc5e50ea"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/metadata.json": {
+      "bytes": 2595,
+      "sha256": "f73abf726208719e3267e90be1b8872e265ce369bd2973e841921d07337bcf73"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 197416,
+      "sha256": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/src/backends/metal/serial_vision_prefetch_shader.h": {
+      "bytes": 2133,
+      "sha256": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12897,
+      "sha256": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/make_calibrated_vector_vision_context.py": {
+      "bytes": 618,
+      "sha256": "52afe81c05e039f03ef080ce7a4b2b6787f0118519281fc0ec3549baa805ea43"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/make_serial_vision_context.py": {
+      "bytes": 6023,
+      "sha256": "7a5929654da778e4fae6828916da05d21decb8ca87b88b7978b0a4a943a06128"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/make_vector_vision_context.py": {
+      "bytes": 3626,
+      "sha256": "99f362105a6136d97f9356d41921e879e3f04630cfcede4002692044f1c3151e"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/run_calibrated_vector_vision_context.py": {
+      "bytes": 1503,
+      "sha256": "b9ad2d8e65d01db299b4db51bb90c81b5ef0d228bdfab865b438bf9ee4f61b0a"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/run_serial_vision_context.py": {
+      "bytes": 3613,
+      "sha256": "2a105e1ff6c370072089ae13b618cac4b9db3614775992b4046d30df169525a4"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/run_vector_vision_context.py": {
+      "bytes": 1492,
+      "sha256": "60b0b9060ff8ae59701a2e4c1f8308df69dde631054d4e060bbaee52fd03698a"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/source-snapshot/test2026/metal/vision_fused_context_gpu.mm": {
+      "bytes": 7085,
+      "sha256": "b2354d709cf825e4731a11240c46ac444c19ee473fa95180c34b7482c2a8afe3"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/statuses.json": {
+      "bytes": 871,
+      "sha256": "dff68782721e8a7647869c296d092efafac50ca2be462e4f0f6b41b4c1048671"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/variant-0-monitor.json": {
+      "bytes": 6339,
+      "sha256": "2890cebb57d17f3e314ef4c957dc3b3cda459c8da3a33018935559c2dfe35758"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/variant-0.log": {
+      "bytes": 385173,
+      "sha256": "9ddce26d8b5fde1c8cf4a85311589424f712f664132895d4cf501e8c12cf65d7"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/vector-vision.metal": {
+      "bytes": 11482,
+      "sha256": "3eee73915af44ff64e89205e2f5bf849016d806a9e86c739bc8cc903220d0dd3"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/jobs/vector_vision_context_gpu.mm": {
+      "bytes": 8890,
+      "sha256": "838920bf5877627410e6618eeadced0171a1bfc87a557b6d496fd2a175c3f8d2"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/output.log": {
+      "bytes": 542,
+      "sha256": "73a91ad367d9fb84a4e2c6501806ba29723e5f9d65e430f669c54247abadd9c0"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/pid.json": {
+      "bytes": 14,
+      "sha256": "003c4038d7dc7a68d092801ca1697d7932d5fb38d3bb8fc986cb07d6d5f6ac87"
+    },
+    "evidence/logs/vector-vision-calibration-20261016/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/tools/analyze_calibrated_vector_null.py": {
+      "bytes": 2137,
+      "sha256": "fb67e2b543e871ad9af176ed4f655536da32fb453d96dabaa3b7230b727f4248"
+    },
+    "evidence/tools/analyze_vector_vision_context.py": {
+      "bytes": 3577,
+      "sha256": "f453e633694461fadd0433eac0dc82a07b7848636b5ddeb844f3090df54e463e"
+    },
+    "evidence/tools/archive_calibrated_vector_vision.py": {
+      "bytes": 996,
+      "sha256": "5ea681721903134c5168dd9959752912cf03c81711856ccf295ea573dc9aeee4"
+    },
+    "evidence/tools/archive_vector_vision_component.py": {
+      "bytes": 2137,
+      "sha256": "751397ec2cb4b6013b50224fc304127e5a0673875fe8cd92ab74ab31155b8cc5"
+    },
+    "evidence/tools/launch_calibrated_vector_vision.py": {
+      "bytes": 1032,
+      "sha256": "7be47ef94b859a3415d092f5d4f4f7109fce1626761f5c3c6242942685f36946"
+    },
+    "evidence/tools/verify_calibrated_vector_vision.py": {
+      "bytes": 5380,
+      "sha256": "c3dd622ef1ad5b8a6c71350672336f36551f665006e9aa5d4e442709fd16e2aa"
+    }
+  },
+  "omitted": {
+    "logs/vector-vision-calibration-20261016/jobs/vector_vision_context_gpu": {
+      "bytes": 72520,
+      "sha256": "df16fdbdf19bdd2a9092566f8518e97b584d2c09978a557fb69664cd39cae0cc"
+    }
+  },
+  "jobs": {
+    "vector-vision-calibration-20261016": {
+      "exit_code": 1,
+      "wall_seconds": 61.96717641595751
+    }
+  },
+  "scope": "Synthetic component only; exact scalar control, vector candidates and null. Terminal failures preserved. No model performance claim.",
+  "full_goal_met": false
+}
