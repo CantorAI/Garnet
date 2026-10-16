@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T22:20:22.133659+00:00
+Generated UTC: 2026-10-16T22:20:57.722674+00:00
 
-Base HEAD at generation: `6c4a42393fc2fc49d0de79d986e3d3b740f071e8`. Reports indexed: **225**.
+Base HEAD at generation: `1177350de313270c7a08cc2c797d59483b557dd9`. Reports indexed: **195**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -162,15 +162,6 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/delta-value-tiles-addresses](../../../results/20261016/delta-value-tiles-addresses/README.md) | Wider delta value tiles CPU prerequisite |
 | [results/20261016/delta-value-tiles-gpu](../../../results/20261016/delta-value-tiles-gpu/README.md) | Wider delta value tiles GPU component investigation |
 | [results/20261016/delta-value-tiles-native](../../../results/20261016/delta-value-tiles-native/README.md) | Private native width64 recurrent prefill investigation |
-| [results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
-| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
 | [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
 | [results/20261016/native-image-input](../../../results/20261016/native-image-input/README.md) | Native image preparation, measured through XLang3 |
@@ -181,20 +172,8 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/paired-norm-rope](../../../results/20261016/paired-norm-rope/README.md) | Paired query and key normalization and RoPE |
 | [results/20261016/paired-norm-rope-chain](../../../results/20261016/paired-norm-rope-chain/README.md) | Chained paired normalization and RoPE measurements |
 | [results/20261016/paired-norm-rope-native](../../../results/20261016/paired-norm-rope-native/README.md) | Private native paired normalization and RoPE investigation |
-| [results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
-| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/prepared-half-inverse](../../../results/20261016/prepared-half-inverse/README.md) | Exact half inverse CPU verification |
 | [results/20261016/prepared-qkv-native](../../../results/20261016/prepared-qkv-native/README.md) | Private native text Q/K/V fusion after repeated component selection |
-| [results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/prepared-union-mlp](../../../results/20261016/prepared-union-mlp/README.md) | Prepared exact union weights and activation-only output |
 | [results/20261016/prepared-union-qkv](../../../results/20261016/prepared-union-qkv/README.md) | Prepared heterogeneous Q/K/V: actual-context GPU investigation |
 | [results/20261016/prepared-union-qv](../../../results/20261016/prepared-union-qv/README.md) | QV fusion with the original key projection |
@@ -207,20 +186,11 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [results/20261016/wide-block-packed-prefill](../../../results/20261016/wide-block-packed-prefill/README.md) | Wide output block packed prefill rejected by timing |
 | [results/20261016/worldsense-m5-coalesced-nopad](../../../results/20261016/worldsense-m5-coalesced-nopad/README.md) | WS-M5-05: unpadded coalesced BF16 prefill — rejected |
-| [results/20261016/worldsense-m5-coalesced-nopad/source/xModel](../../../results/20261016/worldsense-m5-coalesced-nopad/source/xModel/README.md) | xModel |
-| [results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen3/text_1_7b](../../../results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen35/vl_4b](../../../results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen35/vl_4b/README.md) | Qwen3.5 4B Metal xModel |
 | [results/20261016/worldsense-m5-coalesced-prefill](../../../results/20261016/worldsense-m5-coalesced-prefill/README.md) | WS-M5-04: padded coalesced BF16 prefill — rejected |
-| [results/20261016/worldsense-m5-coalesced-prefill/source/xModel](../../../results/20261016/worldsense-m5-coalesced-prefill/source/xModel/README.md) | xModel |
-| [results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen3/text_1_7b](../../../results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen35/vl_4b](../../../results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen35/vl_4b/README.md) | Qwen3.5 4B Metal xModel |
 | [results/20261016/worldsense-m5-fused-head](../../../results/20261016/worldsense-m5-fused-head/README.md) | WS-M5-01: fused greedy head through WorldSense — rejected screen |
 | [results/20261016/worldsense-m5-half-prefill](../../../results/20261016/worldsense-m5-half-prefill/README.md) | WS-M5-02: limited exact-half prefill through WorldSense — rejected |
 | [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |
 | [results/20261016/worldsense-m5-small-prefill](../../../results/20261016/worldsense-m5-small-prefill/README.md) | WS-M5-06: existing smaller BF16 prefill tile — rejected |
-| [results/20261016/worldsense-m5-small-prefill/source/xModel](../../../results/20261016/worldsense-m5-small-prefill/source/xModel/README.md) | xModel |
-| [results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b](../../../results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b](../../../results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md) | Qwen3.5 4B Metal xModel |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |

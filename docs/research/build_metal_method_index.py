@@ -23,8 +23,12 @@ def sha(data):
 
 def main():
     OUTPUT.mkdir(exist_ok=True)
-    reports = sorted({p for base in (ROOT / "results", ROOT / "test2026/metal/results")
+    all_reports = sorted({p for base in (ROOT / "results", ROOT / "test2026/metal/results")
                       for p in base.rglob("README.md")})
+    # Snapshot model/test documentation is evidence, not an experiment report.
+    excluded = [p for p in all_reports if any(part in ('source', 'source-snapshot', 'xModel')
+                for part in p.relative_to(ROOT).parts[:-1])]
+    reports = [p for p in all_reports if p not in excluded]
     records = []
     for path in reports:
         raw = path.read_bytes()
@@ -56,12 +60,13 @@ def main():
         source_commit_role="Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
         worktree_has_uncommitted_changes=bool(subprocess.check_output(
             ["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=normal"], text=True).strip()),
-        scope="All experiment README reports currently present under repository-root results and test2026/metal/results.",
+        scope="Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
         limitations=["Inventory presence does not establish success or independent replication.",
                      "Reports retain their original historical status; live-state changes belong in the research journal.",
                      "Documented hashes are copied as source material, not newly revalidated archive hashes.",
                      "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
                      "Unreported experiments and unavailable remote-only artifacts are outside this inventory."],
+        excluded_source_readmes=[p.relative_to(ROOT).as_posix() for p in excluded],
         report_count=len(records), reports=records,
     )
     (OUTPUT / "index.json").write_bytes((json.dumps(document, indent=2, ensure_ascii=False) + "\n").encode("utf-8"))
