@@ -1837,6 +1837,38 @@ trigonometry, output writes and original FP32 behavior. This is a proposed
 method, not an executed optimization. It could affect both decode and
 prefill, unlike the prefill-only Q/V union experiments.
 
+### 2026-10-16 UTC — paired norm RoPE passes original bits; first timing cohort needs calibration
+
+Generate a new private context from accepted d52. Pair Q/K normalization and
+RoPE in one dispatch while retaining the original per-head arithmetic body
+verbatim, 32-lane SIMD reduction, precise trigonometry and independent output
+writes. No packed weights/output views, input cache or speculation. Require
+alias/readiness/foreign writer guards and original fallback behavior.
+
+Primitive 46016 exits 0 in 10.590449334 s: all 60 changed synthetic cases and
+3,710,720 original FP32 output bits pass, including partial rotary, unusual
+head sizes, normalized/unnormalized modes and offset variants. Learned 46457
+exits 0 in 119.748470250 s: actual native Q/K projection fixtures and checkpoint
+norm weights cover every separate full-attention layer, 232 decode/prefill
+profiles, 928 changed-input cases and 47,321,088 bit-identical output values.
+This includes 68 learned norm matrices, coder's 48 all-ones placeholders and
+the two VL layers excluded by prior union packing. The timed endpoints use
+the true first/last separate layers, including VL 3/23, fixed before execution.
+
+All 9,600 samples/1,920 windows, 2 s warmups, ABBA order, four changed host
+fixtures, original output-bit checks and source/context identities are audited
+on both hosts. Numeric/timing process peaks 253,640,704/132,186,112 bytes are
+component-only. Single-pair GPU intervals are short; only 8/24 own-nulls stay
+within 5% for both GPU and wall time. Preserve all exclusions and do not infer
+a stable model speedup, normalize by nulls or start a favorable repeat.
+
+Next measurement is a separately identified fixed 32-stage chain per command
+batch, with carried outputs, independent allocations, original bit checks,
+all endpoints/samples and unchanged own-null exclusion. Longer work changes
+timing granularity and workload; it is not confirmation of the first cohort.
+No new calibration, native integration or fresh vLLM benchmark has run yet.
+[Complete method, raw evidence, all endpoint clocks and limitations](../../results/20261016/paired-norm-rope/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

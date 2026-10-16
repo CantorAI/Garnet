@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T04:42:37.334951+00:00",
-  "source_commit": "aa6f6f342fcb6b9d04011067d64ebca09999109c",
+  "generated_at_utc": "2026-10-16T04:52:27.926912+00:00",
+  "source_commit": "de19bed22ff90a463f9f818fced76c00337e106e",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 177,
+  "report_count": 178,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -4320,6 +4320,28 @@
       ],
       "evidence_directories": [
         "evidence"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/paired-norm-rope",
+      "title": "Paired query and key normalization and RoPE",
+      "report_path": "results/20261016/paired-norm-rope/README.md",
+      "report_sha256": "91f427e870f40af9f8b5e5444e28ddfe03ff5f65c2c589d66f807c3486f4bbb4",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Paired query and key normalization and RoPE\n\nCurrent status: all original-bit correctness prerequisites pass; the first\ncomplete timing cohort has unstable own-nulls in 16 of 24 endpoint profiles.\nDo not admit native integration, an unchanged favorable repeat, or a model\nspeed claim from this cohort. Preserve all results before a separate timing\ncalibration with longer GPU work in each command batch.\n\nCombine Q and K normalization/RoPE into one dispatch with independent output\nbuffers. Retain the original per-head arithmetic body verbatim: same 32-lane\nSIMD sum, rsqrt, FP32 operations and precise sine/cosine calls. Threadgroups\nselect query or key pointers and their original shape parameters. No weight\npacking, joined output, scatter, input/prefix cache or speculative result is\nintroduced. The component context is generated privately from accepted d52;\nserving code and native libraries remain unchanged.\n\n## Executed numerical prerequisites\n\nPrimitive PID 46016 exits 0 in 10.590449334 s. All 60 changed-input cases and\n3,710,720 original FP32 output-bit comparisons pass, including normalized and\nunnormalized modes, offsets 0/1 and +/-0.25, partial rotary dimensions,\nnonstandard head sizes, pending/foreign writer rejection, aliases,\nabort/recovery and unsupported rotary fallback. The exact original arithmetic\nbody is independently regenerated. [Primitive audit](primitive/verification.json).\n\nLearned PID 46457 exits 0 in 119.748470250 s. Actual current native Q/K\nprojections generate changed structured hidden-input fixtures; VL gated query\ncolumns are selected as in the graph. Use checkpoint norm weights, including\nall 68 learned Q/K norm matrices and coder's 48 all-ones placeholders.\nAll 58 separate full-attention layers are covered, including the two VL\ntriples excluded by the earlier half-union experiments. Four decode/prefill\nrow profiles per layer produce 232 profiles and 928 changed-input cases.\nAll 47,321,088 original FP32 output-bit comparisons pass. The timing stage\nadditionally validates 7,385,088 output bits at its 24 endpoint profiles.\n[Complete learned source, numerical and timing audit](initial/verification.json).\n\nHost fixtures are reused only for kernel-level alternating measurements.\nThis component experiment is not a complete model request benchmark, and it\ncannot prove model accuracy on arbitrary inputs or supply a fresh vLLM ratio.\nFull native graph/session/output validation remains mandatory.\n\n## Complete first timing cohort\n\nFix first/last separate full-attention layers before execution: text 0/27,\ncoder 0/23, VL 3/23. Include decode rows 1/2 and both serving prefill row counts.\nKeep 2 s alternating warmup, own-null then comparison, 10 ABBA rounds, 3 warm\ncalls and 5 measured samples per window. Retain all 9,600 samples in 1,920\nwindows. Every window checks complete output bits. Each sample submits one\nnormalization pair and waits for completion.\n\nGPU kernel time, CPU encoding time and single-submit wall time measure\ndifferent costs. Report them separately; own-nulls exclude unstable profiles\nand never normalize gains. Only 8 of 24 endpoint own-nulls stay within 5% for\nboth GPU and wall time. Short GPU intervals and observed drift make this\ncohort insufficient for a stable across-profile gain claim.\n[All means and fractions](initial/analysis.json).\n\nFractions below are candidate/control; smaller is better. Stable refers only\nto the own-null test, not admission of a speedup.\n\n| Model | Layer | Rows | GPU fraction | Wall fraction | Null GPU fraction | Null wall fraction | Own-null stable |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n| Qwen2.5-Coder-0.5B-Instruct | 0 | 1 | 0.801631 | 0.996582 | 1.304653 | 1.048570 | No |\n| Qwen2.5-Coder-0.5B-Instruct | 0 | 2 | 0.588070 | 0.940138 | 1.299252 | 1.064812 | No |\n| Qwen2.5-Coder-0.5B-Instruct | 0 | 26 | 0.833265 | 0.940768 | 0.901287 | 0.967863 | No |\n| Qwen2.5-Coder-0.5B-Instruct | 0 | 52 | 0.933195 | 0.989962 | 0.984880 | 0.988945 | Yes |\n| Qwen2.5-Coder-0.5B-Instruct | 23 | 1 | 0.619267 | 0.908474 | 0.948554 | 0.978314 | No |\n| Qwen2.5-Coder-0.5B-Instruct | 23 | 2 | 0.588985 | 0.973435 | 0.765247 | 0.966664 | No |\n| Qwen2.5-Coder-0.5B-Instruct | 23 | 26 | 0.780595 | 0.898862 | 0.989777 | 0.981374 | Yes |\n| Qwen2.5-Coder-0.5B-Instruct | 23 | 52 | 1.001667 | 1.004995 | 1.071193 | 0.993546 | No |\n| Qwen3-0.6B | 0 | 1 | 0.619575 | 0.872089 | 0.965952 | 1.015943 | Yes |\n| Qwen3-0.6B | 0 | 2 | 0.629423 | 0.879730 | 1.189063 | 1.017450 | No |\n| Qwen3-0.6B | 0 | 24 | 1.025093 | 1.007569 | 0.961938 | 0.969348 | Yes |\n| Qwen3-0.6B | 0 | 44 | 0.963006 | 1.010317 | 0.956176 | 0.980118 | Yes |\n| Qwen3-0.6B | 27 | 1 | 0.808200 | 0.877527 | 0.951579 | 0.923890 | No |\n| Qwen3-0.6B | 27 | 2 | 0.731258 | 0.932634 | 0.955966 | 1.046334 | Yes |\n| Qwen3-0.6B | 27 | 24 | 1.083051 | 1.011675 | 0.941979 | 0.974101 | No |\n| Qwen3-0.6B | 27 | 44 | 0.823751 | 0.948572 | 0.936580 | 0.968936 | No |\n| Qwen3.5-0.8B | 3 | 1 | 0.586166 | 0.933158 | 1.077639 | 1.029905 | No |\n| Qwen3.5-0.8B | 3 | 2 | 0.545241 | 0.885117 | 1.160861 | 1.010303 | No |\n| Qwen3.5-0.8B | 3 | 80 | 0.980356 | 1.028149 | 0.961741 | 0.979717 | Yes |\n| Qwen3.5-0.8B | 3 | 160 | 1.047170 | 1.070584 | 1.025373 | 1.003743 | Yes |\n| Qwen3.5-0.8B | 23 | 1 | 0.617895 | 0.885752 | 0.844794 | 0.967531 | No |\n| Qwen3.5-0.8B | 23 | 2 | 0.625484 | 0.911534 | 1.061216 | 0.944369 | No |\n| Qwen3.5-0.8B | 23 | 80 | 0.881376 | 0.955052 | 0.894731 | 0.953736 | No |\n| Qwen3.5-0.8B | 23 | 160 | 0.925077 | 0.956625 | 0.934515 | 0.957129 | No |\n\n## Costs and next measurement\n\nThe paired operation adds no weight or output storage to the original two\nnormalization operations. This component harness additionally allocates\nprojection and host fixtures solely for verification. Numeric-stage peak RSS\nis 253,640,704 bytes and timing-stage peak RSS is 132,186,112 bytes; neither is\nmodel memory or startup cost. Pipeline construction remains a setup cost.\n\nA proposed calibration will execute a fixed 32-stage chain in one command\nbatch, with each stage consuming the preceding stage's outputs and retaining\nindependent output allocations. This changes timing granularity and workload;\nit is not an unchanged confirmation of these measurements. Keep original\narithmetic/output-bit gates, all endpoints and samples, own-null exclusion,\nseparate clocks and an independent repeated cohort before native admission.\nThe calibration is planned, not executed in this report.\n\nFrozen archives, independently extracted, regenerated and audited on Mac\nand Windows:\n\n- Primitive, 39 files: `61cd813008cb2431819dc34fa2f719ac7acefce9ba2178ac90a1375b370fe4eb`.\n- Complete learned cohort, 44 files: `31d657a088e16ec3217c4db3ebb72f670b0e4e6fc301ff9fa3c8834d91a1acc2`.\n\nNo native integration, serving binary, complete-model timing or latest\nmatched vLLM result changes.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [
+        "31d657a088e16ec3217c4db3ebb72f670b0e4e6fc301ff9fa3c8834d91a1acc2",
+        "61cd813008cb2431819dc34fa2f719ac7acefce9ba2178ac90a1375b370fe4eb"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md"
+      ],
+      "verification_records": [],
+      "evidence_directories": [
+        "initial",
+        "primitive"
       ]
     },
     {

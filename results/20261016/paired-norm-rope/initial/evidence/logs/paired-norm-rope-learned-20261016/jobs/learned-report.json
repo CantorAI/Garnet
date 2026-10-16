@@ -1,0 +1,4788 @@
+{
+  "models": [
+    {
+      "model": "Qwen3-0.6B",
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "layers": 28,
+      "groups": [
+        {
+          "layer": 0,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            16,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.0.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 647535848,
+              "original_bytes": 4194304,
+              "raw_sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.0.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 641244136,
+              "original_bytes": 2097152,
+              "raw_sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.0.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 651730152,
+              "original_bytes": 2097152,
+              "raw_sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.0.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 647535592,
+              "bytes": 256,
+              "raw_sha256": "9ce76b2c280f5bc5b9ae6c182bf5166540528dc635e786f67c2557917dc13520"
+            },
+            {
+              "tensor": "model.layers.0.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 641243880,
+              "bytes": 256,
+              "raw_sha256": "65ba32dce94cb1fde9037d627efd8b734a0e2db04df21ea33c026393371b2c88"
+            }
+          ]
+        },
+        {
+          "layer": 1,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            16,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.1.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 678997736,
+              "original_bytes": 4194304,
+              "raw_sha256": "bd31b318cf3033bcac5d469ff057e0208fdc889806e781d9dbae751f4916046b",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.1.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 672706024,
+              "original_bytes": 2097152,
+              "raw_sha256": "64321dd55fa511fe4809e574fee9eca3f821151258342fddd692554b5a614d36",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.1.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 683192040,
+              "original_bytes": 2097152,
+              "raw_sha256": "f7a3b78f64ceaaf8bfd811321b91777a2a1b6a2e4debb381ee3a413b33d930fd",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.1.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 678997480,
+              "bytes": 256,
+              "raw_sha256": "c4d480d6497cf66aa99dfd487a67c908ea537b663225e00e29bb044c9a6460be"
+            },
+            {
+              "tensor": "model.layers.1.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 672705768,
+              "bytes": 256,
+              "raw_sha256": "226136f73fef4a8f3ab1a4728e73a4dcd928fc7f798a758470a12ab6cffb3171"
+            }
+          ]
+        },
+        {
+          "layer": 2,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            16,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.2.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1025078504,
+              "original_bytes": 4194304,
+              "raw_sha256": "ab3443ccf171841866ea6769c135d4b013fa38f068121012ce986844e902adb3",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.2.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1018786792,
+              "original_bytes": 2097152,
+              "raw_sha256": "e82d6b70d0174d30d9dc447de3eeb2cbb45527602e7ae277c15363499acbe26a",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.2.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1029272808,
+              "original_bytes": 2097152,
+              "raw_sha256": "8b4adb6f5d9f546047bce626e859459645983e28ecee9aec3edb2df1a4468793",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.2.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1025078248,
+              "bytes": 256,
+              "raw_sha256": "827a314cbe93ec45f27c8f9590cd483b990e3b58f67fdebd67a0fbb6d2dd9f23"
+            },
+            {
+              "tensor": "model.layers.2.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1018786536,
+              "bytes": 256,
+              "raw_sha256": "b4a3874018f518d379ece0b64a3845725673ab6b274de05480b9c46d68c41e95"
+            }
+          ]
+        },
+        {
+          "layer": 3,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.3.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1308235496,
+              "original_bytes": 4194304,
+              "raw_sha256": "93da59cba844c16ebb9f54312a8a74f94edc08555070367355f95a7500a8d536",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.3.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1301943784,
+              "original_bytes": 2097152,
+              "raw_sha256": "1c49a3c6b18d99450c1bfcdf12b9c4f9fcd2cfe16108203c07d388673cc29ae0",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.3.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1312429800,
+              "original_bytes": 2097152,
+              "raw_sha256": "eef7a66b5df917cfd3cd29961aa854ad74d9eb7eefd621d0c95fd82a94e8ed9e",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.3.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1308235240,
+              "bytes": 256,
+              "raw_sha256": "fd6a8ca296c467dc352b410a29f80fea5bb05ac280c2720f66793aa447f688b4"
+            },
+            {
+              "tensor": "model.layers.3.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1301943528,
+              "bytes": 256,
+              "raw_sha256": "0b05b36fb1bec4f4c05ced40c34d0fbaa6c3fe45b6c5889081635ca733fdc811"
+            }
+          ]
+        },
+        {
+          "layer": 4,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            16,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.4.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1339697384,
+              "original_bytes": 4194304,
+              "raw_sha256": "b37eb81e736e1db3a06adb2b9d9d9faa8d1d635efc7f56020689a20e689b3b39",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.4.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1333405672,
+              "original_bytes": 2097152,
+              "raw_sha256": "5a7147473ca81d495d5e617241b5a83095ba371ca437fb0751d5d2d783cec60d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.4.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1343891688,
+              "original_bytes": 2097152,
+              "raw_sha256": "c8b2587f8fbc2303239185d3a821de5a2d3268f0286de5c29825f0d5a0c52b25",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.4.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1339697128,
+              "bytes": 256,
+              "raw_sha256": "543abdaea59e207cbed0c0a1aaef3a825ca0ba9dad64c7fc04677a4d2e9a39fa"
+            },
+            {
+              "tensor": "model.layers.4.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1333405416,
+              "bytes": 256,
+              "raw_sha256": "269ed740b1803c6201dcd4d25f306122465aeeb260c281093f6237ebe1b2ac0c"
+            }
+          ]
+        },
+        {
+          "layer": 5,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.5.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1371159272,
+              "original_bytes": 4194304,
+              "raw_sha256": "ad77aa0b9ce8297078be5dbb2b76736dd6439ab344a152641787190b00b6f84e",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.5.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1364867560,
+              "original_bytes": 2097152,
+              "raw_sha256": "506462838f60c7bed9a7df20d6c2ff6dc862e4253aaf272ca98916a1c01908b7",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.5.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1375353576,
+              "original_bytes": 2097152,
+              "raw_sha256": "37402ac4d6db6ec7c0632e991fc52c70274ddb65b1718f8c539a19c4079829a6",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.5.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1371159016,
+              "bytes": 256,
+              "raw_sha256": "88e325ec0db74d7dcacf1e1d7fc972ebf93da6435334cee906a4e0b9d0de7fa2"
+            },
+            {
+              "tensor": "model.layers.5.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1364867304,
+              "bytes": 256,
+              "raw_sha256": "5e7a82ffe019a0626e3419346d29b39b988139a12524f6a2d8ff39e43791063e"
+            }
+          ]
+        },
+        {
+          "layer": 6,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.6.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1402621160,
+              "original_bytes": 4194304,
+              "raw_sha256": "948079e40cef9721b2bddfd5e651d55167bda317eb08b2aeb41f1f3ea686392c",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.6.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1396329448,
+              "original_bytes": 2097152,
+              "raw_sha256": "07bba39e5f8b1aec2bc144c12935b258e6cde2eb26aa98e9cf6ef4a6d7c0ac92",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.6.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1406815464,
+              "original_bytes": 2097152,
+              "raw_sha256": "2d6041f93dae8bfdb9a17184b4e41ad702baaaeb6342cd3ecd1ef59f6ce109b4",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.6.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1402620904,
+              "bytes": 256,
+              "raw_sha256": "b7b458c6adc6be5928613b6a156d18cdab30dfea2fc6c1871b13e3d37abb58bf"
+            },
+            {
+              "tensor": "model.layers.6.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1396329192,
+              "bytes": 256,
+              "raw_sha256": "aac0cd8d8eb46d2d7a6f4d282bf1e7d31a274768d7c7c14b5f0e981cfb9377fb"
+            }
+          ]
+        },
+        {
+          "layer": 7,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            16
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.7.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1434083048,
+              "original_bytes": 4194304,
+              "raw_sha256": "876a47580c40865a21e3d9094528f81ac2af6dced6026c85c0fd89382615ee59",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.7.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1427791336,
+              "original_bytes": 2097152,
+              "raw_sha256": "30de916f31ec22d087479044188e5d533306a19077e0549eb644e86b250d4dee",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.7.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1438277352,
+              "original_bytes": 2097152,
+              "raw_sha256": "ad13b32ea0c52b78fc01d16791a4164d220d81a72674a244581ff7b89e16c643",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.7.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1434082792,
+              "bytes": 256,
+              "raw_sha256": "392214d94c2289646a0609a04c48a3d7779a6e3cc93f0b5c595d54d0546ac37a"
+            },
+            {
+              "tensor": "model.layers.7.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1427791080,
+              "bytes": 256,
+              "raw_sha256": "45040eea087175c65e688b53a98e60f2d9ac86178773f8e4d659244d70b60b72"
+            }
+          ]
+        },
+        {
+          "layer": 8,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.8.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1465544936,
+              "original_bytes": 4194304,
+              "raw_sha256": "ce2e2c97a48e04f53b7eb96d0f481b2b0379afe70dbe8bc35deb04d8b233cdff",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.8.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1459253224,
+              "original_bytes": 2097152,
+              "raw_sha256": "029bf77ed12e5f80716774c47120136db4b92b9efe0946ce9e473cbdcd23a130",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.8.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1469739240,
+              "original_bytes": 2097152,
+              "raw_sha256": "b75a22fcbad231d11192970e4ecfdc3ec357ef8e61313845ac72e2999a961846",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.8.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1465544680,
+              "bytes": 256,
+              "raw_sha256": "326f62c982c42905a5c13f0cc3f9bb98d9f516c041ec36aea9ec95b3a2e7c451"
+            },
+            {
+              "tensor": "model.layers.8.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1459252968,
+              "bytes": 256,
+              "raw_sha256": "d4aee7bdaf02242ecfd3c4ad0d5b8ffdb46fccbacd8c1daab4fc3d0aeb166fb4"
+            }
+          ]
+        },
+        {
+          "layer": 9,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.9.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1497006824,
+              "original_bytes": 4194304,
+              "raw_sha256": "cfde31871f248f07380a890155ed1aff62837dadca7589146827f05bf9d283ad",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.9.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1490715112,
+              "original_bytes": 2097152,
+              "raw_sha256": "aefe0566863ce9bae414509533ec0712d457dcfacc40773c0e6558f4fab969e5",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.9.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1501201128,
+              "original_bytes": 2097152,
+              "raw_sha256": "6eeda9b95cbc13783d73884fae4c9ed105995b5c051ecf0e742200ca5ca0fb46",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.9.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1497006568,
+              "bytes": 256,
+              "raw_sha256": "d9169a9c83988aeb5e6b5e9e296c023ad5ad3e8dfc2286c5410c170731a53ec5"
+            },
+            {
+              "tensor": "model.layers.9.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1490714856,
+              "bytes": 256,
+              "raw_sha256": "3d4d9257527f58336184757b3a0738255de2f3cc76b32f84c5a53135708eacb9"
+            }
+          ]
+        },
+        {
+          "layer": 10,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.10.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 710459624,
+              "original_bytes": 4194304,
+              "raw_sha256": "f8b6e20941ef45474dc20ae8831e5c10b7513193ea2eab76892bf0e63a3222f6",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.10.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 704167912,
+              "original_bytes": 2097152,
+              "raw_sha256": "56f8b3255c3110dea443e41cf1d10cdf90f52dc7f5970672747131f80fd32b5d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.10.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 714653928,
+              "original_bytes": 2097152,
+              "raw_sha256": "f6f2c49098804c5a73c5d89bd38049e0ca4f841c2c049fe0faefcfb573e0d6de",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.10.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 710459368,
+              "bytes": 256,
+              "raw_sha256": "3bdbb787f31ea93d8da549dd6b6b155e7faf5c093825e77619e4e2a6009cc54c"
+            },
+            {
+              "tensor": "model.layers.10.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 704167656,
+              "bytes": 256,
+              "raw_sha256": "f6818f9d297283f0c795da14cacc9bcc64c6ccb8cdb4d2bd21ee82ff287ca126"
+            }
+          ]
+        },
+        {
+          "layer": 11,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.11.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 741921512,
+              "original_bytes": 4194304,
+              "raw_sha256": "7563fd65dc6cb561b02f0fb390601a710a296e022c0d418808a6aa9b2bae421d",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.11.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 735629800,
+              "original_bytes": 2097152,
+              "raw_sha256": "d12f534dd54def980a3d5b87d6a3cde1dfb336b21ede77c5179db87e685139d3",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.11.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 746115816,
+              "original_bytes": 2097152,
+              "raw_sha256": "e37faa7bf4e1f13d7fc697968d004bf4708acd09513e064901a416c2fafcd4d6",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.11.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 741921256,
+              "bytes": 256,
+              "raw_sha256": "6ddadbe30e12f93ddf3317908e64075f72b1f7fbb458e295a71cb70358f8b295"
+            },
+            {
+              "tensor": "model.layers.11.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 735629544,
+              "bytes": 256,
+              "raw_sha256": "5694616e73714d51645ea25e64f194fdfbcc59b5b23a823f1e564fdf9a027237"
+            }
+          ]
+        },
+        {
+          "layer": 12,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.12.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 773383400,
+              "original_bytes": 4194304,
+              "raw_sha256": "9b22390e6b83ef8074609e2dd4b42b0c835299d02da322fe395eb634ef920a02",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.12.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 767091688,
+              "original_bytes": 2097152,
+              "raw_sha256": "817ddb1573a35abedf895f00cc748eb859685ee7386e313dfefa5feee9d28f58",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.12.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 777577704,
+              "original_bytes": 2097152,
+              "raw_sha256": "a26f0b1e0ea525a42df314e44b1491be20f2b44d4c6163cbaa4aae96a3eb87ec",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.12.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 773383144,
+              "bytes": 256,
+              "raw_sha256": "fa2abac77b30f9f8131755f500b71f9da0202f3b02819c2ac2f21cdbe10524f4"
+            },
+            {
+              "tensor": "model.layers.12.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 767091432,
+              "bytes": 256,
+              "raw_sha256": "e8d10c407d7e3a15328389a282c1f02496ea7510699c6e0a08205bb3de8500cd"
+            }
+          ]
+        },
+        {
+          "layer": 13,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.13.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 804845288,
+              "original_bytes": 4194304,
+              "raw_sha256": "7f63a2ea514a0a6df3cdd0012e541ac1ed50a4569c1577d91f7fc5966281b0cd",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.13.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 798553576,
+              "original_bytes": 2097152,
+              "raw_sha256": "ed9154f6b6449f9bb95a084055f0e43cba68525847ea4513022c7d95edfb2599",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.13.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 809039592,
+              "original_bytes": 2097152,
+              "raw_sha256": "54af7fcf3820cbee0e812f7c070bd0a1c0be987123587364db9bd80451d73287",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.13.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 804845032,
+              "bytes": 256,
+              "raw_sha256": "b89da599251d68a952b25d7c9414976d4f56fa6f740642ddf34c02108ec35306"
+            },
+            {
+              "tensor": "model.layers.13.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 798553320,
+              "bytes": 256,
+              "raw_sha256": "3201c1b0e3d41412768583be42aae64b37224dc2bfa11c2f9fc6986b3aeabbd5"
+            }
+          ]
+        },
+        {
+          "layer": 14,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.14.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 836307176,
+              "original_bytes": 4194304,
+              "raw_sha256": "f7c75415069ecaea6d189dcb4fc35ea246baa078f613fe3d7e0ff2d992a03dd7",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.14.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 830015464,
+              "original_bytes": 2097152,
+              "raw_sha256": "1101640613894577057e014406a96392abef11a843fa4b33616297e1093176f9",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.14.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 840501480,
+              "original_bytes": 2097152,
+              "raw_sha256": "7c7bdb0c6476708f2e67c201d00a3fc6220e39a85caa1221280f587239c1d82e",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.14.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 836306920,
+              "bytes": 256,
+              "raw_sha256": "87a0f426028441c7093ac712df5f78d07f3976bbb98d890641aa1db54ca0e423"
+            },
+            {
+              "tensor": "model.layers.14.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 830015208,
+              "bytes": 256,
+              "raw_sha256": "2262cae97a6438154f0a69cea3166a52245b5f16a45312adc0288645fcdeef6e"
+            }
+          ]
+        },
+        {
+          "layer": 15,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.15.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 867769064,
+              "original_bytes": 4194304,
+              "raw_sha256": "7f0140bdf16a6e7db2b8d210966f246302e8fbcbf07ad44ee12ddf814be1237f",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.15.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 861477352,
+              "original_bytes": 2097152,
+              "raw_sha256": "15a85795dbabb2ab3957b0562c6b4c117bc66d2d22e8f2faece350179bc4411b",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.15.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 871963368,
+              "original_bytes": 2097152,
+              "raw_sha256": "ef9bc257af4a05da7e098fbcba7883f018017324a860db4510c70a020ee867b3",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.15.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 867768808,
+              "bytes": 256,
+              "raw_sha256": "f4eea26cf4f75659da1d59808bf265fd17cc8cb228aa84b4cbd6c1254bb93e5d"
+            },
+            {
+              "tensor": "model.layers.15.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 861477096,
+              "bytes": 256,
+              "raw_sha256": "77e05ecbff6d386edf32da695ec6692cdff27326fec17627d3cdbe57fcc95e6e"
+            }
+          ]
+        },
+        {
+          "layer": 16,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.16.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 899230952,
+              "original_bytes": 4194304,
+              "raw_sha256": "df185135475be0e567e8061156114e2a91f5700b9f2afefcb8792cc3ec23ed8a",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.16.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 892939240,
+              "original_bytes": 2097152,
+              "raw_sha256": "c06499d30dba92921f29ae6abf800a1f66f0b54305b8ca9c08f73d0adfb09ed8",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.16.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 903425256,
+              "original_bytes": 2097152,
+              "raw_sha256": "021fd061e58636cc5740510774a76e31640c2943bd192a96303744423a863a61",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.16.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 899230696,
+              "bytes": 256,
+              "raw_sha256": "b9f11fd79ca61893a83787c42c764a7868461446f212b007cea0c55351f12664"
+            },
+            {
+              "tensor": "model.layers.16.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 892938984,
+              "bytes": 256,
+              "raw_sha256": "3189495e28414d64e501e19e422bfe27a21f06578b414bc542e8c514009ac08e"
+            }
+          ]
+        },
+        {
+          "layer": 17,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.17.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 930692840,
+              "original_bytes": 4194304,
+              "raw_sha256": "7e79d8d78aae289b750be6536a0912badf8678321c94b390164969e35cb0ed82",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.17.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 924401128,
+              "original_bytes": 2097152,
+              "raw_sha256": "2d4835e351097c736af7ec940d7156cde976d5e38b3d1eb179d9903255c54d02",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.17.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 934887144,
+              "original_bytes": 2097152,
+              "raw_sha256": "b655be83ae19e588a887c52256c1d9089f10ec8a40b418987dc1c6b3177536b5",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.17.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 930692584,
+              "bytes": 256,
+              "raw_sha256": "507c91bfd5e04d05d7916f230902b1e015cafd897660418e8d70d5e63c7e0ec7"
+            },
+            {
+              "tensor": "model.layers.17.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 924400872,
+              "bytes": 256,
+              "raw_sha256": "b0e8e4236f38296f9dd38f7919d021a43c0a3488e5c5a5071f24fdb57e8b7b8b"
+            }
+          ]
+        },
+        {
+          "layer": 18,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.18.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 962154728,
+              "original_bytes": 4194304,
+              "raw_sha256": "48e6677059c60d04430cf05e09d58f35fb45ee2585c1da88046561f1cf2f6330",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.18.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 955863016,
+              "original_bytes": 2097152,
+              "raw_sha256": "27a097d53c50898199f85d8244fb76327226b1b7de4e2d5249f5679db9cdb74d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.18.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 966349032,
+              "original_bytes": 2097152,
+              "raw_sha256": "36cbd851688764365c1945825a7a55c5cb98b03fb9da03ae9b583cd0194f2fb8",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.18.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 962154472,
+              "bytes": 256,
+              "raw_sha256": "afc404af9b08bde657c45bf056dd835d01936a91a675a6e486ccca6611a5639e"
+            },
+            {
+              "tensor": "model.layers.18.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 955862760,
+              "bytes": 256,
+              "raw_sha256": "8fc0c8092956720da98603ed562aea4d4bec73303beafa36dd0dfb9cd109a101"
+            }
+          ]
+        },
+        {
+          "layer": 19,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.19.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 993616616,
+              "original_bytes": 4194304,
+              "raw_sha256": "dfac4e8d23da6bc59db2ef73e9d0658bdff27293b5faf60d0b4e9d0048aa611b",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.19.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 987324904,
+              "original_bytes": 2097152,
+              "raw_sha256": "e6a02e35880b3269f20ce32fa6824484fa7c7267b824adf7b816b1fd61a72370",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.19.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 997810920,
+              "original_bytes": 2097152,
+              "raw_sha256": "a9dc829a84242c2b1df83cae9a7aa604452aa59c5e2aab6eabd63ca34c7bd371",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.19.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 993616360,
+              "bytes": 256,
+              "raw_sha256": "e8c9ca31e00c536edb57fd4ba00e9995c0d6f7dcb06969bf152c2e3edcb9b963"
+            },
+            {
+              "tensor": "model.layers.19.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 987324648,
+              "bytes": 256,
+              "raw_sha256": "de036305c692e83df48dbca20d3046b76915ad37ba74586c74d8531b80eb1d2c"
+            }
+          ]
+        },
+        {
+          "layer": 20,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.20.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1056540392,
+              "original_bytes": 4194304,
+              "raw_sha256": "c680264b1662a184b0d91e8f9c07e10b1177b198e7dac8915d2966c293de85fb",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.20.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1050248680,
+              "original_bytes": 2097152,
+              "raw_sha256": "7b68997affeab755ac5ef4df7fa672a0de947141e286f485859868cbd32e09bc",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.20.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1060734696,
+              "original_bytes": 2097152,
+              "raw_sha256": "9895703ac42882aaecbd3b2c377b4caadb2e5e9a1fb3d9083992a89dfba6b225",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.20.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1056540136,
+              "bytes": 256,
+              "raw_sha256": "448c36979c87b3e6ca7bde4a10cd03b917861de4b262e787b7002117b8b42890"
+            },
+            {
+              "tensor": "model.layers.20.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1050248424,
+              "bytes": 256,
+              "raw_sha256": "c8f6ebdb02e1c39f8ae9aeee571ac2b109b3d54cbd4d0263cfff0f1e86cba1d2"
+            }
+          ]
+        },
+        {
+          "layer": 21,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.21.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1088002280,
+              "original_bytes": 4194304,
+              "raw_sha256": "7d1fbba8da2b796d79e7b42fbbc6e4e3896d1fd017ee8bf3a15aee5a2795fa79",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.21.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1081710568,
+              "original_bytes": 2097152,
+              "raw_sha256": "a907c342bbc6e1625b7bb808cd91a633a605c8c44169cb905484ddbce0c4daca",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.21.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1092196584,
+              "original_bytes": 2097152,
+              "raw_sha256": "d656bfb90719e7c4c6e7f2e802ea3cc593076184b96552af46af69eb89cba8f3",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.21.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1088002024,
+              "bytes": 256,
+              "raw_sha256": "2accf6c1127ef7709cb77d98eda07f4a4c67cd4d84b7b05410c4d3f56810afac"
+            },
+            {
+              "tensor": "model.layers.21.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1081710312,
+              "bytes": 256,
+              "raw_sha256": "b25eecda707a09a70585fe2421ea6c6bbe9e1782a3a21777b6721dd060b1e474"
+            }
+          ]
+        },
+        {
+          "layer": 22,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.22.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1119464168,
+              "original_bytes": 4194304,
+              "raw_sha256": "86d19929d840a3ed24a41c1d5310be22298ffcfa07be0b803d32cc6c9d060890",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.22.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1113172456,
+              "original_bytes": 2097152,
+              "raw_sha256": "3f95291a18b7c82e2c7e147003d7d09cea7333d18baf647c657ff3e2594918df",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.22.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1123658472,
+              "original_bytes": 2097152,
+              "raw_sha256": "86904ff23cc987d28c2a2e9ab26432eea6cb97e3713f4cbf52330def75665911",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.22.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1119463912,
+              "bytes": 256,
+              "raw_sha256": "391fb23e0931eac70ea0876a89ff4fd2dca1457b543e068b45854d4d6bdd346e"
+            },
+            {
+              "tensor": "model.layers.22.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1113172200,
+              "bytes": 256,
+              "raw_sha256": "5696037decbbe6d49f24380bcd685ef67ec4114574fc576fbb6cacd7c3bb1abc"
+            }
+          ]
+        },
+        {
+          "layer": 23,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.23.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1150926056,
+              "original_bytes": 4194304,
+              "raw_sha256": "b4d2a8152b696beaed4c28b2a63c54336706b7bed07f00985cbf887872b02751",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.23.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1144634344,
+              "original_bytes": 2097152,
+              "raw_sha256": "3a6d2029ba862f9dae36c49203fb368a92bf513cb409cab4ba87f6c7ced6b6c3",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.23.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1155120360,
+              "original_bytes": 2097152,
+              "raw_sha256": "edf80bb5cf7662d5b3f016f9c6caf85aad05f28f89ff12935c0dd8a48b589d5c",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.23.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1150925800,
+              "bytes": 256,
+              "raw_sha256": "ca6ed831c886cfcd44da630969edb1fdd88cb0f2447124570dea00f446815d39"
+            },
+            {
+              "tensor": "model.layers.23.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1144634088,
+              "bytes": 256,
+              "raw_sha256": "b16776ff0b30e7eb75663e77859b8479f424f5bf428bddde4f6b3916de4d0c27"
+            }
+          ]
+        },
+        {
+          "layer": 24,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.24.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1182387944,
+              "original_bytes": 4194304,
+              "raw_sha256": "984f6be75f84fa804ab215515c533ad13200416c5a1c2ec64f0c8ff534686b1d",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.24.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1176096232,
+              "original_bytes": 2097152,
+              "raw_sha256": "538ff37cbe183691e7be0c2a56f05351d06e9b7cc6c3ae5251fe0c7f7bbb0f99",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.24.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1186582248,
+              "original_bytes": 2097152,
+              "raw_sha256": "0e1fefbaace1014eb1d3d1a473acbe511516503267368c963b77c897c88a98bb",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.24.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1182387688,
+              "bytes": 256,
+              "raw_sha256": "a3bf51fd73968a28c7066598f51befdecb7d39c58c8a6e4a123d154f4f35ffc4"
+            },
+            {
+              "tensor": "model.layers.24.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1176095976,
+              "bytes": 256,
+              "raw_sha256": "ebcf2fcaee8079835636ab65044261700c7cc7fa755ebc055d5ea75e7a58b7a5"
+            }
+          ]
+        },
+        {
+          "layer": 25,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.25.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1213849832,
+              "original_bytes": 4194304,
+              "raw_sha256": "f7cda0effdc37f0f4b9bf76eca03e132cc6b23b42151a445b1e2b70d2167cbb0",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.25.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1207558120,
+              "original_bytes": 2097152,
+              "raw_sha256": "1dd0409b50f6ea40b9df13b2a21bed6e7caec94b75e6a269d0e7ba59a81c0434",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.25.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1218044136,
+              "original_bytes": 2097152,
+              "raw_sha256": "e37d5cb62f714664c38296ca983b3e32dfb0374b756bf6e757a38428ea5725d1",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.25.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1213849576,
+              "bytes": 256,
+              "raw_sha256": "b9444de45359be57615e62c8cea3f86bb7e7d0e911082b5ad891fe0826a31752"
+            },
+            {
+              "tensor": "model.layers.25.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1207557864,
+              "bytes": 256,
+              "raw_sha256": "a60c7c53a9cdeb768c05c2d9c77298070954b33552231dbc3e529c3f677057f5"
+            }
+          ]
+        },
+        {
+          "layer": 26,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.26.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1245311720,
+              "original_bytes": 4194304,
+              "raw_sha256": "b30609b4e44f9cdd84db92d505bad4b3da6be9638a9122db2df07131d6644719",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.26.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1239020008,
+              "original_bytes": 2097152,
+              "raw_sha256": "fef75fd0b8de1ed942d8087b5dc3e084a7f03c45d592eda35d51091522e2a538",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.26.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1249506024,
+              "original_bytes": 2097152,
+              "raw_sha256": "f07cd8369194377ec08c3e1eb5cb2cd050396a7af335eae518dfad44c61d0f79",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.26.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1245311464,
+              "bytes": 256,
+              "raw_sha256": "8538d0b986345bc19783cc0aa5f495a6caa605d39eeb5500b3883bdd01eca203"
+            },
+            {
+              "tensor": "model.layers.26.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1239019752,
+              "bytes": 256,
+              "raw_sha256": "c3895b96870caf4215ce4e3ebd3979271fe462664c8e68eef557a0329a042110"
+            }
+          ]
+        },
+        {
+          "layer": 27,
+          "inner": 1024,
+          "columns": 4096,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            16,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.27.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 2048,
+              "inner": 1024,
+              "data_offset": 1276773608,
+              "original_bytes": 4194304,
+              "raw_sha256": "3f2584a84cef1713c17c879704dc15c4e44a379f1d03f56e950cac1dd1cba779",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.27.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1270481896,
+              "original_bytes": 2097152,
+              "raw_sha256": "c0bd4022cda9a99aaab741c8cd1b32c14fb8f1a5e6c26c48e94c15905337ed3d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.27.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 1024,
+              "inner": 1024,
+              "data_offset": 1280967912,
+              "original_bytes": 2097152,
+              "raw_sha256": "ec8e213f02095b45a3d5d2efdb2590d14dd52a0f5cc8c2095d0c80a448879935",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 8388608,
+          "norms": [
+            {
+              "tensor": "model.layers.27.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1276773352,
+              "bytes": 256,
+              "raw_sha256": "6d3d44d15e9f274d0e855a12c910764b15cebdcf0597adfbe6a7df6e9056c60e"
+            },
+            {
+              "tensor": "model.layers.27.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1270481640,
+              "bytes": 256,
+              "raw_sha256": "45e5edd2d7f90ed5180235b122bd7a820f25339fc86f8c7a33873a51a04027a4"
+            }
+          ]
+        }
+      ],
+      "skipped_layers": [],
+      "rope": {
+        "query_heads": 16,
+        "key_heads": 8,
+        "dim": 128,
+        "rotary": 128,
+        "normalize": true,
+        "weight_offset": 0,
+        "theta": 1000000,
+        "sections": [
+          64,
+          0,
+          0
+        ],
+        "epsilon": 1e-06,
+        "query_gated": false,
+        "prefill_rows": [
+          24,
+          44
+        ]
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+      "layers": 24,
+      "groups": [
+        {
+          "layer": 0,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 15,
+          "union_admitted": true,
+          "independent_scales": [
+            15,
+            15,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.0.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 300291104,
+              "original_bytes": 1605632,
+              "raw_sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.0.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 298454304,
+              "original_bytes": 229376,
+              "raw_sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.0.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 301896992,
+              "original_bytes": 229376,
+              "raw_sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 1,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.1.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 330115872,
+              "original_bytes": 1605632,
+              "raw_sha256": "2f47481e080f166032a2814c88cc5391a3c5df6e77e610e5195538a981fb4b53",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.1.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 328279072,
+              "original_bytes": 229376,
+              "raw_sha256": "701b145054ef737a7a519c6c47692ac7825f4c1efd4efb34dd1798f2261e1a2b",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.1.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 331721760,
+              "original_bytes": 229376,
+              "raw_sha256": "ce92fcfd28bb8186335248bae13931b06b5fb1bb18f28cec1faa644aefeb0a16",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 2,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.2.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 658188320,
+              "original_bytes": 1605632,
+              "raw_sha256": "6285c1679b5b102739cde20b8e02ff3c2601a664c4b50543459ced5e3cd15503",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.2.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 656351520,
+              "original_bytes": 229376,
+              "raw_sha256": "67379f01d58c111c52d714c5c804938a10c2716e8370f53ac52bc51f7d593255",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.2.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 659794208,
+              "original_bytes": 229376,
+              "raw_sha256": "200c89279588be77f1a2c01423521d5eaddcf0ed3356891e964fc1853c5a0930",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 3,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.3.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 807312160,
+              "original_bytes": 1605632,
+              "raw_sha256": "4124e57aae843fbc60de701a67bf43046516e171b4976267d264a8efc4718f51",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.3.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 805475360,
+              "original_bytes": 229376,
+              "raw_sha256": "1468e22cbcb7e570a007dc974bff514039d3e9a88cd20f4ab758db851d07d271",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.3.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 808918048,
+              "original_bytes": 229376,
+              "raw_sha256": "7ec450dfcf93b55c64dc069820fc887f4cd59eb6294a2092fdce019d34acade6",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 4,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 15,
+          "union_admitted": true,
+          "independent_scales": [
+            15,
+            18,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.4.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 837136928,
+              "original_bytes": 1605632,
+              "raw_sha256": "b5e81a42cb43721c2ac9f32b49ccc42dfbb963a0caa04a6ef35933a429792d7a",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.4.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 835300128,
+              "original_bytes": 229376,
+              "raw_sha256": "9d24316a149e26b683761443c6bc7d4697b1991aab0bc339a6f648695b85fd05",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.4.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 838742816,
+              "original_bytes": 229376,
+              "raw_sha256": "66464b3aa13741ab0c4b715336be350613194b3e521282a740e410dde2b2e73c",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 5,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.5.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 866961696,
+              "original_bytes": 1605632,
+              "raw_sha256": "7d31477b35f367b56dac83f4e06addf50501a455fa0fa5f5fe6b072337b7c0df",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.5.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 865124896,
+              "original_bytes": 229376,
+              "raw_sha256": "3c88551f3e7a3c5d8d9a2d6aac19afe1caa59c560489db4d3281c9ceda633b6d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.5.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 868567584,
+              "original_bytes": 229376,
+              "raw_sha256": "390b3abab0910b0fb0316d3dde83f5760eb4717db23411b8225f0ad7914e5b89",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 6,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.6.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 896786464,
+              "original_bytes": 1605632,
+              "raw_sha256": "fad1dc7db68f38870a3911be63d6e241db1d3951678a2e6090b8bd5db726d321",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.6.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 894949664,
+              "original_bytes": 229376,
+              "raw_sha256": "1c1882b75f7570ac61da7a27653675b20c555ab473c239d949898938a7e3ab9c",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.6.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 898392352,
+              "original_bytes": 229376,
+              "raw_sha256": "d22274ef81e27d83447928f8f71ebcfd7d914cba086eb32cc2bb1440e6af08c8",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 7,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.7.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 926611232,
+              "original_bytes": 1605632,
+              "raw_sha256": "b28d641c444159cb31d708b0f2f414e2841a43de02d8303573a7c1042abd4553",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.7.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 924774432,
+              "original_bytes": 229376,
+              "raw_sha256": "d889a3fc749f3d382ee7998363506a55c96403454b680b77ee3ca03477c820ad",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.7.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 928217120,
+              "original_bytes": 229376,
+              "raw_sha256": "e0d9b007c45e579a23455685be8758c6990f07fc2932cd38bd5c15ddfd5f790d",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 8,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 15,
+          "union_admitted": true,
+          "independent_scales": [
+            15,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.8.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 956436000,
+              "original_bytes": 1605632,
+              "raw_sha256": "a262075a418887d98f052c16e8b41ccff6cd4c995c19c75a99c3340db0e37ada",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.8.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 954599200,
+              "original_bytes": 229376,
+              "raw_sha256": "13f19c693a7c93a5d2355c76ccf0eb94b745c259485c9175ba1f01f69e69a6a8",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.8.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 958041888,
+              "original_bytes": 229376,
+              "raw_sha256": "406c3f867dc2af29176529770f460a524d109689c8836c048292e2f169cb5069",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 9,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.9.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 986260768,
+              "original_bytes": 1605632,
+              "raw_sha256": "e87ac1ac22453e100d0163f54c295629b211e10e217b29aaec0e49ff9cf0f84a",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.9.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 984423968,
+              "original_bytes": 229376,
+              "raw_sha256": "01d92b2ddd12c52e586786214d335fd4dd5a0305bc8f112540c1a91d3532c39d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.9.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 987866656,
+              "original_bytes": 229376,
+              "raw_sha256": "64f08b3f192b4ba6efbdc6683fa68357e4a32c3dfe1783fbeb259c2b838185f2",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 10,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.10.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 359940640,
+              "original_bytes": 1605632,
+              "raw_sha256": "e564eb91380fe285f92da58c13c1bec23ca7597954a93700e6724501ef3a58ec",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.10.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 358103840,
+              "original_bytes": 229376,
+              "raw_sha256": "eade13f97fc10142b7773ee27724dc83341e3b0bb119c3ac797969034bbfb180",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.10.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 361546528,
+              "original_bytes": 229376,
+              "raw_sha256": "8344fd98a7be6bc945f7d70249ea3f5f764fc7a03fc9c365f62461eabbe74d9b",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 11,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.11.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 389765408,
+              "original_bytes": 1605632,
+              "raw_sha256": "bd50bad9e215ad4ae935ea9a1486e0e641d0cc64052046656e2a20290c5c7856",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.11.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 387928608,
+              "original_bytes": 229376,
+              "raw_sha256": "dfb6ccc3f6e163f438224f07fc968c5781556798c611b3735eb6f08a397724dc",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.11.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 391371296,
+              "original_bytes": 229376,
+              "raw_sha256": "6c2a8bc4a4af69ea340a01416b5bf5df1d7e5fc36fd1606decd4b9aec6f40a55",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 12,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.12.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 419590176,
+              "original_bytes": 1605632,
+              "raw_sha256": "f597e04bacb4902386fab46206aca32bd796332f9a47dec1d5cd25edc27d3f06",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.12.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 417753376,
+              "original_bytes": 229376,
+              "raw_sha256": "d11bd4495b1865788dd800ebcba9931f1041c297d3ee059b915f8185e9a8737d",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.12.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 421196064,
+              "original_bytes": 229376,
+              "raw_sha256": "08fc1e4347f9df4f47ef40a084569e5fe3ea770f9bce05f73a0dc3dd4f6bc5d2",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 13,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 16,
+          "union_admitted": true,
+          "independent_scales": [
+            16,
+            17,
+            19
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.13.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 449414944,
+              "original_bytes": 1605632,
+              "raw_sha256": "64620ba56b2a97d4f72bb3abb5fc126c78c49a9e0d2bb248b41ae6b809d06c44",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.13.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 447578144,
+              "original_bytes": 229376,
+              "raw_sha256": "ef97dbc77a7ed33df4faea72a809a0627bf0adb7d85f0cd67175910ba9131cb7",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.13.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 451020832,
+              "original_bytes": 229376,
+              "raw_sha256": "f433a758b5a26e4d85583928d5c8d0d37f14c986aa75a315102483da7c4c2d4a",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 14,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.14.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 479239712,
+              "original_bytes": 1605632,
+              "raw_sha256": "c7a71ca9f9113030f12316f4f5829cfb3d56c2d774a5ae6a744e6df5f3cacce1",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.14.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 477402912,
+              "original_bytes": 229376,
+              "raw_sha256": "e6bf14d43495e329deec6566ccfa4eea15afa26c07f7518fd3b7ab8e173925ea",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.14.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 480845600,
+              "original_bytes": 229376,
+              "raw_sha256": "53da32c8eea3a536f01eb010f324c11a39c80b49dca91071fd19724f7ed3e354",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 15,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.15.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 509064480,
+              "original_bytes": 1605632,
+              "raw_sha256": "d7ccfefb2025501d4017b9c52911ca20e1fcaf762b86f03ff5e969a537ce0bf6",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.15.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 507227680,
+              "original_bytes": 229376,
+              "raw_sha256": "3404bf4aa96b533079fbc2b6d96e1b19f94ff2dd6323df618565a1f3ab368886",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.15.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 510670368,
+              "original_bytes": 229376,
+              "raw_sha256": "852288bfb9647e3f6f5d40071e9076e98cebdc2a1a3e1dd4fa70b9d04047bc76",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 16,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.16.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 538889248,
+              "original_bytes": 1605632,
+              "raw_sha256": "52fe5f2197341cc8d0818523d62da6ff5dd1ca09094667cfea5174f03ec801ac",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.16.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 537052448,
+              "original_bytes": 229376,
+              "raw_sha256": "08e4646e1f63c41390721410cf24b783fe3c6b1a61e2f5543381414b6d17c375",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.16.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 540495136,
+              "original_bytes": 229376,
+              "raw_sha256": "6709059899ec22e1a63904346a7aef9cf22a7e61482f467b8222eb33316ebdaf",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 17,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.17.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 568714016,
+              "original_bytes": 1605632,
+              "raw_sha256": "41ddaee1961458cdd35e71292a487ec2287760d7018972aa66d03383f8d458d0",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.17.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 566877216,
+              "original_bytes": 229376,
+              "raw_sha256": "23a26ca2d25c27b098b9095672fbfbf96a9272a2f33360023eb7014d1f2353e3",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.17.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 570319904,
+              "original_bytes": 229376,
+              "raw_sha256": "928623a1f9621a7dae77a0f550dc1a5fd0fe1099be616dafb6c8a1bf62dcfcaa",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 18,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            17,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.18.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 598538784,
+              "original_bytes": 1605632,
+              "raw_sha256": "538b0212d254d9620b725a31654b707e6e022f421ec5a8a96ddc64be5fb14ec0",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.18.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 596701984,
+              "original_bytes": 229376,
+              "raw_sha256": "e1eb578c78c33cf2a93579642ae74e119194618b1e7d6e57fdf1b76156ea7cee",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.18.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 600144672,
+              "original_bytes": 229376,
+              "raw_sha256": "d602a80474a2d6f6e708b9543ae8eb95ea0e19837a51bee474499c74af2c1825",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 19,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.19.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 628363552,
+              "original_bytes": 1605632,
+              "raw_sha256": "9a1cd589e5f203e1ef18545ba36a142bec37517d3ff4f9dbd7c501825c9ddfb4",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.19.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 626526752,
+              "original_bytes": 229376,
+              "raw_sha256": "0606cafc170741a42b292afbf6533776734cb7629b0342234d62c82b46ee3083",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.19.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 629969440,
+              "original_bytes": 229376,
+              "raw_sha256": "93cbf542c068933e35e0d907305114165be51b8a3f1eadeb52efbe1eaaeae01c",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 20,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            18,
+            18,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.20.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 688013088,
+              "original_bytes": 1605632,
+              "raw_sha256": "cdccd3d1975d796d0592ec58eeabb381d2850ec1f5f1246d6f8dc6ca5e98aa04",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.20.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 686176288,
+              "original_bytes": 229376,
+              "raw_sha256": "b634654641031ee8cbd319e18fc3cd588e7ff0b2caf24d3af295e49ed3151e83",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.20.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 689618976,
+              "original_bytes": 229376,
+              "raw_sha256": "52870abb113f244aa014aec3411e1f1a51ce385d8b72596890132bc03a8b0ee0",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 21,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.21.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 717837856,
+              "original_bytes": 1605632,
+              "raw_sha256": "d350005aa07cd472da87a104bcc2f0ba565fb1b1f8508f2e06becc5bb53411a3",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.21.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 716001056,
+              "original_bytes": 229376,
+              "raw_sha256": "fd5005d1cf885603efaab1cba0ab8ba73d87e7aecd9b8453d973dd79b51272fb",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.21.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 719443744,
+              "original_bytes": 229376,
+              "raw_sha256": "c2d84ad1d5e189da7b691ab3d1f46ae411132e25763a1c030134f71765a029a3",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 22,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.22.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 747662624,
+              "original_bytes": 1605632,
+              "raw_sha256": "1ff0d6bdab514b73dd4815ae5f6a4567ce398693a28ee87616611906fdd7284d",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.22.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 745825824,
+              "original_bytes": 229376,
+              "raw_sha256": "c59a9dad8c77f85c20e681216b3be872a363db3fab990cf76a78cb82af0c5dc7",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.22.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 749268512,
+              "original_bytes": 229376,
+              "raw_sha256": "a8cc3fb117aac1270a90f3ad1631a7f79333c2cfe3803991bb5d36039f9422ca",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        },
+        {
+          "layer": 23,
+          "inner": 896,
+          "columns": 1152,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            18,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.layers.23.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 896,
+              "inner": 896,
+              "data_offset": 777487392,
+              "original_bytes": 1605632,
+              "raw_sha256": "b1c57247c87ba6405218811897c3231ff7a194d409d968b4ef6ebbfd778033b4",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.layers.23.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 775650592,
+              "original_bytes": 229376,
+              "raw_sha256": "55f5bcbbd3fa4c7ce54604ac70be37900b112de16eaba98d0c0c758935bc4cdc",
+              "retained_float_key": true
+            },
+            {
+              "tensor": "model.layers.23.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 128,
+              "inner": 896,
+              "data_offset": 779093280,
+              "original_bytes": 229376,
+              "raw_sha256": "ee2716b8b68e608d39d5e8280bbb967f7f2e4eb6a6a46ceafe6eaaf474a46656",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 2064384,
+          "norms": [
+            {
+              "tensor": null,
+              "ones": true
+            },
+            {
+              "tensor": null,
+              "ones": true
+            }
+          ]
+        }
+      ],
+      "skipped_layers": [],
+      "rope": {
+        "query_heads": 14,
+        "key_heads": 2,
+        "dim": 64,
+        "rotary": 64,
+        "normalize": false,
+        "weight_offset": 0,
+        "theta": 1000000.0,
+        "sections": [
+          32,
+          0,
+          0
+        ],
+        "epsilon": 1e-06,
+        "query_gated": false,
+        "prefill_rows": [
+          26,
+          52
+        ]
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "layers": 24,
+      "groups": [
+        {
+          "layer": 3,
+          "inner": 1024,
+          "columns": 5120,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            19,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 4096,
+              "inner": 1024,
+              "data_offset": 1243154408,
+              "original_bytes": 8388608,
+              "raw_sha256": "b0dde4ab3eee4dc2abdf2e2fe8cd6b474d52c4559e38bb8fc9c8589c1b0a7176",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1237911016,
+              "original_bytes": 1048576,
+              "raw_sha256": "4c8cfc4b114917fd3067510ca34886f9bb2bac638a07c537a544e0b9494237fe",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1251543016,
+              "original_bytes": 1048576,
+              "raw_sha256": "459514e89bd3142fca159b73b936cc0e444e6e9cb0dff082be0ecb8462d6a1b7",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 10485760,
+          "norms": [
+            {
+              "tensor": "model.language_model.layers.3.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1243153896,
+              "bytes": 512,
+              "raw_sha256": "6fbc460e96b527aa6b54ab345195d141716dd4e34094baec92c65344f8bac298"
+            },
+            {
+              "tensor": "model.language_model.layers.3.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1237910504,
+              "bytes": 512,
+              "raw_sha256": "424ead8a89f71d4e83858da7f28335665c4d61a8797b121cfaa26a56d1f5ea6a"
+            }
+          ]
+        },
+        {
+          "layer": 7,
+          "inner": 1024,
+          "columns": 5120,
+          "union_scale": 17,
+          "union_admitted": false,
+          "independent_scales": [
+            17,
+            19,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.7.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 4096,
+              "inner": 1024,
+              "data_offset": 1409190984,
+              "original_bytes": 8388608,
+              "raw_sha256": "a26bf320a713a5e747f10d2a79e6cad01cef540ae0ab9886f16e8f2650fe13b2",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.7.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1403947592,
+              "original_bytes": 1048576,
+              "raw_sha256": "0720a1c07da7f9f0513cc6a1e4b83920504ab9b0c9705b0ec7810ed763a36fa8",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.7.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1417579592,
+              "original_bytes": 1048576,
+              "raw_sha256": "b4b61a50c3713f08bae391b95b178408f6f97c89c99fd3f631c6af36e1752ca9",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": false,
+              "bitwise_roundtrip": false,
+              "unrepresentable_values": 1,
+              "unrepresentable_rows": 1
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 10485760,
+          "norms": [
+            {
+              "tensor": "model.language_model.layers.7.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1409190472,
+              "bytes": 512,
+              "raw_sha256": "d9e8640352b19cdad1fa8e4788622cf8a0b977979a878729b2f7e71ed21f8f2d"
+            },
+            {
+              "tensor": "model.language_model.layers.7.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1403947080,
+              "bytes": 512,
+              "raw_sha256": "a5b8b543ca3a084105ff3495ed2c36a2f7e99557479bbc3ba45e05541f6806d7"
+            }
+          ]
+        },
+        {
+          "layer": 11,
+          "inner": 1024,
+          "columns": 5120,
+          "union_scale": 18,
+          "union_admitted": true,
+          "independent_scales": [
+            18,
+            19,
+            18
+          ],
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.11.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 4096,
+              "inner": 1024,
+              "data_offset": 665228968,
+              "original_bytes": 8388608,
+              "raw_sha256": "6c87d80ffb32c16ababa3fa7151fff829d47631a685e3390ff2e00a2a3c0ed1c",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.11.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 659985576,
+              "original_bytes": 1048576,
+              "raw_sha256": "bde140c97a3558c267d10edbe76b6409aa1d2ad4f5790f1d72d1d85d27b0c281",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.11.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 673617576,
+              "original_bytes": 1048576,
+              "raw_sha256": "6d0b839f9b50573a380568d3db8e4be420cfc41bb084bdb9ea1975044b137fd6",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 10485760,
+          "norms": [
+            {
+              "tensor": "model.language_model.layers.11.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 665228456,
+              "bytes": 512,
+              "raw_sha256": "362e6efab6f00a8442201b26236004741dd5afca4b028f8216f131872d88d362"
+            },
+            {
+              "tensor": "model.language_model.layers.11.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 659985064,
+              "bytes": 512,
+              "raw_sha256": "2627cede9dca510f81c95437b72ef6e2ec35d8465b9b82873c0c9c9b5d864f1f"
+            }
+          ]
+        },
+        {
+          "layer": 15,
+          "inner": 1024,
+          "columns": 5120,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            17,
+            19,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.15.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 4096,
+              "inner": 1024,
+              "data_offset": 831265544,
+              "original_bytes": 8388608,
+              "raw_sha256": "35bfbc3cf48dd835c6953120224af8ee7aac5f4bce955d41f1777d136d7b89a9",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.15.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 826022152,
+              "original_bytes": 1048576,
+              "raw_sha256": "f32866a80a6fab3a2f505b91443212283dab7e32a8d445206ebf3038cc1a8a0b",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.15.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 839654152,
+              "original_bytes": 1048576,
+              "raw_sha256": "0091e751727826dd2bb7d6e239870484cba3393bc219ec9595b5ab2ddf8607e0",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 10485760,
+          "norms": [
+            {
+              "tensor": "model.language_model.layers.15.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 831265032,
+              "bytes": 512,
+              "raw_sha256": "ca19b737f9e79a36443c2ad5221c82097d63e07a3fdf9726eefb2f549733af69"
+            },
+            {
+              "tensor": "model.language_model.layers.15.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 826021640,
+              "bytes": 512,
+              "raw_sha256": "bf86eafa90845f6148eef808451d12b1c4eec07a4e01c8cd5fd4e2133f6422f3"
+            }
+          ]
+        },
+        {
+          "layer": 19,
+          "inner": 1024,
+          "columns": 5120,
+          "union_scale": 17,
+          "union_admitted": true,
+          "independent_scales": [
+            18,
+            18,
+            17
+          ],
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.19.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 4096,
+              "inner": 1024,
+              "data_offset": 997302120,
+              "original_bytes": 8388608,
+              "raw_sha256": "a70273d21445d1ebe501732b4e85f8881efd173d64980ca84ca225545992c02e",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.19.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 992058728,
+              "original_bytes": 1048576,
+              "raw_sha256": "105a6ac59d7454f28c5154c920a48d3f4ca335af24df16415b5d47e483591835",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.19.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1005690728,
+              "original_bytes": 1048576,
+              "raw_sha256": "714480f14734e4014f7d21c90829ca6b6b9f2818652aa5fe1bc84d5bed6ecdf8",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            }
+          ],
+          "logical_extra_union_bytes": 10485760,
+          "norms": [
+            {
+              "tensor": "model.language_model.layers.19.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 997301608,
+              "bytes": 512,
+              "raw_sha256": "a00cbb7839761c57bad599bd0643e1359d8bb25b11eda0219c19c577f66b6db2"
+            },
+            {
+              "tensor": "model.language_model.layers.19.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 992058216,
+              "bytes": 512,
+              "raw_sha256": "e6138da9894accb673810dafa8bf73aab6d136c47eeb897097ec81f47ffe5480"
+            }
+          ]
+        },
+        {
+          "layer": 23,
+          "inner": 1024,
+          "columns": 5120,
+          "union_scale": 16,
+          "union_admitted": false,
+          "independent_scales": [
+            17,
+            18,
+            16
+          ],
+          "sides": [
+            {
+              "tensor": "model.language_model.layers.23.self_attn.q_proj.weight",
+              "part": "q",
+              "rows": 4096,
+              "inner": 1024,
+              "data_offset": 1206449128,
+              "original_bytes": 8388608,
+              "raw_sha256": "1625a60896b86f5e446defc270bf2716b6af8a04d0d254ce2a1c038d261547b6",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.23.self_attn.k_proj.weight",
+              "part": "k",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1201205736,
+              "original_bytes": 1048576,
+              "raw_sha256": "27bcbe2c659c7fc069d19136008cee923b51433c4f4984fc282436924e63a9b5",
+              "retained_float_key": false
+            },
+            {
+              "tensor": "model.language_model.layers.23.self_attn.v_proj.weight",
+              "part": "v",
+              "rows": 512,
+              "inner": 1024,
+              "data_offset": 1214837736,
+              "original_bytes": 1048576,
+              "raw_sha256": "76f176150d89f315bd5dda307d25d541bfb61950bdffd5362fc8576d8f7b182f",
+              "retained_float_key": false
+            }
+          ],
+          "checks": [
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": true,
+              "bitwise_roundtrip": true,
+              "unrepresentable_values": 0,
+              "unrepresentable_rows": 0
+            },
+            {
+              "admitted": false,
+              "bitwise_roundtrip": false,
+              "unrepresentable_values": 1,
+              "unrepresentable_rows": 1
+            }
+          ],
+          "logical_extra_union_bytes": 10485760,
+          "norms": [
+            {
+              "tensor": "model.language_model.layers.23.self_attn.q_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1206448616,
+              "bytes": 512,
+              "raw_sha256": "71bc9c83aa8271131910e8bf00a21bc8f7a98630fbe99125d3cf4a0f2596b911"
+            },
+            {
+              "tensor": "model.language_model.layers.23.self_attn.k_norm.weight",
+              "ones": false,
+              "dtype": "BF16",
+              "data_offset": 1201205224,
+              "bytes": 512,
+              "raw_sha256": "b65b55332e92830ff1be15463ae734aeace9c6b145e171e1fbcf3618d4f07e1f"
+            }
+          ]
+        }
+      ],
+      "skipped_layers": [
+        {
+          "layer": 0,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 1,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 2,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 4,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 5,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 6,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 8,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 9,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 10,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 12,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 13,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 14,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 16,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 17,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 18,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 20,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 21,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        },
+        {
+          "layer": 22,
+          "reason": "Existing combined linear-attention QKV; outside separate-triple hypothesis"
+        }
+      ],
+      "rope": {
+        "query_heads": 8,
+        "key_heads": 2,
+        "dim": 256,
+        "rotary": 64,
+        "normalize": true,
+        "weight_offset": 1,
+        "theta": 10000000,
+        "sections": [
+          11,
+          11,
+          10
+        ],
+        "epsilon": 1e-06,
+        "query_gated": true,
+        "prefill_rows": [
+          80,
+          160
+        ]
+      }
+    }
+  ],
+  "scope": "New prerequisite: all separate learned Q/K/V triples, including retained FP32 keys; CPU only.",
+  "full_goal_met": false
+}

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T04:42:37.334951+00:00
+Generated UTC: 2026-10-16T04:52:27.926912+00:00
 
-Base HEAD at generation: `aa6f6f342fcb6b9d04011067d64ebca09999109c`. Reports indexed: **177**.
+Base HEAD at generation: `de19bed22ff90a463f9f818fced76c00337e106e`. Reports indexed: **178**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -161,6 +161,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
+| [results/20261016/paired-norm-rope](../../../results/20261016/paired-norm-rope/README.md) | Paired query and key normalization and RoPE |
 | [results/20261016/prepared-half-inverse](../../../results/20261016/prepared-half-inverse/README.md) | Exact half inverse CPU verification |
 | [results/20261016/prepared-qkv-native](../../../results/20261016/prepared-qkv-native/README.md) | Private native text Q/K/V fusion after repeated component selection |
 | [results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |

@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -435,6 +435,15 @@ def main():
         assert cells[0].strip()==r['model'] and int(cells[1])==r['layer'] and int(cells[2])==r['rows']
         values=[r['fractions'][kind][field] for kind in ('comparison','null') for field in ('gpu_ms','wall_ms')]
         assert [v.strip() for v in cells[3:7]]==[f'{v:.6f}' for v in values] and cells[7].strip()==('Yes' if r['profile_pass'] else 'No')
+    paired=ROOT/'results/20261016/paired-norm-rope';pair_audit=json.loads((paired/'initial/verification.json').read_text());pair_analysis=json.loads((paired/'initial/analysis.json').read_text());pair_primitive=json.loads((paired/'primitive/verification.json').read_text())
+    assert (pair_audit['complete_learned_profiles'],pair_audit['timing_samples'],pair_audit['summary']['numeric']['original_output_bits_checked'])==(232,9600,47321088)
+    assert pair_primitive['original_fp32_output_bits_checked']==3710720 and not pair_analysis['native_integration_admitted']
+    assert sum(r['null_within_five_percent'] for r in pair_analysis['profiles'])==8
+    rows=[line.split('|')[1:-1] for line in (paired/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(rows)==24
+    for cells,r in zip(rows,pair_analysis['profiles']):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['layer'] and int(cells[2])==r['rows']
+        values=[r['fractions'][kind][field] for kind in ('comparison','null') for field in ('gpu_ms','wall_ms')]
+        assert [v.strip() for v in cells[3:7]]==[f'{v:.6f}' for v in values] and cells[7].strip()==('Yes' if r['null_within_five_percent'] else 'No')
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -458,7 +467,8 @@ def main():
                   prepared_qkv_complete_numerical_profiles=232,prepared_qkv_private_changes_regenerated=12,
                   rejected_qkv_table_values_checked=2,half_inverse_cpu_table_values_checked=9,
                   half_inverse_actual_compiler_hosts=2,qv_rejected_component_table_values_checked=48,
-                  qv_preparation_cost_table_values_checked=9,qv_output_view_table_values_checked=48,status='passed',
+                  qv_preparation_cost_table_values_checked=9,qv_output_view_table_values_checked=48,
+                  paired_norm_rope_table_values_checked=96,paired_norm_rope_learned_profiles=232,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))
