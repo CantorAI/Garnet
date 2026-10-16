@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T22:52:17.490995+00:00",
-  "source_commit": "0fbcfcafc8e3abb9a4cce088eadaaf173b0dcd5a",
+  "generated_at_utc": "2026-10-16T23:27:47.903722+00:00",
+  "source_commit": "bfb570205bdcc76d95eae9ee346713872f920567",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -49,11 +49,14 @@
     "results/20261016/worldsense-m5-mixed-chunk/source/xModel/README.md",
     "results/20261016/worldsense-m5-mixed-chunk/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-mixed-chunk/source/xModel/qwen35/vl_4b/README.md",
+    "results/20261016/worldsense-m5-prefix-cache/source/xModel/README.md",
+    "results/20261016/worldsense-m5-prefix-cache/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-prefix-cache/source/xModel/qwen35/vl_4b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 199,
+  "report_count": 200,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5439,6 +5442,85 @@
         }
       ],
       "evidence_directories": [
+        "source"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/worldsense-m5-prefix-cache",
+      "title": "WS-M5-10 native bounded text prefix cache and wider VLM prefill",
+      "report_path": "results/20261016/worldsense-m5-prefix-cache/README.md",
+      "report_sha256": "97dfc5227db88dbbda9e9861bb583f7333c71b43be452cf46d0f2407223b14d2",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-10 native bounded text prefix cache and wider VLM prefill\n\nWS-M5-10 combines VLM prefill64 and an exact64-token native text KV prefix cache against16/16 uncached control. Two session-private compact CPU entries,64MiB logical payload cap; full reset before restore. Cold capture/finite scans and warm memory copies are costs, not GPU-resident or zero-copy reuse. Every image, suffix and answer is freshly inferred. BF16 weight storage and FP32 arithmetic retained.\n\nProspective protocol and complete root raw screen results are included. Native memory/reference tests, all28 reasoner/all32 VLM state bits and tokens,32 safety checks and recovery passed. Initial harness failures are retained. Model bytes/hashes revalidated. Car screen passed; two fresh full WorldSense workers (ABBA then BAAB) also passed exact outputs, prompt/input/Skill identities, non-policy budgets, actual chunk routes and native prefix counters. Confirmation raw artifacts are under confirmation/, independently exported to CSV. Each worker is assessed separately, no pooled rescue or favorable extra retry.\n\nFull worker1/2 changes:4B TTFT−39.97/−35.00%,total−10.84/−12.56%,decode+2.96/+1.10%;reasoner TTFT−23.37/−5.38%,total−18.56/+0.39%,decode+7.83/−0.38%. Native Skill wall15.8013→13.5068s and16.9158→15.1700s. No camera/video decoding throughput, persisted event quality or retrieval/ranking claim. Historical M4/vLLM objectives remain distinct.\n\nDecision: passes declared performance/correctness experiment gates; not yet promoted. Feature-OFF build compatibility and integration/deployment checks remain. Original validated library and live assignments restored; normal service restart follows. Source/build/model/input identities and all warmups retained. The retained-memory bound measures logical float payload, not peak process memory. Both modes warm in one worker; no independent cold-start cache speed claim.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "CMakeCache.txt",
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "build.log",
+        "calls.csv",
+        "cases.json",
+        "cohort-manifest.json",
+        "confirmation-protocol.json",
+        "controller.log",
+        "controller.py",
+        "environment.json",
+        "file-manifest.json",
+        "flags.make",
+        "initial-assumed-prefix-hit-failure.log",
+        "initial-guard-harness.py",
+        "initial-prefix-key-inspection.json",
+        "initial-reference-only-tests.log",
+        "initial-reversed-view-harness-failure.log",
+        "initial-safety-harness.py",
+        "initial-safety-passed-checks.json",
+        "initial-target-registration-failure.log",
+        "inspect_prefix_keys.py",
+        "model-assets.json",
+        "model-identity-verification.json",
+        "native-ctest-detail.log",
+        "paired-1.cantor-stderr.log",
+        "paired-1.cantor.log",
+        "paired-1.client.log",
+        "paired-1.json",
+        "prefix-model-guard.json",
+        "prefix-model-guard.log",
+        "prefix-model-progress.json",
+        "prefix-safety-guard.json",
+        "prefix-safety-guard.log",
+        "prefix-safety-progress.json",
+        "prefix_model_guard.py",
+        "prefix_safety_guard.py",
+        "prepare.py",
+        "prepare_runtime.py",
+        "protocol.json",
+        "report-body.txt",
+        "restoration-verification.json",
+        "restored-normal-server.log",
+        "server-paired-1.log",
+        "server-restored-control.log",
+        "source-overlay.patch",
+        "source-reconstruction.json",
+        "starting-source-manifest.json",
+        "state-guard.json",
+        "state-guard.log",
+        "state_guard.py",
+        "tests.log"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-prefix-cache/model-identity-verification.json",
+          "sha256": "fe9ae43aa021d784aeaa65b54315e249e9413c7bd023d8aab2c00559b186a72b"
+        },
+        {
+          "path": "results/20261016/worldsense-m5-prefix-cache/restoration-verification.json",
+          "sha256": "99ef508c0dde1178812fed565c503e7ea1618e0f8561cc137132fb8fecbed521"
+        }
+      ],
+      "evidence_directories": [
+        "confirmation",
         "source"
       ]
     },

@@ -1,0 +1,22 @@
+{
+  "compatible_committed_base": "bfb570205bdcc76d95eae9ee346713872f920567",
+  "description": "Compatible base selected after execution; consumed source hashes recorded separately. Derived __pycache__ files excluded from text overlay after initial packaging attempt encountered binary cache.",
+  "excluded_derived_directories": [
+    "source/xModel/__pycache__",
+    "source/xModel/qwen35/vl_0_8b/__pycache__",
+    "source/xModel/qwen35/vl_4b/__pycache__",
+    "source/xModel/qwen/__pycache__",
+    "source/xModel/qwen/metal_dense/__pycache__"
+  ],
+  "changed_paths": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/prefix_copy_test.cpp"
+  ],
+  "git_apply_check": true
+}

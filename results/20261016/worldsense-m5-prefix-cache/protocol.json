@@ -1,0 +1,17 @@
+{
+  "experiment": "WS-M5-10",
+  "declared_utc": "2026-10-16T22:58:49.677141+00:00",
+  "method": "Combined policy:4B VLM prefill64;1.7B reasoner prefill16 with exact native64-token KV prefix reuse, versus16/16 uncached. Two bounded session-private compact CPU snapshot entries,64MiB logical float-payload maximum plus bounded container metadata (not peak memory). Every suffix/answer and image freshly inferred.",
+  "tradeoffs": "Cold prefix computation and native copy/finite scan; warm reset+restore; retained compact native CPU vectors, transient capture allocation and key/LRU overhead. Both policies remain warm in same process; no claim of cold speed or GPU-resident/zero-copy cache. No quantization/CPython image helper/CUDA change.",
+  "validation": "Native memory bounds/read-write bits/pending/abort plus session layout, fresh reset, eviction, ownership, stale owners, finite-state and failure recovery. All-state/token equality with changing suffixes and cache hits required before timing.",
+  "stage": "Fixed-car WorldSense ABBA screen four measured calls/policy/model after both modes warm. All prompts/image-Skill hashes/non-policy budgets exact; native restore positive on candidate text hits, zero on control, no VLM prefix reuse. Fresh full three-frame/query ABBA and BAAB workers required before promotion.",
+  "gates": {
+    "4b_ttft_min_gain": 0.1,
+    "4b_total_min_gain": 0.03,
+    "both_decode_max_regression": 0.02,
+    "text_total_ttft_max_regression": 0.02,
+    "exact_outputs_states_prompts_nonpolicy_budgets": true,
+    "actual_native_prefix_counters": true
+  },
+  "preparation_notes": "Initial guard assumed two short prompts shared64tokens; token inspection proved different prefix hashes, so a cold miss was correct. The harness now places the changing suffix after a longer shared prefix. No model speed samples existed. Initial new CTest target needed explicit reconfigure; old one-test result was retained separately."
+}

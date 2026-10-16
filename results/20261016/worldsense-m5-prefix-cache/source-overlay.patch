@@ -1,0 +1,549 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -7,6 +7,20 @@
+ find_library(GARNET_MPS_FRAMEWORK MetalPerformanceShaders REQUIRED)
+ find_library(GARNET_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+ add_library(garnet_metal STATIC src/backends/metal/metal_context.mm)
++option(GARNET_METAL_QWEN35_4B_WIDE_PREFILL "Validate 4B 64-token packed prefill" OFF)
++if(GARNET_METAL_QWEN35_4B_WIDE_PREFILL)
++    if(GARNET_METAL_QWEN35_EXTENDED_PREFILL)
++        message(FATAL_ERROR "4B wide prefill and small-model extended prefill are separate experiments")
++    endif()
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_QWEN35_4B_WIDE_PREFILL=1)
++endif()
++option(GARNET_METAL_DENSE_PREFIX_CACHE "Bounded native dense KV prefix snapshots" OFF)
++if(GARNET_METAL_DENSE_PREFIX_CACHE)
++    if(GARNET_METAL_DEFERRED_STATE_ZERO OR GARNET_METAL_DIRTY_PREFIX_RESET)
++        message(FATAL_ERROR "Prefix snapshot prototype requires full immediate reset")
++    endif()
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_DENSE_PREFIX_CACHE=1)
++endif()
+ option(GARNET_METAL_MLP_PREFILL_GRAPH "Test complete FP32 MLP graphs during prefill" OFF)
+ if(GARNET_METAL_MLP_PREFILL_GRAPH)
+     if(GARNET_METAL_JOINED_GLOBAL_MLP OR GARNET_METAL_JOINED_PREFILL)
+@@ -252,6 +266,11 @@
+     "${GARNET_METAL_FRAMEWORK}" "${GARNET_MPS_FRAMEWORK}"
+     "${GARNET_FOUNDATION_FRAMEWORK}")
+ enable_testing()
++if(GARNET_METAL_DENSE_PREFIX_CACHE)
++    add_executable(garnet_prefix_copy_test test2026/metal/prefix_copy_test.cpp)
++    target_link_libraries(garnet_prefix_copy_test PRIVATE garnet_metal)
++    add_test(NAME metal_prefix_copy_reference COMMAND garnet_prefix_copy_test)
++endif()
+ if(GARNET_METAL_DEFERRED_STATE_ZERO)
+     add_executable(garnet_deferred_state_zero_test test2026/metal/deferred_state_zero_test.cpp)
+     target_link_libraries(garnet_deferred_state_zero_test PRIVATE garnet_metal)
+--- a/runtime/metal_serving.py
++++ b/runtime/metal_serving.py
+@@ -3,6 +3,7 @@
+ import json
+ import os
+ import threading
++import hashlib
+ import time
+ 
+ # The native package registers import roots with XLang3. Embedded Cantor
+@@ -43,13 +44,19 @@
+         self.capacity = int(profile.get('maxInputTokens', 1536)) + int(profile.get('maxOutputTokens', 512))
+         if self.capacity < 64 or self.capacity > 8192:
+             raise ValueError('Metal serving capacity must be between 64 and 8192 tokens')
++        self._prefix_supported = not self.visual and self.text_config.get('model_type') == 'qwen3' and self.text_config.get('hidden_size') == 2048 and self.text_config.get('num_hidden_layers') == 28 and 'dense_prefix_cache' in garnet.backend_info()
++        self.text_prefix_cache = bool(profile.get('textPrefixCache', False))
++        if self.text_prefix_cache and not self._prefix_supported:
++            raise ValueError('Native prefix cache requires the validated Qwen3-1.7B profile')
++        self._prefix_keys = {}
+         self.tokenizer = garnet.tokenizer()
+         self.tokenizer.open(root)
+         index = os.path.join(root, 'model.safetensors.index.json')
+         checkpoint = index if os.path.isfile(index) else os.path.join(root, 'model.safetensors')
+         self.checkpoint = checkpoint
+         cls = MetalDecoder if self.visual else DenseMetalDecoder
+-        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > 65536:
++        packed_limit = 64 * 2560 if self.visual and self.xmodel == 'vl_4b' and 'qwen35_4b_wide_prefill' in garnet.backend_info() else 65536
++        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > packed_limit:
+             raise ValueError('Metal prefill chunk times hidden size exceeds the packed width limit')
+         self.model_factory = None
+         if self.visual and self.xmodel == 'vl_4b':
+@@ -72,16 +79,70 @@
+         elif eos is not None:
+             self.stops.append(eos)
+ 
++    def _prefill_with_prefix(self, hidden, positions, token_ids, stages):
++        stages['prefix_cache_hit'] = False
++        stages['prefix_cache_restored_tokens'] = 0
++        stages['prefix_cache_captured_tokens'] = 0
++        stages['prefix_cache_restore_seconds'] = 0
++        stages['prefix_cache_capture_seconds'] = 0
++        stages['executed_prefill_tokens'] = len(hidden)
++        if not self.text_prefix_cache or self.visual or len(hidden) <= 80:
++            return self.decoder.prefill_sequence(hidden, [positions])
++        if not self._prefix_supported or self.decoder.chunk != 16 or len(token_ids) != len(hidden):
++            raise ValueError('Prefix policy requires validated dense text and chunk16')
++        if any(positions[i] != [i, i, i] for i in range(64)):
++            raise ValueError('Prefix positions must be identical canonical text positions')
++        key = tuple(token_ids[:64])
++        stages['prefix_cache_key_sha256'] = hashlib.sha256(json.dumps(list(key)).encode()).hexdigest()
++        if key in self._prefix_keys:
++            handle = self._prefix_keys.pop(key)
++            began = time.monotonic()
++            try:
++                restored = self.decoder.session.restore_prefix(handle)
++                if restored != 64:
++                    raise ValueError('Native prefix length changed')
++            except:
++                self._prefix_keys.clear()
++                self.decoder.session.clear_prefix_cache()
++                raise
++            stages['prefix_cache_restore_seconds'] = time.monotonic() - began
++            self._prefix_keys[key] = handle
++            self.decoder.slots = [64]
++            stages['prefix_cache_hit'] = True
++            stages['prefix_cache_restored_tokens'] = 64
++            stages['executed_prefill_tokens'] = len(hidden) - 64
++            return self.decoder.prefill_sequence(hidden[64:], [positions[64:]])
++        self.decoder.prefill_sequence(hidden[:64], [positions[:64]], predict=False)
++        prefix_profile = dict(self.decoder.prefill_profile)
++        prefix_plan = list(self.decoder.prefill_chunk_plan)
++        prefix_compile = self.decoder.prefill_compile_ms
++        prefix_inference = self.decoder.prefill_inference_ms
++        began = time.monotonic()
++        handle = self.decoder.session.capture_prefix(64)
++        stages['prefix_cache_capture_seconds'] = time.monotonic() - began
++        stages['prefix_cache_captured_tokens'] = 64
++        self._prefix_keys[key] = handle
++        while len(self._prefix_keys) > 2:
++            self._prefix_keys.pop(next(iter(self._prefix_keys)))
++        prediction = self.decoder.prefill_sequence(hidden[64:], [positions[64:]])
++        self.decoder.prefill_compile_ms += prefix_compile
++        self.decoder.prefill_inference_ms += prefix_inference
++        self.decoder.prefill_chunk_plan = prefix_plan + self.decoder.prefill_chunk_plan
++        for name, value in prefix_profile.items():
++            self.decoder.prefill_profile[name] = self.decoder.prefill_profile.get(name, 0) + value
++        return prediction
++
+     def infer(self, prompt, image, limit):
+         start = time.monotonic()
+         stages = {}
+-        hidden, positions = [], []
++        hidden, positions, token_ids = [], [], []
+         current = 0
+         self.decoder.reset()
+         stages['reset_seconds'] = time.monotonic() - start
+         def append_text(text):
+             nonlocal current
+             for token in self.tokenizer.encode(text):
++                token_ids.append(token)
+                 hidden.append(self.decoder.io.embedding([token]))
+                 positions.append([current, current, current])
+                 current += 1
+@@ -119,7 +180,7 @@
+         if len(hidden) + limit > self.capacity:
+             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
+         prefill_start = time.monotonic()
+-        prediction = self.decoder.prefill_sequence(hidden, [positions])
++        prediction = self._prefill_with_prefix(hidden, positions, token_ids, stages)
+         first = time.monotonic()
+         stages['prefill_seconds'] = first - prefill_start
+         stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
+@@ -145,7 +206,12 @@
+         stages['decode_seconds'] = time.monotonic() - first
+         stages['decode_profile'] = decode_profile
+         stages['decode_fused_head_dispatches'] = fused_head_dispatches
+-        return dict(image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
++        stages['prefix_cache_native_bytes'] = self.decoder.session.prefix_cache_bytes
++        stages['prefix_cache_native_entries'] = self.decoder.session.prefix_cache_entries
++        stages['prefix_restore_native_bytes'] = self.decoder.session.prefix_restore_bytes
++        stages['prefix_capture_native_bytes'] = self.decoder.session.prefix_capture_bytes
++        stages['serving_source'] = __file__
++        return dict(input_prompt_sha256=hashlib.sha256(prompt.encode()).hexdigest(), serving_configuration=dict(text_prefix_cache=self.text_prefix_cache, capacity=self.capacity, image_pixels=self.image_pixels, prefill_chunk=self.decoder.chunk, requested_output_limit=int(limit), share_vision_weights=self.share_vision_weights), image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
+                     backend=garnet.backend_info(), generated_tokens=len(output),
+                     timings=stages, generated_token_ids=output,
+                     ttft_seconds=first-start, total_seconds=time.monotonic()-start)
+@@ -173,3 +239,21 @@
+             return json.dumps(_models[name].infer(prompt, image, int(limit)))
+         except Exception as error:
+             return json.dumps(dict(status='error', error_message=str(error), model_id=name))
++
++
++def set_benchmark_prefill_policy(enabled):
++    """Benchmark combined VLM64/text16+prefix policy; validate before mutation."""
++    with _lock:
++        if 'dense_prefix_cache' not in garnet.backend_info() or not _models:
++            return json.dumps(dict(supported=False))
++        for model in _models.values():
++            if model.visual:
++                if model.xmodel != 'vl_4b' or model.text_config['hidden_size'] != 2560 or not model.decoder.linear_chunk:
++                    raise ValueError('Prefix experiment requires validated4B VLM')
++            elif not model._prefix_supported:
++                raise ValueError('Prefix experiment requires validated1.7B reasoner')
++        for model in _models.values():
++            model.decoder.chunk = (64 if enabled else 16) if model.visual else 16
++            model.prefill_chunk = model.decoder.chunk
++            model.text_prefix_cache = bool(enabled) if not model.visual else False
++        return json.dumps(dict(supported=True, enabled=bool(enabled)))
+--- a/src/backends/metal/decoder_session.cpp
++++ b/src/backends/metal/decoder_session.cpp
+@@ -5,6 +5,8 @@
+ #include <chrono>
+ #include <cmath>
+ #include <stdexcept>
++#include <atomic>
++#include <limits>
+ namespace Garnet {
+ namespace {
+ MetalCompiledGraph* Graph(const X::Value& value,X3PackageHost* host) {
+@@ -19,6 +21,9 @@
+ }
+ }
+ void MetalDecoderSession::Clear() {
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    prefixCache_.clear();prefixBytes_=prefixRestoreBytes_=prefixCaptureBytes_=0;prefixClock_=0;prefixFreshReset_=false;
++#endif
+     screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
+     reusedSourceBytes_=reusedCopyBytes_=reusedCopyStates_=0;
+ #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+@@ -33,6 +38,9 @@
+ }
+ void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
+ void MetalDecoderSession::ResetUnlocked() {
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    prefixFreshReset_=false;prefixRestoreBytes_=prefixCaptureBytes_=0;
++#endif
+     screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
+     reusedCopyBytes_=reusedCopyStates_=0;
+     prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;bodyShapeDispatches_=bodyShapeMisses_=0;deferredZeroBytes_=deferredZeroStates_=0;
+@@ -78,6 +86,9 @@
+ #endif
+     }
+     hidden_=MetalMatrix();hiddenShape_.clear();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    prefixFreshReset_=true;
++#endif
+ }
+ void MetalDecoderSession::Reset() {std::lock_guard<std::mutex> lock(mutex_);ResetUnlocked();}
+ bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
+@@ -108,6 +119,10 @@
+                 state.prefixLayout[k]=graph->CanResetKVPrefix(k+1);
+ #endif
+             }
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++            state.prefixEligible=batch==1&&graph->CanResetKVPrefix(1)&&graph->CanResetKVPrefix(2);
++            state.prefixOwnerGeneration=graph->generation_;
++#endif
+             states_.push_back(std::move(state));owners_.push_back(std::move(owner));
+         }
+         if(head.IsValid()&&!head.IsNone()) {
+@@ -190,6 +205,9 @@
+     screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
+     const auto prepared=std::chrono::steady_clock::now();
+     prepareMs_=std::chrono::duration<double,std::milli>(prepared-start).count();
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    prefixFreshReset_=false;
++#endif
+     kvInplaceUpdates_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;wideBatchPrefillDispatches_=0;interleavedBodyDispatches_=0;coalescedBlockDispatches_=0;mlpGraphDispatches_=0;joinedGlobalMlpBlocks_=0;poisoned_=true;gpu_->Begin();
+     try {
+         auto current=layers[0]->slots_[layers[0]->inputs_[0]].matrix;
+@@ -277,3 +295,108 @@
+     return TensorValue(Host(),*gpu_,hidden_,hiddenShape_);
+ }
+ }
++
++namespace Garnet {
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++namespace {
++constexpr size_t kPrefixCacheBytes=64*1024*1024;
++std::atomic<int64_t> nextPrefixId{1};
++int64_t NewPrefixId() {
++    auto id=nextPrefixId.load();
++    for(;;){if(id<=0||id==std::numeric_limits<int64_t>::max())throw std::overflow_error("Prefix cache IDs exhausted");
++        if(nextPrefixId.compare_exchange_weak(id,id+1))return id;}
++}
++}
++void MetalDecoderSession::ValidatePrefixOwners(std::vector<std::unique_lock<std::mutex>>& locks) {
++    std::vector<MetalCompiledGraph*> graphs;
++    for(size_t i=0;i<states_.size();++i)graphs.push_back(Graph(owners_.at(i),Host()));
++    auto ordered=graphs;if(head_)ordered.push_back(head_);std::sort(ordered.begin(),ordered.end(),std::less<MetalCompiledGraph*>());
++    if(std::adjacent_find(ordered.begin(),ordered.end())!=ordered.end())throw std::invalid_argument("Prefix owners must be distinct");
++    for(auto graph:ordered)locks.emplace_back(graph->mutex_);
++    for(size_t i=0;i<states_.size();++i){const auto& state=states_[i];auto graph=graphs[i];
++        if(!state.prefixEligible||!graph->ready_||graph->generation_!=state.prefixOwnerGeneration)
++            throw std::logic_error("Prefix cache requires unchanged dense-attention graph owners");
++        for(size_t k=0;k<2;++k){const auto& shape=state.shape[k];
++            if(shape.size()!=4||shape[0]!=1||shape[1]<=0||shape[2]<64||shape[3]<=0||state.rows!=1)
++                throw std::invalid_argument("Prefix cache requires batch-one dense KV layout");}}
++    if(head_&&(!head_->ready_||head_->generation_!=headGeneration_))throw std::logic_error("Prefix head owner changed");
++}
++#endif
++int64_t MetalDecoderSession::CapturePrefix(int64_t tokens) {
++    std::lock_guard<std::mutex> lock(mutex_);
++#ifndef GARNET_METAL_DENSE_PREFIX_CACHE
++    (void)tokens;throw std::logic_error("Dense prefix cache is not enabled");
++#else
++    if(!gpu_||poisoned_||prefixFreshReset_||states_.empty())throw std::logic_error("Capture requires a completed nonempty inference prefix");
++    if(tokens!=64)throw std::invalid_argument("Only the validated64-token prefix is admitted");
++    std::vector<std::unique_lock<std::mutex>> locks;ValidatePrefixOwners(locks);
++    PrefixSnapshot snapshot;snapshot.tokens=64;
++    for(const auto& state:states_)for(size_t k=0;k<2;++k){const auto& shape=state.shape[k];
++        const auto count=size_t(shape[1])*64*size_t(shape[3]);
++        if(count>kPrefixCacheBytes/sizeof(float)||snapshot.bytes>kPrefixCacheBytes-count*sizeof(float))
++            throw std::invalid_argument("Prefix cache byte budget exceeded");
++        snapshot.bytes+=count*sizeof(float);}
++    for(const auto& state:states_){std::array<std::vector<float>,2> layer;
++        for(size_t k=0;k<2;++k){const auto& shape=state.shape[k];layer[k]=gpu_->ReadPrefixGroups(state.matrix[k],size_t(shape[1]),size_t(shape[2]),size_t(shape[3]),64);
++            if(!std::all_of(layer[k].begin(),layer[k].end(),[](float v){return std::isfinite(v);}))throw std::runtime_error("Cannot cache nonfinite KV state");}
++        snapshot.layers.push_back(std::move(layer));}
++    const auto id=NewPrefixId();snapshot.lastUse=++prefixClock_;const auto bytes=snapshot.bytes;
++    prefixCache_.emplace(id,std::move(snapshot));prefixBytes_+=bytes;
++    while(prefixCache_.size()>2||prefixBytes_>kPrefixCacheBytes){auto oldest=std::min_element(prefixCache_.begin(),prefixCache_.end(),[](const auto& a,const auto& b){return a.second.lastUse<b.second.lastUse;});prefixBytes_-=oldest->second.bytes;prefixCache_.erase(oldest);}
++    prefixCaptureBytes_+=bytes;return id;
++#endif
++}
++int64_t MetalDecoderSession::RestorePrefix(int64_t id) {
++    std::lock_guard<std::mutex> lock(mutex_);
++#ifndef GARNET_METAL_DENSE_PREFIX_CACHE
++    (void)id;throw std::logic_error("Dense prefix cache is not enabled");
++#else
++    if(!gpu_||poisoned_||!prefixFreshReset_)throw std::logic_error("Restore requires a fresh successful full reset");
++    auto found=prefixCache_.find(id);if(found==prefixCache_.end())throw std::invalid_argument("Unknown, evicted or foreign prefix handle");
++    std::vector<std::unique_lock<std::mutex>> locks;ValidatePrefixOwners(locks);auto& snapshot=found->second;
++    if(snapshot.layers.size()!=states_.size()||snapshot.tokens!=64)throw std::logic_error("Prefix metadata changed");
++    for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k){const auto& shape=states_[i].shape[k];
++        if(snapshot.layers[i][k].size()!=size_t(shape[1])*64*size_t(shape[3]))throw std::logic_error("Prefix shape changed");}
++    // All owners/layouts/counts are proved before any session state is written.
++    prefixFreshReset_=false;poisoned_=true;
++    try {for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k){const auto& shape=states_[i].shape[k];
++        gpu_->WritePrefixGroups(states_[i].matrix[k],size_t(shape[1]),size_t(shape[2]),size_t(shape[3]),64,snapshot.layers[i][k]);}
++        poisoned_=false;snapshot.lastUse=++prefixClock_;prefixRestoreBytes_+=snapshot.bytes;return 64;
++    }catch(...){throw;}
++#endif
++}
++bool MetalDecoderSession::ClearPrefixCache() {std::lock_guard<std::mutex> lock(mutex_);
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    prefixCache_.clear();prefixBytes_=prefixRestoreBytes_=prefixCaptureBytes_=0;
++#endif
++    return true;
++}
++size_t MetalDecoderSession::PrefixCacheBytes(){std::lock_guard<std::mutex> lock(mutex_);
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    return prefixBytes_;
++#else
++    return 0;
++#endif
++}
++size_t MetalDecoderSession::PrefixCacheEntries(){std::lock_guard<std::mutex> lock(mutex_);
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    return prefixCache_.size();
++#else
++    return 0;
++#endif
++}
++size_t MetalDecoderSession::PrefixRestoreBytes(){std::lock_guard<std::mutex> lock(mutex_);
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    return prefixRestoreBytes_;
++#else
++    return 0;
++#endif
++}
++size_t MetalDecoderSession::PrefixCaptureBytes(){std::lock_guard<std::mutex> lock(mutex_);
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    return prefixCaptureBytes_;
++#else
++    return 0;
++#endif
++}
++}
+--- a/src/backends/metal/decoder_session.h
++++ b/src/backends/metal/decoder_session.h
+@@ -2,6 +2,7 @@
+ #pragma once
+ #include "compiled_graph.h"
+ #include <array>
++#include <map>
+ namespace Garnet {
+ // One synchronous request context. Graph owners are retained; request state is
+ // private to this session, including when graphs are reused by another session.
+@@ -11,6 +12,9 @@
+         std::array<std::vector<int64_t>,2> shape;
+         std::array<size_t,2> columns;
+         size_t rows;
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++        bool prefixEligible=false;uint64_t prefixOwnerGeneration=0;
++#endif
+ #ifdef GARNET_METAL_DIRTY_PREFIX_RESET
+         std::array<bool,2> prefixLayout{false,false},zeroOutsideDirty{false,false};
+         std::array<size_t,2> dirtyExtent{0,0};
+@@ -47,6 +51,13 @@
+     bool poisoned_=false;
+     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
+     std::mutex mutex_;
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++    struct PrefixSnapshot {size_t tokens=0,bytes=0;uint64_t lastUse=0;std::vector<std::array<std::vector<float>,2>> layers;};
++    std::map<int64_t,PrefixSnapshot> prefixCache_;
++    size_t prefixBytes_=0,prefixRestoreBytes_=0,prefixCaptureBytes_=0;
++    uint64_t prefixClock_=0;bool prefixFreshReset_=false;
++    void ValidatePrefixOwners(std::vector<std::unique_lock<std::mutex>>& locks);
++#endif
+     void Clear();
+     void ResetUnlocked();
+ public:
+@@ -54,6 +65,13 @@
+     X::Value Run(X::Value graphs,X::Value hidden,X::Value positions,
+         X::Value slots,X::Value active,int64_t predictionToken);
+     void Reset();
++    int64_t CapturePrefix(int64_t tokens);
++    int64_t RestorePrefix(int64_t id);
++    bool ClearPrefixCache();
++    size_t PrefixCacheBytes();
++    size_t PrefixCacheEntries();
++    size_t PrefixRestoreBytes();
++    size_t PrefixCaptureBytes();
+     X::Value Snapshot(int64_t layer);
+     X::Value Hidden();
+     void Close();
+@@ -94,6 +112,13 @@
+         APISET().AddFunc<2>("build",&MetalDecoderSession::Build);
+         APISET().AddFunc<6>("run",&MetalDecoderSession::Run);
+         APISET().AddFunc<0>("reset",&MetalDecoderSession::Reset);
++        APISET().AddFunc<1>("capture_prefix",&MetalDecoderSession::CapturePrefix);
++        APISET().AddFunc<1>("restore_prefix",&MetalDecoderSession::RestorePrefix);
++        APISET().AddFunc<0>("clear_prefix_cache",&MetalDecoderSession::ClearPrefixCache);
++        APISET().AddProp("prefix_cache_bytes",&MetalDecoderSession::PrefixCacheBytes);
++        APISET().AddProp("prefix_cache_entries",&MetalDecoderSession::PrefixCacheEntries);
++        APISET().AddProp("prefix_restore_bytes",&MetalDecoderSession::PrefixRestoreBytes);
++        APISET().AddProp("prefix_capture_bytes",&MetalDecoderSession::PrefixCaptureBytes);
+         APISET().AddFunc<1>("snapshot",&MetalDecoderSession::Snapshot);
+         APISET().AddFunc<0>("hidden",&MetalDecoderSession::Hidden);
+         APISET().AddFunc<0>("close",&MetalDecoderSession::Close);
+--- a/src/backends/metal/metal_context.h
++++ b/src/backends/metal/metal_context.h
+@@ -12,7 +12,11 @@
+ inline constexpr size_t kMetalPrefillPackedHiddenLimit=80*1024;
+ #else
+ inline constexpr size_t kMetalPrefillChunkLimit=64;
++#ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
++inline constexpr size_t kMetalPrefillPackedHiddenLimit=64*2560;
++#else
+ inline constexpr size_t kMetalPrefillPackedHiddenLimit=65536;
++#endif
+ #endif
+ class MetalMatrix {
+     struct Impl;
+@@ -121,6 +125,8 @@
+     size_t LastDeferredZeroBytes() const;
+     size_t LastDeferredZeroStates() const;
+     // Caller proves the remaining logical elements are already positive zero.
++    std::vector<float> ReadPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t tokens);
++    void WritePrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t tokens,const std::vector<float>&);
+     void ZeroPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t dirtyTokens);
+     void Begin();
+     // Commit an ordered partial batch and continue encoding without CPU wait.
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -2098,6 +2098,33 @@
+             0,native.columns*sizeof(float));
+     matrix.impl_->ready=true;
+ }
++std::vector<float> MetalContext::ReadPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens) {
++    if(impl_->command)throw std::logic_error("Prefix read requires a closed command batch");
++    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix read matrix/device");
++    if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix read requires completed initialized state");
++    const auto& native=matrix.impl_->matrix;
++    if(!groups||!capacity||!width||!tokens||tokens>capacity||capacity>SIZE_MAX/width||
++       groups>SIZE_MAX/(capacity*width)||groups*capacity*width!=native.columns||!native.data.contents)
++        throw std::invalid_argument("Prefix read layout/bounds mismatch");
++    std::vector<float> result(Elements(native.rows,groups*tokens*width));
++    for(size_t row=0;row<native.rows;++row)for(size_t group=0;group<groups;++group)
++        std::memcpy(result.data()+(row*groups+group)*tokens*width,
++            static_cast<const char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),tokens*width*sizeof(float));
++    return result;
++}
++void MetalContext::WritePrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens,const std::vector<float>& values) {
++    if(impl_->command)throw std::logic_error("Prefix write requires a closed command batch");
++    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix write matrix/device");
++    if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix write requires completed initialized state");
++    const auto& native=matrix.impl_->matrix;
++    if(!groups||!capacity||!width||!tokens||tokens>capacity||capacity>SIZE_MAX/width||
++       groups>SIZE_MAX/(capacity*width)||groups*capacity*width!=native.columns||!native.data.contents||
++       values.size()!=Elements(native.rows,groups*tokens*width))throw std::invalid_argument("Prefix write layout/bounds mismatch");
++    for(size_t row=0;row<native.rows;++row)for(size_t group=0;group<groups;++group)
++        std::memcpy(static_cast<char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),
++            values.data()+(row*groups+group)*tokens*width,tokens*width*sizeof(float));
++    matrix.impl_->ready=true;
++}
+ void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t dirtyTokens) {
+     if(impl_->command)throw std::logic_error("Host prefix zero requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+--- a/src/entry/metal_main.cpp
++++ b/src/entry/metal_main.cpp
+@@ -34,6 +34,10 @@
+         auto result=X::Value::List(path.host());result.Append(X::Tensor::Create(path.host(),X3_TENSOR_FLOAT32,shape,image.patches.data(),image.patches.size()*4));
+         result.Append(X::Value(image.gridH));result.Append(X::Value(image.gridW));
+         result.Append(X::Value(image.decodeMs));result.Append(X::Value(image.resizeMs));result.Append(X::Value(image.packMs));return result;
++    }
++    std::string BenchmarkPrefillPolicy(X::Value enabled) {
++        auto module=Serving(enabled.host());
++        return module["set_benchmark_prefill_policy"](enabled).ToString();
+     }
+     std::string ServeModel(X::Value root, X::Value xmodel, X::Value cache,
+             X::Value profile, X::Value model) {
+@@ -110,6 +114,12 @@
+ #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+         info+="; reused_zero_source";
+ #endif
++#ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
++        info+="; qwen35_4b_wide_prefill";
++#endif
++#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
++        info+="; dense_prefix_cache";
++#endif
+ #ifdef GARNET_METAL_BODY_SHAPE
+         info+="; body_shape";
+ #endif
+@@ -177,6 +187,7 @@
+         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
+         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
+         APISET().AddFunc<4>("infer_json",&GarnetMetalAPI::InferJson);
++        APISET().AddFunc<1>("set_benchmark_prefill_policy",&GarnetMetalAPI::BenchmarkPrefillPolicy);
+         APISET().AddFunc<0>("shutdown",&GarnetMetalAPI::Shutdown);
+     END_PACKAGE
+ };
+--- /dev/null
++++ b/test2026/metal/prefix_copy_test.cpp
+@@ -0,0 +1,37 @@
++// Correctness only: native compact-prefix byte copies, ownership and bounds.
++#include "metal_context.h"
++#include <cstring>
++#include <iostream>
++#include <stdexcept>
++#include <vector>
++static void need(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
++template<class F>static void reject(F f){bool bad=false;try{f();}catch(const std::exception&){bad=true;}need(bad,"Invalid prefix access accepted");}
++int main(){try{Garnet::MetalContext gpu;size_t checks=0;
++ for(size_t rows:{1,2,3})for(size_t groups:{1,3})for(size_t capacity:{65,128})for(size_t width:{1,3,128}){
++  size_t columns=groups*capacity*width;std::vector<float> values(rows*columns),expected;
++  for(size_t i=0;i<values.size();++i)values[i]=float(int(i%29)-14);
++  values[0]=-0.0f;auto source=gpu.Upload(values,rows,columns),target=gpu.Allocate(rows,columns);
++  reject([&]{gpu.ReadPrefixGroups(target,groups,capacity,width,64);});
++  reject([&]{gpu.WritePrefixGroups(target,groups,capacity,width,64,std::vector<float>(rows*groups*64*width));});
++  for(size_t row=0;row<rows;++row)for(size_t group=0;group<groups;++group)
++   expected.insert(expected.end(),values.begin()+row*columns+group*capacity*width,values.begin()+row*columns+group*capacity*width+64*width);
++  auto prefix=gpu.ReadPrefixGroups(source,groups,capacity,width,64);need(prefix.size()==expected.size()&&!std::memcmp(prefix.data(),expected.data(),prefix.size()*4),"Native prefix capture bits changed");
++  std::vector<float> full(rows*columns,99);gpu.Update(target,full);gpu.WritePrefixGroups(target,groups,capacity,width,64,prefix);
++  for(size_t row=0;row<rows;++row)for(size_t group=0;group<groups;++group)
++   std::memcpy(full.data()+row*columns+group*capacity*width,prefix.data()+(row*groups+group)*64*width,64*width*4);
++  auto actual=gpu.Download(target);need(!std::memcmp(actual.data(),full.data(),full.size()*4),"Prefix restore changed bits or untouched tails");
++  reject([&]{gpu.WritePrefixGroups(target,groups,capacity,width,64,std::vector<float>(1));});
++  reject([&]{gpu.ReadPrefixGroups(source,groups,capacity,width,capacity+1);});
++  reject([&]{gpu.ReadPrefixGroups(source,0,capacity,width,64);});
++  reject([&]{gpu.ReadPrefixGroups(source,groups,capacity,0,64);});
++  reject([&]{gpu.ReadPrefixGroups(source,groups,SIZE_MAX,2,64);});
++  reject([&]{gpu.WritePrefixGroups(target,groups,capacity,width+1,64,prefix);});
++  actual=gpu.Download(target);need(!std::memcmp(actual.data(),full.data(),full.size()*4),"Rejected copy mutated state");
++  gpu.Begin();reject([&]{gpu.ReadPrefixGroups(source,groups,capacity,width,64);});reject([&]{gpu.WritePrefixGroups(target,groups,capacity,width,64,prefix);});gpu.Abort();
++  auto out=gpu.Allocate(rows,columns);gpu.Begin();gpu.EncodeAdd(source,source,out);gpu.Abort();reject([&]{gpu.ReadPrefixGroups(out,groups,capacity,width,64);});
++  gpu.Zero(out);auto zeros=gpu.ReadPrefixGroups(out,groups,capacity,width,64);for(float v:zeros)need(v==0,"Aborted copy did not recover after zero");
++  gpu.Begin();gpu.EncodeAdd(source,source,out);gpu.SubmitAndWait();auto doubled=gpu.ReadPrefixGroups(out,groups,capacity,width,64);for(size_t i=0;i<expected.size();++i)need(doubled[i]==2*expected[i],"Completed GPU producer prefix mismatch");++checks;
++ }
++ reject([&]{gpu.ReadPrefixGroups(Garnet::MetalMatrix(),1,64,1,64);});
++ std::cout<<"Native prefix copy bits, row strides, tail preservation, rejection atomicity, pending/abort/recovery PASS "<<checks<<" cases\n";return 0;
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

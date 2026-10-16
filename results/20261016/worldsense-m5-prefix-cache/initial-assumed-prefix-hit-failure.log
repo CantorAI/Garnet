@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "work/worldsense-prefix-cache/prefix_model_guard.py", line 27, in <module>
+    assert call['timings']['prefix_cache_hit']and call['timings']['prefix_cache_restored_tokens']==64 and call['timings']['prefix_restore_native_bytes']>0
+AssertionError

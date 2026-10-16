@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T22:52:17.490995+00:00
+Generated UTC: 2026-10-16T23:27:47.903722+00:00
 
-Base HEAD at generation: `0fbcfcafc8e3abb9a4cce088eadaaf173b0dcd5a`. Reports indexed: **199**.
+Base HEAD at generation: `bfb570205bdcc76d95eae9ee346713872f920567`. Reports indexed: **200**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -193,6 +193,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-half-prefill](../../../results/20261016/worldsense-m5-half-prefill/README.md) | WS-M5-02: limited exact-half prefill through WorldSense — rejected |
 | [results/20261016/worldsense-m5-inputs](../../../results/20261016/worldsense-m5-inputs/README.md) | Fixed WorldSense M5 experiment inputs |
 | [results/20261016/worldsense-m5-mixed-chunk](../../../results/20261016/worldsense-m5-mixed-chunk/README.md) | WS-M5-09: VLM64 / reasoner32 — rejected |
+| [results/20261016/worldsense-m5-prefix-cache](../../../results/20261016/worldsense-m5-prefix-cache/README.md) | WS-M5-10 native bounded text prefix cache and wider VLM prefill |
 | [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |
 | [results/20261016/worldsense-m5-small-prefill](../../../results/20261016/worldsense-m5-small-prefill/README.md) | WS-M5-06: existing smaller BF16 prefill tile — rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
