@@ -1,7 +1,7 @@
 {
-  "checked_at_utc": "2026-10-16T03:23:57.470852+00:00",
-  "reports_verified": 169,
-  "local_links_checked": 418,
+  "checked_at_utc": "2026-10-16T04:00:47.869111+00:00",
+  "reports_verified": 171,
+  "local_links_checked": 433,
   "verification_hashes_checked": 100,
   "matched_table_values_checked": 72,
   "component_table_values_checked": 30,
@@ -34,6 +34,10 @@
   "prepared_union_complete_numerical_profiles": 304,
   "qkv_union_cpu_groups_audited": 58,
   "qkv_union_cpu_table_values_checked": 9,
+  "prepared_qkv_primitive_cases_audited": 24,
+  "prepared_qkv_learned_table_values_checked": 48,
+  "prepared_qkv_complete_numerical_profiles": 232,
+  "prepared_qkv_private_changes_regenerated": 12,
   "status": "passed",
   "scope": "Documentation consistency only; experiment numerical/performance audits are separate records"
 }

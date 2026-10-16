@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -369,6 +369,31 @@ def main():
     assert len(rows)==3
     for cells,model in zip(rows,qkv_audit['models']):
         assert cells[0].strip()==model['model'] and [int(v.strip()) for v in cells[1:]]==[model['separate_groups'],model['admitted_groups'],model['existing_combined_layers']]
+    qkv_primitive=json.loads((ROOT/'results/20261016/prepared-union-qkv/primitive/verification.json').read_text())
+    assert (qkv_primitive['dyadic_cases'],qkv_primitive['cache_admitted_groups'],qkv_primitive['cache_rejected_groups'],qkv_primitive['initial_extra_union_weight_bytes'])==(24,64,2,336)
+    assert qkv_primitive['regenerated_context'] and qkv_primitive['original_fp32_key_fixture'] and not qkv_primitive['full_goal_met']
+    prepared_qkv=ROOT/'results/20261016/prepared-union-qkv'
+    combined=json.loads((prepared_qkv/'decision-repeat.json').read_text())
+    assert combined['confirmed_models']==['Qwen3-0.6B'] and combined['complete_numerical_profiles']==232 and combined['retained_timing_samples']==9600 and not combined['full_goal_met']
+    cohorts=[json.loads((prepared_qkv/label/'decision.json').read_text()) for label in ('initial','repeat')]
+    rows=[line.split('|')[1:-1] for line in (prepared_qkv/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==12
+    for cells,first,second in zip(rows,cohorts[0]['profiles'],cohorts[1]['profiles']):
+        assert cells[0].strip()==first['model']==second['model'] and int(cells[1])==first['layer']==second['layer'] and int(cells[2])==first['rows']==second['rows']
+        values=[v['fractions']['comparison'][field] for v in (first,second) for field in ('gpu_ms','wall_ms')]
+        assert [v.strip() for v in cells[3:]]==[f'{v:.6f}' for v in values]
+    costs=json.loads((prepared_qkv/'cost-summary.json').read_text())
+    assert costs['source_sha256']==hashlib.sha256((ROOT/'test2026/metal/summarize_prepared_union_qkv_costs.py').read_bytes()).hexdigest()
+    assert len(costs['cohorts'])==2 and all(sum(v['admitted_groups'] for v in trial['models'])==56 for trial in costs['cohorts'])
+    import runpy,sys
+    sys.path.insert(0,str(ROOT/'test2026/metal'))
+    factory=runpy.run_path(str(ROOT/'test2026/metal/make_prepared_qkv_native.py'))
+    prep=json.loads((ROOT/'results/20261016/prepared-qkv-native/preparation.json').read_text())
+    assert len(prep['changes'])==len(factory['OPERATIONS'])==12 and len(prep['added_sources'])==5
+    assert prep['selection']['confirmed_models']==['Qwen3-0.6B'] and not prep['full_goal_met']
+    for name,operation in factory['OPERATIONS'].items():
+        p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==prep['changes'][name]['before']
+        assert hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==prep['changes'][name]['after']
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -387,7 +412,9 @@ def main():
                   compact_group_checks_audited=16,synthetic_triplet_shape_checks_audited=6,
                   union_learned_pairs_cpu_audited=76,prepared_union_primitive_cases_audited=24,
                   prepared_union_learned_table_values_checked=48,prepared_union_complete_numerical_profiles=304,
-                  qkv_union_cpu_groups_audited=58,qkv_union_cpu_table_values_checked=9,status='passed',
+                  qkv_union_cpu_groups_audited=58,qkv_union_cpu_table_values_checked=9,
+                  prepared_qkv_primitive_cases_audited=24,prepared_qkv_learned_table_values_checked=48,
+                  prepared_qkv_complete_numerical_profiles=232,prepared_qkv_private_changes_regenerated=12,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

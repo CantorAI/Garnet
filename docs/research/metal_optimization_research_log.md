@@ -1606,6 +1606,131 @@ including original FP32-key controls and both mandatory fallbacks, before any
 predeclared timing experiment. No active measured jobs remain in this chain.
 [Full eligibility, source identities and remaining GPU requirements](../../results/20261016/qkv-union-half-admission/README.md).
 
+### 2026-10-16 UTC — heterogeneous Q/K/V primitive and complete learned GPU screening pass
+
+New private generated context retains all independent weights and three output
+allocations. Prepare exact common union/MPS product/scratch outside Begin;
+encode one joined product plus scatter, with bounded64-group strong ownership,
+original readiness/foreign-writer/alias/fallback guards and actual counters.
+FP32 key originals remain the control; no original weight cache is mutated.
+This prototype adds union storage and scatter traffic, with no model gain yet.
+
+Actual primitive6834 exits0 in11.194792416s including quiet interval/compile.
+All24 unequal-width dyadic cases, original FP32-key controls, joined/output bits,
+pending/foreign ownership, alias, abort/recovery, unsupported/nonexact fallback
+and64-group/2-reject cache controls pass. Freeze39-file11a891b1... before any
+further stage. Both Mac/Windows independent exact source-regeneration/audits
+pass. Logical outputs are covered, not arbitrary physical padding or captured
+model activations. The initial union fixture uses336 bytes across six shapes.
+
+Before learned GPU execution, declare all58 groups/both batches/four structured
+patterns under original gamma/sumabs and5e-6+5e-5 bounds. Timing endpoints are
+fixed by CPU eligibility alone: text0/27,coder0/23,VL3/19 at both batches; all
+interior and unsupported groups remain in numeric screening. Null then candidate
+comparison each uses2s alternating warmup,10ABBA rounds,3 warm/5 retained samples.
+Both endpoints/batches need>=5% GPU AND wall means, each own-null within5%, all
+numeric/fallback checks, then one unchanged full confirmation before graph work.
+
+Actual learned7300 compiles and completes116 numeric profiles/464 cases,
+188,276,736 reference values and59,482,112 exact scatter bits.52 original FP32
+key matrices and16 fallback cases pass unchanged. Worst gamma .0213529,
+projection-comparison .0678973,control/candidate .0507740; peak component RSS
+323,338,240bytes. The predetermined endpoint timing stage is actually running;
+sources remain frozen until terminal archive. No native/full-model/fresh-vLLM
+gain is inferred from these component correctness results.
+[Protocol, scope and primitive evidence](../../results/20261016/prepared-union-qkv/README.md).
+
+### 2026-10-16 UTC — Q/K/V repeated component selects text only; both-host audits complete
+
+Initial7300 exits0 in85.327812625s; freeze45-file890cb0e8... before audit. Every
+original numerical/FP32-key/scatter/fallback gate passes and all4800 timing
+samples are retained. Text meets>=5% GPU AND wall at all four predetermined
+endpoint/batch profiles with own-nulls within5%. Coder misses first-layer B2
+wall gain and last-layer B1 own-null; VL is slower despite lower CPU encode
+time. Admit exactly one unchanged full confirmation, not a model performance
+claim. Launch8868 only after comparing every measured source hash and record
+the exact initial archive/audit/decision identities at launch.
+
+Confirmation8868 exits0 in85.406805458s; freeze46-fileed28aa1c... before audit.
+Both-host exact source/header regeneration, all232 numerical profiles,52 original
+FP32-key matrices/cohort,32 fallback cases across cohorts and9600 timing samples
+pass. Text repeat GPU fractions .719165/.650452/.698773/.655579; wall fractions
+.847805/.795903/.828562/.809635, with own-nulls passing. Only text is selected.
+Coder's favorable repeat cannot rescue its failed initial gates; VL remains
+slower in both. No threshold change, filtered windows, null normalization or
+third repeat. First-shape text preparation costs238.485..246.950ms/triple
+initially; duplicate logical text payload224MiB. Process peaks and full cost
+ranges remain component-only, not measured model startup/RSS.
+[Complete tables, exclusions, clocks and frozen artifacts](../../results/20261016/prepared-union-qkv/README.md#complete-repeated-component-result).
+
+### 2026-10-16 UTC — private text graph/session integration builds; full33 validation running
+
+Inspect actual resident architecture before integration: per-graph and resident
+session GPU contexts differ. Preparing only the graph context would miss the
+resident cache and could put packing into first inference. Recognize only named
+consecutive Q/K/V with one input and confirmed2048/1024/1024-by1024 text geometry.
+Prepare supported24/44-row unions on the resident session context during build,
+using unchanged shared BF16 owners also used by future prefill graphs. Standalone
+graph.run prepares on its own context before Begin and includes that first-use
+cost. Keep all three original output writes, aliases/readiness/foreign ownership
+guards, original fallbacks and actual graph/session/prefill/decode counters.
+No input cache, speculation or arithmetic change is introduced.
+
+Freeze a private source copy on top of accepted d52 vector vision,1411 files,
+12 exact transformations/5 added helpers, with all original/before/after hashes.
+OFF-by-default feature targets only confirmed text shapes; retained/serving,
+coder/VL and protected GPT-OSS/Pi sources remain unchanged. Declare later native
+rule before any performance: both text batches>=3% warm TTFT reduction in two
+complete unchanged cohorts, no>2% decode regression at any of six profiles,
+complete outputs/all original gates; init/first/warm/RSS separately. Control
+must be accepted d52, not obsolete scalar c186. Fresh vLLM matching still needed.
+
+Actual native10766 compiles, links and passes vector/QKV primitives, all7 CTests,
+full vision grids and trained real heads. Original exact tail cases are running;
+no full33 or model gain is claimed. Require original30 plus QKV primitive
+compile/run and a trained random-input Qwen3 text graph/session stage at chunks
+24/22, first/last layers and both batches (8 profiles/24 changed state steps,
+12 serving/12 fallback route checks), preserving original full hidden/key/value
+bounds, invalid controls, paused inputs, reset/close and explicit/resident equality.
+Keep reproducible fixtures/expected buffers by identity. Local source/runner/
+auditor expansion preflights pass after creating the dry-run output parent;
+that local setup issue did not change a measured runtime or tolerance.
+
+Finalizer15326 watches only verified-live10766, archives terminal failure or
+success, audits successful complete33 evidence, and publishes the gate only on
+success. It does not start inference/performance comparisons. Freeze all source,
+runtime and drivers until terminal archive; no restart from observation timeout.
+[Private preparation, methods, costs and live-stage scope](../../results/20261016/prepared-qkv-native/README.md).
+
+### 2026-10-16 UTC — exact validation continuation armed; native performance not yet claimed
+
+Full33 validation10766 is still verified live and16 complete stages have exited0,
+including all7 CTests, linked vector/QKV primitives, full vision grids, trained
+heads, both original dense tail suites, private KV, serving and mixed-image
+checks. Remaining trained layers/recovery/wide/new24-row checks are running.
+No full33 or native performance pass is inferred from this partial result.
+
+New continuation26534 watches verified-live finalizer15326 only. It archives
+that terminal controller/gate before the native launch re-audit adds the checks
+archive identity. It then admits one full six-profile native ABBA, waits the
+exact process, archives terminal success or failure, independently rechecks all
+72 complete outputs, current d52 control, candidate QKV counters and all decode
+steps, and applies the previously declared3% both-text/2% all-profile-decode rule.
+Only a complete passing initial screen permits one unchanged confirmation.
+No third favorable-repeat search, overlapping runtime or restart from an
+observation timeout. Every source/driver/runtime remains frozen until its own
+terminal archive. Adding the new unused helpers does not alter the live check
+driver's five-file snapshot or private1411-file source closure.
+
+Expanded comparator and original72-output auditor transformation/syntax
+preflights pass before deployment. Preserve the known Path.with_suffix naming
+semantics for six distinct argv profiles/three expanded script files. Because
+the new full source gate includes docs and small binary fixtures, the native
+archive explicitly carries all original source/snapshot bytes; no suffix-based
+omission may invalidate later independent checks. Fresh full-model timing and
+Windows raw audits remain pending; the full matched-vLLM goal stays active.
+[Exact continuation and current live-stage record](../../results/20261016/prepared-qkv-native/README.md#sequential-continuation-armed-after-the-exact-validation-finalizer).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
