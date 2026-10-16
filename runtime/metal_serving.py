@@ -2,12 +2,9 @@
 """Galaxy serving contract backed by Garnet's native Metal graph executors."""
 import json
 import os
-import subprocess
-import sys
 import threading
 import time
 
-ROOT = os.path.dirname(os.path.dirname(__file__))
 # The native package registers import roots with XLang3. Embedded Cantor
 # runtimes need not expose CPython's sys.path.
 import garnet
@@ -35,6 +32,13 @@ class Model:
         if self.prefill_chunk not in (2, 4, 8, 16, 32, 64):
             raise ValueError('Unsupported Metal prefillChunk')
         self.share_vision_weights = bool(profile.get('shareVisionWeights', self.xmodel == 'vl_4b'))
+        if self.visual:
+            with open(os.path.join(root, 'preprocessor_config.json')) as stream:
+                processor = json.loads(stream.read())
+            v = self.config['vision_config']
+            self.image_options = json.dumps(dict(patch_size=v['patch_size'], merge_size=v['spatial_merge_size'],
+                temporal_patch_size=v['temporal_patch_size'], pixels=self.image_pixels,
+                image_mean=processor['image_mean'], image_std=processor['image_std']))
         self.text_config = self.config['text_config'] if self.visual else self.config
         self.capacity = int(profile.get('maxInputTokens', 1536)) + int(profile.get('maxOutputTokens', 512))
         if self.capacity < 64 or self.capacity > 8192:
@@ -83,15 +87,10 @@ class Model:
         if image:
             if not self.visual:
                 raise ValueError('The selected model does not accept images')
-            python = os.environ.get('GARNET_METAL_FRONTEND_PYTHON', '')
-            if not python or not os.path.isfile(python):
-                raise RuntimeError('Set GARNET_METAL_FRONTEND_PYTHON to a Python with NumPy and Pillow')
-            stem = os.path.join(self.cache, 'request-frame')
-            subprocess.run([python, os.path.join(ROOT, 'runtime', 'metal_prepare_image.py'),
-                            self.root, image, stem, str(self.image_pixels)], check=True, timeout=60)
-            with open(stem + '.json') as stream:
-                metadata = json.loads(stream.read())
-            gh, gw = metadata['grid']
+            image_start = time.monotonic()
+            prepared = garnet.prepare_image(image, self.image_options)
+            image_preprocess_seconds = time.monotonic()-image_start
+            gh, gw = prepared[1], prepared[2]
             if self.grid != [gh, gw]:
                 # Keep the current graph usable if construction fails. Shared
                 # native weights own their buffers after the old graph closes.
@@ -101,7 +100,7 @@ class Model:
                 self.vision, self.grid = replacement, [gh, gw]
                 if previous is not None:
                     previous.close()
-            embedding = self.vision.encode_file(stem + '.f32')
+            embedding = self.vision.encode_patches(prepared[0])
             append_text('<|vision_start|>')
             merge = self.config['vision_config']['spatial_merge_size']
             mh, mw = gh // merge, gw // merge
@@ -126,7 +125,7 @@ class Model:
                 break
             prediction = self.decoder.step(prediction, active=[1], positions=[[current, current, current]])
             current += 1
-        return dict(status='ok', text=self.tokenizer.decode(output), model_id=self.name,
+        return dict(image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
                     backend=garnet.backend_info(), generated_tokens=len(output),
                     ttft_seconds=first-start, total_seconds=time.monotonic()-start)
 

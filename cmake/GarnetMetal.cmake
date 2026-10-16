@@ -321,6 +321,13 @@ if(GARNET_METAL_XMODEL)
         message(FATAL_ERROR "Metal xModel requires the SDK and shared XLang3 runtime")
     endif()
     set_target_properties(garnet_metal PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    find_package(JPEG REQUIRED)
+    find_package(PNG REQUIRED)
+    add_library(garnet_native_image STATIC src/image/native_image.cpp)
+    target_compile_definitions(garnet_native_image PRIVATE GARNET_WITH_METAL=1)
+    set_target_properties(garnet_native_image PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_compile_options(garnet_native_image PRIVATE -fno-fast-math -ffp-contract=off)
+    target_link_libraries(garnet_native_image PUBLIC JPEG::JPEG PNG::PNG)
     add_library(garnet SHARED src/entry/metal_main.cpp src/backends/metal/compiled_graph.cpp
         src/backends/metal/decoder_session.cpp
         src/tensor/garnet_tensor.cpp src/tensor/graph_capture.cpp src/core/lowering_context.cpp
@@ -328,7 +335,7 @@ if(GARNET_METAL_XMODEL)
     target_include_directories(garnet PRIVATE "${XLANG3_SDK_ROOT}" src/tensor src/core src/model src/tokenizer src/backends/cpu src/backends/metal third_party)
     target_compile_definitions(garnet PRIVATE GARNET_WITH_METAL=1 XLANG3_USE_SHARED=1)
     target_compile_definitions(garnet PRIVATE GARNET_METAL_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
-    target_link_libraries(garnet PRIVATE garnet_metal ${_garnet_metal_runtime})
+    target_link_libraries(garnet PRIVATE garnet_metal garnet_native_image ${_garnet_metal_runtime})
 endif()
 
 # Experimental decode-only native BF16 body route; default control unchanged.

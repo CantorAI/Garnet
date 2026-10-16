@@ -1,0 +1,15 @@
+{
+  "timestamp_ms": 1792171127246,
+  "library_sha256": "3a7e49a14156f55a3bd6b20b5dede3ef80707b797ce717fdb6f3d5669063619d",
+  "external_helper_env_removed": true,
+  "backup": "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libgarnet.dylib.before-native-image",
+  "source_files": {
+    "src/image/native_image.cpp": "9306e2cf5023c9b3e184eb5889fc4ae7bc33d08552419e1a0a7d9d5fcb254f08",
+    "src/image/native_image.h": "868d36ec0167378a820a26244a53396135f55146bd25e42affc8fcece8289de1",
+    "src/entry/metal_main.cpp": "66f0bb37f6b17a863d89c756c5f0c4885fef2501af56c878358251fde26fa4aa",
+    "cmake/GarnetMetal.cmake": "55d30ac4087b2291de517c68d0be028dfbbd6a48540103fadba825cd162a7c0e",
+    "runtime/metal_serving.py": "7f30dea018cdf186dc087625b7046de9179fecc0a40fd7e67d21c60a63468e4c",
+    "xModel/qwen35/vl_0_8b/vision_encoder.py": "812ad5856be012df2cc28633ca1b1167144f511c993f79f6f600379c05a05d1f",
+    "test2026/metal/test_native_image.py": "9e83e9b4c0362ab5fc4391f954cf7ce23c787683fd0f66da0f30240cba285360"
+  }
+}

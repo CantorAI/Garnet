@@ -26,9 +26,8 @@ xlang3 -B xModel/qwen35/vl_4b/benchmark.py MODEL_ROOT serial BUNNY_JPEG CAR_JPEG
 xlang3 -B xModel/qwen35/vl_4b/benchmark.py MODEL_ROOT parallel BUNNY_JPEG CAR_JPEG STREET_JPEG
 ```
 
-Set `GARNET_METAL_FRONTEND_PYTHON` to the NumPy/Pillow frontend environment and
-run with the built native Garnet module available. The helper does image
-preparation only; inference uses Garnet Metal. Record `/usr/bin/time -l` output
+Run with the built native Garnet module available. Current Metal serving uses
+the in-process C++ JPEG/PNG operator; no external Python image helper is required. Record `/usr/bin/time -l` output
 separately to compare process footprint. The original fixture hashes and actual
 MacBook comparison are documented in the WorldSense physical AI experiment report.
 
@@ -65,3 +64,21 @@ sharing-only attempt failed a decode-preservation gate and is retained as
 rejected evidence. See results/20261016/4b-m5-vision-shape/README.md.
 For an existing build cache, explicitly set GARNET_METAL_BODY_SHAPE=ON; a cache
 initializer does not overwrite an existing OFF value.
+
+## Native image input
+
+Metal builds require native JPEG and PNG development libraries (on this Mac:
+`brew install jpeg-turbo libpng`). The model now calls `garnet.prepare_image`
+directly for decode, EXIF orientation, bicubic resizing, normalization and patch
+packing, then sends the host FP32 tensor directly to the native vision graph.
+No per-frame Python process, NumPy/Pillow import or intermediate patch file is
+used. The obsolete GARNET_METAL_FRONTEND_PYTHON environment variable is not read.
+
+The initial native input contract supports JPEG and PNG (including tested
+grayscale, CMYK JPEG, alpha/palette PNG and16-bit grayscale PNG cases). Other
+formats are rejected rather than routed back to Python. Learned graph definitions and native Metal operators are unchanged. The old
+metal_prepare_image.py remains an offline reference only.
+
+Tests run with XLang3 using test2026/metal/test_native_image.py and saved
+reference manifests. Source snapshots, all component/full-model timings and
+correctness limits are recorded in results/20261016/native-image-input/README.md.

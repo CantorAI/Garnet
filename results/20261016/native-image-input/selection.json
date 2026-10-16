@@ -1,0 +1,17 @@
+{
+  "base": "2745f5eee",
+  "change": "In-process C++ JPEG/PNG decode, orientation, bicubic resize and FP32 patch packing; remove external image helper",
+  "control": "Deployed seven-kernel/shared-vision 4B profile, chunk16",
+  "gates": {
+    "architecture": "No external Python for candidate, exact patches and complete model output equality",
+    "performance": "Two fresh ABBA cohorts; no median total/decode regression beyond5%; report TTFT/total changes without general gain claim",
+    "admission": "corrupt inputs/invalid normalization reject,20 edge fixtures match saved goldens"
+  },
+  "native_test_executor": "XLang3; offline reference generation only uses Pillow/NumPy",
+  "images": [
+    "bunny",
+    "car",
+    "traffic",
+    "bunny"
+  ]
+}

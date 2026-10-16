@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T16:38:30.348933+00:00
+Generated UTC: 2026-10-16T17:22:08.837789+00:00
 
-Base HEAD at generation: `6c4f55f9bdd86778bb0b04ff13382c865868767a`. Reports indexed: **209**.
+Base HEAD at generation: `2745f5eeecf2ad525957898175668f8ee1e0d732`. Reports indexed: **210**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -173,6 +173,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
 | [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
+| [results/20261016/native-image-input](../../../results/20261016/native-image-input/README.md) | Native image preparation, measured through XLang3 |
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |

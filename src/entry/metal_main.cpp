@@ -5,6 +5,8 @@
 #include "../backends/metal/decoder_session.h"
 #include "model_tensor_io.h"
 #include "tokenizer_api.h"
+#include "../image/native_image.h"
+#include "nlohmann/json.hpp"
 #include <filesystem>
 #include <fstream>
 #include <atomic>
@@ -19,6 +21,20 @@ class GarnetMetalAPI {
         return X::Module(host, "metal_serving");
     }
 public:
+    X::Value PrepareImage(X::Value path,X::Value options) {
+        auto params=nlohmann::json::parse(options.ToString());
+        Image::NativeImageConfig c;
+        c.patch=params.at("patch_size").get<int>();c.merge=params.at("merge_size").get<int>();
+        c.temporal=params.at("temporal_patch_size").get<int>();c.pixels=params.at("pixels").get<int>();
+        auto mean=params.at("image_mean"),stddev=params.at("image_std");
+        if(mean.size()!=3||stddev.size()!=3)throw X::Error("Native image normalization requires RGB");
+        for(int i=0;i<3;++i){c.mean[i]=mean.at(i).get<float>();c.stddev[i]=stddev.at(i).get<float>();}
+        auto image=Image::PrepareNativeImage(path.ToString(),c);
+        std::vector<int64_t> shape{1,int64_t(image.gridH)*image.gridW,image.features};
+        auto result=X::Value::List(path.host());result.Append(X::Tensor::Create(path.host(),X3_TENSOR_FLOAT32,shape,image.patches.data(),image.patches.size()*4));
+        result.Append(X::Value(image.gridH));result.Append(X::Value(image.gridW));
+        result.Append(X::Value(image.decodeMs));result.Append(X::Value(image.resizeMs));result.Append(X::Value(image.packMs));return result;
+    }
     std::string ServeModel(X::Value root, X::Value xmodel, X::Value cache,
             X::Value profile, X::Value model) {
         auto module = Serving(root.host());
@@ -156,6 +172,7 @@ public:
         APISET().AddClass<0,MetalDecoderSession>("decoder_session");
         APISET().AddClass<0,ModelTensorIO>("tensor_io");
         APISET().AddClass<0,CPUTokenizer>("tokenizer");
+        APISET().AddFunc<2>("prepare_image",&GarnetMetalAPI::PrepareImage);
         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);

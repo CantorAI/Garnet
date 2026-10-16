@@ -2365,3 +2365,30 @@ separate16-token car request at512capacity, all32 decoder-state layers match
 bits; three1.7B text outputs match. Native matmul and model-contract tests pass.
 Retain opt-in BODY_SHAPE plus4B Metal sharing. CUDA/default flags unchanged.
 [Both candidates, original gates, full outputs, source/library hashes, state/vision checks, memory and deployment](../../results/20261016/4b-m5-vision-shape/README.md).
+
+## 2026 10 16 Native image input through XLang3
+
+Replace the Mac bring-up image subprocess with in-process C++ JPEG/PNG decode,
+EXIF, fixed-point bicubic resize, FP32 normalization and patch packing. XLang3
+executes all tests; Pillow/NumPy are only the offline/reference control. Codec
+versions, geometry, inputs and reference hashes are retained. Three real frames
+have1,173,504 exact patch values;21 edge fixtures include trailing PNG EXIF,
+CMYK, alpha and16-bit gray. Invalid/truncated input and zero std are rejected.
+
+Five alternating component pairs per image measure old helper275–285ms versus
+native2–5ms. Do not apply54–130x component fractions to full VLM calls.
+Two fresh ABBA cohorts retain eight complete outputs per policy. Warm TTFT
+2.369→2.108s and2.307→2.093s; total9.450→9.457s and9.358→9.201s.
+Decode11.550→10.989 and11.564→11.357tok/s: not a decoder speed gain.
+Predeclared port gate is exact inputs/outputs and total/decode preservation
+within5%; it is distinct from earlier pure-kernel improvement screens.
+
+All32-layer state bits on a separate request and three1.7B text outputs match.
+Final main-source native tests pass21 fixtures and serving path/bytes checks
+with helper env absent. WorldSense stores a native-cpp4B observation after
+deployment, with four files online. Initial formats are JPEG/PNG; no fallback
+Python process. CUDA codec dependencies stay excluded via an unsupported stub;
+no Windows build is claimed. Original flags/chunk16/precision/portal preserved.
+The earlier rejected chunk32 attempt is retained in this evidence; no partial
+validation is promoted. [Raw calls, component clocks, source/binary identities,
+format/state checks, rejected attempt and deployment limitations](../../results/20261016/native-image-input/README.md).

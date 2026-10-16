@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Common CPU-only frame preparation; no learned operators."""
+"""Offline Pillow/NumPy reference. Metal serving uses native garnet.prepare_image."""
 import math
 import numpy as np
 from PIL import ImageOps,Image

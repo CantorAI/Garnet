@@ -1,0 +1,35 @@
+{
+  "helper_env_absent": true,
+  "results": [
+    {
+      "image": "car",
+      "input": "path",
+      "response": {
+        "image_preprocess_backend": "native-cpp",
+        "image_preprocess_seconds": 0.0013475829982780851,
+        "status": "ok",
+        "text": "```json\n{\n  \"description\": \"A black and white image shows the front of a car with a license plate.\",\n  \"entities\": [\n    \"car\",\n    \"license plate\",\n    \"headlights\"\n  ],\n  \"rabbit_visible\": false,\n  \"car_visible\": true,\n  \"elephant_visible\": false\n}\n```",
+        "model_id": "Qwen3.5-4B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; body_shape",
+        "generated_tokens": 80,
+        "ttft_seconds": 4.891841666998516,
+        "total_seconds": 10.785371749996557
+      }
+    },
+    {
+      "image": "bunny",
+      "input": "bytes",
+      "response": {
+        "image_preprocess_backend": "native-cpp",
+        "image_preprocess_seconds": 0.00204320800548885,
+        "status": "ok",
+        "text": "```json\n{\n  \"description\": \"A large, white, rabbit-like character stands in a forest clearing with its arms outstretched.\",\n  \"entities\": [\n    \"rabbit\",\n    \"tree\",\n    \"rock\"\n  ],\n  \"rabbit_visible\": true,\n  \"car_visible\": false,\n  \"elephant_visible\": false\n}\n```",
+        "model_id": "Qwen3.5-4B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; body_shape",
+        "generated_tokens": 82,
+        "ttft_seconds": 2.0010916249957518,
+        "total_seconds": 8.963927083001181
+      }
+    }
+  ]
+}
