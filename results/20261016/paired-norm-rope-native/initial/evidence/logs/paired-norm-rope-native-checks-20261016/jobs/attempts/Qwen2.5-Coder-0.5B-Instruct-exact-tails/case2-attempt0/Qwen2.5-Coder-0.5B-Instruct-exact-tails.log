@@ -1,0 +1,8 @@
+paired_norm_rope_trained_route {"batch": 2, "chunk": 22, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 22 max_abs_error 7.62939453125e-06 hidden_l2_worst_ratio 0.004557704362447605 value_l2_worst_ratio 0.01053499535962931 worst_ratio 0.014466222945479223 ms 3.677875
+paired_norm_rope_trained_route {"batch": 2, "chunk": 22, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 22 max_abs_error 1.52587890625e-05 hidden_l2_worst_ratio 0.00423209799342563 value_l2_worst_ratio 0.009809572797387416 worst_ratio 0.011978333662343068 ms 3.530083
+paired_norm_rope_trained_route {"batch": 2, "chunk": 22, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 22 max_abs_error 7.62939453125e-06 hidden_l2_worst_ratio 0.004506604897708441 value_l2_worst_ratio 0.009013602646747184 worst_ratio 0.013905123700189013 ms 4.178458
+pretrained dense PASS full_attention 2 22
+Original dense-tail fixture passed case_index=2

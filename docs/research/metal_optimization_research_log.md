@@ -1988,6 +1988,67 @@ source. The 2.047-second CPU duration is not GPU/model latency; compilation,
 numeric/state equality, learned references and timings remain unmeasured.
 [Method, preserved failure, sources and reproduced CPU proof](../../results/20261016/delta-value-tiles-addresses/README.md).
 
+### 2026-10-16 UTC — complete native paired norm RoPE screen rejected
+
+All six native profiles finish without interruption in 192.471940959 seconds.
+Continuation 89012 exits 0 in 212.306754458 seconds after archiving, independent
+72-output audit and fixed analysis. Reproduce the 6,096-file archive/full audit
+and identical selection on Windows; all original output, clock/protocol and
+actual paired-route assertions pass. Preserve both terminal controllers before
+changing any consumed tool. No model source is promoted.
+
+Text B1 decode fraction 1.012209 and coder B1 fraction 1.018985 exceed the fixed
+1% improvement threshold. Every decode fraction remains >=.98. However text
+B2 TTFT fraction 1.041447 and VL B1 fraction 1.039354 exceed the predeclared
+1.02 preservation limit, so reject without an unchanged confirmation. VL
+does not select paired execution; its observed timing difference cannot be
+attributed causally to the changed primitive. Keep all requests and no favorable
+retry. Init/first-after-init, warm and worker RSS remain separately recorded.
+These native-only figures do not update matched-vLLM results or target counts.
+[All six timings, setup/RSS costs, raw evidence, hashes and fixed decision](../../results/20261016/paired-norm-rope-native/README.md#complete-native-screen-rejects-integration).
+
+### 2026-10-16 UTC — GPU wider value tiles confirm prefill component gain only
+
+After the complete native paired-norm rejection and terminal controller archive,
+prepare a separate private GPU probe of original width 16 and wider 32/64 value
+tiles. Preserve first setup process 92974 exit 1 before compile/GPU: the reused
+guard needs the output alias. Freeze 19 source/log/metadata files, then define
+the alias. Before fixture execution, correct the chunk 1 extension so a learned
+single-token fixture is active rather than inheriting the inactive final token.
+Assert actual active asset values. The shader/math/tolerance is unchanged.
+
+Corrected process 93093 exits 0 in 90.803874875 s, compile/prepare/numeric/timing.
+All 208 profiles and 1,872 output/state checks match original bits over three
+carried steps with changed queries, both batches, widths 16/32/64, padding 0/4,
+synthetic inactive/correlated/zero-decay modes and learned first/last linear
+layers 0/22 at chunks 1/80. The 553,986,648 compared FP32 words include guard words
+and control self-checks. The NumPy fixture maker uses real learned projections
+with synthetic hidden/prior state; this is not Garnet full-model inference.
+
+All 8 learned timing endpoints and both widths retain 6,400 samples, 16 primitive
+dispatches/command, 2 s common warmup/width, own-null before comparison, 10 ABBA
+rounds, 3 warm calls and 5 raw samples/window. Fixed statistic is ratio of raw
+arithmetic means, no filtering or null normalization. Require own-null GPU/wall
+within 5% and >=5% gain for both clocks at all four endpoints/workload.
+All 16 initial nulls are stable. Only width 64 prefill passes all four endpoints.
+
+One unchanged complete confirmation 93509 exits 0 in 90.376146083 s. All 13 source
+identities, generated shader/preparation, flags, model/config, assets and design
+match. Repeat every numeric/timing profile and both widths, retaining initial
+failures. All 16 repeat nulls are stable; only width 64 prefill confirms. Initial
+GPU fractions .869049–.915350, repeat .873431–.906314; wall fractions initially
+.876546–.912910, repeat .880689–.903724. Both hosts reproduce both complete
+audits and identical two-cohort decision: 416 numeric profiles, 3,744 checks,
+1,107,973,296 word comparisons and 12,800 raw timing samples. No third repeat.
+
+Keep rejected widths/decode endpoints and setup failure. Isolated control
+prefill is roughly .326–.331 ms B1/.626–.629 ms B2 per dispatch; measured differences
+are only .040–.043 ms B1/.053–.056 ms B2. Do not equate kernel ratios with TTFT or
+extrapolate a whole-model gain. Native policy/ownership/graph numerical checks,
+complete native model cohorts and fresh repeated vLLM comparisons remain.
+No serving source or target count changes.
+[All endpoint tables, protocols, source/hash records, setup failure and both-host audits](../../results/20261016/delta-value-tiles-gpu/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

@@ -1,7 +1,7 @@
 {
-  "checked_at_utc": "2026-10-16T05:45:57.490533+00:00",
-  "reports_verified": 184,
-  "local_links_checked": 490,
+  "checked_at_utc": "2026-10-16T06:01:34.383775+00:00",
+  "reports_verified": 191,
+  "local_links_checked": 511,
   "verification_hashes_checked": 100,
   "matched_table_values_checked": 72,
   "component_table_values_checked": 30,
@@ -50,7 +50,10 @@
   "paired_chain_learned_profiles": 464,
   "paired_native_private_transformations_regenerated": 12,
   "paired_native_full_validation_stages": 34,
+  "paired_native_rejected_model_table_values_checked": 66,
   "delta_value_tile_cpu_profiles_checked": 12,
   "status": "passed",
+  "delta_value_tile_gpu_endpoint_table_values_checked": 64,
+  "delta_value_tile_gpu_numeric_profiles": 416,
   "scope": "Documentation consistency only; experiment numerical/performance audits are separate records"
 }

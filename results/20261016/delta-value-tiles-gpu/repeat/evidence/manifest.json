@@ -1,0 +1,1420 @@
+{
+  "files": {
+    "evidence/config.json": {
+      "bytes": 2907,
+      "sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204"
+    },
+    "evidence/external-archive-tools/analyze_delta_value_tiles_gpu.py": {
+      "bytes": 2496,
+      "sha256": "d925d16ccb7e84d2fc79afed1dea2c11eaabd28ba2c71fa9bf84b39add1b3408"
+    },
+    "evidence/external-archive-tools/archive_delta_value_tiles_gpu.py": {
+      "bytes": 2159,
+      "sha256": "50c3299491f742d57a5c203ccb168d73adabd83272ce0fd097f74e7a40edd218"
+    },
+    "evidence/external-archive-tools/verify_delta_value_tiles_gpu.py": {
+      "bytes": 5385,
+      "sha256": "0467e13ca89c4ab4aca75fcdca692f9ade83ac6cf8edcc7932e67b3e58097b50"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/confirmation-launch.json": {
+      "bytes": 657,
+      "sha256": "fecee32b2d6be720652f3c8ab5850899f24c31192c41b619a0d31a04bcd1df9e"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/confirmation-launcher.py": {
+      "bytes": 2041,
+      "sha256": "1033ef82f2198e4c765d420af85d0bc8f19db6e4c9c32089eba698fba8c373fc"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/manifest.json": {
+      "bytes": 65211,
+      "sha256": "a34cba143a2f3222de7e597055eb6c848e75b143b1680624ae75e0551683cc7e"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/background_service_checks.json": {
+      "bytes": 10246,
+      "sha256": "827c33fcb715c8b1130d2c13e6c4d5706944ae7eb2949e737a3d00fbc68c41ef"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/compile.log": {
+      "bytes": 829,
+      "sha256": "659cf3b0f968e00c3d828be39a759e8e61a5e7560d152bd2a83df7fe560184c8"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta-value-tiles.metal": {
+      "bytes": 14413,
+      "sha256": "b03e292899fd68556458789dfbf1899ec297e50c25a35e01aebae9fac2054df6"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/exit.json": {
+      "bytes": 76,
+      "sha256": "77523bad6a021731ddb58a73ea04b9ae128460bec69098e1c45e60ba025724a4"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/metadata.json": {
+      "bytes": 4165,
+      "sha256": "00672d304d1da7ea30cfcc16f51f86da008f2e3743e97f8d578c4e53c5bbc4bb"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/numeric-after-processes.txt": {
+      "bytes": 59755,
+      "sha256": "776d127f09120ba5e380cfb1703d1be4c4ab779bef69d675cb87f21bafdb17b9"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/numeric-before-processes.txt": {
+      "bytes": 59755,
+      "sha256": "dd2b2711e23a572da1e42daef21c08fc40e780b23b094908a494cd38faca0c9a"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/numeric-summary.json": {
+      "bytes": 195,
+      "sha256": "92b5ba35e70713c135bcee42b1f68c5d9771753699e3a515d0cbe17dca4f5ab9"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/numeric.log": {
+      "bytes": 291573,
+      "sha256": "7ca2b021a69e5b579df8560dbf07d588bd534458084361292a488e6172c532a1"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/prepare.executed.py": {
+      "bytes": 3526,
+      "sha256": "7e38b7b602de18b1e85a411fd2936a9e913d50e66a1046520852452d86bd008e"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/prepare.log": {
+      "bytes": 19,
+      "sha256": "d6044723dbf2552d6fcbe10435c890f629facf29045dcc268bc56eb187ffe817"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/0/run_delta_value_tiles_gpu.py": {
+      "bytes": 6100,
+      "sha256": "5bf39390b11babb2bd9c26979dc6a2251a3fcaa981fc03dd2150a2c395e1b29f"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/1/make_delta_value_tiles.py": {
+      "bytes": 2498,
+      "sha256": "a27190465416dcf177a76f0bda3a11f450644946f8c20e3f83c72b3b05432d25"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/10/reference_attention.py": {
+      "bytes": 1907,
+      "sha256": "f15ef4e64c884c91e9da27fd132592e41c49c9ed046345796879c4397aba5742"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/11/launch_delta_value_tiles_gpu.py": {
+      "bytes": 1649,
+      "sha256": "bea359dd6cd40d6b3d4aa8b078dd7bd21fc070373a8f1ed3239c584362eab38d"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/12/flags.make": {
+      "bytes": 1335,
+      "sha256": "7035f6426ed40d8e2efefe5093c2171325986480bb0ff9b2b4468aabde130210"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/2/delta_value_tiles_gpu.mm": {
+      "bytes": 8913,
+      "sha256": "7e05403e1ec6414bb6b0f5e3ae28dc47c3b22f009590dd7527a75fc468d8c301"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/3/prepare_parallel_delta_probe.py": {
+      "bytes": 3399,
+      "sha256": "ed2ccc9262d6e260f9413171bb29dce1c4f9e2199ac7c99ab6f0d0ce6e001b38"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/4/probe_real_chunk_delta_formulation.py": {
+      "bytes": 5634,
+      "sha256": "52f0bbc600d05a6008a9bcb75a952294d6f85fd62f99d880589cd56f78b9f565"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/5/probe_chunk_delta_formulation.py": {
+      "bytes": 4553,
+      "sha256": "b8332daf47882ea2e78d887050d264bddff89fd836ac9f53de48f3d428afe98d"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/6/reference_decoder.py": {
+      "bytes": 1019,
+      "sha256": "cff10feef014322c2b34049f611337c6cb7f55ab2931c690891f20d6b9681648"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/7/compare_vllm_metal.py": {
+      "bytes": 12897,
+      "sha256": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/8/metal_context.mm": {
+      "bytes": 198907,
+      "sha256": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/source-snapshot/9/reference_linear.py": {
+      "bytes": 1380,
+      "sha256": "451973d355d2513de3ed2fd7798895f7c7a5b392b4de42a3940c31419a537273"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/statuses.json": {
+      "bytes": 1778,
+      "sha256": "f922f5c119df3b978cbbecf97730480797a915d1a30969f1331728000529139a"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/timing-after-processes.txt": {
+      "bytes": 58013,
+      "sha256": "76c32894a811e26b8098d1fda6da60048008abfde280f47060fa6d6617f969c7"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/timing-before-processes.txt": {
+      "bytes": 59755,
+      "sha256": "46b7f4508d347550828297e969fc0749515e7e29cf686daccd92c1fe6a83a49c"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/timing-summary.json": {
+      "bytes": 184,
+      "sha256": "49e50ac3970561dede69a0cbb7f04a836da64734ea2cc5ab091ad02d19e17df6"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/jobs/timing.log": {
+      "bytes": 1331710,
+      "sha256": "4a29a2a569b0c07ac62230f6f016e31f51f61cff1c348a8f82ba38f28c9fbae9"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/output.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/delta-value-tiles-gpu-confirm-20261016/pid.json": {
+      "bytes": 139,
+      "sha256": "ed59c054f984c9c7f2a540c98cbfcc6a69cbe42d172f96604b10722bcb446d22"
+    }
+  },
+  "omitted": {
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta_value_tiles_gpu": {
+      "bytes": 72952,
+      "sha256": "715ace88d53d9337aac6dc4e056de43285cc1281ed593cafe996acfe519ce7dc"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-correlated-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "2815f9d315129c09bf56ca5a737e94181354f3cb9291b6f73b879ad6d9aae481"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-zero_decay-state.bin": {
+      "bytes": 2097152,
+      "sha256": "7fbc5ef8b424f0f924749e2643c0042d9286011cf17092cb77f2d260663889ed"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-ordinary-state.bin": {
+      "bytes": 1048576,
+      "sha256": "4d394fd39d94d3e96f085181c78c162fd4d52e43b20a91077e3d49e59c4eac95"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-zero_decay-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-correlated-state.bin": {
+      "bytes": 262144,
+      "sha256": "0a8c4c89f649122fccb39cb548568848427b920442dec7641da60433c7c7aef4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-correlated-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "26a1c48474102af9c07f78ea92d27bafeac31a938fa06703cb7d7285d3d487a8"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-ordinary-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "1d038f2536f0e9148f8ab4c8b424014ff2ffafbf796e99955ca974a00733b508"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-correlated-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-ordinary-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "d142c6c644297a86cd09f44c056fa7369f4d765adc8db4b186b8aa739abcf67b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-ordinary-state.bin": {
+      "bytes": 262144,
+      "sha256": "bd3aa0d25fa84c1642f84eaa84c3d50d869576906ebd1360a346f6a69fbad506"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-ordinary-active.bin": {
+      "bytes": 640,
+      "sha256": "e67f1f457024f99bc16e7dde10f824f8d72bb4d317b23f00c1834272f2658001"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-zero_decay-state.bin": {
+      "bytes": 1048576,
+      "sha256": "10052deda5e1665906a4bf745ff77c7619dfb1357182e4aeeea163fc9c9cf04a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-inactive-active.bin": {
+      "bytes": 512,
+      "sha256": "d03d2301586769472eb856f6d9ff99a2147200c27ba7dafa5a3c7aebc7833d8b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-correlated-active.bin": {
+      "bytes": 16,
+      "sha256": "f6bb1294da2f78cd935b01c7656280df5eaa0439e9d97bc03775825a41a508e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b2-c1-state.bin": {
+      "bytes": 2097152,
+      "sha256": "67ec490a8cef88c49c15ee87f320e460e1db9a754a4fdc1942e76c3fc77a35a5"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-correlated-prepared.bin": {
+      "bytes": 494080,
+      "sha256": "ca730221a49f50da2ff7a7308236b803826435bf6db0b808bb0054a450d1a529"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-zero_decay-state.bin": {
+      "bytes": 1048576,
+      "sha256": "aa9a177d5ae234a19f50c41e873ffc425563e16f23c89bed4828f333d8bb926a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-correlated-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b2-c80-active.bin": {
+      "bytes": 640,
+      "sha256": "f62e022f2b4c7c7fff8de7c7b447c52de457e94264604da6fb61c03a17341038"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-ordinary-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "170deb94c3a168a84c7b0c66a25362543b65cf6555125b4a24513c3002ae2c63"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-inactive-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "da2a66390c7023d86ae7470dc99280af6a90768ea09c064070e57f7085961604"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-ordinary-state.bin": {
+      "bytes": 131072,
+      "sha256": "ed001f98efaf4c83f01f474f709d7a2a3c54593e3ba8d6abecc1b6c9e8b6be0a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-inactive-active.bin": {
+      "bytes": 128,
+      "sha256": "73656f39899c55c52636a6a87e979b44cd1dc0103a994182f839d818fbd1672e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-zero_decay-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "247a5e84c79ae546c4cadab29b8bebef3b37254f09f7dc050e44076b5dfbc27e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-correlated-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "19d2f85f410986ae7a7dc260c8616e4ee2bff2d03363c0cc928b80c2df67f219"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-correlated-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "e67c81006a384591a3ad9ed01004fc07b5f8e373679184e6b0e34bf41731745e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-inactive-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "a95b6674c8fccab3e00833dbe74b6d9d7f183988813d908fcdbe14f25d08705a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-ordinary-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "4d248901e8607ef85bc063d828427a89d5f5f839912613ae8fb56951251224b6"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-correlated-active.bin": {
+      "bytes": 512,
+      "sha256": "02722f124d0f1736a9dd7c4ddcd05630dcf16ee1ce3454e9a876005ce005d4ac"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-ordinary-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-correlated-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-ordinary-prepared.bin": {
+      "bytes": 3162112,
+      "sha256": "faa6ccc24451f67c221a885e82aa08a571635a4b61aabeae747fa7f881593c97"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-inactive-prepared.bin": {
+      "bytes": 3088,
+      "sha256": "3cdc018994b38ea18c12f7ec963a81902ff05a77c57f238ceadf692816f6c0d2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-zero_decay-state.bin": {
+      "bytes": 131072,
+      "sha256": "5e957008a0b00433059255793a39067f74e655221e40c6091190be1436018cea"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-inactive-state.bin": {
+      "bytes": 131072,
+      "sha256": "8f244921e0c60402d851955acd5ae4e458d186467a643ac32d5e82d60cb76825"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-zero_decay-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-ordinary-state.bin": {
+      "bytes": 262144,
+      "sha256": "6ede674b50ef6423fa564937ee48e6184df5a785687752c8789133531134fb5d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-ordinary-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "bef9abbce9698c55c6f09ff8ebc0608fa476fd18b86c08043f59685fa331d15a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-inactive-active.bin": {
+      "bytes": 256,
+      "sha256": "fa972f9f4be5d0033f293732b667de0b98b7fc77bfd58349a75d170c81d54b75"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-ordinary-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "b189049c419aa423f4169327c0f4827f60cb5f187d41fa6f163ab3a87641bc5d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b1-c80-active.bin": {
+      "bytes": 320,
+      "sha256": "07318740d1dcabc384bb852a9e77475d96dacdcfd5c8e70811e651e69680b714"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-correlated-state.bin": {
+      "bytes": 262144,
+      "sha256": "278b8d583452839763a6c3eadcba0d87ac7a47cb903848a5c29b2d859c982850"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-ordinary-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "2eb468e64fdb40867bafff6aaa6f13d933c17e9136e3ace76e43f2e32eefe934"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-zero_decay-state.bin": {
+      "bytes": 131072,
+      "sha256": "b0394eebb369cd6ce6b9767feae122496a04209915efc26a83b47a753b3f9ef9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-zero_decay-state.bin": {
+      "bytes": 131072,
+      "sha256": "f588f5d2d1dc84e8645a12e89a39ca037745975a3eff84ce983ed50171efeff2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b1-c1-prepared.bin": {
+      "bytes": 24704,
+      "sha256": "02e623bf781f9d9266b5e312f0cf8dbdf81ffcb02d4544bff028eacb42f77233"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-inactive-state.bin": {
+      "bytes": 2097152,
+      "sha256": "5d074248ff990c6f3bcde252f38bc23480e32a86cc5f29573f611281ddcaa72e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-ordinary-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-zero_decay-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-correlated-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-zero_decay-prepared.bin": {
+      "bytes": 12352,
+      "sha256": "df5cfe5509b88ab26100aeb96a00220b21960921a14da06d6db860dc985d7560"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-correlated-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-zero_decay-state.bin": {
+      "bytes": 131072,
+      "sha256": "a43523221b7a34e533b4451f19b368f52884cd56c1323188477cbb2aeaa76e28"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-correlated-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-ordinary-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-zero_decay-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "91504da6414749ad7cc37e6de0df426cd1c4d37e33b24e41859f6de6e22b021b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-inactive-active.bin": {
+      "bytes": 8,
+      "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-zero_decay-state.bin": {
+      "bytes": 2097152,
+      "sha256": "86d89d5963c5dab62bd9a823939a7d0bf4b1dcc86eca3448f3723730c86d025e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-inactive-state.bin": {
+      "bytes": 262144,
+      "sha256": "3f2da2c4650e5f785adb1ce6b9b1d1a0e6d89ab4329bb6e58ab28f24f4705f8f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-inactive-active.bin": {
+      "bytes": 16,
+      "sha256": "f184e6bb505882a540c51366151356f09989c1fff462b226c219e3932e91cb4d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-ordinary-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-ordinary-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "c0d4f4795dbb36af9b8a9c7c5793bcc0848e24a94214244aa1774de06dcb80ea"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-correlated-active.bin": {
+      "bytes": 64,
+      "sha256": "9628e545ed3ac074e5a6cbf542a642b62482fbfca9b4cb3ea4743a1874256e37"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-correlated-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-inactive-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "4e6b064d5bd2a7bf28adfed44950b7eb56fb0f8cc5a775ed6dcddd1a24655799"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-inactive-active.bin": {
+      "bytes": 256,
+      "sha256": "2d4f68b415967479ea42d55c6653c2c6e80145af6fbdc9c53807982e80e382a0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-ordinary-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "a125d77c129ddd75f627e36de0e94483f866b5dcafb587d2aa06f479bcf7a6b2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-ordinary-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "973a635c0b8d11e8d5bf089b557b6a8d15c3933b20c128d9acb572e70e7b1586"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-zero_decay-active.bin": {
+      "bytes": 64,
+      "sha256": "9628e545ed3ac074e5a6cbf542a642b62482fbfca9b4cb3ea4743a1874256e37"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-ordinary-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "08b99130c7faf02610fe6063831cc7c41e80d8886d456311b46e4f31efdbbb9b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-correlated-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "bf3e7665cd0c6db9ba99b0134bd0599b549fb4b671b21ea9e5524cc89c4338ad"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-zero_decay-prepared.bin": {
+      "bytes": 3162112,
+      "sha256": "53f638b64b98ae156c3e52974f6fd9cd47a0c8e6dab514a7db647a3a883f338e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-correlated-active.bin": {
+      "bytes": 512,
+      "sha256": "02722f124d0f1736a9dd7c4ddcd05630dcf16ee1ce3454e9a876005ce005d4ac"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-inactive-state.bin": {
+      "bytes": 131072,
+      "sha256": "63838cf080684bca60479287bbf5c3a9c7110da61d638136d28bade405734e72"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b2-c1-state.bin": {
+      "bytes": 2097152,
+      "sha256": "75e7bcbb560af1c21697df50a1ee5b5d2ef894e9bf3c2fbbab6dd3bed099eff4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-correlated-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-zero_decay-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "727c59b6eae9747cae4872295bc11662b6b79bab05d0d2fb78c71a359348e8a5"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-zero_decay-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "0e2e699e8767e7d03c153171856b95005012e09c7c4eedbd4f43371808ec860b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-inactive-active.bin": {
+      "bytes": 128,
+      "sha256": "415867986ba3a819ed239eb67e3e0567622a029485b891ed0ae3850b35f2c406"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-correlated-state.bin": {
+      "bytes": 262144,
+      "sha256": "27da772c75ccc9f4690919190061f44ccb2fa015f3cc4df7185adaa8a030c88c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-zero_decay-state.bin": {
+      "bytes": 2097152,
+      "sha256": "337ca9cc8ba6fc1f4ff627e843a8eff9371c62a397518879d4ed7a8bc3f3356b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b1-c80-active.bin": {
+      "bytes": 320,
+      "sha256": "07318740d1dcabc384bb852a9e77475d96dacdcfd5c8e70811e651e69680b714"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-inactive-state.bin": {
+      "bytes": 1048576,
+      "sha256": "babe8c7fd15f9ba9174235e7f5b25c9a91bd966c2fce9b3a0b087a0363cf46ee"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b2-c1-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-inactive-prepared.bin": {
+      "bytes": 1976320,
+      "sha256": "02394f806a1157661bb6641e85fbc997fa9b3494c34d253eb6b51fa7b0a9fdfa"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-ordinary-prepared.bin": {
+      "bytes": 494080,
+      "sha256": "000d5c5b2798cc875a8b218331b20f7fa313ef31951b77ec65ab063e85324a6c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-zero_decay-state.bin": {
+      "bytes": 2097152,
+      "sha256": "6e7cb21276919992d88014d6e2bf1ed2ffbbbd36fe903031ec804f2c93755e35"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b2-c1-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-inactive-active.bin": {
+      "bytes": 320,
+      "sha256": "c3226b2eae8b880fb87b04cdd19c8e9d9b86d9efc1788deee8873bbebbe282bd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-zero_decay-state.bin": {
+      "bytes": 1048576,
+      "sha256": "e4c579367b4b377bf218ad84939e22324823a78874345bac510696aba64d0baf"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-inactive-active.bin": {
+      "bytes": 64,
+      "sha256": "721f29cf32cb077601271d0933ae582856b04cc83b6b1524e7f8af0e86ca74dd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-inactive-prepared.bin": {
+      "bytes": 24704,
+      "sha256": "c5e77cc516862cc8436de280514db63432041ff383b3d99a19b1a0691efe3a55"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-zero_decay-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-correlated-active.bin": {
+      "bytes": 640,
+      "sha256": "e67f1f457024f99bc16e7dde10f824f8d72bb4d317b23f00c1834272f2658001"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-ordinary-state.bin": {
+      "bytes": 2097152,
+      "sha256": "01b2198f648411e86d01af2599d6254311938b4d7348aa9df1668e693f192b62"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-correlated-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "b913522451813f95dfda3709a0002edc07babc1d45145029c3ff9bc7d477ee0f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-zero_decay-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "625bc83ac010ae8fbfbbda55af300755df058bd9556dd9a2a2b6eb6a219fa364"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b1-c80-prepared.bin": {
+      "bytes": 1976320,
+      "sha256": "6fb3fb05452ff33dc221e9ff9ed053549bbe67c751ceeb9a557672538c20d3f0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-zero_decay-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "0b1a0ae0386f82df89306d8cf6331bc0f4b93bb6261d39f941daf0dfb0b101e9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-inactive-state.bin": {
+      "bytes": 1048576,
+      "sha256": "b12353289f6e860b450d6c7eb28cfe76fc1a005e93743498ca65e65866ae507b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-ordinary-state.bin": {
+      "bytes": 2097152,
+      "sha256": "b8a426db15addfc17cbc12fb42c757da4632bf687b1907ed606805b1fa978f55"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-ordinary-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b2-c1-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "137ba39848a328766be0111443c4ea3dfba4f7fbe71787c26328f944f962188a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-zero_decay-prepared.bin": {
+      "bytes": 494080,
+      "sha256": "c4b22d331172837ba95037404712857447fcc0bd21bc5decb6629e42e7458597"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-inactive-prepared.bin": {
+      "bytes": 12352,
+      "sha256": "3d04809c0f6ac99c668dae173853694c51bc0d43d7cc362d5a98ebe1f5350878"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-ordinary-state.bin": {
+      "bytes": 1048576,
+      "sha256": "b96fded1f90dfe79d728102ea931ec321fee7ed3845173d7eda9f343e7a1fb33"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-ordinary-state.bin": {
+      "bytes": 131072,
+      "sha256": "ce2640cbfb96fd3a35dfc60b41e4d4591154d955977eae642779d5d94691c621"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-correlated-state.bin": {
+      "bytes": 2097152,
+      "sha256": "f2a5e5ec3aade68bc0698403e008c8cea08b92a2c274e213b1b71cdf387f8607"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-ordinary-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-zero_decay-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "08706e7fc58fd4880133e900e759f9b8f39775639d4b7f6009befe3e3829a63a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-zero_decay-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "8ba112cfe35deaf38b144f667fafb486b1587e2fc63a42e15dc097e400ddce71"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-inactive-state.bin": {
+      "bytes": 262144,
+      "sha256": "c3a8896daafb17f6e2200d6da94f7c0171ee740cd454c001d06349b737998e19"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-correlated-state.bin": {
+      "bytes": 1048576,
+      "sha256": "fb9a0da987240193b397dc1668174e3e6c77666fac0611c19aaf7707924bbb68"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-ordinary-state.bin": {
+      "bytes": 131072,
+      "sha256": "4d3a205662b8f43b04cf97193a53707affff47f54a1a86e42cdf556105071dde"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-zero_decay-state.bin": {
+      "bytes": 131072,
+      "sha256": "b40091cad0ddb7bb90fa2d0e94400d213d27b771eab24b7aaa42af44906de75d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-inactive-state.bin": {
+      "bytes": 262144,
+      "sha256": "345be01645a9f0e53802c7cd3cc71d1c5fe3e39b34025bf445f36a0350f8df29"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b1-c80-prepared.bin": {
+      "bytes": 1976320,
+      "sha256": "47527e99f8c471e2d9c919b65de770886ed6b9b1bfbd6077ba2ed3643d247244"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-ordinary-active.bin": {
+      "bytes": 512,
+      "sha256": "02722f124d0f1736a9dd7c4ddcd05630dcf16ee1ce3454e9a876005ce005d4ac"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-inactive-active.bin": {
+      "bytes": 640,
+      "sha256": "d6ff027dc9c17ae7bce36e3f5dfd3706dc53b0194fca4231ba2923156fa073c0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-zero_decay-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "cfdb268bf31b7d91bc5a235a1834b5a8fb199ad2e4c6943f717f12cc26ab11be"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-correlated-prepared.bin": {
+      "bytes": 3162112,
+      "sha256": "e562eb1dc7322bd4c753d821c4fcef981e4ddd0278ace3ac508bee866a386e24"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-inactive-state.bin": {
+      "bytes": 262144,
+      "sha256": "212b0c98434980c2b0c8f48f9b4fc2bae383a9b4026f82b963534d729aed841e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-correlated-active.bin": {
+      "bytes": 640,
+      "sha256": "e67f1f457024f99bc16e7dde10f824f8d72bb4d317b23f00c1834272f2658001"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-zero_decay-active.bin": {
+      "bytes": 16,
+      "sha256": "f6bb1294da2f78cd935b01c7656280df5eaa0439e9d97bc03775825a41a508e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-correlated-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-inactive-active.bin": {
+      "bytes": 8,
+      "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-correlated-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "9bda65ae71ebd4a43a2ac3af42018c5d116293cfa9761c752247cd8c7e129789"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-inactive-state.bin": {
+      "bytes": 1048576,
+      "sha256": "2843e6198037258645068849604552cf21aa8657364f6b909e4467eef88f1e21"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-correlated-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "2b456041c679dbe07300264496f442d4651980a6c742a3920afe98d9e45bfe10"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-ordinary-prepared.bin": {
+      "bytes": 3952640,
+      "sha256": "f40dd60b804933fda7cb41690195f4d71bfbe5848c9bde6dbcc52e9160d214ba"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b2-c80-active.bin": {
+      "bytes": 640,
+      "sha256": "f62e022f2b4c7c7fff8de7c7b447c52de457e94264604da6fb61c03a17341038"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-ordinary-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "2670d893888e6c0add6fe606ee3d3561ccad023140beda0ea7bf36f2e1b58ec8"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-ordinary-state.bin": {
+      "bytes": 2097152,
+      "sha256": "8870f806e898b56ea0974591cc78f7f8cbd48a4aa1b068803447b9c002193147"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-ordinary-state.bin": {
+      "bytes": 131072,
+      "sha256": "ca621f4c8fab5e4a2659a795949bccc5d7d99e3c0620a83a54d160ebdf9eb7fc"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-ordinary-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-zero_decay-state.bin": {
+      "bytes": 2097152,
+      "sha256": "9de59f8c279bb2b1617662fb7471f522fb125853904f3fb2fd524050aa650989"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-correlated-state.bin": {
+      "bytes": 262144,
+      "sha256": "685d9e7e4bbcff4891ba476ba3c882e1d72a053a2730192bb43e0d1cf4cd688e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-ordinary-state.bin": {
+      "bytes": 2097152,
+      "sha256": "65ac8b55503fc512a9438748819153de8f5b66b4cadf716fa6c74441036aba1b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b1-c1-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-correlated-state.bin": {
+      "bytes": 131072,
+      "sha256": "8bdc0db1dc51700f2654318eef2bd010f168928ae031ad43eb26437d0f46fe45"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-zero_decay-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-inactive-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "e5307994c8291ae87966940376d01b498e0e145a4d55b3e63b6c19c539f2918b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-zero_decay-active.bin": {
+      "bytes": 320,
+      "sha256": "beea08e0b2386530f2625dfcc037b7237b4ca13ad5732e9798f5bbc619054fc2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-ordinary-prepared.bin": {
+      "bytes": 247040,
+      "sha256": "79e7947f33f4e8a9ba0f3239b51550902b98ea55740e0d07e68c85f205831690"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-ordinary-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-zero_decay-state.bin": {
+      "bytes": 262144,
+      "sha256": "71ff96201cb88f4e134a56a1642192950e609954f91cc649b0134b9bb88bed4c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-correlated-prepared.bin": {
+      "bytes": 12352,
+      "sha256": "775296ca744b38d8073c66ee16cc459598437cd320db722af894d9ea33d8b9e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-zero_decay-state.bin": {
+      "bytes": 1048576,
+      "sha256": "a6050f16f4758228943059feebd7faac962b0c3559daa85c6d8ebc67f074ce0e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-correlated-state.bin": {
+      "bytes": 262144,
+      "sha256": "eb9703d0e4de8eaac0afd3bc640a52ebbc8173acc239a1774794a644f47e5bdd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-inactive-state.bin": {
+      "bytes": 1048576,
+      "sha256": "9e9b1daf33d4f55e1073798119086b35adb0192d3eac7cf1d9eba724d4e24253"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b1-c1-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-correlated-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "605c8c60db9806952f2e6f33a0263adc644c1199f9261a518006fd0d97cbc368"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-zero_decay-state.bin": {
+      "bytes": 1048576,
+      "sha256": "bf8b402a1f2fa4b06472a9cbd74c841e2c363544ca5a1cdff7b2a00e3ece7521"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-inactive-active.bin": {
+      "bytes": 16,
+      "sha256": "f184e6bb505882a540c51366151356f09989c1fff462b226c219e3932e91cb4d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-inactive-state.bin": {
+      "bytes": 2097152,
+      "sha256": "927714943747f5250245ee30242fda9c51e1fe9f9701c6dfb845a40cc12aa876"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-correlated-active.bin": {
+      "bytes": 320,
+      "sha256": "beea08e0b2386530f2625dfcc037b7237b4ca13ad5732e9798f5bbc619054fc2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-ordinary-active.bin": {
+      "bytes": 64,
+      "sha256": "9628e545ed3ac074e5a6cbf542a642b62482fbfca9b4cb3ea4743a1874256e37"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-ordinary-active.bin": {
+      "bytes": 320,
+      "sha256": "beea08e0b2386530f2625dfcc037b7237b4ca13ad5732e9798f5bbc619054fc2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-correlated-active.bin": {
+      "bytes": 320,
+      "sha256": "beea08e0b2386530f2625dfcc037b7237b4ca13ad5732e9798f5bbc619054fc2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-correlated-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "5f31ba41f54215828e5b360e482fbc61f73278f7951aa0f4f2a75046bc3d1881"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-inactive-state.bin": {
+      "bytes": 262144,
+      "sha256": "2f461d14e3d7850b5a77bcac4ac01a1c548cf01506f8e653480805969f6a3dd3"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-correlated-state.bin": {
+      "bytes": 131072,
+      "sha256": "af4801572353e0ff60e6351b670fb4e645efe079710918da6ce21c8cba090de8"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-correlated-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-inactive-active.bin": {
+      "bytes": 4,
+      "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b2-c1-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "7c882d94cf8f891632d260d07114b498ab7c6f2c21799ead1f7d8a5a238d7d4f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-inactive-state.bin": {
+      "bytes": 1048576,
+      "sha256": "f24c27cb2785ea8d4de28c18fda4650bd2e2938f4195df797ddd640e4c801fe4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-correlated-state.bin": {
+      "bytes": 131072,
+      "sha256": "8a434172f8121926b474c8f7714eeb50a5f94253e1599863d0bbf95abc331ff7"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-correlated-state.bin": {
+      "bytes": 131072,
+      "sha256": "5a42af8f1691c05221d2eaa8e2d99ab676a3295e2455c119f44faee47f4aa500"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-ordinary-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-zero_decay-state.bin": {
+      "bytes": 262144,
+      "sha256": "b4bbc84579ba6d95c07094e6a1291588d35737a55ba985cc0e307781cf50d4ef"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-inactive-state.bin": {
+      "bytes": 131072,
+      "sha256": "7a7a3e2460f17a5b3944611bcffb8b52fcd6b6949326054a6662804bc1e94ee9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-inactive-active.bin": {
+      "bytes": 512,
+      "sha256": "d03d2301586769472eb856f6d9ff99a2147200c27ba7dafa5a3c7aebc7833d8b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-inactive-prepared.bin": {
+      "bytes": 494080,
+      "sha256": "991f42dff570620318ebe7bdf3a2bd200f5a8eca311a62dc8d69fc33ee75fa52"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-zero_decay-active.bin": {
+      "bytes": 320,
+      "sha256": "beea08e0b2386530f2625dfcc037b7237b4ca13ad5732e9798f5bbc619054fc2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-ordinary-prepared.bin": {
+      "bytes": 1976320,
+      "sha256": "6537ffd85588eb876ef91e18a948ca815120fe1cee7317d91d7e056a92d324ba"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-ordinary-active.bin": {
+      "bytes": 640,
+      "sha256": "e67f1f457024f99bc16e7dde10f824f8d72bb4d317b23f00c1834272f2658001"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-ordinary-prepared.bin": {
+      "bytes": 24704,
+      "sha256": "227a5899044bf7a508235aac0b139c828d904bd6c41c34d61ab05aa75a7625e1"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-correlated-prepared.bin": {
+      "bytes": 3952640,
+      "sha256": "2e26dd0e236f7f2cb86bdd4cbf2477220d9034cfea959faf962e587d914628b2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-zero_decay-prepared.bin": {
+      "bytes": 247040,
+      "sha256": "1020a68bfb85853d8c88f0e79dce94ad4a0c174d3bfc267f8e735b8b9202f93f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-zero_decay-prepared.bin": {
+      "bytes": 24704,
+      "sha256": "9bd74cbebf497e9fc796c1ce08f42ef7a46f16c115a9b926e8d9c58699c06b7c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-correlated-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "0f629c279c27f935f052d70dd1497b4956c3c3a7fd388f214245814eff81fe74"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-inactive-active.bin": {
+      "bytes": 320,
+      "sha256": "c3226b2eae8b880fb87b04cdd19c8e9d9b86d9efc1788deee8873bbebbe282bd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-inactive-active.bin": {
+      "bytes": 64,
+      "sha256": "721f29cf32cb077601271d0933ae582856b04cc83b6b1524e7f8af0e86ca74dd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-ordinary-active.bin": {
+      "bytes": 16,
+      "sha256": "f6bb1294da2f78cd935b01c7656280df5eaa0439e9d97bc03775825a41a508e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-zero_decay-active.bin": {
+      "bytes": 640,
+      "sha256": "e67f1f457024f99bc16e7dde10f824f8d72bb4d317b23f00c1834272f2658001"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-correlated-active.bin": {
+      "bytes": 16,
+      "sha256": "f6bb1294da2f78cd935b01c7656280df5eaa0439e9d97bc03775825a41a508e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-zero_decay-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-correlated-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "8d4aecc31ee878aca19938bf54ba8e27687556323f28c9db78538a02c4221263"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b2-c80-state.bin": {
+      "bytes": 2097152,
+      "sha256": "fda44fa783033026bd4d4e2affefc53c324f433a9e8ce2a1c5f25d004c21eef1"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-ordinary-state.bin": {
+      "bytes": 131072,
+      "sha256": "77ccf7e2ea8170f754e641ef32f25ce9a49d5b2c7b2d828456ef7f2e63c573c3"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-ordinary-prepared.bin": {
+      "bytes": 12352,
+      "sha256": "9caf7e33815007a418fe8ad0554656c75b4daaff367623cd936519ec70f702fa"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b2-c80-prepared.bin": {
+      "bytes": 3952640,
+      "sha256": "0d339fccb2ed3f79df4994145dd6a7cd69b6057513fd75540aa6e656f99ca31a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-correlated-state.bin": {
+      "bytes": 2097152,
+      "sha256": "92db5e83fbce9776ff8b58b5033990a88308352591e12cad13e0af30fe82a7b3"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-inactive-active.bin": {
+      "bytes": 8,
+      "sha256": "22b6f43bd8d27738d3213f29e96b62d01d9d6c0ab4f9732aaae803186f51eab7"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b2-c80-state.bin": {
+      "bytes": 2097152,
+      "sha256": "6847549a004ddc3e2e319e70c6698eaa1626f793afb80191f071a6f09ac43ad2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-inactive-prepared.bin": {
+      "bytes": 3952640,
+      "sha256": "f25d11450a83153caa64b72349da391cdb021f554432345015b777ce99dc292c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-inactive-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "85be0ab72055a8920aaadeb515861eee3700d5e403676b26ba5cd3e3996e6448"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-inactive-state.bin": {
+      "bytes": 262144,
+      "sha256": "db527aa0fbec55894454761a8da362eeb6e5f2eb9dbdd4d81572be0eca3a8d8d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-correlated-state.bin": {
+      "bytes": 1048576,
+      "sha256": "1df684e37853d76483feb4dad48b47f35279a3afaf03a76225d36ebcaff8c3c0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-correlated-state.bin": {
+      "bytes": 1048576,
+      "sha256": "5f87b24fbce3a6c46808ed890d0b486e8e8a9347e58e5a93ee83d3bf4c3cad66"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-ordinary-active.bin": {
+      "bytes": 64,
+      "sha256": "9628e545ed3ac074e5a6cbf542a642b62482fbfca9b4cb3ea4743a1874256e37"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b1-c80-state.bin": {
+      "bytes": 1048576,
+      "sha256": "18e95db97c45e1da4ecaa95e9e14af0f47142329c8d984d409f8ed8ce0c8d644"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-ordinary-active.bin": {
+      "bytes": 320,
+      "sha256": "beea08e0b2386530f2625dfcc037b7237b4ca13ad5732e9798f5bbc619054fc2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b1-c80-state.bin": {
+      "bytes": 1048576,
+      "sha256": "b700b30b1483d5dc4d02d59e11f7e5a88b5c0fff81e5dcfa695878fb54e14f0b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-ordinary-state.bin": {
+      "bytes": 2097152,
+      "sha256": "3e04db86ca663b10e21da9f9ffd192a54e9f651ec94b04a471cb77ebc2699e43"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-correlated-state.bin": {
+      "bytes": 2097152,
+      "sha256": "1f4300652f343921fa7ddbc12d991c93ca09fe7dbf293a1965c6a6ea8e9906d2"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-zero_decay-state.bin": {
+      "bytes": 262144,
+      "sha256": "d1cfeb37b3a46c40e1a13c1b872c33373b54268afac67733792164edb91d2978"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b2-c80-prepared.bin": {
+      "bytes": 3952640,
+      "sha256": "26c193d301b1bc89e7816c62971066aa5763001d0a9c2b1dc0b06aee685829c6"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-correlated-state.bin": {
+      "bytes": 131072,
+      "sha256": "80c1f7e51726172b3a21726cfc1ce01e83cc02cb1296d740ef6185c498e2a00e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-zero_decay-prepared.bin": {
+      "bytes": 1976320,
+      "sha256": "45fc2f8b0f9d5d20930631706d1e6bcd5a09ef615f28651c17ca9d2aeea09429"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-inactive-active.bin": {
+      "bytes": 128,
+      "sha256": "415867986ba3a819ed239eb67e3e0567622a029485b891ed0ae3850b35f2c406"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-ordinary-state.bin": {
+      "bytes": 262144,
+      "sha256": "f29f0f0ecbf86a19035f2e395c6607faaa977b55d904d31b013b3a00005bfa2b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-correlated-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-ordinary-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "64702717fd4e1b60f734b3ad7ce779b0ea2198553cc4fb5633519672a72e8360"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-zero_decay-active.bin": {
+      "bytes": 640,
+      "sha256": "e67f1f457024f99bc16e7dde10f824f8d72bb4d317b23f00c1834272f2658001"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-inactive-prepared.bin": {
+      "bytes": 247040,
+      "sha256": "4ccdfcd02128669af1887558364a50b6e6d55b820069224e28ce852ecc0cc538"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-correlated-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "3abcd629594368687b79d6446df8e65d8dd732c412af0313040095cecab93b6a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-correlated-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "3fdec1508b5abbd50c04f70ea0e5320935a9dc0fbd5bd936a98aa56723271d39"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-zero_decay-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "66207dc2357f59035809419e3ecf068e8076e633b65e0f656d13cf810fa55d78"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-zero_decay-prepared.bin": {
+      "bytes": 3088,
+      "sha256": "30f6a90408c4aeeeef4ce87dd5ce8c3f09011e22e4760691d09ed92fe60689bf"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-inactive-active.bin": {
+      "bytes": 256,
+      "sha256": "2d4f68b415967479ea42d55c6653c2c6e80145af6fbdc9c53807982e80e382a0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-ordinary-state.bin": {
+      "bytes": 131072,
+      "sha256": "71dc450706933d613b1e6651f27ca6521dab472d2fb28a0fcb895d1a2158e023"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-zero_decay-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "ed3942de9465aeb354fb4d02670bbefd6d94bce66fe360aa841a87e9d561c92f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-ordinary-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-inactive-active.bin": {
+      "bytes": 8,
+      "sha256": "22b6f43bd8d27738d3213f29e96b62d01d9d6c0ab4f9732aaae803186f51eab7"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer0-b1-c1-state.bin": {
+      "bytes": 1048576,
+      "sha256": "d05ed53d977a3e5bce53ea3eaa320d31f30a932c39c0fb217ef36090e7257416"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-zero_decay-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-inactive-active.bin": {
+      "bytes": 128,
+      "sha256": "73656f39899c55c52636a6a87e979b44cd1dc0103a994182f839d818fbd1672e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-ordinary-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "e305a18e355b1ab18ad54e37ccbb54877865386b4a50d78ee9e8780ef9c87231"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-ordinary-state.bin": {
+      "bytes": 1048576,
+      "sha256": "55fe9cf6bf5f4882e989bf291221a2bcd06ce083aff61c20b0f47b1d9bdf56f9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-zero_decay-active.bin": {
+      "bytes": 64,
+      "sha256": "9628e545ed3ac074e5a6cbf542a642b62482fbfca9b4cb3ea4743a1874256e37"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-inactive-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "6586b957c809295ba53ea66f88d19b196179f34eb517c080736a0bd90835a031"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-correlated-prepared.bin": {
+      "bytes": 24704,
+      "sha256": "592138e2c1035c5f85c9a160759a6e8196dc9f756e8fd4b40bca7bcc0a946ee8"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-zero_decay-active.bin": {
+      "bytes": 512,
+      "sha256": "02722f124d0f1736a9dd7c4ddcd05630dcf16ee1ce3454e9a876005ce005d4ac"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-zero_decay-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "6a283139a14d89c057612a309d4f36769d6b136b2899d276bab84bdb18c3c045"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-inactive-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "6cf1e3309ab31b7eb2e3d2f1c5c9f096311fc19565eeb56e2eea6d746e6c248f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-inactive-state.bin": {
+      "bytes": 2097152,
+      "sha256": "bf773337d732a1a12da0a2bbd47dab93059f5f2ba9bed558f0e9a07b20e0cc2e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-correlated-active.bin": {
+      "bytes": 64,
+      "sha256": "9628e545ed3ac074e5a6cbf542a642b62482fbfca9b4cb3ea4743a1874256e37"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-ordinary-state.bin": {
+      "bytes": 1048576,
+      "sha256": "96cb2ac8c2bce49a56d9c7651044e538102ab5a794c7a47b7094402c591726f8"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-zero_decay-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-ordinary-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-inactive-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "881b3ad50f159e54e01af8d2ffa4aa2ddd4b15f1d13460b709bf1374daa440b5"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-zero_decay-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "90ba41c6e6bedff9c6300f3a0c1dc120d86c483222e82b15d1462dc574b14d4c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-inactive-state.bin": {
+      "bytes": 2097152,
+      "sha256": "7e9dc9b38400c2d9312f092b50e7bd0538fc382e1f437145117d5bc515841ec9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-correlated-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-inactive-state.bin": {
+      "bytes": 131072,
+      "sha256": "6828814b953c35eacad9efda7d883806508439287aa61551af44748fa05af819"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-ordinary-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-inactive-prepared.bin": {
+      "bytes": 3162112,
+      "sha256": "ed2686f401e01e8dde8f7d87aa32e8d26c97cf7fdeb45370c38dd90278225eb0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-ordinary-prepared.bin": {
+      "bytes": 3088,
+      "sha256": "75f5b21dd9bc3340928a7e83d4a0396ad2a268a7e925bb44ae80fe2351dd8daf"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-inactive-state.bin": {
+      "bytes": 1048576,
+      "sha256": "a2a2795c28df3df966945215f727fbf2ca66a11bddefae358515fbbdf43a278f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-zero_decay-prepared.bin": {
+      "bytes": 3952640,
+      "sha256": "4db953bedc09d59aae259860c45401a4687da34478fad445f70e0db6d4958eb7"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c80-correlated-prepared.bin": {
+      "bytes": 247040,
+      "sha256": "af51fe94aabc2a9368aa53ee7b08b5839eb3e201e962fd50f1f36f3b2957ba96"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-correlated-active.bin": {
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-zero_decay-active.bin": {
+      "bytes": 8,
+      "sha256": "80b8fd6d60fa85fd14a38b5295cb92abd80dfec5ca406c9f969609a79d36809d"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-inactive-state.bin": {
+      "bytes": 131072,
+      "sha256": "df1e4c0d306b18d4449022010fbe8c5be43888572f274fd88488e2389de9acde"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-zero_decay-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "03dc668ce8dd4191598ed1696fbab6ced5800147c9a2ba6cc5ca49d53acd6d6b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-correlated-state.bin": {
+      "bytes": 1048576,
+      "sha256": "a271be7e24263b99b797aca2c87e17ecb7edb3e859063489fa5e82d94cffae6c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-zero_decay-state.bin": {
+      "bytes": 262144,
+      "sha256": "6dcb36155183c5713ab3f6074c1f06f0ccb448e75653154967fbc54266353fca"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-ordinary-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-zero_decay-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-correlated-state.bin": {
+      "bytes": 262144,
+      "sha256": "d23155bfa5172f57d3d34116b6e7b5b57eb7d1fde3cdfea55d616a8b36c77f9f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-correlated-state.bin": {
+      "bytes": 1048576,
+      "sha256": "e15e0b724aed55bc75493ee849bb098daa52c661de82ec5290ef89941953525e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-inactive-active.bin": {
+      "bytes": 4,
+      "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-inactive-prepared.bin": {
+      "bytes": 197632,
+      "sha256": "4bca35170ff45638fda55a4d27c1c897bcb42fc68e44c3bd423e20c03b9e85bb"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-zero_decay-state.bin": {
+      "bytes": 131072,
+      "sha256": "8a7e295eb55281ee64264ab6f1ce7b0671878229d49ccb376e72635c082bffa9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-zero_decay-state.bin": {
+      "bytes": 262144,
+      "sha256": "800b2a33f59d0d8fbd212a331e2e381f639519bf5afd6576fa0524e4ee6977ae"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-ordinary-active.bin": {
+      "bytes": 16,
+      "sha256": "f6bb1294da2f78cd935b01c7656280df5eaa0439e9d97bc03775825a41a508e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-zero_decay-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c32-ordinary-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "76a49b58dba26ebdc3017815094e751e32e44ced56fe5dae3a814ca73b492e70"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-correlated-state.bin": {
+      "bytes": 2097152,
+      "sha256": "203c14267390c947d7d6c576a192f81ac10e56495ec9268dcd75cf58a432a234"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c2-ordinary-state.bin": {
+      "bytes": 262144,
+      "sha256": "098215230dd1392a0fcbcdf68b3a5b59fbde4142c658273e6e665ab48a72ff80"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-zero_decay-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "f59a93d06467323fb68a1883cbe98afe091285df269fde2fd8608fac515eb4c9"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-correlated-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "14e7082126a2382e54af7443e1a630108dd05f72fb35fdff44e720e16c72a08f"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c16-ordinary-state.bin": {
+      "bytes": 1048576,
+      "sha256": "eac52597ed919f929d583e33b0f4dd85ba22ce1fcdd9bb8fc8bbd8f15cbe49e1"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-zero_decay-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "833062516fa1cad51b7cf5bf7f9f9876562226d64578050f7a2b8ea268e258c7"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c1-correlated-prepared.bin": {
+      "bytes": 3088,
+      "sha256": "1e0ba24e30fa33504c73cc72fce9a5706a68d169a3b4b71daace808a422cd44b"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-ordinary-state.bin": {
+      "bytes": 262144,
+      "sha256": "903e07f368b8c57611d565519cd849f63331c111823d93818c5f75429e349aa3"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-zero_decay-active.bin": {
+      "bytes": 512,
+      "sha256": "02722f124d0f1736a9dd7c4ddcd05630dcf16ee1ce3454e9a876005ce005d4ac"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-ordinary-state.bin": {
+      "bytes": 262144,
+      "sha256": "8fa7d376ca8197bf5eb40d646b69c2e44205499782155073c365776c7bf35576"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-correlated-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "1447cefbbb87af4780ce808e115738e02b59b7417a0a938672254e9a80213ca1"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c32-zero_decay-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-correlated-state.bin": {
+      "bytes": 1048576,
+      "sha256": "326c752e06a7bfca4b3ee84db7b9fb1bbc030e2f556e684e72691e5701daeb5e"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c2-inactive-state.bin": {
+      "bytes": 131072,
+      "sha256": "a81c82f80187e68bacfddc6c6581bc1c279584aeaa5d922c9d1526d0c2292586"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-inactive-prepared.bin": {
+      "bytes": 98816,
+      "sha256": "6dd0e21046fe08aeca8b7e13ef2ab41a64a04a539e166af8db051862bbfdfc94"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c16-inactive-prepared.bin": {
+      "bytes": 790528,
+      "sha256": "cc04809ebc41561210e0dc03a8eb30a736c644c1c77a9171f2079c6c930143cd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c80-inactive-active.bin": {
+      "bytes": 640,
+      "sha256": "d6ff027dc9c17ae7bce36e3f5dfd3706dc53b0194fca4231ba2923156fa073c0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c64-ordinary-active.bin": {
+      "bytes": 512,
+      "sha256": "02722f124d0f1736a9dd7c4ddcd05630dcf16ee1ce3454e9a876005ce005d4ac"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-correlated-state.bin": {
+      "bytes": 2097152,
+      "sha256": "58ddf0b50e70c519c6b40c04ac0bbf1fe8f08794f789d4a7168caa594d3922fe"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c80-correlated-prepared.bin": {
+      "bytes": 1976320,
+      "sha256": "795c32d0c6baa83c66d2295583e6c71779dcc416003926db679b57cfc1f6e00c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c1-inactive-prepared.bin": {
+      "bytes": 6176,
+      "sha256": "d19a38f535e33bde8c7a86b1a200c5cc09ad7c5eee6c9a0d87dae9a6a6903f8c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-inactive-state.bin": {
+      "bytes": 2097152,
+      "sha256": "82cae2b2f3b455d6a527732a3852a22d72cd052f7b5af4869fac9e937faf691c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c80-correlated-state.bin": {
+      "bytes": 2097152,
+      "sha256": "8d9d07a3d2ddb2e22f6774988fce6152bbede749f0408268b7e56833318f2c19"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-zero_decay-state.bin": {
+      "bytes": 262144,
+      "sha256": "e779ed07fd97debff09e70feade6b0ca34e5df77b8991cb155b4cc553b159a7a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-inactive-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "91383feb4faa7b61f8d658d7aa81c126ec265036b46cdf16fb11ff88e46e4d32"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c16-zero_decay-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-ordinary-state.bin": {
+      "bytes": 1048576,
+      "sha256": "96b9f0d8f0fc335d673dbec9e6b69ce56279fd5d00cfefbb90b4e10e069c830a"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b1-c1-state.bin": {
+      "bytes": 1048576,
+      "sha256": "2f840c3e0a275a4541c94bb091c3b01efb08755c0d60a6d9bc4b3878a0b50e90"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c1-zero_decay-state.bin": {
+      "bytes": 1048576,
+      "sha256": "6f7fc5fbbe5ccc8b21d53366b5608d740cc8622af232be83ac14187c63ba8c73"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-inactive-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "ea149faa89a5bcc5df09e39768f38c6f51fd5ec75c906d59b0f19caee94beebb"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-correlated-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c16-correlated-state.bin": {
+      "bytes": 131072,
+      "sha256": "ba561a5a9f4294533e9400830e60d5930a11422d3e82a57c58c0fdf71a915a9c"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c1-inactive-state.bin": {
+      "bytes": 2097152,
+      "sha256": "4c42b275bf8838a2513c5366fbddc66db19778e010fe3ec623bf2b4a1c53bacd"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-inactive-active.bin": {
+      "bytes": 256,
+      "sha256": "fa972f9f4be5d0033f293732b667de0b98b7fc77bfd58349a75d170c81d54b75"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-zero_decay-state.bin": {
+      "bytes": 2097152,
+      "sha256": "b9249dee0efae91600d5cbf97db57e704b109f1c266841e94171bbcb15914b60"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c2-inactive-prepared.bin": {
+      "bytes": 49408,
+      "sha256": "d220bc9232343df83b8feb0224a8fc3c8dcdee5056fab52290a7a9cf3364cd98"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c2-zero_decay-active.bin": {
+      "bytes": 16,
+      "sha256": "f6bb1294da2f78cd935b01c7656280df5eaa0439e9d97bc03775825a41a508e4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c32-ordinary-active.bin": {
+      "bytes": 128,
+      "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/real-layer22-b1-c1-prepared.bin": {
+      "bytes": 24704,
+      "sha256": "2ef470159f6d88b7b6788b57d7d85cc296437b27e63c0d0bd1a5d27f7f665fe4"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h16-c32-ordinary-state.bin": {
+      "bytes": 2097152,
+      "sha256": "1efd079d87453b7fc9dad8aaccbd15dd5ce49eff988f5d694e14679a73c262c5"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b2-h2-c64-inactive-prepared.bin": {
+      "bytes": 395264,
+      "sha256": "eec84229c7fde53496672bfd5d02d0b2e1cf5fc450a06a8e7e4bf16c2e677a71"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h2-c64-zero_decay-active.bin": {
+      "bytes": 256,
+      "sha256": "2f20cd03c9cd392a406c56232b0ff93a15f6d6d7da79086bfa14f55d4a4031b0"
+    },
+    "logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets/synthetic-b1-h16-c64-ordinary-prepared.bin": {
+      "bytes": 1581056,
+      "sha256": "81e1a1f75f7d73368886acd1f108f2c52d564d023fdde2d62a42028eb165f2b1"
+    }
+  },
+  "jobs": {
+    "delta-value-tiles-gpu-confirm-20261016": {
+      "exit_code": 0,
+      "wall_seconds": 90.37614608276635,
+      "full_goal_met": false
+    }
+  },
+  "terminal_process": "",
+  "scope": "Isolated original-kernel bit checks and component clocks only. No native integration, model inference speed or vLLM target claim.",
+  "full_goal_met": false
+}

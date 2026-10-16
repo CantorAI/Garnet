@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -472,6 +472,28 @@ def main():
     assert {(p['width'],p['batch'],p['padding_floats']) for p in tile_report['profiles']}=={(w,b,p) for w in (16,32,64) for b in (1,2) for p in (0,4)}
     provenance=json.loads((tiles/'source-provenance.json').read_text());assert provenance['recurrence_unchanged_by_paired_native_integration'] and provenance['failed_and_fixed_cpu_audits_generated_identical_shaders']
     assert (tiles/'failure/evidence/delta-value-tiles.metal').read_bytes()==(tiles/'verified/evidence/delta-value-tiles.metal').read_bytes()
+    native_decision=json.loads((paired_native/'decision-initial.json').read_text());native_profiles=native_decision['trials'][0]['profiles'];assert not native_decision['repeat_admitted'] and not native_decision['native_confirmation_pass'] and not native_decision['promote']
+    assert native_decision==json.loads((paired_native/'continuation/evidence/validation-audits/paired-norm-rope-native-results/decision-initial.json').read_text())
+    assert json.loads((paired_native/'initial/verification.json').read_text())['full_output_requests']==72
+    rows=[line.split('|')[1:-1] for line in (paired_native/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(rows)==12
+    for cells,r in zip(rows[:6],native_profiles):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch'];a,b=r['means']['control'],r['means']['candidate']
+        assert cells[2].strip()==f"{a['decode_tps']:.4f} / {b['decode_tps']:.4f}" and cells[3].strip()==f"{a['ttft_ms']:.4f} / {b['ttft_ms']:.4f}" and [v.strip() for v in cells[4:]]==[f"{r['decode_ratio']:.6f}",f"{r['ttft_fraction']:.6f}"]
+    for cells,r in zip(rows[6:],native_profiles):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch'];a,b=r['first_request_after_initialization']['control'],r['first_request_after_initialization']['candidate']
+        assert cells[2].strip()==f"{a['initialization_s']:.6f} / {b['initialization_s']:.6f}" and cells[3].strip()==f"{a['ttft_ms']:.4f} / {b['ttft_ms']:.4f}" and cells[4].strip()==f"{r['added_mean_worker_peak_rss_gib']*1024:.4f}"
+    tile_gpu=ROOT/'results/20261016/delta-value-tiles-gpu';tile_decision=json.loads((tile_gpu/'decision-repeat.json').read_text());assert tile_decision==json.loads((tile_gpu/'mac-decision-repeat.json').read_text())
+    assert tile_decision['confirmed_workloads']==[dict(width=64,kind='prefill')] and tile_decision['complete_numeric_profiles']==416 and tile_decision['original_word_comparisons']==1107973296 and tile_decision['timing_samples']==12800 and not tile_decision['native_performance_proven'] and not tile_decision['target_count_update']
+    tile_cohorts=[]
+    for label in ('initial','repeat'):
+        audit=json.loads((tile_gpu/label/'verification.json').read_text());analysis=json.loads((tile_gpu/label/'analysis.json').read_text())
+        assert audit==json.loads((tile_gpu/label/'mac-verification.json').read_text()) and analysis==json.loads((tile_gpu/label/'mac-analysis.json').read_text())
+        assert audit['numeric_checks']==1872 and audit['original_word_comparisons']==553986648 and audit['timing_samples']==6400 and len(analysis['profiles'])==16 and all(p['own_null_stable'] for p in analysis['profiles']);tile_cohorts.append(analysis)
+    rows=[line.split('|')[1:-1] for line in (tile_gpu/'README.md').read_text().splitlines() if re.match(r'^\| (32|64) \|',line)];assert len(rows)==16
+    for cells,a,b in zip(rows,tile_cohorts[0]['profiles'],tile_cohorts[1]['profiles']):
+        assert [int(c.strip()) for c in cells[:4]]==[a['width'],a['layer'],a['batch'],a['chunk']]==[b['width'],b['layer'],b['batch'],b['chunk']]
+        for cell,key in zip(cells[4:6],('gpu_ms','wall_ms')):assert cell.strip()==' / '.join(f"{p['fractions']['comparison'][key]:.6f}" for p in (a,b))
+        assert cells[6].strip()==' / '.join('Yes' if p['own_null_stable'] else 'No' for p in (a,b)) and cells[7].strip()==' / '.join('Yes' if p['component_screen_pass'] else 'No' for p in (a,b))
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -499,7 +521,9 @@ def main():
                   paired_norm_rope_table_values_checked=96,paired_norm_rope_learned_profiles=232,
                   paired_chain_table_values_checked=96,paired_chain_learned_profiles=464,
                   paired_native_private_transformations_regenerated=12,paired_native_full_validation_stages=34,
+                  paired_native_rejected_model_table_values_checked=66,
                   delta_value_tile_cpu_profiles_checked=12,status='passed',
+                  delta_value_tile_gpu_endpoint_table_values_checked=64,delta_value_tile_gpu_numeric_profiles=416,
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

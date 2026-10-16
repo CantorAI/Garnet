@@ -1,0 +1,335 @@
+{
+  "profiles": [
+    {
+      "name": "real-layer0-b1-c1",
+      "layer": 0,
+      "batch": 1,
+      "chunk": 1,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9931797451535023,
+          "wall_ms": 1.0003239409484082
+        },
+        "comparison": {
+          "gpu_ms": 0.8729792016146055,
+          "wall_ms": 0.9670675814088855
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer0-b1-c1",
+      "layer": 0,
+      "batch": 1,
+      "chunk": 1,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9962461676667107,
+          "wall_ms": 0.9928675927687916
+        },
+        "comparison": {
+          "gpu_ms": 0.8940003807031105,
+          "wall_ms": 0.9471416070449501
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer0-b1-c80",
+      "layer": 0,
+      "batch": 1,
+      "chunk": 80,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9979837991313575,
+          "wall_ms": 0.9989571418058368
+        },
+        "comparison": {
+          "gpu_ms": 0.9463828541690193,
+          "wall_ms": 0.942059071037107
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer0-b1-c80",
+      "layer": 0,
+      "batch": 1,
+      "chunk": 80,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9971660570503649,
+          "wall_ms": 0.9985058919806048
+        },
+        "comparison": {
+          "gpu_ms": 0.877305278496238,
+          "wall_ms": 0.8850981838436609
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer0-b2-c1",
+      "layer": 0,
+      "batch": 2,
+      "chunk": 1,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9976990082385128,
+          "wall_ms": 0.9806058793184762
+        },
+        "comparison": {
+          "gpu_ms": 1.1439548443532883,
+          "wall_ms": 1.0971106499752177
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer0-b2-c1",
+      "layer": 0,
+      "batch": 2,
+      "chunk": 1,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9979373300952601,
+          "wall_ms": 1.0291705481901037
+        },
+        "comparison": {
+          "gpu_ms": 1.3077223191835368,
+          "wall_ms": 1.2211136635962492
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer0-b2-c80",
+      "layer": 0,
+      "batch": 2,
+      "chunk": 80,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9935982832654693,
+          "wall_ms": 0.9917173736515146
+        },
+        "comparison": {
+          "gpu_ms": 0.8559052196940107,
+          "wall_ms": 0.8582544321297962
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer0-b2-c80",
+      "layer": 0,
+      "batch": 2,
+      "chunk": 80,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0013585091703823,
+          "wall_ms": 1.003909455255633
+        },
+        "comparison": {
+          "gpu_ms": 0.9063138778280547,
+          "wall_ms": 0.9037236204204364
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer22-b1-c1",
+      "layer": 22,
+      "batch": 1,
+      "chunk": 1,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0059364239862363,
+          "wall_ms": 0.9954317137447095
+        },
+        "comparison": {
+          "gpu_ms": 0.8331942110156082,
+          "wall_ms": 0.9255396501739931
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer22-b1-c1",
+      "layer": 22,
+      "batch": 1,
+      "chunk": 1,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.001560584370856,
+          "wall_ms": 1.0058164827496379
+        },
+        "comparison": {
+          "gpu_ms": 0.8870980210265924,
+          "wall_ms": 0.957624404162008
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer22-b1-c80",
+      "layer": 22,
+      "batch": 1,
+      "chunk": 80,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9816824356326963,
+          "wall_ms": 0.9763940994296396
+        },
+        "comparison": {
+          "gpu_ms": 0.9517545579749068,
+          "wall_ms": 0.9568760471636656
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer22-b1-c80",
+      "layer": 22,
+      "batch": 1,
+      "chunk": 80,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9945488781215226,
+          "wall_ms": 0.9934084406669147
+        },
+        "comparison": {
+          "gpu_ms": 0.8734310331325651,
+          "wall_ms": 0.8806888217343051
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer22-b2-c1",
+      "layer": 22,
+      "batch": 2,
+      "chunk": 1,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9913330724151774,
+          "wall_ms": 0.9949316957661652
+        },
+        "comparison": {
+          "gpu_ms": 1.1137832121310596,
+          "wall_ms": 1.0722183895078659
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer22-b2-c1",
+      "layer": 22,
+      "batch": 2,
+      "chunk": 1,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0136931613544538,
+          "wall_ms": 1.0364002448096412
+        },
+        "comparison": {
+          "gpu_ms": 1.2655378892210218,
+          "wall_ms": 1.168948755063127
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": false
+    },
+    {
+      "name": "real-layer22-b2-c80",
+      "layer": 22,
+      "batch": 2,
+      "chunk": 80,
+      "width": 32,
+      "fractions": {
+        "null": {
+          "gpu_ms": 1.0126738005042766,
+          "wall_ms": 1.0165499584931332
+        },
+        "comparison": {
+          "gpu_ms": 0.8637258720542188,
+          "wall_ms": 0.8649264215756564
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    },
+    {
+      "name": "real-layer22-b2-c80",
+      "layer": 22,
+      "batch": 2,
+      "chunk": 80,
+      "width": 64,
+      "fractions": {
+        "null": {
+          "gpu_ms": 0.9878196253688941,
+          "wall_ms": 0.9871592133791925
+        },
+        "comparison": {
+          "gpu_ms": 0.8917723173762931,
+          "wall_ms": 0.8896507856359083
+        }
+      },
+      "own_null_stable": true,
+      "component_screen_pass": true
+    }
+  ],
+  "workloads": [
+    {
+      "width": 32,
+      "kind": "decode",
+      "component_screen_pass": false
+    },
+    {
+      "width": 32,
+      "kind": "prefill",
+      "component_screen_pass": false
+    },
+    {
+      "width": 64,
+      "kind": "decode",
+      "component_screen_pass": false
+    },
+    {
+      "width": 64,
+      "kind": "prefill",
+      "component_screen_pass": true
+    }
+  ],
+  "unchanged_confirmation_admitted": true,
+  "statistic": "Ratio of arithmetic means of all 100 candidate and all 100 control raw samples per comparison/null endpoint; no filtering or normalization.",
+  "native_integration_admitted": false,
+  "full_goal_met": false,
+  "scope": "Initial component screen only; all four first/last layer x B1/B2 endpoints must have >=5% GPU and wall gain with stable own-nulls. Complete unchanged confirmation and native/full-model gates remain required."
+}

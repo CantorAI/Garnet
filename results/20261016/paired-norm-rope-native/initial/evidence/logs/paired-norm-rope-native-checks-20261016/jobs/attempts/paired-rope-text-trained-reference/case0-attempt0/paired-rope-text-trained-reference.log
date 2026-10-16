@@ -1,0 +1,56 @@
+paired_norm_rope_trained_route {"batch": 1, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 1 max_abs_error 4.57763671875e-05 hidden_l2_worst_ratio 0.001711706132398932 value_l2_worst_ratio 0.0027618311213034315 worst_ratio 0.05850896989029427 ms 2.2415
+paired_norm_rope_trained_route {"batch": 1, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 1.519792
+paired_norm_rope_trained_route {"batch": 1, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 1 max_abs_error 2.288818359375e-05 hidden_l2_worst_ratio 0.0016037655533349157 value_l2_worst_ratio 0.0028356702305722507 worst_ratio 0.069681378063293 ms 2.037416
+pretrained dense PASS full_attention 1 1
+paired_norm_rope_trained_route {"batch": 1, "chunk": 2, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 2 max_abs_error 3.0517578125e-05 hidden_l2_worst_ratio 0.0016955762123011568 value_l2_worst_ratio 0.0032253921021841037 worst_ratio 0.041125162557372204 ms 2.507625
+paired_norm_rope_trained_route {"batch": 1, "chunk": 2, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 2 max_abs_error 5.340576171875e-05 hidden_l2_worst_ratio 0.0018295164322314642 value_l2_worst_ratio 0.0032032893871211687 worst_ratio 0.09474735899342636 ms 1.84
+paired_norm_rope_trained_route {"batch": 1, "chunk": 2, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 2 max_abs_error 4.57763671875e-05 hidden_l2_worst_ratio 0.0020915592178198696 value_l2_worst_ratio 0.003177350685298547 worst_ratio 0.10679162951217029 ms 2.225541
+pretrained dense PASS full_attention 1 2
+paired_norm_rope_trained_route {"batch": 2, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 2 chunk 1 max_abs_error 3.0517578125e-05 hidden_l2_worst_ratio 0.0016319553898626578 value_l2_worst_ratio 0.0030390921402075 worst_ratio 0.041788336225253464 ms 2.34075
+paired_norm_rope_trained_route {"batch": 2, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 2 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 2.091959
+paired_norm_rope_trained_route {"batch": 2, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 2 chunk 1 max_abs_error 2.765655517578125e-05 hidden_l2_worst_ratio 0.0016882564390989895 value_l2_worst_ratio 0.0032284809439700485 worst_ratio 0.05440811068780805 ms 2.465292
+pretrained dense PASS full_attention 2 1
+paired_norm_rope_trained_route {"batch": 2, "chunk": 2, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 2 max_abs_error 9.1552734375e-05 hidden_l2_worst_ratio 0.0016279099928070534 value_l2_worst_ratio 0.002501548690459361 worst_ratio 0.11427705630996428 ms 2.616417
+paired_norm_rope_trained_route {"batch": 2, "chunk": 2, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 2 max_abs_error 7.62939453125e-05 hidden_l2_worst_ratio 0.0016735803869546875 value_l2_worst_ratio 0.0023618306460995416 worst_ratio 0.0680514623585906 ms 3.318208
+paired_norm_rope_trained_route {"batch": 2, "chunk": 2, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 2 max_abs_error 3.814697265625e-05 hidden_l2_worst_ratio 0.001454415417938838 value_l2_worst_ratio 0.002281676937498818 worst_ratio 0.06590456505549597 ms 3.470208
+pretrained dense PASS full_attention 2 2
+paired_norm_rope_trained_route {"batch": 1, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.00018310546875 hidden_l2_worst_ratio 0.005484108360428411 value_l2_worst_ratio 0.003113237852619213 worst_ratio 0.045108427696306415 ms 1.843625
+paired_norm_rope_trained_route {"batch": 1, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 2.051375
+paired_norm_rope_trained_route {"batch": 1, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 1 max_abs_error 4.1961669921875e-05 hidden_l2_worst_ratio 0.008403434261478203 value_l2_worst_ratio 0.0033512341081633847 worst_ratio 0.0711524188230773 ms 1.287542
+pretrained dense PASS full_attention 1 1
+paired_norm_rope_trained_route {"batch": 1, "chunk": 2, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 2 max_abs_error 0.0001678466796875 hidden_l2_worst_ratio 0.01456851567506977 value_l2_worst_ratio 0.0031810792020238636 worst_ratio 0.15306516398754927 ms 1.814167
+paired_norm_rope_trained_route {"batch": 1, "chunk": 2, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 2 max_abs_error 9.1552734375e-05 hidden_l2_worst_ratio 0.009821961394417477 value_l2_worst_ratio 0.003149591024488114 worst_ratio 0.04827135140488762 ms 2.361333
+paired_norm_rope_trained_route {"batch": 1, "chunk": 2, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 1 chunk 2 max_abs_error 0.00048828125 hidden_l2_worst_ratio 0.011135136048325677 value_l2_worst_ratio 0.0031790368789228534 worst_ratio 0.06395155085780914 ms 1.49575
+pretrained dense PASS full_attention 1 2
+paired_norm_rope_trained_route {"batch": 2, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 2 chunk 1 max_abs_error 7.62939453125e-05 hidden_l2_worst_ratio 0.007604835733529117 value_l2_worst_ratio 0.003169696009625244 worst_ratio 0.041206796376988764 ms 2.767708
+paired_norm_rope_trained_route {"batch": 2, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 2 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 2.913375
+paired_norm_rope_trained_route {"batch": 2, "chunk": 1, "expected": 1, "session": 1, "graph": 1}
+dense reference full_attention batch 2 chunk 1 max_abs_error 0.00048828125 hidden_l2_worst_ratio 0.010396186471926812 value_l2_worst_ratio 0.003207053930594183 worst_ratio 0.08131129808088 ms 2.827125
+pretrained dense PASS full_attention 2 1
+paired_norm_rope_trained_route {"batch": 2, "chunk": 2, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 2 max_abs_error 0.00018310546875 hidden_l2_worst_ratio 0.009470842259469647 value_l2_worst_ratio 0.002722860675368999 worst_ratio 0.16249416102222985 ms 2.740917
+paired_norm_rope_trained_route {"batch": 2, "chunk": 2, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 2 max_abs_error 5.340576171875e-05 hidden_l2_worst_ratio 0.006412561055476279 value_l2_worst_ratio 0.0023266238759722902 worst_ratio 0.12814702213967608 ms 2.943417
+paired_norm_rope_trained_route {"batch": 2, "chunk": 2, "expected": 0, "session": 0, "graph": 0}
+dense reference full_attention batch 2 chunk 2 max_abs_error 0.00042724609375 hidden_l2_worst_ratio 0.009489201684104638 value_l2_worst_ratio 0.0030308717224385713 worst_ratio 0.08943744016969205 ms 3.488125
+pretrained dense PASS full_attention 2 2

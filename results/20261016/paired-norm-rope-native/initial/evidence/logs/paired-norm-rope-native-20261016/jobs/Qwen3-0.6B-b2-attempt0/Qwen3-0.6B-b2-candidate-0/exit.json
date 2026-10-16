@@ -1,0 +1,14 @@
+{
+  "name": "Qwen3-0.6B-b2-candidate-0",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/source/test2026/metal/run_matched_garnet.py",
+    "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/build-paired-norm-rope-decode",
+    "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/source",
+    "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/models/Qwen3-0.6B",
+    "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/logs/paired-norm-rope-native-20261016/jobs/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-case.json"
+  ],
+  "exit_code": 0
+}

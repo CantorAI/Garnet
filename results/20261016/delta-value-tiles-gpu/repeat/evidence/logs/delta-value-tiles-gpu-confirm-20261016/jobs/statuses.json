@@ -1,0 +1,50 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/delta-value-tiles-component-tools-20261016/delta_value_tiles_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta_value_tiles_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/prepare.executed.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "numeric",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta_value_tiles_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta-value-tiles.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets",
+      "numeric"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "timing",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta_value_tiles_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/delta-value-tiles.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/delta-value-tiles-gpu-confirm-20261016/jobs/assets",
+      "timing"
+    ],
+    "exit_code": 0
+  }
+]

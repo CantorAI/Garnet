@@ -1,0 +1,2714 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+#include "openvino_builder.h"
+
+#include "garnet_tensor.h"
+#include "q4q8_linear.h"
+#include "qwen3_native_decode_engine.h"
+#include "host_tensor.h"
+#include "graph_capture.h"
+#include "weight_quantization.h"
+
+#include <algorithm>
+#include <climits>
+#include <filesystem>
+#include <fstream>
+#include <cmath>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <regex>
+#include <stdexcept>
+#include <unordered_map>
+
+#if defined(GARNET_WITH_OPENVINO)
+#include <openvino/openvino.hpp>
+#include <openvino/opsets/opset13.hpp>
+#include "gated_delta_lowering.h"
+#include "causal_conv_lowering.h"
+#include "qwen35_linear_lowering.h"
+#include "qwen35_attention_lowering.h"
+#include "qwen35_vision_lowering.h"
+#endif
+
+namespace Garnet
+{
+#if defined(GARNET_WITH_OPENVINO)
+    namespace
+    {
+#if defined(GARNET_CPU_ONLY)
+        // Keep the CPU plugin alive across graph compilation/import/release.
+        // Declare this before caches so requests/models are destroyed first.
+        std::mutex g_openVINOCoreMutex;
+        std::shared_ptr<ov::Core> g_openVINOCore;
+        std::shared_ptr<ov::Core> SharedCPUCore()
+        {
+            std::lock_guard<std::mutex> guard(g_openVINOCoreMutex);
+            if (!g_openVINOCore) g_openVINOCore = std::make_shared<ov::Core>();
+            return g_openVINOCore;
+        }
+#endif
+        struct OpenVINOExecutionSession
+        {
+            std::unique_ptr<ov::InferRequest> request;
+            bool stateInitialized = false;
+            bool profileDumped = false;
+            std::mutex mutex;
+        };
+
+        struct CachedOpenVINOExecution
+        {
+#if defined(GARNET_CPU_ONLY)
+            std::shared_ptr<ov::Core> core = SharedCPUCore();
+            ov::Core& Core() { return *core; }
+#else
+            ov::Core core;
+            ov::Core& Core() { return core; }
+#endif
+            ov::CompiledModel model;
+            std::mutex sessionsMutex;
+            std::unordered_map<
+                std::uint64_t,
+                std::shared_ptr<OpenVINOExecutionSession>> sessions;
+            std::mutex nativeLMHeadMutex;
+            std::shared_ptr<Q4Q8Linear> nativeLMHead;
+        };
+
+        std::mutex g_openVINOCacheMutex;
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<CachedOpenVINOExecution>> g_openVINOCache;
+        std::mutex g_nativeDecodeCacheMutex;
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<Qwen3NativeDecodeEngine>> g_nativeDecodeCache;
+        std::string OpenVINODevice();
+
+        bool OpenVINOFullNativeCPUDecode()
+        {
+            const char* value = std::getenv(
+                "GARNET_OPENVINO_CPU_NATIVE_DECODE");
+            return value && std::string(value) == "1" &&
+                OpenVINODevice().rfind("CPU", 0) == 0;
+        }
+
+        std::filesystem::path NativeDecodeMarker(
+            const std::string& enginePath)
+        {
+            return std::filesystem::path(
+                enginePath + ".garnet_qwen3_native_decode_v2");
+        }
+
+        std::filesystem::path NativeDecodePackedCache(
+            const std::string& enginePath)
+        {
+            return std::filesystem::path(
+                enginePath + ".garnet_q4q8_avx2_pack_v1");
+        }
+
+        bool OpenVINOPackedCPUProjections()
+        {
+            const char* value = std::getenv(
+                "GARNET_OPENVINO_CPU_PACKED_PROJECTIONS");
+            return value && std::string(value) == "1";
+        }
+
+        bool OpenVINOSignedCPUWeights()
+        {
+            const char* value = std::getenv(
+                "GARNET_OPENVINO_CPU_SIGNED_I4");
+            return value && std::string(value) == "1";
+        }
+
+        bool OpenVINONativeCPUQ4Q8()
+        {
+            const char* value = std::getenv(
+                "GARNET_OPENVINO_CPU_NATIVE_Q4Q8");
+            return value && std::string(value) == "1" &&
+                OpenVINODevice().rfind("CPU", 0) == 0;
+        }
+
+        int OpenVINONativeCPUThreads()
+        {
+            const char* value = std::getenv(
+                "GARNET_OPENVINO_CPU_THREADS");
+            return value && *value ? std::max(1, std::stoi(value)) : 4;
+        }
+
+        int OpenVINOCPUWeightGroupSize()
+        {
+            const char* value = std::getenv(
+                "GARNET_OPENVINO_CPU_WEIGHT_GROUP_SIZE");
+            if (!value || !*value) return 128;
+            const int parsed = std::stoi(value);
+            if (parsed == -1 || parsed == 32 || parsed == 64 ||
+                parsed == 128) {
+                return parsed;
+            }
+            throw std::invalid_argument(
+                "GARNET_OPENVINO_CPU_WEIGHT_GROUP_SIZE must be "
+                "-1, 32, 64, or 128");
+        }
+
+        ov::AnyMap OpenVINOCPURuntimeProperties()
+        {
+            ov::AnyMap properties;
+            if (OpenVINODevice().rfind("CPU", 0) != 0) return properties;
+#if defined(GARNET_CPU_ONLY)
+            // Establish an FP32 correctness baseline unless explicitly overridden.
+            properties[ov::hint::inference_precision.name()] = ov::element::f32;
+#endif
+            if (const char* precision = std::getenv("GARNET_OPENVINO_CPU_INFERENCE_PRECISION");
+                precision && *precision) {
+                const std::string value(precision);
+                if (value != "f32" && value != "f16" && value != "bf16")
+                    throw std::invalid_argument("OpenVINO CPU inference precision must be f32, f16, or bf16");
+                properties[ov::hint::inference_precision.name()] =
+                    value == "f32" ? ov::element::f32 :
+                    value == "f16" ? ov::element::f16 : ov::element::bf16;
+            }
+            if (const char* threads = std::getenv(
+                    "GARNET_OPENVINO_CPU_THREADS");
+                threads && *threads) {
+                properties[ov::inference_num_threads.name()] =
+                    static_cast<int32_t>(std::stoi(threads));
+            }
+            if (const char* hyperthreading = std::getenv(
+                    "GARNET_OPENVINO_CPU_HYPERTHREADING");
+                hyperthreading && *hyperthreading) {
+                properties[ov::hint::enable_hyper_threading.name()] =
+                    std::string(hyperthreading) != "0";
+            }
+            if (const char* profile = std::getenv(
+                    "GARNET_OPENVINO_PROFILE");
+                profile && std::string(profile) == "1") {
+                properties[ov::enable_profiling.name()] = true;
+            }
+            properties[ov::hint::performance_mode.name()] =
+                ov::hint::PerformanceMode::LATENCY;
+            properties[ov::hint::execution_mode.name()] =
+                ov::hint::ExecutionMode::PERFORMANCE;
+            return properties;
+        }
+
+        ov::element::Type ToOpenVINOType(X3TensorDType type)
+        {
+            switch (type) {
+            case X3_TENSOR_FLOAT32: return ov::element::f32;
+            case X3_TENSOR_FLOAT64: return ov::element::f64;
+            case X3_TENSOR_FLOAT16: return ov::element::f16;
+            case X3_TENSOR_BFLOAT16: return ov::element::bf16;
+            case X3_TENSOR_INT32: return ov::element::i32;
+            case X3_TENSOR_INT64: return ov::element::i64;
+            default: return ov::element::dynamic;
+            }
+        }
+
+        X3TensorDType ToXLangType(const ov::element::Type& type)
+        {
+            if (type == ov::element::f32) return X3_TENSOR_FLOAT32;
+            if (type == ov::element::f64) return X3_TENSOR_FLOAT64;
+            if (type == ov::element::f16) return X3_TENSOR_FLOAT16;
+            if (type == ov::element::bf16) return X3_TENSOR_BFLOAT16;
+            if (type == ov::element::i32) return X3_TENSOR_INT32;
+            if (type == ov::element::i64) return X3_TENSOR_INT64;
+            return static_cast<X3TensorDType>(0);
+        }
+
+        ov::Shape ToOpenVINOShape(X::Tensor tensor)
+        {
+            ov::Shape shape;
+            shape.reserve(static_cast<size_t>(tensor.Info().rank));
+            for (int index = 0; index < tensor.Info().rank; ++index) {
+                shape.push_back(static_cast<size_t>(TensorDimension(tensor, index)));
+            }
+            return shape;
+        }
+
+        ov::Output<ov::Node> I64Scalar(int64_t value)
+        {
+            return ov::opset13::Constant::create(
+                ov::element::i64, ov::Shape{}, {value});
+        }
+
+        ov::Output<ov::Node> I64Vector(
+            std::initializer_list<int64_t> values)
+        {
+            return ov::opset13::Constant::create(
+                ov::element::i64, ov::Shape{values.size()}, values);
+        }
+
+        ov::Output<ov::Node> Reshape(
+            const ov::Output<ov::Node>& value,
+            std::initializer_list<int64_t> shape)
+        {
+            return std::make_shared<ov::opset13::Reshape>(
+                value, I64Vector(shape), false);
+        }
+
+        ov::Output<ov::Node> RMSNorm(
+            const ov::Output<ov::Node>& value,
+            const ov::Output<ov::Node>& scale,
+            float epsilon)
+        {
+            const auto sourceType = value.get_element_type();
+            auto sourceFloat = std::make_shared<ov::opset13::Convert>(
+                value, ov::element::f32);
+            auto square = std::make_shared<ov::opset13::Multiply>(
+                sourceFloat, sourceFloat);
+            auto mean = std::make_shared<ov::opset13::ReduceMean>(
+                square, I64Vector({-1}), true);
+            auto variance = std::make_shared<ov::opset13::Add>(
+                mean, ov::opset13::Constant::create(
+                    ov::element::f32, ov::Shape{}, {epsilon}));
+            auto root = std::make_shared<ov::opset13::Sqrt>(variance);
+            auto normalized = std::make_shared<ov::opset13::Divide>(
+                sourceFloat, root);
+            auto scaleFloat = std::make_shared<ov::opset13::Convert>(
+                scale, ov::element::f32);
+            auto scaled = std::make_shared<ov::opset13::Multiply>(
+                normalized, scaleFloat);
+            return std::make_shared<ov::opset13::Convert>(
+                scaled, sourceType);
+        }
+
+        ov::Output<ov::Node> ExpandKVHeads(
+            const ov::Output<ov::Node>& value,
+            int heads,
+            int kvHeads)
+        {
+            std::vector<int64_t> indices(static_cast<size_t>(heads));
+            const int group = heads / kvHeads;
+            for (int head = 0; head < heads; ++head) {
+                indices[static_cast<size_t>(head)] = head / group;
+            }
+            auto indexNode = ov::opset13::Constant::create(
+                ov::element::i64, ov::Shape{indices.size()}, indices);
+            return std::make_shared<ov::opset13::Gather>(
+                value, indexNode, I64Scalar(2));
+        }
+
+        ov::Output<ov::Node> ApplyRotary(
+            const ov::Output<ov::Node>& value,
+            const ov::Output<ov::Node>& positions,
+            int headDim,
+            float theta)
+        {
+            const auto sourceType = value.get_element_type();
+            std::vector<float> inverse(static_cast<size_t>(headDim / 2));
+            for (int index = 0; index < headDim / 2; ++index) {
+                inverse[static_cast<size_t>(index)] =
+                    std::pow(theta, -2.0F * static_cast<float>(index) /
+                        static_cast<float>(headDim));
+            }
+            auto inverseNode = ov::opset13::Constant::create(
+                ov::element::f32, ov::Shape{inverse.size()}, inverse);
+            auto positionFloat = std::make_shared<ov::opset13::Convert>(
+                positions, ov::element::f32);
+            auto positionRows = Reshape(positionFloat, {-1, 1});
+            auto angles = std::make_shared<ov::opset13::Multiply>(
+                positionRows, inverseNode);
+            auto frequencies = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{angles, angles}, 1);
+            auto cosineFloat = Reshape(
+                std::make_shared<ov::opset13::Cos>(frequencies),
+                {1, -1, 1, headDim});
+            auto sineFloat = Reshape(
+                std::make_shared<ov::opset13::Sin>(frequencies),
+                {1, -1, 1, headDim});
+            auto valueFloat = std::make_shared<ov::opset13::Convert>(
+                value, ov::element::f32);
+            auto halves = std::make_shared<ov::opset13::VariadicSplit>(
+                valueFloat, I64Scalar(-1),
+                I64Vector({headDim / 2, headDim / 2}));
+            auto rotated = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{
+                    std::make_shared<ov::opset13::Negative>(halves->output(1)),
+                    halves->output(0)},
+                -1);
+            auto resultFloat = std::make_shared<ov::opset13::Add>(
+                std::make_shared<ov::opset13::Multiply>(
+                    valueFloat, cosineFloat),
+                std::make_shared<ov::opset13::Multiply>(
+                    rotated, sineFloat));
+            return std::make_shared<ov::opset13::Convert>(
+                resultFloat, sourceType);
+        }
+
+        ov::Output<ov::Node> GroupedAttention(
+            const ov::Output<ov::Node>& query,
+            const ov::Output<ov::Node>& key,
+            const ov::Output<ov::Node>& value,
+            const ov::Output<ov::Node>& validKeys,
+            int heads,
+            int kvHeads,
+            int headDim,
+            bool causal)
+        {
+            auto expandedKey = ExpandKVHeads(key, heads, kvHeads);
+            auto expandedValue = ExpandKVHeads(value, heads, kvHeads);
+            auto q = std::make_shared<ov::opset13::Transpose>(
+                query, I64Vector({0, 2, 1, 3}));
+            auto k = std::make_shared<ov::opset13::Transpose>(
+                expandedKey, I64Vector({0, 2, 3, 1}));
+            auto v = std::make_shared<ov::opset13::Transpose>(
+                expandedValue, I64Vector({0, 2, 1, 3}));
+            auto scores = std::make_shared<ov::opset13::MatMul>(q, k);
+            auto scoresFloat = std::make_shared<ov::opset13::Convert>(
+                scores, ov::element::f32);
+            auto scaled = std::make_shared<ov::opset13::Multiply>(
+                scoresFloat,
+                ov::opset13::Constant::create(
+                    ov::element::f32, ov::Shape{}, {
+                        1.0F / std::sqrt(static_cast<float>(headDim))}));
+            auto keyMask = std::make_shared<ov::opset13::Convert>(
+                Reshape(validKeys, {1, 1, 1, -1}), ov::element::boolean);
+            ov::Output<ov::Node> allowed = keyMask;
+            if (causal) {
+                const int64_t queryLength =
+                    query.get_partial_shape()[1].get_length();
+                const int64_t keyLength =
+                    key.get_partial_shape()[1].get_length();
+                std::vector<uint8_t> causalValues(
+                    static_cast<size_t>(queryLength * keyLength), 0);
+                for (int64_t row = 0; row < queryLength; ++row) {
+                    for (int64_t column = 0;
+                         column < keyLength && column <= row;
+                         ++column) {
+                        causalValues[static_cast<size_t>(
+                            row * keyLength + column)] = 1;
+                    }
+                }
+                auto causalMask = std::make_shared<ov::opset13::Constant>(
+                    ov::element::boolean,
+                    ov::Shape{
+                        1, 1, static_cast<size_t>(queryLength),
+                        static_cast<size_t>(keyLength)},
+                    causalValues.data());
+                allowed = std::make_shared<ov::opset13::LogicalAnd>(
+                    keyMask, causalMask);
+            }
+            auto masked = std::make_shared<ov::opset13::Select>(
+                allowed, scaled,
+                ov::opset13::Constant::create(
+                    ov::element::f32, ov::Shape{}, {-1.0e9F}));
+            auto probabilities = std::make_shared<ov::opset13::Softmax>(
+                masked, -1);
+            auto probabilitiesTyped = std::make_shared<ov::opset13::Convert>(
+                probabilities, v->get_element_type());
+            auto attended = std::make_shared<ov::opset13::MatMul>(
+                probabilitiesTyped, v);
+            auto tokenMajor = std::make_shared<ov::opset13::Transpose>(
+                attended, I64Vector({0, 2, 1, 3}));
+            const auto queryShape = query.get_partial_shape();
+            return Reshape(
+                tokenMajor,
+                {
+                    queryShape[0].get_length(),
+                    queryShape[1].get_length(),
+                    static_cast<int64_t>(heads) * headDim,
+                });
+        }
+
+        std::string OpenVINODevice()
+        {
+            const char* configured = std::getenv("GARNET_OPENVINO_DEVICE");
+            return configured && *configured ? configured : "CPU";
+        }
+
+        std::shared_ptr<CachedOpenVINOExecution> LoadCompiledModel(
+            const std::string& enginePath,
+            std::string& error)
+        {
+            std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+            const auto found = g_openVINOCache.find(enginePath);
+            if (found != g_openVINOCache.end()) return found->second;
+            try {
+                std::ifstream stream(enginePath, std::ios::binary);
+                if (!stream) {
+                    error = "failed to open OpenVINO compiled model: " + enginePath;
+                    return nullptr;
+                }
+                auto execution = std::make_shared<CachedOpenVINOExecution>();
+                execution->model = execution->Core().import_model(
+                    stream,
+                    OpenVINODevice(),
+                    OpenVINOCPURuntimeProperties());
+                g_openVINOCache[enginePath] = execution;
+                return execution;
+            }
+            catch (const std::exception& exception) {
+                error = std::string("OpenVINO import_model failed: ") + exception.what();
+                return nullptr;
+            }
+        }
+
+        std::shared_ptr<OpenVINOExecutionSession> GetExecutionSession(
+            const std::shared_ptr<CachedOpenVINOExecution>& execution,
+            std::uint64_t sessionId)
+        {
+            std::lock_guard<std::mutex> guard(execution->sessionsMutex);
+            const auto found = execution->sessions.find(sessionId);
+            if (found != execution->sessions.end()) return found->second;
+            auto session = std::make_shared<OpenVINOExecutionSession>();
+            session->request = std::make_unique<ov::InferRequest>(
+                execution->model.create_infer_request());
+            execution->sessions.emplace(sessionId, session);
+            return session;
+        }
+
+        std::shared_ptr<Q4Q8Linear> GetNativeLMHead(
+            const std::shared_ptr<CachedOpenVINOExecution>& execution,
+            const SafeTensorsIndex* weightIndex,
+            std::string& error)
+        {
+            if (!OpenVINONativeCPUQ4Q8() || !weightIndex) return nullptr;
+            std::lock_guard<std::mutex> guard(execution->nativeLMHeadMutex);
+            if (execution->nativeLMHead) return execution->nativeLMHead;
+            const SafeTensorMetadata* metadata =
+                weightIndex->Find("lm_head.weight");
+            if (!metadata) {
+                error = "native Q4Q8 lm_head.weight is missing";
+                return nullptr;
+            }
+            auto mapped = std::make_shared<SafeTensorsMappedFile>();
+            if (!mapped->Open(metadata->filePath, error)) return nullptr;
+            const void* source = mapped->DataAt(
+                metadata->dataOffset, metadata->dataSize);
+            if (!source) {
+                error = "native Q4Q8 failed to map lm_head.weight";
+                return nullptr;
+            }
+            QuantizedWeight quantized;
+            constexpr int groupSize = 128;
+            if (!QuantizeSymmetricINT4(
+                    "lm_head.weight", *metadata, source, groupSize,
+                    quantized, error)) {
+                return nullptr;
+            }
+            auto linear = std::make_shared<Q4Q8Linear>();
+            if (!linear->Prepare(quantized, error)) return nullptr;
+            execution->nativeLMHead = linear;
+            return linear;
+        }
+    }
+
+    struct OpenVINOBuilder::Implementation
+    {
+        struct CacheView
+        {
+            ov::Output<ov::Node> layer;
+            int inputIndex = -1;
+            int layerIndex = -1;
+            bool key = false;
+            std::shared_ptr<ov::op::util::Variable> variable;
+            ov::element::Type stateType;
+        };
+
+        struct StatefulCacheSeed
+        {
+            unsigned long long tensorId = 0;
+            int inputIndex = -1;
+            bool key = false;
+            ov::Shape layerShape;
+            ov::element::Type type;
+            ov::element::Type stateType;
+        };
+
+        struct TensorState
+        {
+            std::optional<CacheView> keyCache;
+            std::optional<CacheView> valueCache;
+            ov::Output<ov::Node> pageTable;
+            ov::Output<ov::Node> contextLength;
+            ov::Output<ov::Node> slotPosition;
+            ov::Output<ov::Node> query;
+            ov::Output<ov::Node> key;
+            ov::Output<ov::Node> value;
+            ov::Output<ov::Node> deltaDecay, deltaBeta, deltaState, deltaActive;
+            ov::Output<ov::Node> convToken, convWeight, convState, convActive;
+            ov::Output<ov::Node> fullKey,fullValue,fullPositions,fullSlots,fullActive;
+        };
+
+        struct CacheWrite
+        {
+            ov::Output<ov::Node> value;
+            int inputIndex = -1;
+            int layerIndex = -1;
+            bool key = false;
+        };
+
+        std::unordered_map<unsigned long long, ov::Output<ov::Node>> tensors;
+        std::unordered_map<unsigned long long, TensorState> states;
+        std::unordered_map<unsigned long long, int> parameterIndices;
+        std::unordered_map<int, ov::element::Type> inputTypes;
+        std::unordered_map<unsigned long long, CacheView> cacheViews;
+        std::unordered_map<std::string, ov::Output<ov::Node>> weights;
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<SafeTensorsMappedFile>> mappedWeightFiles;
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<QuantizedWeight>> quantizedWeights;
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<std::vector<uint8_t>>> openvinoPackedWeights;
+        const SafeTensorsIndex* weightIndex = nullptr;
+        ov::ParameterVector parameters;
+        std::vector<CacheWrite> cacheWrites;
+        bool statefulDecode = false;
+        std::optional<StatefulCacheSeed> keyState;
+        std::optional<StatefulCacheSeed> valueState;
+        ov::SinkVector stateSinks;
+        ov::op::util::VariableVector stateVariables;
+        ov::Output<ov::Node> lastOutput;
+        ov::element::Type computeType = ov::element::dynamic;
+        bool int4WeightOnly = false;
+        int quantizationBlockSize = 64;
+        bool externalNativeLMHead = false;
+
+        ov::Output<ov::Node> GetWeight(
+            const std::string& name,
+            std::string& error)
+        {
+            const auto existing = weights.find(name);
+            if (existing != weights.end()) return existing->second;
+            const SafeTensorMetadata* metadata =
+                weightIndex ? weightIndex->Find(name) : nullptr;
+            if (!metadata) {
+                error = "OpenVINO checkpoint weight is missing: " + name;
+                return {};
+            }
+            ov::element::Type type;
+            if (metadata->dataType == "BF16") type = ov::element::bf16;
+            else if (metadata->dataType == "F16") type = ov::element::f16;
+            else if (metadata->dataType == "F32") type = ov::element::f32;
+            else {
+                error = "unsupported OpenVINO checkpoint dtype: " +
+                    metadata->dataType;
+                return {};
+            }
+            const std::string fileKey =
+                metadata->filePath.lexically_normal().string();
+            auto mapped = mappedWeightFiles.find(fileKey);
+            if (mapped == mappedWeightFiles.end()) {
+                auto file = std::make_shared<SafeTensorsMappedFile>();
+                if (!file->Open(metadata->filePath, error)) return {};
+                mapped = mappedWeightFiles.emplace(fileKey, std::move(file)).first;
+            }
+            const void* data = mapped->second->DataAt(
+                metadata->dataOffset, metadata->dataSize);
+            if (!data) {
+                error = "failed to map OpenVINO checkpoint weight: " + name;
+                return {};
+            }
+            const int effectiveBlockSize =
+                quantizationBlockSize == -1 && metadata->shape.size() == 2
+                    ? static_cast<int>(metadata->shape[1])
+                    : quantizationBlockSize;
+            if (int4WeightOnly &&
+                IsQwenLinearWeightForINT4(
+                    name, *metadata, effectiveBlockSize)) {
+                auto quantized = std::make_shared<QuantizedWeight>();
+                if (!QuantizeSymmetricINT4(
+                        name, *metadata, data, effectiveBlockSize,
+                        *quantized, error)) {
+                    return {};
+                }
+                const auto scaleShape = quantized->ScaleShape();
+                const int64_t rows = metadata->shape[0];
+                const int64_t columns = metadata->shape[1];
+                const int64_t groups = columns / quantized->blockSize;
+                const bool signedWeights =
+                    OpenVINODevice().rfind("CPU", 0) == 0 &&
+                    OpenVINOSignedCPUWeights();
+                // CPU receives Garnet's native symmetric signed I4 form.
+                // Legacy Intel-GPU plugins require the equivalent U4 form:
+                // u4 = i4 + 8, followed by a fixed zero-point subtraction.
+                auto openvinoPacked =
+                    std::make_shared<std::vector<uint8_t>>(
+                        quantized->packedValues);
+                if (!signedWeights) {
+                    for (uint8_t& byte : *openvinoPacked) {
+                        byte ^= 0x88U;
+                    }
+                }
+                auto packed = std::make_shared<ov::opset13::Constant>(
+                    signedWeights ? ov::element::i4 : ov::element::u4,
+                    ov::Shape{
+                        static_cast<size_t>(rows),
+                        static_cast<size_t>(columns)},
+                    openvinoPacked->data());
+                auto blocked = Reshape(
+                    packed, {rows, groups, quantized->blockSize});
+                auto unpacked = std::make_shared<ov::opset13::Convert>(
+                    blocked, ov::element::f16);
+                ov::Output<ov::Node> centered = unpacked;
+                if (!signedWeights) {
+                    auto zeroPoint =
+                        std::make_shared<ov::opset13::Constant>(
+                            ov::element::f16,
+                            ov::Shape{},
+                            std::vector<float>{8.0F});
+                    centered = std::make_shared<ov::opset13::Subtract>(
+                        unpacked, zeroPoint);
+                }
+                auto scales = std::make_shared<ov::opset13::Constant>(
+                    ov::element::f16,
+                    ov::Shape{
+                        static_cast<size_t>(scaleShape[0]),
+                        static_cast<size_t>(scaleShape[1]),
+                        1},
+                    quantized->fp16Scales.data());
+                auto dequantized = std::make_shared<ov::opset13::Multiply>(
+                    centered, scales);
+                ov::Output<ov::Node> output = Reshape(
+                    dequantized, {rows, columns});
+                openvinoPackedWeights[name] = std::move(openvinoPacked);
+                quantizedWeights[name] = std::move(quantized);
+                weights[name] = output;
+                return output;
+            }
+            ov::Shape shape;
+            shape.reserve(metadata->shape.size());
+            for (const long long dimension : metadata->shape) {
+                shape.push_back(static_cast<size_t>(dimension));
+            }
+            auto constant = std::make_shared<ov::opset13::Constant>(
+                type, shape, data);
+            constant->set_friendly_name(name);
+            ov::Output<ov::Node> output = constant->output(0);
+            if (computeType == ov::element::f16 &&
+                type == ov::element::bf16) {
+                output = std::make_shared<ov::opset13::Convert>(
+                    output, computeType);
+            }
+            weights[name] = output;
+            return output;
+        }
+
+        ov::Output<ov::Node> GetCombinedWeight(
+            const std::vector<std::string>& names,
+            std::string& error)
+        {
+            std::string cacheKey = "__combined";
+            for (const std::string& name : names) {
+                cacheKey += "\n" + name;
+            }
+            const auto existing = weights.find(cacheKey);
+            if (existing != weights.end()) return existing->second;
+
+            ov::OutputVector sourceWeights;
+            sourceWeights.reserve(names.size());
+            for (const std::string& name : names) {
+                const auto weight = GetWeight(name, error);
+                if (!weight.get_node_shared_ptr()) return {};
+                sourceWeights.push_back(weight);
+            }
+            if (!int4WeightOnly) {
+                auto combined = std::make_shared<ov::opset13::Concat>(
+                    sourceWeights, 0);
+                weights[cacheKey] = combined;
+                return combined;
+            }
+
+            auto quantized = std::make_shared<QuantizedWeight>();
+            auto packed = std::make_shared<std::vector<uint8_t>>();
+            long long totalRows = 0;
+            long long columns = 0;
+            for (const std::string& name : names) {
+                const auto item = quantizedWeights.find(name);
+                const auto openvinoItem = openvinoPackedWeights.find(name);
+                if (item == quantizedWeights.end() ||
+                    openvinoItem == openvinoPackedWeights.end() ||
+                    item->second->shape.size() != 2) {
+                    error =
+                        "OpenVINO combined INT4 weight is unavailable: " +
+                        name;
+                    return {};
+                }
+                const QuantizedWeight& source = *item->second;
+                if (columns == 0) {
+                    columns = source.shape[1];
+                    quantized->blockSize = source.blockSize;
+                    quantized->blockAxis = source.blockAxis;
+                }
+                if (source.shape[1] != columns ||
+                    source.blockSize != quantized->blockSize) {
+                    error =
+                        "OpenVINO combined INT4 weights are incompatible";
+                    return {};
+                }
+                totalRows += source.shape[0];
+                packed->insert(
+                    packed->end(),
+                    openvinoItem->second->begin(),
+                    openvinoItem->second->end());
+                quantized->fp16Scales.insert(
+                    quantized->fp16Scales.end(),
+                    source.fp16Scales.begin(),
+                    source.fp16Scales.end());
+                quantized->maximumAbsoluteError = std::max(
+                    quantized->maximumAbsoluteError,
+                    source.maximumAbsoluteError);
+            }
+            quantized->shape = {totalRows, columns};
+            const long long groups =
+                columns / quantized->blockSize;
+            const bool signedWeights =
+                OpenVINODevice().rfind("CPU", 0) == 0 &&
+                OpenVINOSignedCPUWeights();
+            auto packedConstant =
+                std::make_shared<ov::opset13::Constant>(
+                    signedWeights ? ov::element::i4 : ov::element::u4,
+                    ov::Shape{
+                        static_cast<size_t>(totalRows),
+                        static_cast<size_t>(columns)},
+                    packed->data());
+            auto blocked = Reshape(
+                packedConstant,
+                {totalRows, groups, quantized->blockSize});
+            auto unpacked = std::make_shared<ov::opset13::Convert>(
+                blocked, ov::element::f16);
+            ov::Output<ov::Node> centered = unpacked;
+            if (!signedWeights) {
+                auto zeroPoint =
+                    std::make_shared<ov::opset13::Constant>(
+                        ov::element::f16,
+                        ov::Shape{},
+                        std::vector<float>{8.0F});
+                centered = std::make_shared<ov::opset13::Subtract>(
+                    unpacked, zeroPoint);
+            }
+            auto scales = std::make_shared<ov::opset13::Constant>(
+                ov::element::f16,
+                ov::Shape{
+                    static_cast<size_t>(totalRows),
+                    static_cast<size_t>(groups),
+                    1},
+                quantized->fp16Scales.data());
+            auto dequantized = std::make_shared<ov::opset13::Multiply>(
+                centered, scales);
+            ov::Output<ov::Node> output = Reshape(
+                dequantized, {totalRows, columns});
+            openvinoPackedWeights[cacheKey] = std::move(packed);
+            quantizedWeights[cacheKey] = std::move(quantized);
+            weights[cacheKey] = output;
+            return output;
+        }
+    };
+#endif
+
+    bool OpenVINOBuilder::IsAvailable()
+    {
+#if defined(GARNET_WITH_OPENVINO)
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    bool OpenVINOBuilder::AnalyzeCapturedGraph(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        std::vector<CapturedTensorOperation>& operations,
+        std::string& errorMessage)
+    {
+        m_analyzedOperations.clear();
+        try {
+            TensorGraphCapture capture(graph);
+            if (!CaptureFusionGraph(capture, FusionPartitionOptions{}, errorMessage))
+                return false;
+            operations = GetCapturedTensorOperations();
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return false;
+        }
+        errorMessage.clear();
+        return true;
+    }
+
+    bool OpenVINOBuilder::BuildCapturedGraph(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        X::ARGS& symbolicInputs,
+        const SafeTensorsIndex* weightIndex,
+        const std::string& enginePath,
+        const std::string& precision,
+        std::string& errorMessage,
+        bool memoryOnly)
+    {
+#if !defined(GARNET_WITH_OPENVINO)
+        errorMessage = "Garnet was built without the OpenVINO SDK";
+        return false;
+#else
+        m_error.clear();
+        m_loweringActive = true;
+        Implementation implementation;
+        implementation.weightIndex = weightIndex;
+        implementation.computeType =
+            precision == "fp16" || precision == "int4_fp16"
+                ? ov::element::f16
+                : ov::element::dynamic;
+        implementation.int4WeightOnly = precision == "int4_fp16";
+        implementation.quantizationBlockSize =
+            implementation.int4WeightOnly &&
+            OpenVINODevice().rfind("CPU", 0) == 0
+                ? OpenVINOCPUWeightGroupSize()
+                : 64;
+        implementation.statefulDecode =
+            symbolicInputs.size() == 7 &&
+            IsTensor(symbolicInputs[2]) &&
+            IsTensor(symbolicInputs[3]) &&
+            X::Tensor(symbolicInputs[2]).Info().rank == 5 &&
+            X::Tensor(symbolicInputs[3]).Info().rank == 5;
+        if(memoryOnly&&implementation.statefulDecode) {
+            m_loweringActive=false;
+            errorMessage="memory-only compilation requires explicit request-owned cache inputs";
+            return false;
+        }
+        m_implementation = &implementation;
+        const char* stage = "symbolic inputs";
+        try {
+            for (size_t index = 0; index < symbolicInputs.size(); ++index) {
+                X::Value value = symbolicInputs[index];
+                if (!IsTensor(value) || !value.IsObject()) {
+                    m_error = "OpenVINO graph inputs must be tensors";
+                    break;
+                }
+                X::Tensor tensor(value);
+                const auto type = ToOpenVINOType(tensor.Info().dtype);
+                if (type == ov::element::dynamic) {
+                    m_error = "unsupported symbolic OpenVINO input dtype";
+                    break;
+                }
+                const auto tensorId = TensorId(value);
+                implementation.parameterIndices[tensorId] =
+                    static_cast<int>(index);
+                implementation.inputTypes[
+                    static_cast<int>(index)] = type;
+                if (implementation.statefulDecode &&
+                    (index == 2 || index == 3)) {
+                    const bool key = index == 2;
+                    const auto fullShape = ToOpenVINOShape(tensor);
+                    if (fullShape.size() != 5 || fullShape[0] == 0) {
+                        m_error =
+                            "OpenVINO decode cache shape is invalid";
+                        break;
+                    }
+                    ov::Shape layerShape(
+                        fullShape.begin() + 1, fullShape.end());
+                    const std::string openVINODevice =
+                        OpenVINODevice();
+                    const bool gpuState =
+                        openVINODevice.rfind("GPU", 0) == 0;
+                    const auto internalType =
+                        implementation.computeType == ov::element::f16 &&
+                            type == ov::element::bf16
+                            ? ov::element::f16
+                            : type;
+                    const auto stateType =
+                        implementation.computeType == ov::element::f16 ||
+                            (gpuState && type == ov::element::bf16)
+                            ? ov::element::f16
+                            : type;
+                    Implementation::StatefulCacheSeed state{
+                        tensorId,
+                        static_cast<int>(index),
+                        key,
+                        std::move(layerShape),
+                        internalType,
+                        stateType};
+                    implementation.tensors[tensorId] =
+                        ov::opset13::Constant::create(
+                            type, ov::Shape{}, {0});
+                    if (key) implementation.keyState = std::move(state);
+                    else implementation.valueState = std::move(state);
+                    continue;
+                }
+                auto parameter = std::make_shared<ov::opset13::Parameter>(
+                    type, ToOpenVINOShape(tensor));
+                parameter->set_friendly_name("input_" + std::to_string(index));
+                parameter->output(0).get_tensor().set_names(
+                    {"input_" + std::to_string(index)});
+                implementation.parameters.push_back(parameter);
+                ov::Output<ov::Node> internalParameter = parameter;
+                if (implementation.computeType == ov::element::f16 &&
+                    type == ov::element::bf16) {
+                    internalParameter =
+                        std::make_shared<ov::opset13::Convert>(
+                            parameter, ov::element::f16);
+                }
+                implementation.tensors[tensorId] = internalParameter;
+            }
+            if (m_error.empty()) {
+                stage = "captured constants";
+                TensorGraphCapture capture(graph);
+                stage = "constant lowering";
+                for (const auto& node : capture.Operations()) {
+                    if (!node.provider.empty() || implementation.tensors.count(node.id)) continue;
+                    if (node.name == "constant") {
+                        auto tensor = PrepareOpenVINOHostTensor(X::Tensor(node.output));
+                        if (!IsContiguousTensor(tensor))
+                            throw std::runtime_error("OpenVINO constants must be contiguous");
+                        const auto type = ToOpenVINOType(tensor.Info().dtype);
+                        if (type == ov::element::dynamic)
+                            throw std::runtime_error("unsupported OpenVINO constant dtype");
+                        implementation.tensors[node.id] = std::make_shared<ov::opset13::Constant>(
+                            type, ToOpenVINOShape(tensor), tensor.Info().data);
+                    } else if (node.name == "input") {
+                        std::string name;
+                        for (uint64_t i = 0; i < node.attributes.Size(); ++i) {
+                            X::Value key, value;
+                            if (!node.attributes.DictEntry(i, key, value))
+                                throw std::runtime_error("invalid symbolic input attributes");
+                            if (key.ToString() == "name") name = value.ToString();
+                        }
+                        auto weight = implementation.GetWeight(name, m_error);
+                        if (!m_error.empty()) break;
+                        implementation.tensors[node.id] = weight;
+                    }
+                }
+            }
+            if (m_error.empty()) {
+                stage = "graph replay";
+                std::string replayError;
+                if (!ReplayTensorGraph(graph, *this, replayError) && m_error.empty())
+                    m_error = replayError;
+            }
+            if (m_error.empty()) {
+                stage = "graph outputs";
+                TensorGraphCapture capture(graph);
+                uint64_t outputId = 0;
+                const auto collect = [&outputId](const auto& self, const X::Value& value) -> void {
+                    if (IsTensor(value)) {
+                        const auto id = TensorId(value);
+                        if (outputId && outputId != id)
+                            throw std::runtime_error("compiled OpenVINO graph requires one tensor output");
+                        outputId = id;
+                    } else if (value.IsDict()) {
+                        for (uint64_t i = 0; i < value.Size(); ++i) {
+                            X::Value key, child;
+                            if (!value.DictEntry(i, key, child))
+                                throw std::runtime_error("invalid graph output dictionary");
+                            self(self, child);
+                        }
+                    } else if (value.IsList() || x3_value_object_kind(value.raw()) == X3_OBJECT_KIND_TUPLE) {
+                        for (uint64_t i = 0; i < value.Size(); ++i) self(self, value.Get(i));
+                    }
+                };
+                collect(collect, capture.Outputs());
+                const auto output = implementation.tensors.find(outputId);
+                if (output == implementation.tensors.end())
+                    throw std::runtime_error("declared OpenVINO graph output was not lowered");
+                implementation.lastOutput = output->second;
+            }
+            if (m_error.empty() && !implementation.lastOutput.get_node_shared_ptr()) {
+                m_error = "captured graph produced no OpenVINO output";
+            }
+            if (m_error.empty()) {
+                if (implementation.statefulDecode &&
+                    !implementation.externalNativeLMHead) {
+                    if (!implementation.keyState ||
+                        !implementation.valueState ||
+                        implementation.stateSinks.empty()) {
+                        m_error =
+                            "OpenVINO stateful decode cache variables are missing";
+                    }
+                    else {
+                        auto top = std::make_shared<ov::opset13::TopK>(
+                            implementation.lastOutput,
+                            I64Scalar(1),
+                            -1,
+                            "max",
+                            "none",
+                            ov::element::i64);
+                        implementation.lastOutput = top->output(1);
+                    }
+                }
+            }
+            if (m_error.empty()) {
+                if (!implementation.statefulDecode &&
+                    implementation.computeType == ov::element::f16 &&
+                    implementation.lastOutput.get_element_type() ==
+                        ov::element::f16) {
+                    implementation.lastOutput =
+                        std::make_shared<ov::opset13::Convert>(
+                            implementation.lastOutput,
+                            ov::element::bf16);
+                }
+                implementation.lastOutput.get_tensor().set_names({"output_0"});
+                ov::OutputVector modelOutputs{implementation.lastOutput};
+                for (const auto& write : implementation.cacheWrites) {
+                    const std::string name =
+                        std::string("cache_") +
+                        (write.key ? "key" : "value") + "_input_" +
+                        std::to_string(write.inputIndex) + "_layer_" +
+                        std::to_string(write.layerIndex);
+                    ov::Output<ov::Node> externalValue = write.value;
+                    const auto inputType =
+                        implementation.inputTypes.find(write.inputIndex);
+                    if (inputType != implementation.inputTypes.end() &&
+                        externalValue.get_element_type() !=
+                            inputType->second) {
+                        externalValue =
+                            std::make_shared<ov::opset13::Convert>(
+                                externalValue, inputType->second);
+                    }
+                    externalValue.get_tensor().set_names({name});
+                    modelOutputs.push_back(externalValue);
+                }
+                auto model = implementation.statefulDecode
+                    ? std::make_shared<ov::Model>(
+                        modelOutputs,
+                        implementation.stateSinks,
+                        implementation.parameters,
+                        implementation.stateVariables,
+                        "garnet_tensor_graph")
+                    : std::make_shared<ov::Model>(
+                        modelOutputs,
+                        implementation.parameters,
+                        "garnet_tensor_graph");
+#if defined(GARNET_CPU_ONLY)
+                auto sharedCore = SharedCPUCore();
+                auto& core = *sharedCore;
+#else
+                ov::Core core;
+#endif
+                ov::AnyMap compileProperties = OpenVINOCPURuntimeProperties();
+                if (implementation.computeType == ov::element::f16) {
+                    compileProperties[
+                        ov::hint::inference_precision.name()] =
+                        ov::element::f16;
+                    compileProperties[
+                        ov::hint::performance_mode.name()] =
+                        ov::hint::PerformanceMode::LATENCY;
+                }
+                const std::string device = OpenVINODevice();
+                if (implementation.int4WeightOnly &&
+                    device.rfind("CPU", 0) == 0) {
+                    compileProperties[
+                        ov::hint::performance_mode.name()] =
+                        ov::hint::PerformanceMode::LATENCY;
+                    compileProperties[
+                        ov::hint::execution_mode.name()] =
+                        ov::hint::ExecutionMode::PERFORMANCE;
+                    if (const char* groupSize = std::getenv(
+                            "GARNET_OPENVINO_CPU_DQ_GROUP_SIZE");
+                        groupSize && *groupSize) {
+                        compileProperties[
+                            ov::hint::dynamic_quantization_group_size.name()] =
+                            static_cast<uint64_t>(std::stoull(groupSize));
+                    }
+                    if (const char* threads = std::getenv(
+                            "GARNET_OPENVINO_CPU_THREADS");
+                        threads && *threads) {
+                        compileProperties[
+                            ov::inference_num_threads.name()] =
+                            static_cast<int32_t>(std::stoi(threads));
+                    }
+                    if (const char* hyperthreading = std::getenv(
+                            "GARNET_OPENVINO_CPU_HYPERTHREADING");
+                        hyperthreading && *hyperthreading) {
+                        compileProperties[
+                            ov::hint::enable_hyper_threading.name()] =
+                            std::string(hyperthreading) != "0";
+                    }
+                }
+                stage = "device compilation";
+                ov::CompiledModel compiled = core.compile_model(
+                    model, device, compileProperties);
+                if(memoryOnly) {
+                    stage="memory cache publication";
+                    auto execution=std::make_shared<CachedOpenVINOExecution>();
+                    execution->model=std::move(compiled);
+                    std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+                    g_openVINOCache[enginePath]=std::move(execution);
+                } else {
+                const std::filesystem::path outputPath(enginePath);
+                stage = "compiled model export";
+                std::filesystem::create_directories(outputPath.parent_path());
+                const std::filesystem::path temporary =
+                    outputPath.string() + ".tmp";
+                {
+                    std::ofstream stream(
+                        temporary, std::ios::binary | std::ios::trunc);
+                    compiled.export_model(stream);
+                }
+                std::error_code publishError;
+                std::filesystem::remove(outputPath, publishError);
+                publishError.clear();
+                std::filesystem::rename(temporary, outputPath, publishError);
+                if (publishError) {
+                    m_error = "failed to publish OpenVINO compiled model: " +
+                        publishError.message();
+                }
+                else {
+                    if (implementation.statefulDecode) {
+                        std::ofstream marker(
+                            NativeDecodeMarker(enginePath),
+                            std::ios::out | std::ios::trunc);
+                        marker <<
+                            "GARNET_XLANG_QWEN3_NATIVE_DECODE_V2\n";
+                    }
+                    std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+                    g_openVINOCache.erase(enginePath);
+                }
+                }
+            }
+        }
+        catch (const std::exception& exception) {
+            m_error = std::string("OpenVINO graph compilation failed during ") + stage + ": " +
+                exception.what();
+        }
+        m_implementation = nullptr;
+        m_loweringActive = false;
+        errorMessage = m_error;
+        return m_error.empty();
+#endif
+    }
+
+    bool OpenVINOBuilder::PrepareCapturedEngine(
+        const std::string& enginePath,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage)
+    {
+#if defined(GARNET_WITH_OPENVINO)
+        if (OpenVINOFullNativeCPUDecode() &&
+            std::filesystem::is_regular_file(
+                NativeDecodeMarker(enginePath))) {
+            if (!weightIndex) {
+                errorMessage =
+                    "full native CPU decode requires a checkpoint index";
+                return false;
+            }
+            std::lock_guard<std::mutex> guard(g_nativeDecodeCacheMutex);
+            if (g_nativeDecodeCache.find(enginePath) ==
+                g_nativeDecodeCache.end()) {
+                auto engine =
+                    std::make_shared<Qwen3NativeDecodeEngine>();
+                if (!engine->Prepare(
+                        *weightIndex,
+                        NativeDecodePackedCache(enginePath),
+                        errorMessage)) {
+                    return false;
+                }
+                g_nativeDecodeCache.emplace(enginePath, std::move(engine));
+            }
+            errorMessage.clear();
+            return true;
+        }
+        auto execution = LoadCompiledModel(enginePath, errorMessage);
+        if (!execution) return false;
+        if (OpenVINONativeCPUQ4Q8() && weightIndex &&
+            !execution->model.outputs().empty()) {
+            const SafeTensorMetadata* metadata =
+                weightIndex->Find("lm_head.weight");
+            const auto shape =
+                execution->model.output(0).get_partial_shape();
+            if (metadata && metadata->shape.size() == 2 &&
+                shape.rank().is_static() &&
+                shape.rank().get_length() == 3 &&
+                shape[2].is_static() &&
+                shape[2].get_length() == metadata->shape[1] &&
+                !GetNativeLMHead(execution, weightIndex, errorMessage)) {
+                return false;
+            }
+        }
+        errorMessage.clear();
+        return true;
+#else
+        errorMessage = "Garnet was built without the OpenVINO SDK";
+        return false;
+#endif
+    }
+
+    X::Value OpenVINOBuilder::RunCapturedEngine(
+        const std::string& enginePath,
+        X::Value inputsValue,
+        const SafeTensorsIndex* weightIndex,
+        X::Value,
+        bool resetState,
+        std::uint64_t sessionId,
+        std::string& errorMessage)
+    {
+#if !defined(GARNET_WITH_OPENVINO)
+        errorMessage = "Garnet was built without the OpenVINO SDK";
+        return X::Value();
+#else
+        if (!inputsValue.IsList()) {
+            errorMessage = "OpenVINO execution requires an inputs list";
+            return X::Value();
+        }
+        if (OpenVINOFullNativeCPUDecode() &&
+            std::filesystem::is_regular_file(
+                NativeDecodeMarker(enginePath))) {
+            std::shared_ptr<Qwen3NativeDecodeEngine> engine;
+            {
+                std::lock_guard<std::mutex> guard(
+                    g_nativeDecodeCacheMutex);
+                const auto found = g_nativeDecodeCache.find(enginePath);
+                if (found != g_nativeDecodeCache.end()) {
+                    engine = found->second;
+                }
+            }
+            if (!engine) {
+                errorMessage =
+                    "full native CPU decode was not prepared";
+                return X::Value();
+            }
+            X::Value inputs(inputsValue);
+            if (inputs.Size() != 7) {
+                errorMessage =
+                    "full native CPU decode requires seven graph inputs";
+                return X::Value();
+            }
+            X::Tensor tensors[7];
+            for (int index = 0; index < 7; ++index) {
+                X::Value value = inputs.Get(index);
+                if (!IsTensor(value)) {
+                    errorMessage =
+                        "full native CPU decode inputs must be tensors";
+                    return X::Value();
+                }
+                tensors[index] = X::Tensor(value);
+                if (tensors[index].Info().device_type !=
+                        0 ||
+                    !static_cast<unsigned char*>(tensors[index].Info().data)) {
+                    errorMessage =
+                        "full native CPU decode requires CPU tensors";
+                    return X::Value();
+                }
+            }
+            if (tensors[0].Info().dtype !=
+                    X3_TENSOR_INT64 ||
+                tensors[1].Info().dtype !=
+                    X3_TENSOR_INT64 ||
+                tensors[2].Info().dtype !=
+                    X3_TENSOR_BFLOAT16 ||
+                tensors[3].Info().dtype !=
+                    X3_TENSOR_BFLOAT16 ||
+                tensors[4].Info().dtype != X3_TENSOR_INT32 ||
+                tensors[5].Info().dtype != X3_TENSOR_INT32 ||
+                tensors[6].Info().dtype != X3_TENSOR_INT32 ||
+                tensors[2].Info().rank != 5 ||
+                tensors[3].Info().rank != 5) {
+                errorMessage =
+                    "full native CPU decode input contract is invalid";
+                return X::Value();
+            }
+            for (int dimension = 0; dimension < 5; ++dimension) {
+                if (TensorDimension(tensors[2], dimension) !=
+                    TensorDimension(tensors[3], dimension)) {
+                    errorMessage =
+                        "full native CPU key/value cache shapes differ";
+                    return X::Value();
+                }
+            }
+            int pageTableSize = 1;
+            for (int dimension = 0;
+                 dimension < tensors[4].Info().rank;
+                 ++dimension) {
+                const int size = TensorDimension(tensors[4], dimension);
+                if (size <= 0 || pageTableSize > INT_MAX / size) {
+                    errorMessage =
+                        "full native CPU page table shape is invalid";
+                    return X::Value();
+                }
+                pageTableSize *= size;
+            }
+            Qwen3NativeDecodeEngine::DecodeInput input;
+            std::vector<std::pair<X::Tensor, X3TensorAccess>> nativeAccess;
+            for (int i = 0; i < 7; ++i)
+                nativeAccess.emplace_back(tensors[i], (i == 2 || i == 3) ? X3_TENSOR_WRITE : X3_TENSOR_READ);
+            auto nativeUse = X::Tensor::AcquireMany(nativeAccess);
+            input.tokenId = *reinterpret_cast<const long long*>(
+                static_cast<unsigned char*>(tensors[0].Info().data));
+            input.position = *reinterpret_cast<const long long*>(
+                static_cast<unsigned char*>(tensors[1].Info().data));
+            input.keyCache = reinterpret_cast<std::uint16_t*>(
+                static_cast<unsigned char*>(tensors[2].Info().data));
+            input.valueCache = reinterpret_cast<std::uint16_t*>(
+                static_cast<unsigned char*>(tensors[3].Info().data));
+            input.pageTable = reinterpret_cast<const int*>(
+                static_cast<unsigned char*>(tensors[4].Info().data));
+            input.pageTableSize = pageTableSize;
+            input.pages = TensorDimension(tensors[2], 1);
+            input.pageSize = TensorDimension(tensors[2], 2);
+            input.contextLength = *reinterpret_cast<const int*>(
+                static_cast<unsigned char*>(tensors[5].Info().data));
+            input.slotPosition = *reinterpret_cast<const int*>(
+                static_cast<unsigned char*>(tensors[6].Info().data));
+            long long token = -1;
+            if (!engine->Decode(input, token, errorMessage)) {
+                return X::Value();
+            }
+            errorMessage.clear();
+            return X::Tensor::Create(inputsValue.host(), X3_TENSOR_INT64,
+                {1, 1, 1}, &token, sizeof(token));
+        }
+        auto execution = LoadCompiledModel(enginePath, errorMessage);
+        if (!execution) return X::Value();
+        try {
+            auto session = GetExecutionSession(execution, sessionId);
+            std::lock_guard<std::mutex> sessionGuard(session->mutex);
+            X::Value inputs(inputsValue);
+            ov::InferRequest& request = *session->request;
+            std::vector<X::Value> cpuCopies;
+            std::vector<std::pair<X::Tensor, X3TensorAccess>> access;
+            for (uint64_t i = 0; i < inputs.Size(); ++i) {
+                const auto value = inputs.Get(i);
+                if (IsTensor(value)) {
+                    X::Tensor tensor(value);
+                    if (tensor.Info().device_type == 0)
+                        access.emplace_back(tensor, tensor.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE);
+                }
+            }
+            cpuCopies.reserve(execution->model.inputs().size());
+            const std::regex inputName(R"(input_([0-9]+))");
+            for (size_t modelInputIndex = 0;
+                 modelInputIndex < execution->model.inputs().size();
+                 ++modelInputIndex) {
+                const auto inputPort =
+                    execution->model.input(modelInputIndex);
+                std::string name;
+                if (!inputPort.get_names().empty()) {
+                    name = *inputPort.get_names().begin();
+                }
+                std::smatch match;
+                if (!std::regex_match(name, match, inputName)) {
+                    errorMessage =
+                        "OpenVINO model input lacks original input identity";
+                    return X::Value();
+                }
+                const int originalIndex = std::stoi(match[1].str());
+                if (originalIndex < 0 || originalIndex >= inputs.Size()) {
+                    errorMessage =
+                        "OpenVINO execution input identity is out of range";
+                    return X::Value();
+                }
+                X::Value inputValue = inputs.Get(originalIndex);
+                if (!IsTensor(inputValue)) {
+                    errorMessage = "OpenVINO inputs must be X::Tensor values";
+                    return X::Value();
+                }
+                X::Tensor input(inputValue);
+                if (input.Info().device_type != 0) {
+                    inputValue = PrepareOpenVINOHostTensor(input);
+                    if (!IsTensor(inputValue)) {
+                        errorMessage = "failed to copy OpenVINO input to CPU";
+                        return X::Value();
+                    }
+                    input = X::Tensor(inputValue);
+                }
+                cpuCopies.push_back(inputValue);
+                access.emplace_back(input, input.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE);
+                const auto type = ToOpenVINOType(input.Info().dtype);
+                if (type == ov::element::dynamic || !static_cast<unsigned char*>(input.Info().data)) {
+                    errorMessage = "unsupported or empty OpenVINO input tensor";
+                    return X::Value();
+                }
+                request.set_input_tensor(
+                    modelInputIndex,
+                    ov::Tensor(type, ToOpenVINOShape(input), input.Info().data,
+                        ov::Strides(input.Info().strides,
+                            input.Info().strides + input.Info().rank)));
+            }
+            auto inputUse = X::Tensor::AcquireMany(access);
+            const auto variableStates = request.query_state();
+            if (!variableStates.empty() &&
+                (resetState || !session->stateInitialized)) {
+                const std::regex stateName(
+                    R"(cache_(key|value)_input_([0-9]+)_layer_([0-9]+))");
+                for (auto variableState : request.query_state()) {
+                    std::smatch match;
+                    const std::string name = variableState.get_name();
+                    if (!std::regex_match(name, match, stateName)) {
+                        errorMessage =
+                            "OpenVINO decode state identity is invalid: " +
+                            name;
+                        return X::Value();
+                    }
+                    const int originalIndex = std::stoi(match[2].str());
+                    const int layerIndex = std::stoi(match[3].str());
+                    if (originalIndex < 0 ||
+                        originalIndex >= inputs.Size() ||
+                        !IsTensor(inputs.Get(originalIndex))) {
+                        errorMessage =
+                            "OpenVINO decode state input is unavailable";
+                        return X::Value();
+                    }
+                    X::Tensor cache(inputs.Get(originalIndex));
+                    if (cache.Info().device_type !=
+                            0 ||
+                        !static_cast<unsigned char*>(cache.Info().data)) {
+                        errorMessage =
+                            "OpenVINO decode state requires a CPU cache seed";
+                        return X::Value();
+                    }
+                    const auto type =
+                        ToOpenVINOType(cache.Info().dtype);
+                    const ov::Tensor currentState =
+                        variableState.get_state();
+                    const size_t layerBytes =
+                        currentState.get_byte_size();
+                    const size_t offset =
+                        static_cast<size_t>(layerIndex) * layerBytes;
+                    if (offset + layerBytes >
+                        static_cast<size_t>(cache.Info().byte_size)) {
+                        errorMessage =
+                            "OpenVINO decode state seed exceeds cache input";
+                        return X::Value();
+                    }
+                    if (currentState.get_element_type() == type) {
+                        variableState.set_state(ov::Tensor(
+                            type,
+                            currentState.get_shape(),
+                            static_cast<unsigned char*>(cache.Info().data) + offset));
+                    }
+                    else if (
+                        type == ov::element::bf16 &&
+                        currentState.get_element_type() ==
+                            ov::element::f16) {
+                        const auto* source =
+                            reinterpret_cast<const ov::bfloat16*>(
+                                static_cast<unsigned char*>(cache.Info().data) + offset);
+                        ov::Tensor converted(
+                            ov::element::f16,
+                            currentState.get_shape());
+                        auto* destination =
+                            converted.data<ov::float16>();
+                        for (size_t element = 0;
+                             element < currentState.get_size();
+                             ++element) {
+                            destination[element] = ov::float16(
+                                static_cast<float>(source[element]));
+                        }
+                        variableState.set_state(converted);
+                    }
+                    else {
+                        errorMessage =
+                            "OpenVINO decode state seed type conversion "
+                            "is unsupported";
+                        return X::Value();
+                    }
+                }
+                session->stateInitialized = true;
+            }
+            request.infer();
+            if (!session->profileDumped) {
+                const char* profile = std::getenv("GARNET_OPENVINO_PROFILE");
+                if (profile && std::string(profile) == "1") {
+                    auto records = request.get_profiling_info();
+                    std::sort(
+                        records.begin(), records.end(),
+                        [](const ov::ProfilingInfo& left,
+                           const ov::ProfilingInfo& right) {
+                            return left.real_time > right.real_time;
+                        });
+                    std::ofstream output(
+                        enginePath + ".profile.txt",
+                        std::ios::out | std::ios::trunc);
+                    for (const auto& record : records) {
+                        output << record.real_time.count() << '\t'
+                               << record.cpu_time.count() << '\t'
+                               << record.node_type << '\t'
+                               << record.exec_type << '\t'
+                               << record.node_name << '\n';
+                    }
+                    session->profileDumped = true;
+                }
+            }
+            const std::regex cacheName(
+                R"(cache_(key|value)_input_([0-9]+)_layer_([0-9]+))");
+            for (size_t outputIndex = 1;
+                 outputIndex < execution->model.outputs().size();
+                 ++outputIndex) {
+                const auto outputPort = execution->model.output(outputIndex);
+                std::string outputName;
+                if (!outputPort.get_names().empty()) {
+                    outputName = *outputPort.get_names().begin();
+                }
+                std::smatch match;
+                if (!std::regex_match(outputName, match, cacheName)) continue;
+                const int inputIndex = std::stoi(match[2].str());
+                const int layerIndex = std::stoi(match[3].str());
+                if (inputIndex < 0 || inputIndex >= inputs.Size()) {
+                    errorMessage = "OpenVINO cache output input index is invalid";
+                    return X::Value();
+                }
+                X::Tensor cache(inputs.Get(inputIndex));
+                if (cache.Info().device_type != 0 ||
+                    !static_cast<unsigned char*>(cache.Info().data) || cache.Info().rank < 1) {
+                    errorMessage =
+                        "OpenVINO Qwen cache inputs must be CPU tensors";
+                    return X::Value();
+                }
+                const ov::Tensor cacheOutput =
+                    request.get_output_tensor(outputIndex);
+                const size_t layerBytes = cacheOutput.get_byte_size();
+                const size_t offset =
+                    static_cast<size_t>(layerIndex) * layerBytes;
+                if (offset + layerBytes >
+                    static_cast<size_t>(cache.Info().byte_size)) {
+                    errorMessage = "OpenVINO cache write exceeds input tensor";
+                    return X::Value();
+                }
+                std::memcpy(
+                    static_cast<unsigned char*>(cache.Info().data) + offset,
+                    cacheOutput.data(),
+                    layerBytes);
+            }
+            const ov::Tensor outputTensor = request.get_output_tensor(0);
+            if (OpenVINONativeCPUQ4Q8() &&
+                outputTensor.get_element_type() == ov::element::f32 &&
+                outputTensor.get_shape().size() == 3) {
+                auto nativeLMHead = GetNativeLMHead(
+                    execution, weightIndex, errorMessage);
+                if (!nativeLMHead) return X::Value();
+                const auto& hiddenShape = outputTensor.get_shape();
+                if (hiddenShape[0] == 1 && hiddenShape[1] == 1 &&
+                    hiddenShape[2] ==
+                        static_cast<size_t>(nativeLMHead->Columns())) {
+                    std::vector<float> logits(
+                        static_cast<size_t>(nativeLMHead->Rows()));
+                    if (!nativeLMHead->Forward(
+                            outputTensor.data<const float>(),
+                            logits.data(),
+                            OpenVINONativeCPUThreads(),
+                            errorMessage)) {
+                        return X::Value();
+                    }
+                    const auto maximum = std::max_element(
+                        logits.begin(), logits.end());
+                    const int64_t token = static_cast<int64_t>(
+                        std::distance(logits.begin(), maximum));
+                    errorMessage.clear();
+                    return X::Tensor::Create(inputsValue.host(), X3_TENSOR_INT64,
+                        {1, 1, 1}, &token, sizeof(token));
+                }
+            }
+            const X3TensorDType outputType =
+                ToXLangType(outputTensor.get_element_type());
+            if (outputType == static_cast<X3TensorDType>(0)) {
+                errorMessage = "unsupported OpenVINO output dtype";
+                return X::Value();
+            }
+            std::vector<int64_t> shape;
+            shape.reserve(outputTensor.get_shape().size());
+            for (const size_t dimension : outputTensor.get_shape()) {
+                if (dimension > static_cast<size_t>(INT64_MAX))
+                    throw std::runtime_error("OpenVINO output dimension overflow");
+                shape.push_back(static_cast<int64_t>(dimension));
+            }
+            errorMessage.clear();
+            return X::Tensor::Create(inputsValue.host(), outputType, shape,
+                outputTensor.data(), outputTensor.get_byte_size());
+        }
+        catch (const std::exception& exception) {
+            errorMessage = std::string("OpenVINO inference failed: ") +
+                exception.what();
+            return X::Value();
+        }
+#endif
+    }
+
+#if defined(GARNET_CPU_ONLY)
+    void OpenVINOBuilder::ShutdownCPUBackend()
+    {
+#if defined(GARNET_WITH_OPENVINO)
+        std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+        if (!g_openVINOCache.empty())
+            throw std::runtime_error("close all CPU compiled graphs before backend shutdown");
+        std::lock_guard<std::mutex> coreGuard(g_openVINOCoreMutex);
+        g_openVINOCore.reset();
+#endif
+    }
+#endif
+
+    void OpenVINOBuilder::ReleaseCachedExecutions(const std::string& cacheRoot)
+    {
+#if defined(GARNET_WITH_OPENVINO)
+        {
+            std::lock_guard<std::mutex> guard(g_openVINOCacheMutex);
+            for (auto iterator = g_openVINOCache.begin();
+                 iterator != g_openVINOCache.end();) {
+                if (iterator->first.rfind(cacheRoot, 0) == 0) {
+                    iterator = g_openVINOCache.erase(iterator);
+                }
+                else {
+                    ++iterator;
+                }
+            }
+        }
+        {
+            std::lock_guard<std::mutex> guard(g_nativeDecodeCacheMutex);
+            for (auto iterator = g_nativeDecodeCache.begin();
+                 iterator != g_nativeDecodeCache.end();) {
+                if (iterator->first.rfind(cacheRoot, 0) == 0) {
+                    iterator = g_nativeDecodeCache.erase(iterator);
+                }
+                else {
+                    ++iterator;
+                }
+            }
+        }
+#else
+        (void)cacheRoot;
+#endif
+    }
+
+    void OpenVINOBuilder::ReleaseCachedSession(
+        const std::string& enginePath,
+        std::uint64_t sessionId)
+    {
+#if defined(GARNET_WITH_OPENVINO)
+        if (enginePath.empty() || sessionId == 0) return;
+        std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+        const auto found = g_openVINOCache.find(enginePath);
+        if (found == g_openVINOCache.end()) return;
+        {
+            std::lock_guard<std::mutex> sessionsGuard(
+                found->second->sessionsMutex);
+            found->second->sessions.erase(sessionId);
+            if (!found->second->sessions.empty()) return;
+        }
+        g_openVINOCache.erase(found);
+#else
+        (void)enginePath;
+        (void)sessionId;
+#endif
+    }
+
+    X::Value OpenVINOBuilder::HandleBinaryOp(
+        const std::string& opName,
+        X::Value,
+        X::ARGS&,
+        X::KWARGS& keywordParams,
+        X::Value input1,
+        X::Value input2,
+        X::Value output)
+    {
+        if (m_analysisActive) {
+            CapturedTensorOperation operation;
+            operation.index = static_cast<int>(m_analyzedOperations.size());
+            operation.name = opName;
+            if (input1.IsObject()) {
+                operation.inputTensorIds.push_back(TensorId(input1));
+            }
+            if (input2.IsObject()) {
+                operation.inputTensorIds.push_back(TensorId(input2));
+            }
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
+            m_analyzedOperations.push_back(std::move(operation));
+            return X::Value(true);
+        }
+#if !defined(GARNET_WITH_OPENVINO)
+        return X::Value();
+#else
+        if (!m_loweringActive || !m_implementation) return X::Value(true);
+        const uint64_t leftId = IsTensor(input1) ? TensorId(input1) : 0;
+        const uint64_t rightId = IsTensor(input2) ? TensorId(input2) : 0;
+        auto scalarType = ov::element::f32;
+        for (const auto id : {leftId, rightId}) {
+            const auto found = m_implementation->tensors.find(id);
+            if (found != m_implementation->tensors.end()) {
+                scalarType = found->second.get_element_type();
+                break;
+            }
+        }
+        auto operand = [&](const X::Value& value, uint64_t id) -> ov::Output<ov::Node> {
+            if (id) {
+                auto found = m_implementation->tensors.find(id);
+                return found == m_implementation->tensors.end() ? ov::Output<ov::Node>{} : found->second;
+            }
+            if (value.raw().tag == X3_TAG_INT64)
+                return ov::opset13::Constant::create(scalarType, ov::Shape{},
+                    std::vector<int64_t>{value.ToLongLong()});
+            if (value.raw().tag == X3_TAG_DOUBLE)
+                return ov::opset13::Constant::create(scalarType, ov::Shape{},
+                    std::vector<double>{value.ToDouble()});
+            return {};
+        };
+        const auto leftValue = operand(input1, leftId);
+        const auto rightValue = operand(input2, rightId);
+        if (!leftValue.get_node_shared_ptr() || !rightValue.get_node_shared_ptr()) {
+            m_error = "OpenVINO binary input is not available: " + opName;
+            return X::Value();
+        }
+        const auto outputId = TensorId(output);
+        const auto leftStateFound =
+            m_implementation->states.find(leftId);
+        Implementation::TensorState state =
+            leftStateFound != m_implementation->states.end()
+                ? leftStateFound->second
+                : Implementation::TensorState{};
+        auto keywordInt = [&](const char* name, int fallback) {
+            auto* item = FindKeyword(keywordParams, name);
+            return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
+        };
+        if(opName=="qwen35_replace_packed_hidden") {
+            const int dim=keywordInt("hidden_dim",0);
+            const auto leftShape=leftValue.get_shape(),rightShape=rightValue.get_shape();
+            if(dim<=0||leftShape.size()!=2||leftShape[1]<size_t(dim)||
+               rightShape!=ov::Shape{leftShape[0],size_t(dim)}) {
+                m_error="Qwen3.5 packed hidden replacement dimensions mismatch";return X::Value();
+            }
+            auto suffix=std::make_shared<ov::opset13::Slice>(leftValue,I64Vector({dim}),I64Vector({int64_t(leftShape[1])}),I64Vector({1}),I64Vector({1}));
+            const auto result=std::make_shared<ov::opset13::Concat>(ov::OutputVector{rightValue,suffix},1);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_concat_sequence") {
+            const auto a=leftValue.get_shape(),b=rightValue.get_shape();
+            if(a.size()<2||a.size()!=b.size()){m_error="sequence concat rank mismatch";return X::Value();}
+            for(size_t i=0;i<a.size();++i)if(i!=1&&a[i]!=b[i]){m_error="sequence concat shape mismatch";return X::Value();}
+            auto result=std::make_shared<ov::opset13::Concat>(ov::OutputVector{leftValue,rightValue},1);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_mask_chunk") {
+            const auto shape=leftValue.get_shape();
+            if(shape.size()!=3||rightValue.get_shape()!=ov::Shape{shape[0],shape[1]}){m_error="chunk mask shape mismatch";return X::Value();}
+            auto mask=std::make_shared<ov::opset13::Convert>(rightValue,ov::element::boolean);
+            auto result=std::make_shared<ov::opset13::Select>(Reshape(mask,{int64_t(shape[0]),int64_t(shape[1]),1}),leftValue,
+                ov::opset13::Constant::create(leftValue.get_element_type(),ov::Shape{},std::vector<float>{0}));
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_mask_rows") {
+            const auto shape=leftValue.get_shape();
+            if(shape.size()!=2||rightValue.get_shape()!=ov::Shape{shape[0]}) {
+                m_error="Qwen3.5 active row mask dimensions mismatch";return X::Value();
+            }
+            auto mask=std::make_shared<ov::opset13::Convert>(rightValue,ov::element::boolean);
+            auto result=std::make_shared<ov::opset13::Select>(Reshape(mask,{int64_t(shape[0]),1}),leftValue,
+                ov::opset13::Constant::create(leftValue.get_element_type(),ov::Shape{},std::vector<float>{0}));
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if (opName.rfind("qwen35_attention_bind_",0)==0) {
+            if(opName=="qwen35_attention_bind_key")state.fullKey=rightValue;
+            else if(opName=="qwen35_attention_bind_value")state.fullValue=rightValue;
+            else if(opName=="qwen35_attention_bind_positions")state.fullPositions=rightValue;
+            else if(opName=="qwen35_attention_bind_slots")state.fullSlots=rightValue;
+            else if(opName=="qwen35_attention_bind_active")state.fullActive=rightValue;
+            else {m_error="unknown Qwen3.5 full attention binding";return X::Value();}
+            m_implementation->states[outputId]=state;m_implementation->tensors[outputId]=leftValue;
+            m_implementation->lastOutput=leftValue;return X::Value(true);
+        }
+        if (opName.rfind("qwen35_conv_bind_", 0) == 0) {
+            if (!state.convToken.get_node_shared_ptr()) state.convToken = leftValue;
+            if (opName == "qwen35_conv_bind_weight") state.convWeight = rightValue;
+            else if (opName == "qwen35_conv_bind_state") state.convState = rightValue;
+            else if (opName == "qwen35_conv_bind_active") state.convActive = rightValue;
+            else { m_error = "unknown causal convolution binding"; return X::Value(); }
+            m_implementation->states[outputId] = state;
+            m_implementation->tensors[outputId] = leftValue;
+            m_implementation->lastOutput = leftValue;
+            return X::Value(true);
+        }
+        if (opName.rfind("qwen35_delta_bind_", 0) == 0) {
+            if (!state.query.get_node_shared_ptr()) state.query = leftValue;
+            if (opName == "qwen35_delta_bind_key") state.key = rightValue;
+            else if (opName == "qwen35_delta_bind_value") state.value = rightValue;
+            else if (opName == "qwen35_delta_bind_decay") state.deltaDecay = rightValue;
+            else if (opName == "qwen35_delta_bind_beta") state.deltaBeta = rightValue;
+            else if (opName == "qwen35_delta_bind_state") state.deltaState = rightValue;
+            else if (opName == "qwen35_delta_bind_active") state.deltaActive = rightValue;
+            else { m_error = "unknown gated delta binding"; return X::Value(); }
+            m_implementation->states[outputId] = state;
+            m_implementation->tensors[outputId] = leftValue;
+            m_implementation->lastOutput = leftValue;
+            return X::Value(true);
+        }
+        if (opName == "qwen3_apply_text_rope_packed") {
+            const int heads = keywordInt("num_heads", 0);
+            const int kvHeads = keywordInt("num_kv_heads", 0);
+            const int headDim = keywordInt("head_dim", 0);
+            auto* thetaItem = FindKeyword(keywordParams, "rope_theta");
+            const float theta = thetaItem
+                ? static_cast<float>(thetaItem->second.ToDouble())
+                : 10000.0F;
+            if (!state.query.get_node_shared_ptr() ||
+                !state.key.get_node_shared_ptr() ||
+                !state.value.get_node_shared_ptr() ||
+                heads <= 0 || kvHeads <= 0 || headDim <= 0) {
+                m_error = "OpenVINO text RoPE is missing packed QKV metadata";
+                return X::Value();
+            }
+            state.query = ApplyRotary(
+                state.query, rightValue, headDim, theta);
+            state.key = ApplyRotary(
+                state.key, rightValue, headDim, theta);
+            auto packedHeads = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{state.query, state.key, state.value}, 2);
+            const auto packedShape = packedHeads->get_output_partial_shape(0);
+            auto packed = Reshape(
+                packedHeads, {
+                    packedShape[0].get_length(),
+                    packedShape[1].get_length(),
+                    static_cast<int64_t>(heads + 2 * kvHeads) * headDim});
+            m_implementation->tensors[outputId] = packed;
+            m_implementation->states[outputId] = state;
+            m_implementation->lastOutput = packed;
+            return X::Value(true);
+        }
+        if (
+            opName == "paged_kv_bind_key_pages" ||
+            opName == "paged_kv_bind_value_pages" ||
+            opName == "paged_kv_bind_page_table" ||
+            opName == "paged_kv_bind_context_length" ||
+            opName == "paged_kv_bind_slot_position") {
+            if (opName == "paged_kv_bind_key_pages" ||
+                opName == "paged_kv_bind_value_pages") {
+                const auto cache = m_implementation->cacheViews.find(
+                    TensorId(input2));
+                if (cache == m_implementation->cacheViews.end()) {
+                    m_error = "OpenVINO paged-KV binding is missing layer view";
+                    return X::Value();
+                }
+                if (opName == "paged_kv_bind_key_pages") {
+                    state.keyCache = cache->second;
+                }
+                else {
+                    state.valueCache = cache->second;
+                }
+            }
+            else if (opName == "paged_kv_bind_page_table") {
+                state.pageTable = rightValue;
+            }
+            else if (opName == "paged_kv_bind_context_length") {
+                state.contextLength = rightValue;
+            }
+            else {
+                state.slotPosition = rightValue;
+            }
+            m_implementation->tensors[outputId] = leftValue;
+            m_implementation->states[outputId] = state;
+            m_implementation->lastOutput = leftValue;
+            return X::Value(true);
+        }
+        if (opName == "paged_attention_packed") {
+            const int heads = keywordInt("num_heads", 0);
+            const int kvHeads = keywordInt("num_key_value_heads", 0);
+            const int headDim = keywordInt("head_dim", 0);
+            if (!state.query.get_node_shared_ptr() ||
+                !state.key.get_node_shared_ptr() ||
+                !state.value.get_node_shared_ptr()) {
+                m_error = "OpenVINO prefill attention is missing QKV state";
+                return X::Value();
+            }
+            auto attended = GroupedAttention(
+                state.query, state.key, state.value, rightValue,
+                heads, kvHeads, headDim, true);
+            m_implementation->tensors[outputId] = attended;
+            m_implementation->lastOutput = attended;
+            return X::Value(true);
+        }
+        std::shared_ptr<ov::Node> node;
+        if (opName == "add") {
+            node = std::make_shared<ov::opset13::Add>(leftValue, rightValue);
+        }
+        else if (opName == "mul") {
+            node = std::make_shared<ov::opset13::Multiply>(leftValue, rightValue);
+        }
+        else if (opName == "minus" || opName == "sub") {
+            node = std::make_shared<ov::opset13::Subtract>(leftValue, rightValue);
+        }
+        else if (opName == "div") {
+            node = std::make_shared<ov::opset13::Divide>(leftValue, rightValue);
+        }
+        else if (opName == "matmul") {
+            node = std::make_shared<ov::opset13::MatMul>(
+                leftValue, rightValue, false, false);
+        }
+        else if (opName == "linear") {
+            node = std::make_shared<ov::opset13::MatMul>(
+                leftValue, rightValue, false, true);
+        }
+        else {
+            m_error = "unsupported OpenVINO binary operation: " + opName;
+            return X::Value();
+        }
+        const auto lowered = node->output(0);
+        m_implementation->tensors[outputId] = lowered;
+        m_implementation->lastOutput = lowered;
+        return X::Value(true);
+#endif
+    }
+
+    X::Value OpenVINOBuilder::HandleUnaryOp(
+        const std::string& opName,
+        X::Value,
+        X::ARGS&,
+        X::KWARGS& keywordParams,
+        X::Value input,
+        X::Value output)
+    {
+        if (m_analysisActive) {
+            CapturedTensorOperation operation;
+            operation.index = static_cast<int>(m_analyzedOperations.size());
+            operation.name = opName;
+            if (input.IsObject()) {
+                operation.inputTensorIds.push_back(TensorId(input));
+            }
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
+            m_analyzedOperations.push_back(std::move(operation));
+            return X::Value(true);
+        }
+#if !defined(GARNET_WITH_OPENVINO)
+        return X::Value();
+#else
+        if (!m_loweringActive || !m_implementation) return X::Value(true);
+        const auto source = m_implementation->tensors.find(TensorId(input));
+        if (source == m_implementation->tensors.end()) {
+            m_error = "OpenVINO unary input is not available: " + opName;
+            return X::Value();
+        }
+        const auto inputId = TensorId(input);
+        const auto outputId = TensorId(output);
+        const auto sourceStateFound = m_implementation->states.find(inputId);
+        Implementation::TensorState state =
+            sourceStateFound != m_implementation->states.end()
+                ? sourceStateFound->second
+                : Implementation::TensorState{};
+        auto keywordInt = [&](const char* name, int fallback) {
+            auto* item = FindKeyword(keywordParams, name);
+            return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
+        };
+        if(opName=="qwen35_chunk_token") {
+            auto shape=source->second.get_shape();const int index=keywordInt("index",-1);
+            if((shape.size()!=2&&shape.size()!=3)||index<0||size_t(index)>=shape[1]){m_error="chunk token index/shape mismatch";return X::Value();}
+            auto value=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({index}),I64Vector({index+1}),I64Vector({1}),I64Vector({1}));
+            std::vector<int64_t> target{int64_t(shape[0])};if(shape.size()==3)target.push_back(int64_t(shape[2]));
+            auto result=std::make_shared<ov::opset13::Reshape>(value,
+                ov::opset13::Constant::create(ov::element::i64,ov::Shape{target.size()},target),false);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_vision_encoder") {
+            auto lookup=[&](const std::string& name)->ov::Output<ov::Node>{
+                auto value=m_implementation->GetWeight(name,m_error);
+                if(!m_error.empty())throw std::invalid_argument(m_error);return value;
+            };
+            auto* theta=FindKeyword(keywordParams,"rope_theta");
+            auto result=LowerQwen35Vision(source->second,lookup,keywordInt("grid_h",0),keywordInt("grid_w",0),
+                keywordInt("hidden_size",0),keywordInt("num_heads",0),keywordInt("depth",0),keywordInt("patch_size",0),
+                keywordInt("temporal_patch_size",0),keywordInt("in_channels",0),keywordInt("spatial_merge_size",0),
+                keywordInt("num_position_embeddings",0),keywordInt("out_hidden_size",0),theta?float(theta->second.ToDouble()):10000.f);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_attention_step") {
+            auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
+            if(!prefixItem) {m_error="Qwen3.5 full attention requires checkpoint prefix";return X::Value();}
+            for(auto value:{state.fullKey,state.fullValue,state.fullPositions,state.fullSlots,state.fullActive})
+                if(!value.get_node_shared_ptr()){m_error="Qwen3.5 full attention is missing a bound input";return X::Value();}
+            auto prefix=prefixItem->second.ToString();
+            auto weight=[&](const char* suffix){return m_implementation->GetWeight(prefix+suffix,m_error);};
+            Qwen35AttentionWeights weights{weight(".q_proj.weight"),weight(".k_proj.weight"),weight(".v_proj.weight"),
+                weight(".o_proj.weight"),weight(".q_norm.weight"),weight(".k_norm.weight")};
+            if(!m_error.empty())return X::Value();
+            auto number=[&](const char* name,double fallback){auto* item=FindKeyword(keywordParams,name);return item?item->second.ToDouble():fallback;};
+            const auto result=LowerQwen35AttentionStep(source->second,state.fullKey,state.fullValue,state.fullPositions,state.fullSlots,state.fullActive,
+                weights,keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),keywordInt("rotary_dim",0),
+                {keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},float(number("rope_theta",10000000)),float(number("eps",1e-6)));
+            const auto shape=result.output.get_shape();
+            const auto packed=std::make_shared<ov::opset13::Concat>(ov::OutputVector{result.output,
+                Reshape(result.keyCache,{int64_t(shape[0]),-1}),Reshape(result.valueCache,{int64_t(shape[0]),-1})},-1);
+            m_implementation->tensors[outputId]=packed;m_implementation->lastOutput=packed;return X::Value(true);
+        }
+        if(opName=="qwen35_attention_output"||opName=="qwen35_attention_key_cache"||opName=="qwen35_attention_value_cache") {
+            const int hidden=keywordInt("hidden_dim",0),kv=keywordInt("num_kv_heads",0),dim=keywordInt("head_dim",0),capacity=keywordInt("capacity",0);
+            const auto shape=source->second.get_shape();
+            const int64_t width=int64_t(kv)*dim*capacity;
+            if(hidden<=0||kv<=0||dim<=0||capacity<=0||shape.size()!=2||shape[1]!=uint64_t(hidden+2*width)) {
+                m_error="Qwen3.5 full attention packed dimensions mismatch";return X::Value();
+            }
+            int64_t start=0,end=hidden;
+            std::vector<int64_t> resultShape{int64_t(shape[0]),hidden};
+            if(opName!="qwen35_attention_output") {
+                start=hidden+(opName=="qwen35_attention_value_cache"?width:0);end=start+width;
+                resultShape={int64_t(shape[0]),kv,capacity,dim};
+            }
+            auto slice=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({start}),I64Vector({end}),I64Vector({1}),I64Vector({1}));
+            auto result=std::make_shared<ov::opset13::Reshape>(slice,
+                ov::opset13::Constant::create(ov::element::i64,ov::Shape{resultShape.size()},resultShape),false);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if (opName == "qwen35_linear_output" || opName == "qwen35_linear_conv_state" ||
+            opName == "qwen35_linear_recurrent_state") {
+            const int hidden=keywordInt("hidden_dim",0),kh=keywordInt("key_heads",0),vh=keywordInt("value_heads",0);
+            const int kd=keywordInt("key_dim",0),vd=keywordInt("value_dim",0),kernel=keywordInt("kernel_size",0);
+            const auto shape=source->second.get_shape();
+            if(hidden<=0||kh<=0||vh<=0||kd<=0||vd<=0||kernel<=0||shape.size()!=2) {
+                m_error="Qwen3.5 linear packed dimensions are invalid";return X::Value();
+            }
+            const int64_t channels=2LL*kh*kd+int64_t(vh)*vd;
+            const int64_t convWidth=channels*kernel,stateWidth=int64_t(vh)*kd*vd;
+            if(shape[1]!=uint64_t(hidden+convWidth+stateWidth)) {
+                m_error="Qwen3.5 linear packed width does not match configuration";return X::Value();
+            }
+            int64_t start=0,end=hidden;
+            std::vector<int64_t> resultShape{int64_t(shape[0]),hidden};
+            if(opName=="qwen35_linear_conv_state") {
+                start=hidden;end=hidden+convWidth;
+                resultShape={int64_t(shape[0]),channels,kernel};
+            }else if(opName=="qwen35_linear_recurrent_state") {
+                start=hidden+convWidth;end=start+stateWidth;
+                resultShape={int64_t(shape[0]),vh,kd,vd};
+            }
+            auto slice=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({start}),I64Vector({end}),I64Vector({1}),I64Vector({1}));
+            const auto result=std::make_shared<ov::opset13::Reshape>(slice,
+                ov::opset13::Constant::create(ov::element::i64,ov::Shape{resultShape.size()},resultShape),false);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if (opName == "qwen35_linear_step") {
+            auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
+            if(!prefixItem || !state.convState.get_node_shared_ptr() ||
+               !state.deltaState.get_node_shared_ptr() || !state.convActive.get_node_shared_ptr()) {
+                m_error="Qwen3.5 linear attention requires weight prefix and bound states";
+                return X::Value();
+            }
+            const auto prefix=prefixItem->second.ToString();
+            auto weight=[&](const char* suffix){return m_implementation->GetWeight(prefix+suffix,m_error);};
+            Qwen35LinearWeights weights{weight(".in_proj_qkv.weight"),weight(".in_proj_z.weight"),
+                weight(".in_proj_b.weight"),weight(".in_proj_a.weight"),weight(".conv1d.weight"),
+                weight(".A_log"),weight(".dt_bias"),weight(".norm.weight"),weight(".out_proj.weight")};
+            if(!m_error.empty())return X::Value();
+            auto* epsilonItem=FindKeyword(keywordParams,"eps");
+            const auto result=LowerQwen35LinearStep(source->second,state.convState,state.deltaState,state.convActive,
+                weights,keywordInt("key_heads",0),keywordInt("value_heads",0),keywordInt("key_dim",0),keywordInt("value_dim",0),
+                epsilonItem?float(epsilonItem->second.ToDouble()):1e-6f);
+            const auto shape=result.output.get_shape();
+            auto flatten=[&](ov::Output<ov::Node> tensor){return Reshape(tensor,{int64_t(shape[0]),-1});};
+            const auto packed=std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{result.output,flatten(result.convState),flatten(result.recurrentState)},-1);
+            m_implementation->tensors[outputId]=packed;
+            m_implementation->lastOutput=packed;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_conv_step") {
+            for (auto operand : {state.convToken,state.convWeight,state.convState,state.convActive}) {
+                if (!operand.get_node_shared_ptr()) {
+                    m_error = "causal convolution is missing a bound input";
+                    return X::Value();
+                }
+            }
+            const auto result = LowerCausalConvStep(state.convToken,state.convWeight,state.convState,state.convActive);
+            const auto packed = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{std::make_shared<ov::opset13::Unsqueeze>(result.output,I64Vector({-1})),result.state},-1);
+            m_implementation->tensors[outputId] = packed;
+            m_implementation->lastOutput = packed;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_conv_output" || opName == "qwen35_conv_state") {
+            const int kernel = keywordInt("kernel_size",0);
+            const auto shape = source->second.get_shape();
+            if(kernel<=0 || shape.size()!=3 || shape[2]!=uint64_t(kernel)+1) {
+                m_error = "causal convolution packed shape is invalid";
+                return X::Value();
+            }
+            const bool wantState=opName=="qwen35_conv_state";
+            auto values=std::make_shared<ov::opset13::Slice>(source->second,
+                I64Vector({wantState?1:0}),I64Vector({wantState?kernel+1:1}),I64Vector({1}),I64Vector({-1}));
+            ov::Output<ov::Node> result=values;
+            if(!wantState) result=Reshape(values,{int64_t(shape[0]),int64_t(shape[1])});
+            m_implementation->tensors[outputId]=result;
+            m_implementation->lastOutput=result;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_delta_output" || opName == "qwen35_delta_state") {
+            const int keyDim = keywordInt("key_dim", 0);
+            const int valueDim = keywordInt("value_dim", 0);
+            const auto shape = source->second.get_shape();
+            if (keyDim <= 0 || valueDim <= 0 || shape.size() != 3 ||
+                shape[2] != uint64_t(valueDim)*(uint64_t(keyDim)+1)) {
+                m_error = "gated delta packed output shape is invalid";
+                return X::Value();
+            }
+            const bool wantState = opName == "qwen35_delta_state";
+            auto values = std::make_shared<ov::opset13::Slice>(source->second,
+                I64Vector({wantState ? valueDim : 0}),
+                I64Vector({wantState ? int64_t(shape[2]) : valueDim}),
+                I64Vector({1}), I64Vector({-1}));
+            ov::Output<ov::Node> result = values;
+            if (wantState) result = Reshape(values,
+                {int64_t(shape[0]),int64_t(shape[1]),keyDim,valueDim});
+            m_implementation->tensors[outputId] = result;
+            m_implementation->lastOutput = result;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_delta_step") {
+            for (auto operand : {state.query, state.key, state.value, state.deltaDecay,
+                                 state.deltaBeta, state.deltaState, state.deltaActive}) {
+                if (!operand.get_node_shared_ptr()) {
+                    m_error = "gated delta step is missing a bound input";
+                    return X::Value();
+                }
+            }
+            const auto result = LowerGatedDelta(state.query, state.key, state.value,
+                state.deltaDecay, state.deltaBeta, state.deltaState, state.deltaActive);
+            const auto shape = result.output.get_shape();
+            const auto stateShape = result.state.get_shape();
+            const auto flatState = Reshape(result.state,
+                {int64_t(shape[0]), int64_t(shape[1]), int64_t(stateShape[2]*shape[2])});
+            const auto packed = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{result.output, flatState}, -1);
+            m_implementation->tensors[outputId] = packed;
+            m_implementation->lastOutput = packed;
+            return X::Value(true);
+        }
+        if (opName == "qwen3_text_qkv_packed") {
+            const int heads = keywordInt("num_heads", 0);
+            const int kvHeads = keywordInt("num_kv_heads", 0);
+            const int headDim = keywordInt("head_dim", 0);
+            auto* qName = FindKeyword(keywordParams, "q_weight_name");
+            auto* kName = FindKeyword(keywordParams, "k_weight_name");
+            auto* vName = FindKeyword(keywordParams, "v_weight_name");
+            auto* qNormName = FindKeyword(keywordParams, "q_norm_weight_name");
+            auto* kNormName = FindKeyword(keywordParams, "k_norm_weight_name");
+            if (!qName || !kName || !vName || !qNormName || !kNormName ||
+                heads <= 0 || kvHeads <= 0 || headDim <= 0) {
+                m_error = "OpenVINO packed text QKV parameters are invalid";
+                return X::Value();
+            }
+            const bool packedProjections =
+                OpenVINOPackedCPUProjections();
+            const auto qWeight = packedProjections
+                ? ov::Output<ov::Node>()
+                : m_implementation->GetWeight(
+                    qName->second.ToString(), m_error);
+            const auto kWeight = packedProjections
+                ? ov::Output<ov::Node>()
+                : m_implementation->GetWeight(
+                    kName->second.ToString(), m_error);
+            const auto vWeight = packedProjections
+                ? ov::Output<ov::Node>()
+                : m_implementation->GetWeight(
+                    vName->second.ToString(), m_error);
+            const auto qkvWeight = packedProjections
+                ? m_implementation->GetCombinedWeight(
+                    {
+                        qName->second.ToString(),
+                        kName->second.ToString(),
+                        vName->second.ToString(),
+                    },
+                    m_error)
+                : ov::Output<ov::Node>();
+            const auto qNorm = m_implementation->GetWeight(
+                qNormName->second.ToString(), m_error);
+            const auto kNorm = m_implementation->GetWeight(
+                kNormName->second.ToString(), m_error);
+            if (!m_error.empty()) return X::Value();
+            auto* epsilonItem = FindKeyword(keywordParams, "norm_eps");
+            const float epsilon = epsilonItem
+                ? static_cast<float>(epsilonItem->second.ToDouble())
+                : 1.0e-6F;
+            const auto shape = source->second.get_partial_shape();
+            const int64_t batch = shape[0].get_length();
+            const int64_t sequence = shape[1].get_length();
+            const int64_t qWidth =
+                static_cast<int64_t>(heads) * headDim;
+            const int64_t kvWidth =
+                static_cast<int64_t>(kvHeads) * headDim;
+            ov::Output<ov::Node> queryProjection;
+            ov::Output<ov::Node> keyProjection;
+            ov::Output<ov::Node> valueProjection;
+            if (packedProjections) {
+                auto qkvProjection =
+                    std::make_shared<ov::opset13::MatMul>(
+                        source->second, qkvWeight, false, true);
+                auto qkvSplit =
+                    std::make_shared<ov::opset13::VariadicSplit>(
+                        qkvProjection,
+                        I64Scalar(-1),
+                        I64Vector({qWidth, kvWidth, kvWidth}));
+                queryProjection = qkvSplit->output(0);
+                keyProjection = qkvSplit->output(1);
+                valueProjection = qkvSplit->output(2);
+            }
+            else {
+                queryProjection =
+                    std::make_shared<ov::opset13::MatMul>(
+                        source->second, qWeight, false, true);
+                keyProjection =
+                    std::make_shared<ov::opset13::MatMul>(
+                        source->second, kWeight, false, true);
+                valueProjection =
+                    std::make_shared<ov::opset13::MatMul>(
+                        source->second, vWeight, false, true);
+            }
+            state.query = Reshape(
+                queryProjection,
+                {batch, sequence, heads, headDim});
+            state.key = Reshape(
+                keyProjection,
+                {batch, sequence, kvHeads, headDim});
+            state.value = Reshape(
+                valueProjection,
+                {batch, sequence, kvHeads, headDim});
+            state.query = RMSNorm(state.query, qNorm, epsilon);
+            state.key = RMSNorm(state.key, kNorm, epsilon);
+            auto packedHeads = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{state.query, state.key, state.value}, 2);
+            auto packed = Reshape(
+                packedHeads,
+                {batch, sequence,
+                    static_cast<int64_t>(heads + 2 * kvHeads) * headDim});
+            m_implementation->tensors[outputId] = packed;
+            m_implementation->states[outputId] = state;
+            m_implementation->lastOutput = packed;
+            return X::Value(true);
+        }
+        if (opName == "paged_kv_select_layer") {
+            const int layerIndex = keywordInt("layer_idx", -1);
+            const auto parameter =
+                m_implementation->parameterIndices.find(inputId);
+            if (layerIndex < 0 ||
+                parameter == m_implementation->parameterIndices.end()) {
+                m_error = "OpenVINO paged-KV layer selection is invalid";
+                return X::Value();
+            }
+            bool key = false;
+            ov::Output<ov::Node> layer;
+            std::shared_ptr<ov::op::util::Variable> variable;
+            if (m_implementation->statefulDecode) {
+                const Implementation::StatefulCacheSeed* seed = nullptr;
+                if (m_implementation->keyState &&
+                    inputId == m_implementation->keyState->tensorId) {
+                    key = true;
+                    seed = &*m_implementation->keyState;
+                }
+                else if (m_implementation->valueState &&
+                    inputId == m_implementation->valueState->tensorId) {
+                    seed = &*m_implementation->valueState;
+                }
+                else {
+                    m_error =
+                        "OpenVINO stateful cache tensor identity is invalid";
+                    return X::Value();
+                }
+                const std::string variableName =
+                    std::string("cache_") +
+                    (key ? "key" : "value") + "_input_" +
+                    std::to_string(seed->inputIndex) + "_layer_" +
+                    std::to_string(layerIndex);
+                ov::op::util::VariableInfo variableInfo{
+                    ov::PartialShape(seed->layerShape),
+                    seed->stateType,
+                    variableName};
+                variable =
+                    std::make_shared<ov::op::util::Variable>(
+                        std::move(variableInfo));
+                auto read = std::make_shared<ov::op::v6::ReadValue>(
+                    variable);
+                layer = seed->stateType == seed->type
+                    ? ov::Output<ov::Node>(read)
+                    : ov::Output<ov::Node>(
+                        std::make_shared<ov::opset13::Convert>(
+                            read, seed->type));
+                m_implementation->stateVariables.push_back(variable);
+            }
+            else {
+                layer = std::make_shared<ov::opset13::Gather>(
+                    source->second, I64Scalar(layerIndex), I64Scalar(0));
+            }
+            Implementation::CacheView view{
+                layer,
+                parameter->second,
+                layerIndex,
+                key,
+                variable,
+                m_implementation->statefulDecode
+                    ? (key
+                        ? m_implementation->keyState->stateType
+                        : m_implementation->valueState->stateType)
+                    : layer.get_element_type()};
+            m_implementation->tensors[outputId] = layer;
+            m_implementation->cacheViews[outputId] = view;
+            m_implementation->lastOutput = layer;
+            return X::Value(true);
+        }
+        if (
+            opName == "paged_kv_prefill_write_bf16" ||
+            opName == "paged_kv_decode_bf16") {
+            const int heads = keywordInt("q_heads", 0);
+            const int kvHeads = keywordInt("kv_heads", 0);
+            const int headDim = keywordInt("head_dim", 0);
+            if (!state.keyCache || !state.valueCache ||
+                !state.query.get_node_shared_ptr() ||
+                !state.key.get_node_shared_ptr() ||
+                !state.value.get_node_shared_ptr()) {
+                m_error = "OpenVINO paged-KV operation is missing state";
+                return X::Value();
+            }
+            const auto layerShape =
+                state.keyCache->layer.get_partial_shape();
+            const int64_t pages = layerShape[0].get_length();
+            const int64_t pageSize = layerShape[1].get_length();
+            const int64_t capacity = pages * pageSize;
+            auto keyFlat = Reshape(
+                state.keyCache->layer, {capacity, kvHeads, headDim});
+            auto valueFlat = Reshape(
+                state.valueCache->layer, {capacity, kvHeads, headDim});
+            ov::Output<ov::Node> indices;
+            ov::Output<ov::Node> keyUpdates;
+            ov::Output<ov::Node> valueUpdates;
+            if (opName == "paged_kv_prefill_write_bf16") {
+                const int64_t sequence =
+                    state.key.get_partial_shape()[1].get_length();
+                std::vector<int64_t> indexValues(
+                    static_cast<size_t>(sequence));
+                for (int64_t index = 0; index < sequence; ++index) {
+                    indexValues[static_cast<size_t>(index)] = index;
+                }
+                indices = ov::opset13::Constant::create(
+                    ov::element::i64, ov::Shape{indexValues.size()},
+                    indexValues);
+                keyUpdates = Reshape(
+                    state.key, {sequence, kvHeads, headDim});
+                valueUpdates = Reshape(
+                    state.value, {sequence, kvHeads, headDim});
+            }
+            else {
+                if (!state.slotPosition.get_node_shared_ptr() ||
+                    !state.contextLength.get_node_shared_ptr()) {
+                    m_error =
+                        "OpenVINO decode requires slot and context tensors";
+                    return X::Value();
+                }
+                indices = Reshape(state.slotPosition, {1});
+                keyUpdates = Reshape(state.key, {1, kvHeads, headDim});
+                valueUpdates = Reshape(state.value, {1, kvHeads, headDim});
+            }
+            auto updatedKeyFlat =
+                std::make_shared<ov::opset13::ScatterUpdate>(
+                    keyFlat, indices, keyUpdates, I64Scalar(0));
+            auto updatedValueFlat =
+                std::make_shared<ov::opset13::ScatterUpdate>(
+                    valueFlat, indices, valueUpdates, I64Scalar(0));
+            auto updatedKey = Reshape(
+                updatedKeyFlat, {pages, pageSize, kvHeads, headDim});
+            auto updatedValue = Reshape(
+                updatedValueFlat, {pages, pageSize, kvHeads, headDim});
+            if (m_implementation->statefulDecode) {
+                if (!state.keyCache->variable ||
+                    !state.valueCache->variable) {
+                    m_error =
+                        "OpenVINO per-layer cache variables are missing";
+                    return X::Value();
+                }
+                ov::Output<ov::Node> keyStateValue = updatedKey;
+                ov::Output<ov::Node> valueStateValue = updatedValue;
+                if (updatedKey.get_element_type() !=
+                    state.keyCache->stateType) {
+                    keyStateValue =
+                        std::make_shared<ov::opset13::Convert>(
+                            updatedKey, state.keyCache->stateType);
+                }
+                if (updatedValue.get_element_type() !=
+                    state.valueCache->stateType) {
+                    valueStateValue =
+                        std::make_shared<ov::opset13::Convert>(
+                            updatedValue, state.valueCache->stateType);
+                }
+                m_implementation->stateSinks.push_back(
+                    std::make_shared<ov::op::v6::Assign>(
+                        keyStateValue, state.keyCache->variable));
+                m_implementation->stateSinks.push_back(
+                    std::make_shared<ov::op::v6::Assign>(
+                        valueStateValue, state.valueCache->variable));
+            }
+            else {
+                m_implementation->cacheWrites.push_back({
+                    updatedKey, state.keyCache->inputIndex,
+                    state.keyCache->layerIndex, true});
+                m_implementation->cacheWrites.push_back({
+                    updatedValue, state.valueCache->inputIndex,
+                    state.valueCache->layerIndex, false});
+            }
+            if (opName == "paged_kv_prefill_write_bf16") {
+                m_implementation->tensors[outputId] = source->second;
+                m_implementation->states[outputId] = state;
+                m_implementation->lastOutput = source->second;
+                return X::Value(true);
+            }
+            auto fullKey = Reshape(
+                updatedKeyFlat, {1, capacity, kvHeads, headDim});
+            auto fullValue = Reshape(
+                updatedValueFlat, {1, capacity, kvHeads, headDim});
+            auto range = std::make_shared<ov::opset13::Range>(
+                I64Scalar(0), I64Scalar(capacity), I64Scalar(1),
+                ov::element::i64);
+            auto context = std::make_shared<ov::opset13::Convert>(
+                Reshape(state.contextLength, {}), ov::element::i64);
+            auto valid = std::make_shared<ov::opset13::Less>(
+                range, context);
+            auto attended = GroupedAttention(
+                state.query, fullKey, fullValue, valid,
+                heads, kvHeads, headDim, false);
+            m_implementation->tensors[outputId] = attended;
+            m_implementation->lastOutput = attended;
+            return X::Value(true);
+        }
+        if (opName == "merge_attention_heads") {
+            // Attention lowerings return [batch, tokens, hidden] so backends
+            // can fuse the head transpose/reshape with the attention kernel.
+            m_implementation->tensors[outputId] = source->second;
+            m_implementation->lastOutput = source->second;
+            return X::Value(true);
+        }
+        std::shared_ptr<ov::Node> node;
+        if (opName == "neg") {
+            node = std::make_shared<ov::opset13::Negative>(source->second);
+        }
+        else if (opName == "exp") {
+            node = std::make_shared<ov::opset13::Exp>(source->second);
+        }
+        else if (opName == "reshape" || opName == "permute") {
+            const auto values = IntegerAttribute(keywordParams,
+                opName == "reshape" ? "shape" : "axes");
+            auto dimensions = ov::opset13::Constant::create(ov::element::i64,
+                ov::Shape{values.size()}, values);
+            if (opName == "reshape")
+                node = std::make_shared<ov::opset13::Reshape>(source->second, dimensions, false);
+            else
+                node = std::make_shared<ov::opset13::Transpose>(source->second, dimensions);
+        }
+        else if (opName == "sum") {
+            std::vector<int64_t> axes;
+            const auto* axis = FindKeyword(keywordParams, "axis");
+            if (axis && axis->second.raw().tag != X3_TAG_NONE) {
+                if (axis->second.raw().tag != X3_TAG_INT64)
+                    throw std::runtime_error("sum axis must be an integer");
+                axes.push_back(axis->second.ToLongLong());
+            } else {
+                const auto rank = source->second.get_partial_shape().rank().get_length();
+                for (int64_t i = 0; i < rank; ++i) axes.push_back(i);
+            }
+            auto dimensions = ov::opset13::Constant::create(ov::element::i64,
+                ov::Shape{axes.size()}, axes);
+            node = std::make_shared<ov::opset13::ReduceSum>(source->second, dimensions, false);
+        }
+        else if (opName == "relu") {
+            node = std::make_shared<ov::opset13::Relu>(source->second);
+        }
+        else if (opName == "sigmoid") {
+            node = std::make_shared<ov::opset13::Sigmoid>(source->second);
+        }
+        else if (opName == "tanh") {
+            node = std::make_shared<ov::opset13::Tanh>(source->second);
+        }
+        else if (opName == "silu") {
+            node = std::make_shared<ov::opset13::Swish>(source->second);
+        }
+        else if (opName == "gelu" || opName == "gelu_pytorch_tanh") {
+            node = std::make_shared<ov::opset13::Gelu>(
+                source->second,
+                opName == "gelu_pytorch_tanh"
+                    ? ov::op::GeluApproximationMode::TANH
+                    : ov::op::GeluApproximationMode::ERF);
+        }
+        else if (opName == "embedding") {
+            auto* weightName = FindKeyword(keywordParams, "weight_name");
+            if (!weightName) {
+                m_error = "OpenVINO embedding requires weight_name";
+                return X::Value();
+            }
+            const auto weight = m_implementation->GetWeight(
+                weightName->second.ToString(), m_error);
+            if (!weight.get_node_shared_ptr()) return X::Value();
+            const auto axis = ov::opset13::Constant::create(
+                ov::element::i64, ov::Shape{}, {0});
+            node = std::make_shared<ov::opset13::Gather>(
+                weight, source->second, axis);
+        }
+        else if (
+            opName == "linear" || opName == "qkv_linear" ||
+            opName == "q_proj" || opName == "k_proj" ||
+            opName == "v_proj" || opName == "o_proj" ||
+            opName == "gate_proj" || opName == "up_proj" ||
+            opName == "down_proj" || opName == "lm_head") {
+            auto* weightName = FindKeyword(keywordParams, "weight_name");
+            if (!weightName) {
+                m_error = "OpenVINO " + opName + " requires weight_name";
+                return X::Value();
+            }
+            if (opName == "lm_head" &&
+                m_implementation->statefulDecode &&
+                m_implementation->int4WeightOnly &&
+                OpenVINONativeCPUQ4Q8()) {
+                node = std::make_shared<ov::opset13::Convert>(
+                    source->second, ov::element::f32);
+                m_implementation->externalNativeLMHead = true;
+                const auto lowered = node->output(0);
+                m_implementation->tensors[outputId] = lowered;
+                m_implementation->lastOutput = lowered;
+                return X::Value(true);
+            }
+            const auto weight = m_implementation->GetWeight(
+                weightName->second.ToString(), m_error);
+            if (!weight.get_node_shared_ptr()) return X::Value();
+            auto projected = std::make_shared<ov::opset13::MatMul>(
+                source->second, weight, false, true);
+            auto* biasName = FindKeyword(keywordParams, "bias_name");
+            if (biasName && !biasName->second.IsNone() &&
+                !biasName->second.ToString().empty()) {
+                const auto bias = m_implementation->GetWeight(
+                    biasName->second.ToString(), m_error);
+                if (!bias.get_node_shared_ptr()) return X::Value();
+                node = std::make_shared<ov::opset13::Add>(projected, bias);
+            }
+            else {
+                node = projected;
+            }
+        }
+        else if (opName == "rms_norm" || opName == "qwen35_rms_norm") {
+            auto* weightName = FindKeyword(keywordParams, "weight_name");
+            if (!weightName) {
+                m_error = "OpenVINO rms_norm requires weight_name";
+                return X::Value();
+            }
+            const auto scale = m_implementation->GetWeight(
+                weightName->second.ToString(), m_error);
+            if (!scale.get_node_shared_ptr()) return X::Value();
+            const auto sourceType = source->second.get_element_type();
+            auto sourceFloat = std::make_shared<ov::opset13::Convert>(
+                source->second, ov::element::f32);
+            auto square = std::make_shared<ov::opset13::Multiply>(
+                sourceFloat, sourceFloat);
+            const int64_t lastAxis =
+                static_cast<int64_t>(source->second.get_partial_shape().rank().get_length()) - 1;
+            const auto axes = ov::opset13::Constant::create(
+                ov::element::i64, ov::Shape{1}, {lastAxis});
+            auto mean = std::make_shared<ov::opset13::ReduceMean>(
+                square, axes, true);
+            auto* epsilonItem = FindKeyword(keywordParams, "eps");
+            const float epsilon = epsilonItem
+                ? static_cast<float>(epsilonItem->second.ToDouble())
+                : 1.0e-6F;
+            const auto epsilonNode = ov::opset13::Constant::create(
+                ov::element::f32, ov::Shape{}, {epsilon});
+            auto variance = std::make_shared<ov::opset13::Add>(
+                mean, epsilonNode);
+            auto root = std::make_shared<ov::opset13::Sqrt>(variance);
+            auto normalized = std::make_shared<ov::opset13::Divide>(
+                sourceFloat, root);
+            ov::Output<ov::Node> scaleFloat = std::make_shared<ov::opset13::Convert>(
+                scale, ov::element::f32);
+            if(opName=="qwen35_rms_norm")scaleFloat=std::make_shared<ov::opset13::Add>(scaleFloat,
+                ov::opset13::Constant::create(ov::element::f32,ov::Shape{},std::vector<float>{1}));
+            auto scaled = std::make_shared<ov::opset13::Multiply>(
+                normalized, scaleFloat);
+            node = std::make_shared<ov::opset13::Convert>(
+                scaled, sourceType);
+        }
+        else if(opName=="qwen35_tied_head") {
+            auto weight=m_implementation->GetWeight("model.language_model.embed_tokens.weight",m_error);
+            if(!m_error.empty())return X::Value();
+            auto input=std::make_shared<ov::opset13::Convert>(source->second,ov::element::f32);
+            auto fpWeight=std::make_shared<ov::opset13::Convert>(weight,ov::element::f32);
+            node=std::make_shared<ov::opset13::MatMul>(input,fpWeight,false,true);
+        }
+        else if(opName=="qwen35_mlp") {
+            auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
+            if(!prefixItem){m_error="Qwen3.5 MLP requires checkpoint prefix";return X::Value();}
+            const auto prefix=prefixItem->second.ToString();
+            auto gate=m_implementation->GetWeight(prefix+".gate_proj.weight",m_error);
+            auto up=m_implementation->GetWeight(prefix+".up_proj.weight",m_error);
+            auto down=m_implementation->GetWeight(prefix+".down_proj.weight",m_error);
+            if(!m_error.empty())return X::Value();
+            const auto shape=source->second.get_shape(),gs=gate.get_shape();
+            if(shape.size()!=2||gs.size()!=2||gs[1]!=shape[1]||up.get_shape()!=gs||down.get_shape()!=ov::Shape{shape[1],gs[0]}) {
+                m_error="Qwen3.5 MLP weight dimensions mismatch";return X::Value();
+            }
+            auto fp=[](ov::Output<ov::Node> value)->ov::Output<ov::Node>{return std::make_shared<ov::opset13::Convert>(value,ov::element::f32);};
+            auto x=fp(source->second);
+            auto g=std::make_shared<ov::opset13::MatMul>(x,fp(gate),false,true);
+            auto u=std::make_shared<ov::opset13::MatMul>(x,fp(up),false,true);
+            auto product=std::make_shared<ov::opset13::Multiply>(std::make_shared<ov::opset13::Multiply>(g,std::make_shared<ov::opset13::Sigmoid>(g)),u);
+            node=std::make_shared<ov::opset13::MatMul>(product,fp(down),false,true);
+        }
+        else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
+            auto* gateName = FindKeyword(keywordParams, "gate_weight_name");
+            auto* upName = FindKeyword(keywordParams, "up_weight_name");
+            if (!gateName || !upName) {
+                m_error =
+                    "OpenVINO packed SwiGLU requires gate/up weight names";
+                return X::Value();
+            }
+            const bool packedProjections =
+                OpenVINOPackedCPUProjections();
+            const auto gateWeight = packedProjections
+                ? ov::Output<ov::Node>()
+                : m_implementation->GetWeight(
+                    gateName->second.ToString(), m_error);
+            const auto upWeight = packedProjections
+                ? ov::Output<ov::Node>()
+                : m_implementation->GetWeight(
+                    upName->second.ToString(), m_error);
+            const auto gateUpWeight = packedProjections
+                ? m_implementation->GetCombinedWeight(
+                    {
+                        gateName->second.ToString(),
+                        upName->second.ToString(),
+                    },
+                    m_error)
+                : ov::Output<ov::Node>();
+            if (!m_error.empty()) {
+                return X::Value();
+            }
+            // Combine the packed U4 values and per-block scales before
+            // dequantization. This preserves FullyConnectedCompressed while
+            // amortizing one projection launch across gate and up.
+            ov::Output<ov::Node> gate;
+            ov::Output<ov::Node> up;
+            if (packedProjections) {
+                auto gateUp = std::make_shared<ov::opset13::MatMul>(
+                    source->second, gateUpWeight, false, true);
+                auto gateUpSplit =
+                    std::make_shared<ov::opset13::Split>(
+                        gateUp, I64Scalar(-1), 2);
+                gate = gateUpSplit->output(0);
+                up = gateUpSplit->output(1);
+            }
+            else {
+                gate = std::make_shared<ov::opset13::MatMul>(
+                    source->second, gateWeight, false, true);
+                up = std::make_shared<ov::opset13::MatMul>(
+                    source->second, upWeight, false, true);
+            }
+            auto sigmoid = std::make_shared<ov::opset13::Sigmoid>(
+                gate);
+            auto silu = std::make_shared<ov::opset13::Multiply>(
+                gate, sigmoid);
+            node = std::make_shared<ov::opset13::Multiply>(
+                silu, up);
+        }
+        else {
+            m_error = "unsupported OpenVINO unary operation: " + opName;
+            return X::Value();
+        }
+        const auto lowered = node->output(0);
+        m_implementation->tensors[outputId] = lowered;
+        m_implementation->lastOutput = lowered;
+        return X::Value(true);
+#endif
+    }
+
+    X::Value OpenVINOBuilder::HandleBranchBegin(
+        const std::string&,
+        int,
+        unsigned long long,
+        int)
+    {
+        return X::Value(true);
+    }
+
+    X::Value OpenVINOBuilder::HandleBranchEnd()
+    {
+        return X::Value(true);
+    }
+}

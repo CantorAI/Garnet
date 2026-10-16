@@ -1,0 +1,26 @@
+[
+  {
+    "name": "vector-vision-primitive-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/build-paired-norm-rope-decode/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/logs/paired-norm-rope-native-checks-20261016/jobs/vector_vision_native_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 1.3790237922221422
+  }
+]

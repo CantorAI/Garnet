@@ -1,9 +1,9 @@
 # Private native paired normalization and RoPE investigation
 
-Status: all 34 fresh native correctness stages pass, with identical independent
-audits on Mac and Windows. The first complete six-profile native performance
-cohort is running. No model speed improvement is established; serving code
-is unchanged. Preserve the original failed archive audit described below.
+Status: all 34 fresh native correctness stages and all 72 complete native
+outputs pass identical independent Mac/Windows audits. The first native cohort
+fails the predeclared TTFT preservation screen. Reject this integration without
+a confirmation or promotion; accepted d52 serving source remains unchanged.
 
 After two complete unchanged component cohorts, select only Qwen3-0.6B and
 Qwen2.5-Coder-0.5B-Instruct matrix rows 1/2. VL and larger rows retain their
@@ -91,7 +91,8 @@ re-audit and exclusive quiet interval. At 05:44:42 UTC both processes are live,
 with the first text batch-1 profile started. It compares against accepted d52,
 keeps vector vision in both policies, preserves original inputs/limits and checks
 all six profiles. Its 72-output independent auditor also verifies actual
-prefill/every-decode route counts. No complete timing result is available yet.
+prefill/every-decode route counts. No complete timing result was available at
+that observation; the terminal screen and rejection are recorded below.
 All consumed shared tools/private source/library remain frozen until terminal
 and archived. Observation deadlines never stop or restart model jobs.
 
@@ -115,6 +116,60 @@ python3 ROOT/source/test2026/metal/finalize_paired_norm_rope_native_checks.py CA
 python3 ROOT/source/test2026/metal/finalize_paired_norm_rope_native_checks.py CANDIDATE ROOT/logs/paired-norm-rope-native-finalize-rearchive-20261016 54126 --rearchive
 python3 ROOT/source/test2026/metal/continue_paired_norm_rope_native.py CANDIDATE ROOT/logs/paired-norm-rope-native-continuation-rearchive-20261016 88835 --finalizer-folder ROOT/logs/paired-norm-rope-native-finalize-rearchive-20261016
 ```
+
+## Complete native screen rejects integration
+
+All six profiles exit 0 in 192.471940959 seconds; continuation 89012 exits 0
+in 212.306754458 seconds after archive, independent audit and fixed selection.
+The 6,096-file archive preserves all 72 complete outputs, 1,411 source files,
+1,225 external tools, source regeneration, original protocol/clock/output
+assertions and actual paired-route counts. The full72 audit and complete
+selection reproduce on Windows identically to the Mac result.
+[Full native audit](initial/verification.json),
+[fixed decision](decision-initial.json),
+[terminal controller evidence](continuation/archive-verification.json).
+
+Both unmet batch-1 decode profiles initially improve by >=1%, but text B2
+TTFT fraction 1.041447 and VL B1 fraction 1.039354 exceed the fixed 1.02
+limit. All decode fractions remain >=.98. Reject the cohort: no unchanged
+confirmation, promotion or fresh-vLLM target update. VL does not select the
+paired operation, so its observed timing difference does not establish a
+causal paired-kernel regression. Preserve all measurements without favorable
+retries or attributing every fluctuation to the changed arithmetic.
+
+Warm decode TPS below is per row; aggregate batch throughput is TPS times
+batch. Each warm mean contains four complete requests per policy, with
+initialization and first-after-initialization reported separately.
+
+| Native model | Batch | Decode TPS control / candidate | TTFT ms control / candidate | Decode fraction | TTFT fraction |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B | 1 | 73.9708 / 74.8739 | 35.8153 / 36.1245 | 1.012209 | 1.008635 |
+| Qwen3-0.6B | 2 | 72.4125 / 71.1536 | 56.2240 / 58.5543 | 0.982614 | 1.041447 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 87.5792 / 89.2419 | 26.9712 / 26.9179 | 1.018985 | 0.998025 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 84.3602 / 84.9848 | 43.3404 / 44.0795 | 1.007403 | 1.017052 |
+| Qwen3.5-0.8B | 1 | 60.5247 / 61.2086 | 166.7929 / 173.3569 | 1.011300 | 1.039354 |
+| Qwen3.5-0.8B | 2 | 55.4494 / 55.1732 | 287.1322 / 287.8045 | 0.995019 | 1.002341 |
+
+| Setup model | Batch | Init seconds control / candidate | First TTFT ms control / candidate | Mean individual-worker peak RSS delta MiB |
+| --- | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B | 1 | 3.535627 / 3.491857 | 132.2701 / 124.5547 | -9.2578 |
+| Qwen3-0.6B | 2 | 3.518889 / 3.529248 | 155.2070 / 144.7700 | 8.4297 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 2.830888 / 2.822134 | 104.9375 / 107.7498 | 3.7734 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 2.823166 / 2.829676 | 119.1115 / 118.0587 | 2.5000 |
+| Qwen3.5-0.8B | 1 | 5.495908 / 5.436055 | 269.0813 / 266.0117 | 26.6875 |
+| Qwen3.5-0.8B | 2 | 5.473739 / 5.456145 | 375.5852 / 388.7521 | 23.6641 |
+
+Peak RSS includes initialization and all worker activity. These differences do
+not isolate the paired primitive's memory allocation. Hardware caches remain
+unflushed; first-after-initialization is not a hardware-cold result.
+
+Archive identities:
+
+| Evidence | SHA256 |
+| --- | --- |
+| Complete native cohort, 6,096 files | `651a42cb20dfde3ddeb53056762d25cf146507713a3e1c9f34ecb5f3187f3ea6` |
+| Successful rearchive finalizer, 14 files | `8a426e1cfbc461a9ba6d92d8c1f51870828fd267334b59588db8761614fc9004` |
+| Terminal screen continuation, 1,254 files | `3ea1a512c785e20ed1f32a3676b3710f49d833b97630b220377f10f6a3c7bbee` |
 
 The full 2x decode / half-TTFT goal for all matched models and batches remains
 active. Fresh repeated vLLM-Metal measurements are required after any retained

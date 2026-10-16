@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T05:45:56.401409+00:00
+Generated UTC: 2026-10-16T06:01:33.300067+00:00
 
-Base HEAD at generation: `573f4fe8902d8ea246dd8b93e1a5c4cf2b514fe0`. Reports indexed: **184**.
+Base HEAD at generation: `fbaa2fc7914b19222929e2208ae9c805fd54f81c`. Reports indexed: **191**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -157,6 +157,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/compact-fused-projection-groups](../../../results/20261016/compact-fused-projection-groups/README.md) | Compact-aware independent decode projections |
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
 | [results/20261016/delta-value-tiles-addresses](../../../results/20261016/delta-value-tiles-addresses/README.md) | Wider delta value tiles CPU prerequisite |
+| [results/20261016/delta-value-tiles-gpu](../../../results/20261016/delta-value-tiles-gpu/README.md) | Wider delta value tiles GPU component investigation |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
 | [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
@@ -167,6 +168,12 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
 | [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
+| [results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/README.md) | xModel |
 | [results/20261016/paired-norm-rope-native](../../../results/20261016/paired-norm-rope-native/README.md) | Private native paired normalization and RoPE investigation |
 | [results/20261016/prepared-half-inverse](../../../results/20261016/prepared-half-inverse/README.md) | Exact half inverse CPU verification |
 | [results/20261016/prepared-qkv-native](../../../results/20261016/prepared-qkv-native/README.md) | Private native text Q/K/V fusion after repeated component selection |
