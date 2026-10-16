@@ -9,6 +9,7 @@
 #include "graph_capture.h"
 #include "md5.h"
 #include "trt_builder.h"
+#include "weight_streaming_policy.h"
 #include "openvino_builder.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
@@ -438,6 +439,9 @@ namespace
                  << "precision:" << precision << '\n'
                  << "tensorrt:" << NV_TENSORRT_VERSION << '\n'
                  << entryFunction << '\n';
+        if (backend == "tensorrt") {
+            material << Garnet::TRTWeightStreamingFingerprint();
+        }
         if (backend == "openvino") {
             const char* device = std::getenv("GARNET_OPENVINO_DEVICE");
             material << "openvino_runtime_schema:"
@@ -949,6 +953,17 @@ namespace Garnet
                 (m_frontend == "qwen3_asr" && m_inputShapes.size() == 9);
             const bool needsTTSRuntimes =
                 m_frontend == "qwen3_tts" && m_inputShapes.size() == 7;
+            // Decode compilation needs temporary GPU buffers. Build it before
+            // retaining prefill execution owners so those resident allocations
+            // do not overlap the TensorRT builder's peak memory. Model shapes,
+            // precision, workspace limits and both serving engines stay intact.
+            std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> decodeResult;
+            if (needsDecodeRuntime || needsTTSRuntimes) decodeResult = createDecodeRuntime();
+            if ((needsDecodeRuntime || needsTTSRuntimes) && !decodeResult.first) {
+                m_errorCode = "decode_runtime_initialization_failed";
+                m_errorMessage = decodeResult.second;
+                return false;
+            }
             std::string preparationError;
             bool prepared = false;
             if (m_backend == "openvino") {
@@ -988,13 +1003,6 @@ namespace Garnet
                 return false;
             }
             m_enginesPrepared = true;
-            std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> decodeResult;
-            if (needsDecodeRuntime || needsTTSRuntimes) decodeResult = createDecodeRuntime();
-            if ((needsDecodeRuntime || needsTTSRuntimes) && !decodeResult.first) {
-                m_errorCode = "decode_runtime_initialization_failed";
-                m_errorMessage = decodeResult.second;
-                return false;
-            }
             m_decodeRuntime = std::move(decodeResult.first);
             if (needsTTSRuntimes) {
                 int talkerHiddenSize = 0;

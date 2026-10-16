@@ -422,7 +422,8 @@ namespace Garnet::Image::QwenVL
                 throw std::invalid_argument("invalid JPEG device tensor dimensions");
             }
             int64_t shape[] = {deviceResult.patchCount, deviceResult.featureDim};
-            int64_t strides[] = {static_cast<int64_t>(deviceResult.featureDim) * sizeof(float), sizeof(float)};
+            constexpr int64_t elementStride = static_cast<int64_t>(sizeof(float));
+            int64_t strides[] = {static_cast<int64_t>(deviceResult.featureDim) * elementStride, elementStride};
             X3TensorInfo info{};
             info.size = sizeof(info);
             info.dtype = X3_TENSOR_FLOAT32;
