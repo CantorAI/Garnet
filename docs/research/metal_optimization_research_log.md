@@ -1349,6 +1349,36 @@ and failed before output; add a directory filter and rerun successfully. No
 raw benchmark edits or failed-analysis timing admitted.
 [Source identities, complete table and limits](../../results/20261016/vector-vision-native/README.md#retained-control-clock-breakdown-for-next-optimization-priorities).
 
+### 2026-10-16 UTC — exact three-half representation CPU evidence; MPS cost probe queued
+
+Respond to measured prefill GPU cost with a distinct precision-preserving
+representation hypothesis: bounded sourceFP32 equals three half-storage pieces
+at fixed scales0/11/22, rather than the earlier lossy BF16-feed activation cast.
+Actual Windows CPU study exits0:2,826,240 bounded synthetic source values
+reconstruct bitwise over six model/row shapes x4 scales. Finite exponent/mantissa
+edge sample4590 admits769, requires originalFP32 fallback3821. No universal
+coverage, actual model activation range/frequency, runtime fallback or speed
+claim. Final CPU evidence pins prospective probe source847f1dc1...; repeat
+after unqueued diagnostic reporting additions leaves all admission counts and
+numeric data unchanged.
+
+Prepare synthetic MPS product cost floor on model gate shapes: oneF32xF16
+versus threeF16xF16 products intoF32, scales/alpha1/2^-11/2^-22, beta0/1/1.
+Precomputed source planes and synthetic structured weights deliberately exclude
+GPU decomposition and learned/native admission. Original FP64/comparison bounds,
+source bits and all output/padding checks precede2s/10x5ABBA timings and own-null.
+Four finite diagnostics test product and scale/beta behavior, without assuming
+outputF32 proves every internal accumulator instruction. Apple API/spec fetch
+did not establish a precision guarantee; no third-party claim is used.
+
+Queue83151 watches exact compact controller73358, verified live; terminal,
+archived/audited dependencies and quiet guard required before compile/GPU.
+One probe only, preserve negative/exception outcomes; no native selection or
+favorable-repeat search. Freeze six consumed helpers. Current vector validation
+64007 remains live with16 completed stages, including all privateKV cases,
+serving, mixedimage and Qwen3.5/text layers. No full validation/TTFT gain yet.
+[Complete equations, CPU evidence, limits and command](../../results/20261016/half-triplet-lower-bound/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

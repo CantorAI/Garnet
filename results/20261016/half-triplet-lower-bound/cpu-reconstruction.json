@@ -1,0 +1,2092 @@
+{
+  "helper_source_sha256": "7ffff8672be98437364d8b5333d304cbea4140945a5e3e9f5aa3866f89dd04e5",
+  "probe_source_sha256": "847f1dc136dcbab13ff537b600ca575e3a7b174fe789bfe692dbc2a2fd01baee",
+  "versions": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+    "numpy": "2.3.5"
+  },
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 0,
+      "scale": 1,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "6b517d39eff105e463c623317c759677da2f44334d07af201041d9d716db0a7c",
+      "plane_sha256": [
+        "ca9c5036584d82be42733eebced6ef90d9f1561022af347cbb70a6c4779801db",
+        "23cfec9fc2dd56490aff032e411b637a123c228f7d4494756ce76b5146f6a1ad",
+        "3136ee1f60960d7805e5becbe565a42aea9f4374dd860f15a9faa8f45f885456"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 1,
+      "scale": -1,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "13dc1cf740354fdbe43f5213f0764ca751948c119af203b41252760335c02203",
+      "plane_sha256": [
+        "9dc1dd04163ece18ef9b3c087fcfd658450875edf93c5a1c4168185ee02855b0",
+        "93b8ec0ddde2482239db72eb7e511a018e06fe773eff4109a9b6ff001ea8b88f",
+        "cc6b64e75b19ca6d6e504952cd3368ee7dd42b63f612b337335d81282a42af2a"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 2,
+      "scale": 0.5,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "7d7fccfec4379807ea2bacd6ee6053b13134cf2697aea89f762fb8b0c481cc01",
+      "plane_sha256": [
+        "a89aef587b8a50b11158d3e0ae5daa23b5384fa29f72b760b2418390e34d99c3",
+        "c74437ff24ff03cc3a71895990c7ba01c326638a100e1c4dd62f8f71fb555914",
+        "f3fd750201397ebc3eac3529bdeb91d7547dd8d0ac8bb7d8692ab7a085549027"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 3,
+      "scale": 2,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "44a3691ee839465d610d581cd92c3a9344bc77c310e82eb69bb770fef14bca56",
+      "plane_sha256": [
+        "d6b9a49be08104aacfc798ed7258908a2ac530348f89c592788c80d65b1ff1ec",
+        "69836f029f090a8fdc4ad2e0a822ea01830b98243bebd2308ec91d5c8aac4781",
+        "71b2e81a7d8e9ec2356147285903f65acda63d0a87ac9da0e2442747af31b9c3"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 0,
+      "scale": 1,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "8abf79b9fce0378778faf54c418560d95353b8af2bc44fab791cdc46aeeb62b1",
+      "plane_sha256": [
+        "c50bc7407bca53b557b5e68cbfe81d46e7031de7fe088d418a4ac8674e3ea6e6",
+        "e543e2d0d7e497b59bb8d3b1d5225ccd7b5d40156c6ba567be89f180b16d9b4b",
+        "9d9830a44507a34046d37f5522d1f0809384ec80e4eb70848a9d4574569c8c99"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 1,
+      "scale": -1,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "c8fc9f63cc57c8a0937f3ae0b9b72290cbbb28e3b4085c512f26dba790c4de96",
+      "plane_sha256": [
+        "a71040be04032e4b4c3f1d413f070d90def340a8cfc4a82dba8a99607ebffe2f",
+        "442fd26707316cd0f798f79e75e95fb18c891e44aa893cd2eb5b2b9e9690fee7",
+        "69862e00e3db1413e2848d221e6ba63e16e75b4c06ed5f44b006523d1daaadae"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 2,
+      "scale": 0.5,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "b874ada1f4848dd26f019ccf54d20c24cb3977a02233e23ede2cc42b784da877",
+      "plane_sha256": [
+        "38bfc524a12da161bab4f8f11610d0d9b086b6766d34d343c7bb92533683a58a",
+        "7bd8f52391aa190a023acb496f20887664f4a4a9cd79b746fcdfcc8b689237b5",
+        "bbf1c1c30401f515668a04f269c4a8cb17c7ad79d887eea5c14de9b65b1c38a5"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 3,
+      "scale": 2,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "b0d6eecc5af754ee1b3ee0c76a0822b022a68986466e5b08a8c4912f00567ae1",
+      "plane_sha256": [
+        "e5a70e3151382f03984219356cf13df006990b72f4c6897c3a7d18a355487aeb",
+        "340312583812f3ef3db2f19e1b15146da8a8ae05a3af3275d98c3607d59e85f1",
+        "cc0e37ec465779dfcee80dce3254681c3ff99f6fcdb2af17c6dc5ef8e6ba4f98"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 80,
+      "inner": 896,
+      "pattern": 0,
+      "scale": 1,
+      "inputs": 71680,
+      "admitted": 71680,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "0caeac825dc0e5feddabf4b442afd036d5fe4413d7581895f41379f38ead7146",
+      "plane_sha256": [
+        "05ebcc1bd9fd537c367beffb15d448f333a10697b951369884161d925d8349a0",
+        "7879f0fa30088fdb6083941350d9fd9a42cd157b7e46ef2df02c6ce761fd119e",
+        "fd36c3d1deabcc00ed97f58f59719788eee7ae5f710bce18e6acabbaf73e99dd"
+      ],
+      "nonzero_plane_values": [
+        71680,
+        71671,
+        17920
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 80,
+      "inner": 896,
+      "pattern": 1,
+      "scale": -1,
+      "inputs": 71680,
+      "admitted": 71680,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "6a68b2be168b7d850f36e9a6516bae31e074523f27e5790aef8ff19a5fc509d7",
+      "plane_sha256": [
+        "5e1b7dd8a679d9b39299e3c4372c061ecd8b1a49813e7c4630f757823c0b2fca",
+        "3e13875a67d56dce1837e7bd6605a26bf7aa42046d858f0e61804c2f99f0c2ed",
+        "f9d06e401b0f926f122eb6e01d19cf68482cc2e170f34f69682746420f12d2b5"
+      ],
+      "nonzero_plane_values": [
+        71680,
+        71671,
+        17920
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 80,
+      "inner": 896,
+      "pattern": 2,
+      "scale": 0.5,
+      "inputs": 71680,
+      "admitted": 71680,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "948b587ab9a405b2bc2a4ee4e874aea378cc8c2d050426fdd24e1c405beb4d1c",
+      "plane_sha256": [
+        "3a932752f9903ec8eb7696d52d6474e79453a06bb07aacf7bd74d6e0d694b304",
+        "bcd77aa0d10cc4179d7e713b7c5a7fe8025aa6b0f9fde52826681e8ac93f5351",
+        "59e20c98ca7c100041d6d8af22fb55c6236e76804939340a08f2804e77c29d4b"
+      ],
+      "nonzero_plane_values": [
+        71680,
+        71671,
+        17920
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 80,
+      "inner": 896,
+      "pattern": 3,
+      "scale": 2,
+      "inputs": 71680,
+      "admitted": 71680,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "04b0d6f30ca31aea9af7ab7cffc71e673769ff3809479ae3e7be897a4d17673b",
+      "plane_sha256": [
+        "98c3ff436176944d361e4d87e7fb5f18e189c40dd4394367b0670cb73750aa93",
+        "a69b42bded86f8912adb6ab7c6f7c47a0e2976743f1800921bf46d45deef47bd",
+        "19e077e6da751611e0636e714513224cd0838a4f0615e42fad20fe6c49334e83"
+      ],
+      "nonzero_plane_values": [
+        71680,
+        71671,
+        17920
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 160,
+      "inner": 896,
+      "pattern": 0,
+      "scale": 1,
+      "inputs": 143360,
+      "admitted": 143360,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "41af2907ef5b733cf2f79e7b5b80aa72fbdf188d46f62aff81f6ab312facf9c0",
+      "plane_sha256": [
+        "35795a36e6db7615c03858a5c177e9f0d318c0945bc24eb0ad92d826ed55dc42",
+        "5dd322bd940dd44db43fcc179836062bc9b0ade71ce38959c9045c1c2e24979d",
+        "942a9d3b5e23b20b93e371837c60d07c6ca0467f35da31768762bc34a966678d"
+      ],
+      "nonzero_plane_values": [
+        143360,
+        143343,
+        35835
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 160,
+      "inner": 896,
+      "pattern": 1,
+      "scale": -1,
+      "inputs": 143360,
+      "admitted": 143360,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "983463108681b6b695e64b03638306646e9457733377916e8928a6d324ed9f03",
+      "plane_sha256": [
+        "99d1a9b1bc084531f0f8e463c539a4177fb745a5e938337d9b3653805fc92ba9",
+        "6c17ade8002eecc262ffa276d4c73b95235b6ff7c757475fdd9fdabbfcd9ec96",
+        "48cf9c93d02adea0315c91552e168775c00acd07fef0a228d0487e24ff192c06"
+      ],
+      "nonzero_plane_values": [
+        143360,
+        143343,
+        35835
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 160,
+      "inner": 896,
+      "pattern": 2,
+      "scale": 0.5,
+      "inputs": 143360,
+      "admitted": 143360,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "c76b5efd66c62f89c5bb4ba97410424b5486d1f3b15769c7e79706f316d15fa8",
+      "plane_sha256": [
+        "b74856850ec41623dc585eb7d06e86250210219325a49f2bce503d2e017a1f4f",
+        "9878f856e4daf3b3cfd17d061be3e7f661387e8d4bd8e6b76255b1b07fb1d9c8",
+        "13f5aa18bf13e216e122e4716455a78f7280a1f01671773f88ff97f2e3e3c5c3"
+      ],
+      "nonzero_plane_values": [
+        143360,
+        143343,
+        35835
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "rows": 160,
+      "inner": 896,
+      "pattern": 3,
+      "scale": 2,
+      "inputs": 143360,
+      "admitted": 143360,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "c28cf65d9fdc1552f463c3d9555700a0d28b8853d3a081bb0b8e9597fb5fb952",
+      "plane_sha256": [
+        "35b24369c27250cb54d597fe5b7127003e8be851ea1e06b04c5b50fa050a5fa8",
+        "c37cb1d1dae8e339610e0791ac6d1493089095070b20471b678456a09a2b36ec",
+        "7aa07ee4043567e0dfea741ed137c83ca26cc097146fa280cc7c0f2da0f3f3ee"
+      ],
+      "nonzero_plane_values": [
+        143360,
+        143343,
+        35835
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 0,
+      "scale": 1,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "6b517d39eff105e463c623317c759677da2f44334d07af201041d9d716db0a7c",
+      "plane_sha256": [
+        "ca9c5036584d82be42733eebced6ef90d9f1561022af347cbb70a6c4779801db",
+        "23cfec9fc2dd56490aff032e411b637a123c228f7d4494756ce76b5146f6a1ad",
+        "3136ee1f60960d7805e5becbe565a42aea9f4374dd860f15a9faa8f45f885456"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 1,
+      "scale": -1,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "13dc1cf740354fdbe43f5213f0764ca751948c119af203b41252760335c02203",
+      "plane_sha256": [
+        "9dc1dd04163ece18ef9b3c087fcfd658450875edf93c5a1c4168185ee02855b0",
+        "93b8ec0ddde2482239db72eb7e511a018e06fe773eff4109a9b6ff001ea8b88f",
+        "cc6b64e75b19ca6d6e504952cd3368ee7dd42b63f612b337335d81282a42af2a"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 2,
+      "scale": 0.5,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "7d7fccfec4379807ea2bacd6ee6053b13134cf2697aea89f762fb8b0c481cc01",
+      "plane_sha256": [
+        "a89aef587b8a50b11158d3e0ae5daa23b5384fa29f72b760b2418390e34d99c3",
+        "c74437ff24ff03cc3a71895990c7ba01c326638a100e1c4dd62f8f71fb555914",
+        "f3fd750201397ebc3eac3529bdeb91d7547dd8d0ac8bb7d8692ab7a085549027"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 80,
+      "inner": 1024,
+      "pattern": 3,
+      "scale": 2,
+      "inputs": 81920,
+      "admitted": 81920,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "44a3691ee839465d610d581cd92c3a9344bc77c310e82eb69bb770fef14bca56",
+      "plane_sha256": [
+        "d6b9a49be08104aacfc798ed7258908a2ac530348f89c592788c80d65b1ff1ec",
+        "69836f029f090a8fdc4ad2e0a822ea01830b98243bebd2308ec91d5c8aac4781",
+        "71b2e81a7d8e9ec2356147285903f65acda63d0a87ac9da0e2442747af31b9c3"
+      ],
+      "nonzero_plane_values": [
+        81920,
+        81911,
+        20483
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 0,
+      "scale": 1,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "8abf79b9fce0378778faf54c418560d95353b8af2bc44fab791cdc46aeeb62b1",
+      "plane_sha256": [
+        "c50bc7407bca53b557b5e68cbfe81d46e7031de7fe088d418a4ac8674e3ea6e6",
+        "e543e2d0d7e497b59bb8d3b1d5225ccd7b5d40156c6ba567be89f180b16d9b4b",
+        "9d9830a44507a34046d37f5522d1f0809384ec80e4eb70848a9d4574569c8c99"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 1,
+      "scale": -1,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "c8fc9f63cc57c8a0937f3ae0b9b72290cbbb28e3b4085c512f26dba790c4de96",
+      "plane_sha256": [
+        "a71040be04032e4b4c3f1d413f070d90def340a8cfc4a82dba8a99607ebffe2f",
+        "442fd26707316cd0f798f79e75e95fb18c891e44aa893cd2eb5b2b9e9690fee7",
+        "69862e00e3db1413e2848d221e6ba63e16e75b4c06ed5f44b006523d1daaadae"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 2,
+      "scale": 0.5,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "b874ada1f4848dd26f019ccf54d20c24cb3977a02233e23ede2cc42b784da877",
+      "plane_sha256": [
+        "38bfc524a12da161bab4f8f11610d0d9b086b6766d34d343c7bb92533683a58a",
+        "7bd8f52391aa190a023acb496f20887664f4a4a9cd79b746fcdfcc8b689237b5",
+        "bbf1c1c30401f515668a04f269c4a8cb17c7ad79d887eea5c14de9b65b1c38a5"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "rows": 160,
+      "inner": 1024,
+      "pattern": 3,
+      "scale": 2,
+      "inputs": 163840,
+      "admitted": 163840,
+      "requires_original_f32_fallback": 0,
+      "source_sha256": "b0d6eecc5af754ee1b3ee0c76a0822b022a68986466e5b08a8c4912f00567ae1",
+      "plane_sha256": [
+        "e5a70e3151382f03984219356cf13df006990b72f4c6897c3a7d18a355487aeb",
+        "340312583812f3ef3db2f19e1b15146da8a8ae05a3af3275d98c3607d59e85f1",
+        "cc0e37ec465779dfcee80dce3254681c3ff99f6fcdb2af17c6dc5ef8e6ba4f98"
+      ],
+      "nonzero_plane_values": [
+        163840,
+        163821,
+        40957
+      ],
+      "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+    }
+  ],
+  "bounded_inputs_checked": 2826240,
+  "bounded_source_bits_exact": true,
+  "finite_exponent_edge_cases": {
+    "inputs": 4590,
+    "admitted": 769,
+    "requires_original_f32_fallback": 3821,
+    "source_sha256": "1504837d67eb7e10c63ad715846625411031beb31e3cb1b9e441509a66747cb1",
+    "plane_sha256": [
+      "7974cd5f88bfd6327c6a0127194dc36546ceea787d615f98bf784ac6b73043c9",
+      "6bc48754f6a7081cbb77e81dfb645c0c0ae96978093d9d87ac3d71cdb860033e",
+      "d83893e8607c8e24192c5a068378578730ef80ed832c2f9f4e95140755b39aae"
+    ],
+    "nonzero_plane_values": [
+      2752,
+      2760,
+      2468
+    ],
+    "scope": "Fixed scales 0/11/22, source-bit reconstruction in CPU binary64 then binary32; no GPU split/reconstruction or model activation coverage"
+  },
+  "edge_profiles": [
+    {
+      "exponent": 0,
+      "inputs": 18,
+      "admitted": 1,
+      "requires_original_f32_fallback": 17
+    },
+    {
+      "exponent": 1,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 2,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 3,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 4,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 5,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 6,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 7,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 8,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 9,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 10,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 11,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 12,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 13,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 14,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 15,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 16,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 17,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 18,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 19,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 20,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 21,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 22,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 23,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 24,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 25,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 26,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 27,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 28,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 29,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 30,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 31,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 32,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 33,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 34,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 35,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 36,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 37,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 38,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 39,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 40,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 41,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 42,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 43,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 44,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 45,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 46,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 47,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 48,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 49,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 50,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 51,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 52,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 53,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 54,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 55,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 56,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 57,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 58,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 59,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 60,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 61,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 62,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 63,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 64,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 65,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 66,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 67,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 68,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 69,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 70,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 71,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 72,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 73,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 74,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 75,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 76,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 77,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 78,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 79,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 80,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 81,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 82,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 83,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 84,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 85,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 86,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 87,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 88,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 89,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 90,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 91,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 92,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 93,
+      "inputs": 18,
+      "admitted": 2,
+      "requires_original_f32_fallback": 16
+    },
+    {
+      "exponent": 94,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 95,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 96,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 97,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 98,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 99,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 100,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 101,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 102,
+      "inputs": 18,
+      "admitted": 4,
+      "requires_original_f32_fallback": 14
+    },
+    {
+      "exponent": 103,
+      "inputs": 18,
+      "admitted": 8,
+      "requires_original_f32_fallback": 10
+    },
+    {
+      "exponent": 104,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 105,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 106,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 107,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 108,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 109,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 110,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 111,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 112,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 113,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 114,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 115,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 116,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 117,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 118,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 119,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 120,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 121,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 122,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 123,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 124,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 125,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 126,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 127,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 128,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 129,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 130,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 131,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 132,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 133,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 134,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 135,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 136,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 137,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 138,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 139,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 140,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 141,
+      "inputs": 18,
+      "admitted": 18,
+      "requires_original_f32_fallback": 0
+    },
+    {
+      "exponent": 142,
+      "inputs": 18,
+      "admitted": 14,
+      "requires_original_f32_fallback": 4
+    },
+    {
+      "exponent": 143,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 144,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 145,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 146,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 147,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 148,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 149,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 150,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 151,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 152,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 153,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 154,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 155,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 156,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 157,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 158,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 159,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 160,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 161,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 162,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 163,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 164,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 165,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 166,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 167,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 168,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 169,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 170,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 171,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 172,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 173,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 174,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 175,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 176,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 177,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 178,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 179,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 180,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 181,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 182,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 183,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 184,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 185,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 186,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 187,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 188,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 189,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 190,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 191,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 192,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 193,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 194,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 195,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 196,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 197,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 198,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 199,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 200,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 201,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 202,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 203,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 204,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 205,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 206,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 207,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 208,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 209,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 210,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 211,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 212,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 213,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 214,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 215,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 216,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 217,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 218,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 219,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 220,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 221,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 222,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 223,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 224,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 225,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 226,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 227,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 228,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 229,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 230,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 231,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 232,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 233,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 234,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 235,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 236,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 237,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 238,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 239,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 240,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 241,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 242,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 243,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 244,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 245,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 246,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 247,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 248,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 249,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 250,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 251,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 252,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 253,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    },
+    {
+      "exponent": 254,
+      "inputs": 18,
+      "admitted": 0,
+      "requires_original_f32_fallback": 18
+    }
+  ],
+  "precision_policy": "Admission requires finite exact original source-bit recovery, otherwise retain original FP32 route. This CPU study does not implement that runtime policy.",
+  "scope": "CPU exact-representation feasibility only. Synthetic bounded inputs and finite exponent/mantissa edges, not universal FP32 coverage or captured model activations; no GPU/arithmetic precision, inference speed or vLLM claim.",
+  "full_goal_met": false
+}

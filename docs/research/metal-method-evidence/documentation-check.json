@@ -1,7 +1,7 @@
 {
-  "checked_at_utc": "2026-10-16T02:12:02.912463+00:00",
-  "reports_verified": 165,
-  "local_links_checked": 389,
+  "checked_at_utc": "2026-10-16T02:19:24.281546+00:00",
+  "reports_verified": 166,
+  "local_links_checked": 391,
   "verification_hashes_checked": 96,
   "matched_table_values_checked": 72,
   "component_table_values_checked": 30,
@@ -21,6 +21,8 @@
   "vector_null_calibration_table_values_checked": 8,
   "vector_calibrated_component_table_values_checked": 32,
   "retained_control_phase_table_values_checked": 16,
+  "half_triplet_cpu_profiles_checked": 24,
+  "half_triplet_finite_edge_cases_checked": 4590,
   "status": "passed",
   "scope": "Documentation consistency only; experiment numerical/performance audits are separate records"
 }

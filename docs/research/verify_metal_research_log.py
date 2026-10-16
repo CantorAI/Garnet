@@ -271,6 +271,15 @@ def main():
         intervals=row['wall_intervals_ms'];values=[intervals.get(k) for k in ('ttft_ms','vision_ms','prefill_wall_ms')]+[row['prefill_profile_ms']['gpu_ms']]
         assert [c.strip() for c in cells[2:]]==['—' if value is None else f'{value:.3f}' for value in values]
         retained_phase_numbers+=sum(value is not None for value in values)
+    p=ROOT/'results/20261016/half-triplet-lower-bound'
+    half_cpu=json.loads((p/'cpu-reconstruction.json').read_text())
+    assert half_cpu['helper_source_sha256']==hashlib.sha256((ROOT/'test2026/metal/analyze_half_triplet_reconstruction.py').read_bytes()).hexdigest()
+    assert half_cpu['probe_source_sha256']==hashlib.sha256((ROOT/'test2026/metal/mps_half_triplet_lower_bound.mm').read_bytes()).hexdigest()
+    assert len(half_cpu['profiles'])==24 and half_cpu['bounded_source_bits_exact'] and not half_cpu['full_goal_met']
+    assert sum(r['inputs'] for r in half_cpu['profiles'])==half_cpu['bounded_inputs_checked']==2826240
+    assert all(r['admitted']==r['inputs'] and r['requires_original_f32_fallback']==0 for r in half_cpu['profiles'])
+    half_edges=half_cpu['finite_exponent_edge_cases'];assert (half_edges['inputs'],half_edges['admitted'],half_edges['requires_original_f32_fallback'])==(4590,769,3821)
+    assert len(half_cpu['edge_profiles'])==255 and sum(r['admitted'] for r in half_cpu['edge_profiles'])==769
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -294,7 +303,8 @@ def main():
                   retained_control_guard_preflight_requests=36,selective_native_table_values_checked=selective_native_numbers,
                   vector_initial_table_values_checked=vector_initial_numbers,vector_null_calibration_table_values_checked=vector_calibration_numbers,
                   vector_calibrated_component_table_values_checked=vector_calibrated_numbers,
-                  retained_control_phase_table_values_checked=retained_phase_numbers,status='passed',
+                  retained_control_phase_table_values_checked=retained_phase_numbers,
+                  half_triplet_cpu_profiles_checked=24,half_triplet_finite_edge_cases_checked=4590,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T02:12:01.948326+00:00",
-  "source_commit": "0cc30176d44f0b0186a201570504d2ee0d935015",
+  "generated_at_utc": "2026-10-16T02:19:23.370506+00:00",
+  "source_commit": "ed128830bb26124acf2f7231dedc9ba06c685113",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 165,
+  "report_count": 166,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -4166,6 +4166,27 @@
       "evidence_directories": [
         "evidence"
       ]
+    },
+    {
+      "experiment_id": "results/20261016/half-triplet-lower-bound",
+      "title": "Three exact half-storage activation planes: prefill feasibility",
+      "report_path": "results/20261016/half-triplet-lower-bound/README.md",
+      "report_sha256": "42df7f700402821e74921a548cd5ed55b9470dea9ecedcbfd172b17a6390ab0f",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Three exact half-storage activation planes: prefill feasibility\n\nStatus: CPU representation study executed; synthetic MPS lower-bound probe\nprepared and queued. No GPU precision, model compatibility or speed claim yet.\n\nMotivation: retained-control prefill GPU spans are83.781/144.813ms for VL\nB1/B2; text/coder also spend substantial TTFT in prefill. Existing native\ncommon-alpha products use FP32 activations and exact half-stored BF16 weights.\nThe rejected BF16-feed study rounded source activations. This study instead\nasks whether three half-storage pieces can reconstruct source FP32 bits, and\nwhether the cost of three products leaves useful headroom before decomposition.\nThis is a feasibility investigation; no algorithmic novelty is claimed.\n\nRepresent a bounded normal input by `h0=half(x)`,\n`h1=half((x-float(h0))*2^11)`, and\n`h2=half((x-float(h0)-float(h1)*2^-11)*2^22)`.\nRequire finite planes and exact original source-bit recovery; otherwise a future\nimplementation must retain the original FP32 route. This runtime admission and\nfallback are not implemented by the CPU study or the synthetic timing probe.\n\n## Actual CPU representation result\n\n[CPU raw source/plane hashes, cases and versions](cpu-reconstruction.json).\nThe Windows CPU script exits0 and verifies2,826,240 source inputs over three\nmodel gate input widths, physical rows80/160 and four exact power-of-two scales.\nAll these bounded synthetic source values reconstruct bit for bit. They are\ngenerated from the same bounded normal bit pattern as the proposed MPS probe,\nnot captured model activations.\n\nIndependently sample255 finite exponent fields, nine selected mantissas and\nboth signs:4,590 edge inputs. Only769 reconstruct exactly;3,821 require the\noriginal FP32 fallback, including unsupported dynamic ranges/signed-zero cases.\nThese samples do not estimate real model fallback frequency or universal FP32\ncoverage. Nothing is clipped or silently rounded into admission.\n\nFinal prospective MPS probe source SHA256:\n`847f1dc136dcbab13ff537b600ca575e3a7b174fe789bfe692dbc2a2fd01baee`.\nThe CPU calculation was repeated after adding diagnostic actual-value and\nwarmup/buffer reporting to that unqueued probe; numeric reconstruction and\nall admission counts remain unchanged. No CPU timing benefit is claimed.\n\n```text\npython -X utf8 test2026/metal/analyze_half_triplet_reconstruction.py results/20261016/half-triplet-lower-bound/cpu-reconstruction.json\n```\n\n## Prospective synthetic MPS lower-bound probe\n\nUse the six actual MLP gate shapes from the frozen model configurations:\ninner/output1024/3072 text,896/4864 coder,1024/3584 VL, each with80/160 rows.\nWeights are structured nonzero synthetic dyadic values, not learned weights.\nInputs and all three half planes are precomputed on the host, outside timing.\nNo universal source conversion, learned checkpoint or native inference claim.\n\nControl: one FP32-input/half-weight product, FP32 output. Candidate: three\nhalf-input/half-weight products with alpha1/2^-11/2^-22 and beta0/1/1 into the\nsame FP32 output. Same-control-pipeline null is a third mode. Dense products\nexecute through MPSMatrixMultiplication. No claim about MPS internal accumulator\ninstructions follows from output dtype. Three finite diagnostics distinguish\nrounded-half products from observed FP32 products, plus one exact alpha/beta\ntest requiring all three source pieces to contribute. Any exception or\ndiagnostic failure stops timing admission and is archived as a negative result.\nAPI reference: [Apple MPSMatrixMultiplication](https://developer.apple.com/documentation/metalperformanceshaders/mpsmatrixmultiplication).\nThe API page/spec fetch did not establish an internal accumulator guarantee;\nnone is assumed. Earlier explicit Metal mixed-accumulator diagnostics are a\ndifferent API and do not prove this MPS route.\n\nFor all six shapes/four input scales, require source-bit reconstruction,\ncomplete finite outputs and padding preservation, unchanged independent FP64\ngamma(ceil(K/32)+32)*sumabs+1e-7 AND5e-6+5e-5*abs(reference) envelopes,\nand original control-comparison bounds. Numerics precede timing. Conditioning\nis2s alternating common warmup; ten complete ABBA rounds, five samples/window,\nthree window warm calls, both candidate and identical-control null; all records\nretained. Capture weight/setup/check duration and logical buffer byte counts\nseparately. They are not RSS or an inference initialization measurement.\n\nThis is an optimistic cost feasibility probe: GPU decomposition, general\nexponent handling, native ownership/fallback, trained weights/activations and\nfull outputs remain unimplemented/unverified. Even a large synthetic gain\ncannot establish the full FP32 inference goal or a vLLM comparison. No native\nselection or confirmation rule is inferred after inspecting these timings.\n\nQueue PID83151 watches exact compact component controller73358 and requires its\nterminal/archive/audit success before quiet guarded dispatch. It archives one\nterminal probe success/failure and audits successful raw data; it does not\nsearch for favorable repeats. Existing vector-native jobs stay untouched and\nserial. All six consumed helpers are frozen while queued.\n\n```text\npython3 ROOT/source/test2026/metal/queue_mps_half_triplet_lower_bound.py ROOT ROOT/logs/mps-half-triplet-lower-bound-queue-20261016 73358\n```\n\nROOT is `/Users/zsdx/garnet-metal-investigation`; exact compile/run/archive/audit\ncommands are captured when executed. No compilation or GPU result exists yet.\n",
+      "commands_as_documented": [
+        "python -X utf8 test2026/metal/analyze_half_triplet_reconstruction.py results/20261016/half-triplet-lower-bound/cpu-reconstruction.json\n",
+        "python3 ROOT/source/test2026/metal/queue_mps_half_triplet_lower_bound.py ROOT ROOT/logs/mps-half-triplet-lower-bound-queue-20261016 73358\n"
+      ],
+      "archive_hashes_as_documented": [
+        "847f1dc136dcbab13ff537b600ca575e3a7b174fe789bfe692dbc2a2fd01baee"
+      ],
+      "adjacent_files": [
+        "README.md",
+        "cpu-reconstruction.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261016/ndarray-selective-native",
