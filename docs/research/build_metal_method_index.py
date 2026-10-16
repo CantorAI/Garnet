@@ -46,7 +46,8 @@ def main():
         records.append(dict(
             experiment_id=path.parent.relative_to(ROOT).as_posix(),
             title=heading, report_path=relative, report_sha256=sha(raw),
-            classification="historical_report_requires_scope_and_status_review",
+            classification=("input_fixture_manifest" if (path.parent / "inputs.json").is_file()
+                            else "historical_report_requires_scope_and_status_review"),
             report_text=content,
             commands_as_documented=re.findall(r"```(?:text|bash|sh|powershell|python)?\s*\n(.*?)```", content, re.S),
             archive_hashes_as_documented=sorted(set(re.findall(r"\b[a-f0-9]{64}\b", content))),

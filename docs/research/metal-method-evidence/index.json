@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T22:25:52.613036+00:00",
-  "source_commit": "0df1a8e61122bc4f113d0bc4dafd9eabf0062b8b",
+  "generated_at_utc": "2026-10-16T22:42:26.627334+00:00",
+  "source_commit": "a07ed0e21c3e85f5be2a81bbd000ac27bc85963c",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -43,11 +43,14 @@
     "results/20261016/worldsense-m5-coalesced-prefill/source/xModel/README.md",
     "results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen35/vl_4b/README.md",
+    "results/20261016/worldsense-m5-dual-chunk64/source/xModel/README.md",
+    "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen35/vl_4b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 196,
+  "report_count": 198,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5175,6 +5178,68 @@
       ]
     },
     {
+      "experiment_id": "results/20261016/worldsense-m5-dual-chunk64",
+      "title": "WS-M5-08: dual-model prefill64 — rejected after fresh confirmation",
+      "report_path": "results/20261016/worldsense-m5-dual-chunk64/README.md",
+      "report_sha256": "c9b4b14af856d32fb42f34f658c858a56ccfcbef50dcdfafc1727adc86589885",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-08: dual-model prefill64 — rejected after fresh confirmation\n\nBoth4B VLM and1.7B reasoner use physical prefill64 versus16, otherwise original BF16/FP32 kernels and budgets. Larger activation/graph cache and padding are costs; both chunk-keyed graph sets remain warm/shared-weight. This is distinct from VLM-only WS07. Native reference and all32 VLM/28 reasoner state/token bit checks pass. Additional finite/recovery tests were prepared but NOT executed after rejection; they remain explicitly labeled.\n\nThe initial fixed-car screen passed (4B TTFT−39.69%,total−15.73%; reasoner TTFT−19.36%,total−9.70%; Skill14.1635→12.1890s). It was not promoted. The predeclared fresh three-frame/search-plan confirmation then ran two workers, ABBA and BAAB; both modes warm, two measured repeats/policy/case/query per worker. All92 model calls across screen and confirmation retain matching generated tokens/text, image/Skill hashes and input-token counts and valid chunk plans. See root analysis for screen and confirmation/analysis.json for terminal gates; do not pool them as independent scenes.\n\nFull worker1:4B TTFT−26.17%,total−7.94%; reasoner TTFT+10.33%,total+15.77%; native Skill14.9255→14.2447s. Full worker2:4B TTFT−23.42%,total−12.20%; reasoner TTFT+39.28%,total+23.00%; native Skill16.2493→16.2858s. Both fail text preservation; mirrored Skill wall also fails improvement. TERMINAL REJECTED. No favorable unchanged rerun, no threshold relaxation, no production kernel/profile change. Original library/live assignments restored. Per-workload diagnostic breakdown is post-hoc explanation aid, not a replacement gate or a causal hardware finding.\n\nRaw warmups and measured calls, exact checkpoints/source/build/environment identities, per-call CSV and fixed input hashes remain available. Shared JPEG/Skill fixtures are ../worldsense-m5-inputs/. Source overlay reconstruction is separate from original execution identity. RSS/swap are not peak GPU memory. Preliminary decode-stage GPU counters identify GPU execution as dominant relative to CPU encoding, without proving DRAM/occupancy causality. These timings exclude video decoding, scheduling, event persistence and retrieval/ranking. One M5, small/correlated inputs: no hardware-general or significance claim. Controller Python handles lifecycle; timed clients/serving use XLang3/native pipeline with native C++ image input.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "CMakeCache.txt",
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "bottleneck-screen.json",
+        "build.log",
+        "calls.csv",
+        "cases-paired-2.json",
+        "cases.json",
+        "cohort-manifest.json",
+        "confirmation-cases.json",
+        "confirmation-protocol.json",
+        "controller.log",
+        "controller.py",
+        "decision.json",
+        "environment.json",
+        "file-manifest.json",
+        "flags.make",
+        "model-assets.json",
+        "paired-1.cantor-stderr.log",
+        "paired-1.cantor.log",
+        "paired-1.client.log",
+        "paired-1.json",
+        "prepare.py",
+        "production-restore-verification.json",
+        "protocol.json",
+        "reasoner-state-guard.json",
+        "reasoner-state-guard.log",
+        "reasoner_state_guard.py",
+        "reconstruction.json",
+        "report-body.txt",
+        "server-paired-1.log",
+        "server-restored-control.log",
+        "source-overlay.patch",
+        "starting-source-manifest.json",
+        "state-guard.json",
+        "state-guard.log",
+        "state_guard.py",
+        "tests.log"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-dual-chunk64/production-restore-verification.json",
+          "sha256": "a344ca776c6e4e080bbfcc65cbf1f752b2db4ab6fed4f0b8376404c92c5de162"
+        }
+      ],
+      "evidence_directories": [
+        "confirmation",
+        "prepared-not-executed",
+        "source"
+      ]
+    },
+    {
       "experiment_id": "results/20261016/worldsense-m5-fused-head",
       "title": "WS-M5-01: fused greedy head through WorldSense — rejected screen",
       "report_path": "results/20261016/worldsense-m5-fused-head/README.md",
@@ -5286,6 +5351,29 @@
       "evidence_directories": [
         "source"
       ]
+    },
+    {
+      "experiment_id": "results/20261016/worldsense-m5-inputs",
+      "title": "Fixed WorldSense M5 experiment inputs",
+      "report_path": "results/20261016/worldsense-m5-inputs/README.md",
+      "report_sha256": "72a09134865306104ae3df34162169045f91f95643f3acbcf452e753da99024c",
+      "classification": "input_fixture_manifest",
+      "report_text": "# Fixed WorldSense M5 experiment inputs\n\nThe three exact archived TimeDB JPEGs and Skill specifications used in WS-M5-01 through WS-M5-08. SHA-256 matches original raw call records. Skill files retain XLang3 compact JSON formatting to match recorded spec hashes; initial default CPython formatting failed its hash assertion before completion and was corrected without changing any model input. inputs.json maps observation/image IDs and Skill references. These are individual video-derived frames (pedestrians, bunny, car), not independent camera trials. Single-car screens use only the car entry. Full-suite search-plan query is `a passenger car`. These images freeze model input rather than replay the video scheduler. Restoring an observation-backed WorldSense suite also needs original TimeDB observation records or an explicitly documented fixture import; JPEGs alone do not recreate those records. No new inference or timing samples were generated while freezing evidence.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "7516923187783794688.jpg",
+        "7516923187783794688.skill.json",
+        "7516923349319024640.jpg",
+        "7516923349319024640.skill.json",
+        "7516923584221020160.jpg",
+        "7516923584221020160.skill.json",
+        "README.md",
+        "file-manifest.json",
+        "inputs.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261016/worldsense-m5-shared-half",

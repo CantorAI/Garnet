@@ -1,0 +1,143 @@
+{
+  "role": "Post-hoc workload diagnosis; does not change rejected prospective gates",
+  "records": [
+    {
+      "workload": "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+      "groups": {
+        "control": {
+          "calls": 2,
+          "input_tokens": [
+            223,
+            223
+          ],
+          "generated_tokens": [
+            50,
+            50
+          ],
+          "prefill_compile_ms": [
+            0,
+            0
+          ],
+          "ttft": 2.225203583497205,
+          "total": 3.941066999999748
+        },
+        "candidate": {
+          "calls": 2,
+          "input_tokens": [
+            223,
+            223
+          ],
+          "generated_tokens": [
+            50,
+            50
+          ],
+          "prefill_compile_ms": [
+            0,
+            0
+          ],
+          "ttft": 2.5217649585028994,
+          "total": 4.233029916496889
+        }
+      }
+    },
+    {
+      "workload": "6663E057-C15F-4000-B6A9-655FF434FE62",
+      "groups": {
+        "control": {
+          "calls": 0,
+          "input_tokens": [],
+          "generated_tokens": [],
+          "prefill_compile_ms": [],
+          "ttft": null,
+          "total": null
+        },
+        "candidate": {
+          "calls": 0,
+          "input_tokens": [],
+          "generated_tokens": [],
+          "prefill_compile_ms": [],
+          "ttft": null,
+          "total": null
+        }
+      }
+    },
+    {
+      "workload": "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+      "groups": {
+        "control": {
+          "calls": 2,
+          "input_tokens": [
+            200,
+            200
+          ],
+          "generated_tokens": [
+            35,
+            35
+          ],
+          "prefill_compile_ms": [
+            0,
+            0
+          ],
+          "ttft": 2.232609311999113,
+          "total": 3.4264470624984824
+        },
+        "candidate": {
+          "calls": 2,
+          "input_tokens": [
+            200,
+            200
+          ],
+          "generated_tokens": [
+            35,
+            35
+          ],
+          "prefill_compile_ms": [
+            0,
+            0
+          ],
+          "ttft": 2.942411395502859,
+          "total": 4.12962089550274
+        }
+      }
+    },
+    {
+      "workload": "search_plan",
+      "groups": {
+        "control": {
+          "calls": 2,
+          "input_tokens": [
+            411,
+            411
+          ],
+          "generated_tokens": [
+            56,
+            56
+          ],
+          "prefill_compile_ms": [
+            0,
+            0
+          ],
+          "ttft": 2.5666283124955953,
+          "total": 4.727296249999199
+        },
+        "candidate": {
+          "calls": 2,
+          "input_tokens": [
+            411,
+            411
+          ],
+          "generated_tokens": [
+            56,
+            56
+          ],
+          "prefill_compile_ms": [
+            0,
+            0
+          ],
+          "ttft": 2.5989062704975368,
+          "total": 4.631031645498297
+        }
+      }
+    }
+  ]
+}

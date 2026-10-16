@@ -1,0 +1,13 @@
+{
+  "scope": "WS-M5-08 preliminary single-car screen, candidate warm VLM model calls only; four calls, not full confirmation",
+  "samples": 4,
+  "decode_profile_p50_ms": {
+    "prepare_ms": 4.3866665000000005,
+    "encode_ms": 34.88654149999999,
+    "gpu_ms": 7005.278812481265,
+    "wait_ms": 7030.763063
+  },
+  "decode_wall_p50_seconds": 7.07488460449531,
+  "interpretation": "Observed decode phase is dominated by reported GPU execution; CPU encoder preparation/encoding is comparatively small. These are overlapping clock/counter domains, not additive components. This does not establish a causal DRAM-bandwidth limit or hardware occupancy.",
+  "next_target": "After prospective full confirmation, investigate GPU decode work rather than external Python or CPU image preparation. Keep future profiling separate from timed gate cohorts."
+}

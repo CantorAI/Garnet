@@ -1,0 +1,625 @@
+{
+  "status": "rejected",
+  "passed": false,
+  "exact_outputs_and_inputs": true,
+  "actual_routes_valid": true,
+  "checks": [
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "6663E057-C15F-4000-B6A9-655FF434FE62",
+        "Expanded Video Tests/bunny.yaml#search_only",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "6663E057-C15F-4000-B6A9-655FF434FE62",
+        "Expanded Video Tests/bunny.yaml#search_only",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "6663E057-C15F-4000-B6A9-655FF434FE62",
+        "Expanded Video Tests/bunny.yaml#search_only",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "6663E057-C15F-4000-B6A9-655FF434FE62",
+        "Expanded Video Tests/bunny.yaml#search_only",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "6663E057-C15F-4000-B6A9-655FF434FE62",
+        "Expanded Video Tests/bunny.yaml#search_only",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+        "Expanded Video Tests/current_only.yaml#current_absent_elephant",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "6663E057-C15F-4000-B6A9-655FF434FE62",
+        "Expanded Video Tests/bunny.yaml#search_only",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "a passenger car",
+        "search_plan"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "a passenger car",
+        "search_plan"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "a passenger car",
+        "search_plan"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "a passenger car",
+        "search_plan"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "a passenger car",
+        "search_plan"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "a passenger car",
+        "search_plan"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": null
+    }
+  ],
+  "metrics": {
+    "paired-1": {
+      "Qwen3-1.7B": {
+        "control": {
+          "samples": 6,
+          "total_seconds_p50": 3.941066999999748,
+          "ttft_seconds_p50": 2.3555138954980066,
+          "decode_tps_p50": 28.38723407679364,
+          "stages_p50": {
+            "reset_seconds": 0.02921554199565435,
+            "vision_seconds": 0.0,
+            "host_input_seconds": 0.001427479503036011,
+            "prefill_seconds": 2.3248633745024563,
+            "decode_seconds": 1.7156686669986811
+          }
+        },
+        "candidate": {
+          "samples": 6,
+          "total_seconds_p50": 4.562399645503319,
+          "ttft_seconds_p50": 2.5989062704975368,
+          "decode_tps_p50": 28.505073725897482,
+          "stages_p50": {
+            "reset_seconds": 0.03855124950496247,
+            "vision_seconds": 0.0,
+            "host_input_seconds": 0.002744187499047257,
+            "prefill_seconds": 2.553748000500491,
+            "decode_seconds": 1.7107577494898578
+          }
+        }
+      },
+      "Qwen3.5-4B": {
+        "control": {
+          "samples": 6,
+          "total_seconds_p50": 14.127690229499422,
+          "ttft_seconds_p50": 4.695747833000496,
+          "decode_tps_p50": 13.24232585176285,
+          "stages_p50": {
+            "reset_seconds": 0.01549110449559521,
+            "vision_seconds": 0.28292906250135275,
+            "host_input_seconds": 0.0020116875020903535,
+            "prefill_seconds": 4.181124520502635,
+            "decode_seconds": 8.749125792004634
+          }
+        },
+        "candidate": {
+          "samples": 6,
+          "total_seconds_p50": 13.006500145500468,
+          "ttft_seconds_p50": 3.4667466874961974,
+          "decode_tps_p50": 13.358246002615545,
+          "stages_p50": {
+            "reset_seconds": 0.023309687501750886,
+            "vision_seconds": 0.35526772899902426,
+            "host_input_seconds": 0.00427849950210657,
+            "prefill_seconds": 3.072328562491748,
+            "decode_seconds": 8.744802270499349
+          }
+        }
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "worker": "paired-1",
+      "model": "Qwen3-1.7B",
+      "decode_gain": 0.004151149378803787,
+      "ttft_change": 0.1033287791104589,
+      "total_change": 0.15765594583994913
+    },
+    {
+      "worker": "paired-1",
+      "model": "Qwen3.5-4B",
+      "decode_gain": 0.008753760642226105,
+      "ttft_change": -0.261726393582551,
+      "total_change": -0.07936117410458543
+    }
+  ],
+  "current_skill_native_wall_p50": {
+    "paired-1": {
+      "control": 14.925476000506023,
+      "candidate": 14.244716521003284
+    }
+  },
+  "scope": "Paired WorldSense/Galaxy current-Skill and text planning; no decode/storage/event-scheduler end-to-end claim"
+}
