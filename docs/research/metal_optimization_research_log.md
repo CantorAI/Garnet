@@ -1941,6 +1941,53 @@ live, 16 completed stages all exit 0, including dense tails, private KV,
 serving and mixed-image tests. No terminal record or published full34 gate is
 present. Save the exact observation; an incomplete suite remains incomplete.
 
+### 2026-10-16 UTC — full34 passes and archive-only recovery admits native comparison
+
+Fresh check 54126 exits 0 after 1,898.893526708 seconds with all 34 stages.
+Original finalizer 58273 archives it but exits 1 because the private source
+predates the vector auditor and the archive omitted that external dependency.
+Continuation 78736 archives the terminal finalizer and exits 1; no profile
+launch occurs. Confirm all three exact PIDs terminal and preserve both failed
+controllers, their consumed tools and the original checks archive identities
+before any repair. No runtime/test/tolerance change is needed or made.
+
+Package both original vector/MLP auditors as external validation dependencies,
+matching their previously frozen controller source hashes. Pin the original
+vector auditor identity, restore the needed re import, and publish separately
+named corrected archive/audit paths through the gate and launcher. Never
+overwrite the original failure archive. Repaired finalizer 88835 exits 0 in
+14.309746209 seconds. All 1,915 archive files and the complete numerical audit
+pass independently on Mac and Windows with identical records: 12 regenerated
+private changes, 34 fresh stages, no reused stages, 60 linked primitive cases,
+3,710,720 bit-identical FP32 values, 48 added trained carried steps and
+36 selected/12 fallback routes. Original bounds remain fixed; worst added
+trained ratio 0.1624941610 and worst wide VL ratio 0.5432836183.
+
+After completed transfers, continuation 89012 and first native cohort 89030
+are verified live at 05:44:42 UTC, first text B1 profile started behind raw34
+re-audit and quiet interval. Freeze all consumed shared tools/private source.
+Only the fixed complete all-six-profile screen can admit one unchanged
+confirmation; no timing gain or matched-vLLM target update is established.
+[Commands, archive hashes, failures and independent full34 records](../../results/20261016/paired-norm-rope-native/README.md).
+
+### 2026-10-16 UTC — wider delta value tile CPU indexing prerequisite
+
+Hypothesis for VL first-token work: widen the existing 16-value recurrence tile
+to 32/64 values per 128-thread group, sharing the identical Q/K norm prefix
+across extra float4 bands. Retain literal per-value arithmetic and original
+barriers. More registers may outweigh reduced duplicated work. This differs
+from the previously rejected extra-dispatch norm cache. No Mac tools change.
+
+Preserve an initial CPU audit authoring failure before enumeration: the control
+keeps original variable names while the assertion expected renamed candidate
+names. Fix only control-block membership, with identical generated shader.
+Corrected enumeration and independent frozen-source reproduction pass all
+12 width/batch/padding profiles, 4,718,592 state words and 3,575,808 output words
+at chunks 1/16/80. Original recurrence matches accepted d52 and private paired
+source. The 2.047-second CPU duration is not GPU/model latency; compilation,
+numeric/state equality, learned references and timings remain unmeasured.
+[Method, preserved failure, sources and reproduced CPU proof](../../results/20261016/delta-value-tiles-addresses/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

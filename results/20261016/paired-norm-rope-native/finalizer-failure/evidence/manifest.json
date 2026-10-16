@@ -1,0 +1,69 @@
+{
+  "files": {
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/archive-identity.json": {
+      "bytes": 195,
+      "sha256": "4343a713414054f33261110fea07e314356bf6d772e7e3eff6eab6c4e87a424a"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/archive.log": {
+      "bytes": 158,
+      "sha256": "d4f99e17a7d2f9c51884e9835e7dd7989807e9e99ccda96d83551837d1a2062c"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/audit.log": {
+      "bytes": 1253,
+      "sha256": "61d7a43a63a9e8583dcbcd02403bea271cae1d9604c6720125c01f8042dc21aa"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/controller-source/0/finalize_paired_norm_rope_native_checks.py": {
+      "bytes": 4548,
+      "sha256": "0d7aa112daf2eecc117fbb48975de271e509bd5733137ac3b6e2a063cc556629"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/controller-source/1/archive_paired_norm_rope_native_checks.py": {
+      "bytes": 3024,
+      "sha256": "d00c487ef798a6aea660ee5320fe170fbd428e8d5d14356690d188ab61bc85a6"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/controller-source/2/verify_paired_norm_rope_native_checks.py": {
+      "bytes": 8018,
+      "sha256": "eb48ffde63b80524a329f6014d333fa46e2a2ceb7724832e2f15885537a49984"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/controller-source/3/preparation.json": {
+      "bytes": 336502,
+      "sha256": "ca37104b7582b236b865b9852be7d44d9f3f769e0d1767393cc931217a899423"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/exit.json": {
+      "bytes": 88,
+      "sha256": "ab14fe0092e118cc36cca27eda88d292fb1991232830aa8f2cccbb1500c4940f"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/metadata.json": {
+      "bytes": 1133,
+      "sha256": "8964488df404cde02d702500fd2f6d367a5d0a410f084d510111505e6e26a903"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/output.log": {
+      "bytes": 939,
+      "sha256": "b5710cb87a35c325ca78813e219b8b5b659d660b9a4fbb78d1bccbb341d923d9"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/pid.json": {
+      "bytes": 14,
+      "sha256": "51199d55adce25ce8653edc41524614b16799c4d654f5a0661cf9bfa89c9e65b"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/statuses.json": {
+      "bytes": 900,
+      "sha256": "5adb297939dd32c0aa0ec0aacd5f42fe48c5ad59fa6b2cc9cdc141b08b5b9acc"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/waits.json": {
+      "bytes": 196804,
+      "sha256": "1e90461c34f06b6029bfd88ead7154b464aaa57c28622ea0d3d86917157e47b9"
+    },
+    "evidence/logs/paired-norm-rope-native-finalize-20261016/watched-terminal.json": {
+      "bytes": 53,
+      "sha256": "3527f011206b7854255cb193d915376de79cd59cbd6da0d0bf7f96e823c73676"
+    }
+  },
+  "jobs": {
+    "paired-norm-rope-native-finalize-20261016": {
+      "exit_code": 1,
+      "wall_seconds": 1701.6790318749845,
+      "native_profiles_launched": false
+    }
+  },
+  "scope": "Terminal controller commands/source/waits/gate only; numerical/model evidence is separate.",
+  "full_goal_met": false
+}

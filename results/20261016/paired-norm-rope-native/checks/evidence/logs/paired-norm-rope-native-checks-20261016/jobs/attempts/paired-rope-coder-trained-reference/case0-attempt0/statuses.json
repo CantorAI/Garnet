@@ -1,0 +1,18 @@
+[
+  {
+    "name": "paired-rope-coder-trained-reference",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/source/test2026/metal/test_paired_norm_rope_dense_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/build-paired-norm-rope-decode",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bf16",
+      "/Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/logs/paired-norm-rope-native-checks-20261016/jobs/trained-paired-rope-coder"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 31.409391792025417
+  }
+]

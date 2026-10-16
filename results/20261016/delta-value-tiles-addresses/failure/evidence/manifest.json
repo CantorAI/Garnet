@@ -1,0 +1,27 @@
+{
+  "files": {
+    "evidence/delta-value-tiles.metal": {
+      "bytes": 14413,
+      "sha256": "b03e292899fd68556458789dfbf1899ec297e50c25a35e01aebae9fac2054df6"
+    },
+    "evidence/failure.json": {
+      "bytes": 520,
+      "sha256": "79d866287e76f20f370ac27af06db4a17b6ac0c0b36eb79e69565f4f216d0a55"
+    },
+    "evidence/source-snapshot/audit_delta_value_tile_addresses.py": {
+      "bytes": 5031,
+      "sha256": "09acec9993da7959f98e7956c0fa2beab1942eac36f0b2db55162782e7b8337c"
+    },
+    "evidence/source-snapshot/make_delta_value_tiles.py": {
+      "bytes": 2498,
+      "sha256": "a27190465416dcf177a76f0bda3a11f450644946f8c20e3f83c72b3b05432d25"
+    },
+    "evidence/source-snapshot/metal_context.mm": {
+      "bytes": 198907,
+      "sha256": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41"
+    }
+  },
+  "scope": "Local CPU harness authoring failure before address enumeration; no shader/runtime or tolerance change.",
+  "exit_code": 1,
+  "full_goal_met": false
+}

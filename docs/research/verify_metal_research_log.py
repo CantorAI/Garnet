@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -461,6 +461,17 @@ def main():
     for name,operation in paired_ops.items():
         p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==paired_prep['changes'][name]['before'] and hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==paired_prep['changes'][name]['after']
     for name,sha in paired_prep['added_sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha
+    native_audit=json.loads((paired_native/'checks/verification.json').read_text());assert native_audit==json.loads((paired_native/'checks/mac-verification.json').read_text())
+    assert native_audit['validation_stages']==34 and native_audit['paired_rope_trained_steps']==48 and not native_audit['reused_validation_stages'] and not native_audit['reused_compile_stages']
+    assert native_audit['paired_rope_serving_route_checks']==36 and native_audit['paired_rope_fallback_route_checks']==12 and native_audit['paired_rope_primitive_output_bits']==3710720
+    gate=json.loads((paired_native/'checks/gate.json').read_text());assert gate['archive_sha256']==json.loads((paired_native/'checks/archive-verification.json').read_text())['archive_sha256'] and gate['candidate_sha256']==native_audit['candidate_library_sha256']
+    assert hashlib.sha256((paired_native/'checks/mac-verification.json').read_bytes()).hexdigest()==gate['full_audit_sha256'] and not gate['full_goal_met']
+    tiles=ROOT/'results/20261016/delta-value-tiles-addresses';tile_audit=json.loads((tiles/'verified/verification.json').read_text());tile_report=json.loads((tiles/'verified/evidence/report.json').read_text())
+    assert (tile_audit['reproduced_cpu_profiles'],tile_audit['state_words_checked'],tile_audit['output_words_checked'])==(12,4718592,3575808)
+    assert not any(tile_audit[k] for k in ('gpu_executed','numerical_equivalence_proven','performance_measured','full_goal_met'))
+    assert {(p['width'],p['batch'],p['padding_floats']) for p in tile_report['profiles']}=={(w,b,p) for w in (16,32,64) for b in (1,2) for p in (0,4)}
+    provenance=json.loads((tiles/'source-provenance.json').read_text());assert provenance['recurrence_unchanged_by_paired_native_integration'] and provenance['failed_and_fixed_cpu_audits_generated_identical_shaders']
+    assert (tiles/'failure/evidence/delta-value-tiles.metal').read_bytes()==(tiles/'verified/evidence/delta-value-tiles.metal').read_bytes()
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -487,7 +498,8 @@ def main():
                   qv_preparation_cost_table_values_checked=9,qv_output_view_table_values_checked=48,
                   paired_norm_rope_table_values_checked=96,paired_norm_rope_learned_profiles=232,
                   paired_chain_table_values_checked=96,paired_chain_learned_profiles=464,
-                  paired_native_private_transformations_regenerated=12,status='passed',
+                  paired_native_private_transformations_regenerated=12,paired_native_full_validation_stages=34,
+                  delta_value_tile_cpu_profiles_checked=12,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

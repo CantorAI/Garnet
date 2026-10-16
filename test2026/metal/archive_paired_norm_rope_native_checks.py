@@ -31,7 +31,16 @@ for p in ((root/'build-paired-norm-rope-decode').iterdir() if (root/'build-paire
  if p.is_file() and (p.suffix=='.a' or (p.name.startswith('garnet') and not p.suffix)):add(p)
 for name in ('archive_paired_norm_rope_native_checks.py','verify_paired_norm_rope_native_checks.py'):
  p=Path(__file__).with_name(name);add(p,'external-archive-tools/'+name)
-proof=dict(files={},omitted=omitted,jobs={trial:status},library_sha256=libraries,scope='Fresh original30, actual linked paired norm-RoPE primitive and two original-bound trained graph/session decode/fallback suites; terminal failure or success preserved, no performance claim.',full_goal_met=False)
+# The private runtime tree predates the vector auditor. Preserve that tree and
+# archive the auditors separately, checked against the original frozen controller.
+parent=Path(prep['parent']);controller=parent/'logs/paired-norm-rope-native-continuation-20261016'
+assert json.loads((controller/'exit.json').read_text())['exit_code']==1
+identities=json.loads((controller/'metadata.json').read_text())['tool_source_sha256'];dependencies={}
+for name in ('verify_vector_vision_native_checks.py','verify_mlp_prefill_native_checks.py'):
+ p=Path(__file__).with_name(name);assert digest(p)==digest(controller/'controller-source'/name)==identities[name]
+ dependencies[name]=identities[name];add(p,'external-validation-tools/'+name)
+add(controller/'metadata.json','archive-repair/original-controller-metadata.json')
+proof=dict(files={},omitted=omitted,jobs={trial:status},library_sha256=libraries,audit_dependency_sha256=dependencies,scope='Fresh original30, actual linked paired norm-RoPE primitive and two original-bound trained graph/session decode/fallback suites; terminal failure or success preserved, no performance claim.',full_goal_met=False)
 with tarfile.open(target,'w:gz') as tar:
  for name,p in sorted(files.items()):
   raw=p.read_bytes();proof['files'][name]=dict(bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest());item=tarfile.TarInfo(name);item.size=len(raw);tar.addfile(item,io.BytesIO(raw))

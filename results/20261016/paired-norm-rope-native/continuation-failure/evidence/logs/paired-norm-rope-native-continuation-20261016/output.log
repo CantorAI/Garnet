@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/continue_paired_norm_rope_native.py", line 60, in <module>
+    assert status['exit_code']==0,'Native check finalizer failed; terminal controller archived, no model profiles admitted'
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Native check finalizer failed; terminal controller archived, no model profiles admitted

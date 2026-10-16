@@ -1,0 +1,19 @@
+Test project /Users/zsdx/garnet-metal-investigation/paired-norm-rope-native-investigation-20261016/build-paired-norm-rope-decode
+    Start 1: metal_wide_batch_prefill_reference
+1/7 Test #1: metal_wide_batch_prefill_reference ......   Passed    0.99 sec
+    Start 2: metal_coalesced_bf16_body_reference
+2/7 Test #2: metal_coalesced_bf16_body_reference .....   Passed    0.67 sec
+    Start 3: metal_interleaved_bf16_body_reference
+3/7 Test #3: metal_interleaved_bf16_body_reference ...   Passed    0.63 sec
+    Start 4: metal_prefill_stream_reference
+4/7 Test #4: metal_prefill_stream_reference ..........   Passed    0.41 sec
+    Start 5: metal_dirty_prefix_reset_reference
+5/7 Test #5: metal_dirty_prefix_reset_reference ......   Passed    0.48 sec
+    Start 6: metal_mps_matmul_reference
+6/7 Test #6: metal_mps_matmul_reference ..............   Passed    1.79 sec
+    Start 7: metal_screened_head_reference
+7/7 Test #7: metal_screened_head_reference ...........   Passed    0.57 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =   5.54 sec

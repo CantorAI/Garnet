@@ -1,6 +1,6 @@
 """Regenerate private decode norm-RoPE integration and all34 original-bound native records."""
 from pathlib import Path
-import hashlib,json,math,runpy,shutil,sys,tempfile
+import hashlib,json,math,re,runpy,shutil,sys,tempfile
 base=Path(sys.argv[1]).resolve();root=base/'evidence';proof=json.loads((root/'manifest.json').read_text())
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 for name,info in proof['files'].items():
@@ -35,7 +35,12 @@ with tempfile.TemporaryDirectory(prefix='garnet-paired-rope-audit-') as temporar
  assert (Path(temporary)/'generated.paired_rope.complete34.executed.py').read_bytes()==(checks.parent/'jobs.paired_rope.complete34.executed.py').read_bytes()
 assert 'METAL_PAIRED_NORM_ROPE' in meta['options'] and 'METAL_COALESCED_BF16_BODY' in meta['options'] and 'METAL_MLP_PREFILL_GRAPH' not in meta['options']
 # Reuse every original independent validation gate; only add stages and exact provenance paths.
-original=(root/'source/test2026/metal/verify_vector_vision_native_checks.py').read_text();fragment=original[original.index("template=root/'source/test2026/metal/verify_mlp_prefill_native_checks.py'"):original.rindex("exec(compile(source,__file__,'exec'))")]
+dependencies=proof['audit_dependency_sha256'];controller=json.loads((root/'archive-repair/original-controller-metadata.json').read_text())
+assert set(dependencies)=={'verify_vector_vision_native_checks.py','verify_mlp_prefill_native_checks.py'}
+assert dependencies['verify_vector_vision_native_checks.py']=='0e57a8ad01c71e549abce786886cc2050283c85f0fc487e816faef0656d013be'
+for name,sha in dependencies.items():assert digest(root/'external-validation-tools'/name)==sha==controller['tool_source_sha256'][name]
+original=(root/'external-validation-tools/verify_vector_vision_native_checks.py').read_text();fragment=original[original.index("template=root/'source/test2026/metal/verify_mlp_prefill_native_checks.py'"):original.rindex("exec(compile(source,__file__,'exec'))")]
+fragment=fragment.replace("template=root/'source/test2026/metal/verify_mlp_prefill_native_checks.py'","template=root/'external-validation-tools/verify_mlp_prefill_native_checks.py'")
 exec(compile(fragment,'original_full30_auditor','exec'))
 replace('assert len(stages)==30','assert len(stages)==34')
 replace("assert stages[29]['name']=='wide-batch-trained-reference'","assert stages[33]['name']=='wide-batch-trained-reference'")
