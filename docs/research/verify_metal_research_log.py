@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views','paired-norm-rope','paired-norm-rope-chain','paired-norm-rope-native','delta-value-tiles-addresses','delta-value-tiles-gpu','delta-value-tiles-native')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -494,6 +494,13 @@ def main():
         assert [int(c.strip()) for c in cells[:4]]==[a['width'],a['layer'],a['batch'],a['chunk']]==[b['width'],b['layer'],b['batch'],b['chunk']]
         for cell,key in zip(cells[4:6],('gpu_ms','wall_ms')):assert cell.strip()==' / '.join(f"{p['fractions']['comparison'][key]:.6f}" for p in (a,b))
         assert cells[6].strip()==' / '.join('Yes' if p['own_null_stable'] else 'No' for p in (a,b)) and cells[7].strip()==' / '.join('Yes' if p['component_screen_pass'] else 'No' for p in (a,b))
+    tile_native=ROOT/'results/20261016/delta-value-tiles-native';tile_prep=json.loads((tile_native/'preparation.json').read_text());tile_ops=runpy.run_path(str(ROOT/'test2026/metal/make_delta_value_tiles_native.py'))['OPERATIONS']
+    assert len(tile_ops)==len(tile_prep['changes'])==12 and len(tile_prep['added_sources'])==4 and len(tile_prep['source_sha256'])==1410 and tile_prep['selection']==tile_decision
+    for name,operation in tile_ops.items():
+        p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==tile_prep['changes'][name]['before'] and hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==tile_prep['changes'][name]['after']
+    for name,sha in tile_prep['added_sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha
+    observed=json.loads((tile_native/'latest-observation.json').read_text());primitive=observed['native_primitive'];assert primitive['checks']==162 and primitive['selected']==6 and primitive['fallback']==156 and primitive['original_fp32_words_checked']==74805120 and primitive['pending_abort_recovery_alias_uninitialized_foreign']
+    assert len(observed['completed_stages'])==9 and all(v['exit_code']==0 for v in observed['completed_stages']) and not observed['full32_gate_exists'] and not observed['native_model_profiles_exist']
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -524,6 +531,7 @@ def main():
                   paired_native_rejected_model_table_values_checked=66,
                   delta_value_tile_cpu_profiles_checked=12,status='passed',
                   delta_value_tile_gpu_endpoint_table_values_checked=64,delta_value_tile_gpu_numeric_profiles=416,
+                  delta_value_tile_private_native_transformations_regenerated=12,
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

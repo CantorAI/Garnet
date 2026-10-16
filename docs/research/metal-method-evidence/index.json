@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T06:01:33.300067+00:00",
-  "source_commit": "fbaa2fc7914b19222929e2208ae9c805fd54f81c",
+  "generated_at_utc": "2026-10-16T06:16:43.803496+00:00",
+  "source_commit": "4547d69fbc49d8797d7a9e05ef67b44116b5a1b4",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 191,
+  "report_count": 192,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -4226,6 +4226,31 @@
         "repeat",
         "setup-failure"
       ]
+    },
+    {
+      "experiment_id": "results/20261016/delta-value-tiles-native",
+      "title": "Private native width64 recurrent prefill investigation",
+      "report_path": "results/20261016/delta-value-tiles-native/README.md",
+      "report_sha256": "9043f5776850f4c83830afdda4dda489fb8099f72c082b8fc41aa4d6463d8a8d",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Private native width64 recurrent prefill investigation\n\nStatus: the private library builds, the actual linked primitive and CTest pass,\nand nine complete validation stages have exited 0 at the saved observation.\nThe full 32-stage correctness suite is still running. No complete native model\ntiming or new matched-vLLM result is established. Accepted serving source stays\non d52.\n\nThe [two complete component cohorts](../delta-value-tiles-gpu/README.md) select\nonly width-64 prefill. Copy accepted d52 into a new private tree with 1,410\nsource files, 12 exact transformations and 4 added helpers. Preserve all\nbefore/after/source identities. The actual Mac preparation matches Windows\nregeneration of every transformation and added helper.\n[Frozen preparation and prospective gates](preparation.json).\n\n## Native policy and implementation\n\nGARNET_METAL_DELTA_VALUE_TILE64 defaults OFF. Append the confirmed kernel to\nthe original main shader only under that compile flag. Select only batch 1/2,\nchunk 80, 16 heads, key/value dimension 128, aligned FP32 layouts with zero\nbuffer offsets, and supported 128-thread/32-lane pipelines. Divide the original\n16-column group count by four when selecting width 64. Decode and other shapes\nretain the original kernel and dispatch geometry.\n\nReuse the original state-kernel argument, initialized-producer, device,\ninput/output alias, pending-writer and secondary-output validation. Preserve\noriginal independent output/state allocations and writes; no packed weights,\nstate-layout changes, numerical approximation or input/prefix/image reuse.\nKeep all per-value arithmetic expressions, Q/K normalization and barriers.\n\nExpose real context, graph and resident-session dispatch counters. Reset them\non Begin/Abort, graph/reset/close and session/reset/failure. Capture actual\nprefill and every decode step in workers. Agreed text/coder and all decode\nrequests must report zero selected calls. For VL, count the 18 linear layers\nfor each actual chunk-80 prefill in the original plan. Original graph/session\ntrained references assert the selected/fallback counters on every carried step.\n\n## Validation and current observation\n\nRun all original 30 native stages afresh plus linked width64 primitive compile\nand execution, 32 total. Before execution, regenerate/parse the full driver and\nindependent auditor, preserving checkpoints 25/31/32 and all original numerical\nbounds. A local AST-only expansion initially used a dummy source root and could\nnot find the frozen template; correct only that local preflight path before\ndeployment. No runtime/driver or bound repair was made.\n[Preflight event record](preflight-events.json).\n\nThe actual candidate library SHA256 is:\n`03ac447d4db2c18e03f8090e79eefa1e0519358e09d9b89a66e1d37e28bf9ebb`.\nAccepted d52 control remains:\n`d52c37e09edf7afb61889037863b1cb338f9ac0b6d98ea62043c3a016af5b55e`.\n\nCheck process 94442 builds the library and its actual public-API linked\nprimitive. Compare against the original width-16 Metal kernel, three carried\nsteps over batches 1/2/3, chunks 1/16/80, heads 2/16 and values 96/128/256.\nAll 162 checks pass: 6 selected and 156 original-fallback cases, 74,805,120\nlogical output/state FP32 words bit-identical. Changed prepared inputs, finite\nresults, pending unreadability, abort invalidation/recovery, state alias,\nuninitialized producers and foreign writers are checked. CTest and the\nexisting vector primitive also pass. This linked primitive result does not\nestablish complete native correctness or model performance.\n\nAt 06:14:33 UTC, checks 94442, finalizer 98584 and continuation 1941 are verified\nlive. Nine whole stages pass, including full vision grid and real-head checks;\nthe suite is within text exact-tail cases. No full32 gate or model performance\njob exists. [Exact process/stage/primitive observation](latest-observation.json),\n[earlier observation](observation.json).\n\nThe finalizer watches that exact check process, archives terminal success or\nfailure, then independently regenerates/audits all 32 successful stages. The\narchive explicitly includes the original vector/MLP auditor dependencies and\nall declared source bytes. Require the linked primitive coverage and all 48\noriginal extended/wide trained route steps: 12 selected, 36 fallback. Preserve\nthe original error bounds, hidden/conv/state/KV comparisons, invalid controls,\nresident/explicit equality, resets and close behavior.\n\nOnly a successful complete audit publishes a gate. No source/runtime/driver\nconsumed by a live job changes before terminal archive. The continuation also\nsnapshots and pins all direct shared Mac tools; freeze that directory until\nthe continuation is terminal and archived. An observation deadline stops no\njob and never authorizes a restart.\n\n## Prospective model performance screen\n\nBehind the terminal archived/audited full32 gate and a fresh raw re-audit,\nrun all six matched native profiles sequentially against accepted d52. Keep\noriginal models, learned values/FP32 arithmetic, images/preprocessing, prompts,\nlimits, complete output checks and both VL B2 chunk plans [80]. Keep vector\nvision enabled in both policies and verify actual width64 routes on all 72\ncomplete outputs, including prefill and every decode step. Initialization,\nfirst-after-initialization, warm results and individual-worker RSS remain\nseparate; hardware caches remain unflushed.\n\nThe gate fixed in preparation requires >=1% warm TTFT reduction at each VL\nbatch in two complete unchanged cohorts, every profile's decode fraction\n>=.98 and TTFT fraction <=1.02, with all original outputs/routes passing.\nOnly a complete passing initial cohort admits one unchanged full confirmation;\nno favorable third repeat. Report all failures and setup/memory costs. This\nretention screen is separate from the unchanged full 2x decode/half-TTFT goal.\nFresh repeated matched-vLLM measurements remain mandatory after any retained\nimplementation. Component kernel ratios never update target counts.\n\n## Executed commands\n\nROOT=`/Users/zsdx/garnet-metal-investigation`,\nCANDIDATE=`ROOT/delta-value-tile64-native-investigation-20261016`:\n\n```text\npython3 ROOT/source/test2026/metal/prepare_delta_value_tiles_native.py ROOT CANDIDATE\npython3 ROOT/source/test2026/metal/launch_delta_value_tiles_native_checks.py CANDIDATE CANDIDATE/logs/delta-value-tile64-native-checks-20261016 checks\npython3 ROOT/source/test2026/metal/finalize_delta_value_tiles_native_checks.py CANDIDATE ROOT/logs/delta-value-tile64-native-finalize-20261016 94442\npython3 ROOT/source/test2026/metal/continue_delta_value_tiles_native.py CANDIDATE ROOT/logs/delta-value-tile64-native-continuation-20261016 98584\n```\n\nThe model comparison helpers' comparator, outer and inner independent 72-output\nauditors regenerate and parse locally without executing inference. They are\nprepared/armed, not a performance result. Full matched-vLLM goal remains active.\n",
+      "commands_as_documented": [
+        "python3 ROOT/source/test2026/metal/prepare_delta_value_tiles_native.py ROOT CANDIDATE\npython3 ROOT/source/test2026/metal/launch_delta_value_tiles_native_checks.py CANDIDATE CANDIDATE/logs/delta-value-tile64-native-checks-20261016 checks\npython3 ROOT/source/test2026/metal/finalize_delta_value_tiles_native_checks.py CANDIDATE ROOT/logs/delta-value-tile64-native-finalize-20261016 94442\npython3 ROOT/source/test2026/metal/continue_delta_value_tiles_native.py CANDIDATE ROOT/logs/delta-value-tile64-native-continuation-20261016 98584\n"
+      ],
+      "archive_hashes_as_documented": [
+        "03ac447d4db2c18e03f8090e79eefa1e0519358e09d9b89a66e1d37e28bf9ebb",
+        "d52c37e09edf7afb61889037863b1cb338f9ac0b6d98ea62043c3a016af5b55e"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "latest-observation.json",
+        "observation.json",
+        "preflight-events.json",
+        "preparation.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261016/half-triplet-lower-bound",

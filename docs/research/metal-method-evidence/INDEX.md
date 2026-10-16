@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T06:01:33.300067+00:00
+Generated UTC: 2026-10-16T06:16:43.803496+00:00
 
-Base HEAD at generation: `fbaa2fc7914b19222929e2208ae9c805fd54f81c`. Reports indexed: **191**.
+Base HEAD at generation: `4547d69fbc49d8797d7a9e05ef67b44116b5a1b4`. Reports indexed: **192**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -158,6 +158,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
 | [results/20261016/delta-value-tiles-addresses](../../../results/20261016/delta-value-tiles-addresses/README.md) | Wider delta value tiles CPU prerequisite |
 | [results/20261016/delta-value-tiles-gpu](../../../results/20261016/delta-value-tiles-gpu/README.md) | Wider delta value tiles GPU component investigation |
+| [results/20261016/delta-value-tiles-native](../../../results/20261016/delta-value-tiles-native/README.md) | Private native width64 recurrent prefill investigation |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
 | [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |

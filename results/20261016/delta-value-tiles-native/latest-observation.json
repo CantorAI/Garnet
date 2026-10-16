@@ -1,0 +1,70 @@
+{
+  "observed_utc": "2026-10-16T06:14:33.598300+00:00",
+  "full_goal_met": false,
+  "checks": {
+    "pid": 94442,
+    "process": "Ss   /opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+    "output_tail": "e64-primitive\nCompleted delta-value64-primitive\nCompleted all clean cases for delta-value64-primitive\nStarting ctest\nCompleted ctest\nCompleted all clean cases for ctest\nStarting vision-full-grid\nCompleted vision-full-grid\nCompleted all clean cases for vision-full-grid\nStarting screened-real-heads\nCompleted screened-real-heads\nCompleted all clean cases for screened-real-heads\nStarting Qwen3-0.6B-exact-tails\nCompleted Qwen3-0.6B-exact-tails\nStarting Qwen3-0.6B-exact-tails\nCompleted Qwen3-0.6B-exact-tails\nStarting Qwen3-0.6B-exact-tails\nCompleted Qwen3-0.6B-exact-tails\nStarting Qwen3-0.6B-exact-tails\nCompleted Qwen3-0.6B-exact-tails\nStarting Qwen3-0.6B-exact-tails\nCompleted Qwen3-0.6B-exact-tails\nStarting Qwen3-0.6B-exact-tails\nCompleted Qwen3-0.6B-exact-tails\nStarting Qwen3-0.6B-exact-tails\n"
+  },
+  "finalizer": {
+    "pid": 98584,
+    "process": "Ss   /opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+    "output_tail": ""
+  },
+  "continuation": {
+    "pid": 1941,
+    "process": "Ss   /opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+    "output_tail": ""
+  },
+  "completed_stages": [
+    {
+      "name": "configure",
+      "exit_code": 0
+    },
+    {
+      "name": "build",
+      "exit_code": 0
+    },
+    {
+      "name": "vector-vision-primitive-compile",
+      "exit_code": 0
+    },
+    {
+      "name": "vector-vision-primitive",
+      "exit_code": 0
+    },
+    {
+      "name": "delta-value64-compile",
+      "exit_code": 0
+    },
+    {
+      "name": "delta-value64-primitive",
+      "exit_code": 0
+    },
+    {
+      "name": "ctest",
+      "exit_code": 0
+    },
+    {
+      "name": "vision-full-grid",
+      "exit_code": 0
+    },
+    {
+      "name": "screened-real-heads",
+      "exit_code": 0
+    }
+  ],
+  "candidate_sha256": "03ac447d4db2c18e03f8090e79eefa1e0519358e09d9b89a66e1d37e28bf9ebb",
+  "native_primitive": {
+    "kind": "complete",
+    "checks": 162,
+    "selected": 6,
+    "fallback": 156,
+    "original_fp32_words_checked": 74805120,
+    "carried_steps": 3,
+    "pending_abort_recovery_alias_uninitialized_foreign": true,
+    "model_performance_measured": false
+  },
+  "full32_gate_exists": false,
+  "native_model_profiles_exist": false
+}

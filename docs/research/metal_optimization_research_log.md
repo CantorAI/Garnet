@@ -2049,6 +2049,54 @@ complete native model cohorts and fresh repeated vLLM comparisons remain.
 No serving source or target count changes.
 [All endpoint tables, protocols, source/hash records, setup failure and both-host audits](../../results/20261016/delta-value-tiles-gpu/README.md).
 
+### 2026-10-16 UTC — guarded native width64 prefill implementation enters full32 checks
+
+After both complete unchanged component cohorts select only width64 prefill,
+copy accepted d52 to a fresh private root: 1,410 source files, 12 exact changes
+and 4 added helpers. Actual Mac preparation matches every local regenerated
+before/after and added-source identity. Feature defaults OFF and selects only
+B1/B2, chunk80, heads16, key/value128, aligned FP32 zero-offset layouts and a
+supported 128-thread pipeline. Keep original argument/ownership/alias checks,
+independent output/state writes, normalization and per-value arithmetic.
+Other geometries and decode retain the original kernel. Expose/reset actual
+context/graph/resident-session counters; workers retain prefill/every-decode
+counts and original trained references assert each selected/fallback route.
+
+Check 94442 builds candidate 03ac447d...9ebb and passes the actual linked native
+primitive: 162 cases, 6 selected/156 fallback and 74,805,120 output/state FP32
+words bit-identical to original width16 Metal across three carried steps.
+Check pending outputs, abort invalidation/recovery, state alias, uninitialized
+producer and foreign writer. CTest and original vector primitive also pass.
+At 06:14:33 UTC, nine whole stages pass, including full vision grid/real heads;
+the suite is within text tail cases. This is not complete native validation.
+
+Run all original30 afresh plus new primitive compile/execution, 32 total.
+Before execution, parse/regenerate the complete driver, checkpoints25/31/32,
+and original independent auditor. Preserve original bounds. A local dummy-root
+AST preflight path first misses the template; correct only that local harness
+path before deployment, without changing native tests/runtime. Full32 requires
+all original extended/wide trained state checks and 48 actual counter steps,
+12 selected/36 fallback. Archive includes every declared source byte and
+explicit vector/MLP auditor dependencies from fixed original hashes.
+
+Finalizer 98584 watches exact native check 94442 and publishes a gate only after
+terminal archive and complete independent audit. Continuation 1941 snapshots
+all direct shared Mac tools, then can launch sequential six-profile native
+ABBA only after that gate, raw32 re-audit and a quiet interval. Both watcher
+handles are verified live. Freeze all consumed source/runtime/drivers until
+terminal archive, including the complete shared-tools directory while the
+continuation runs. Observation limits stop/restart no job.
+
+Fix the native screen before model timing: >=1% warm TTFT reduction at both VL
+batches in two complete unchanged cohorts; every decode fraction >=.98 and
+every TTFT fraction <=1.02; all six complete original outputs/routes required.
+Only complete initial success admits one unchanged confirmation. Init, first,
+warm and worker RSS remain separate. Comparator and outer/inner original
+72-output auditor expansion/AST preflights pass, without model execution.
+No native model timing exists yet. No serving source or matched-vLLM target
+count changes; the full 2x decode/half-TTFT goal remains active.
+[Private policy, exact preparation, observed processes/results and commands](../../results/20261016/delta-value-tiles-native/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
