@@ -160,6 +160,10 @@ namespace Garnet {
         };
 
         struct CachedTRTExecution {
+            // A cached engine can outlive this library's global logger during
+            // host/runtime shutdown. TensorRT retains its logger by reference;
+            // keep it alive until this owner's contexts, engine and runtime die.
+            Logger logger;
             int device = -1;
             int64_t weightStreamingBudget = -1;
             // Destroyed after the destructor body has released every TRT user.
@@ -322,7 +326,7 @@ namespace Garnet {
             auto& cached = *owner;
             cached.device = device;
             cached.weightStreamingBudget = streamingPolicy.budgetBytes;
-            cached.runtime = createInferRuntime(gLogger);
+            cached.runtime = createInferRuntime(cached.logger);
             if (!cached.runtime) {
                 std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
                 return nullptr;
@@ -351,7 +355,7 @@ namespace Garnet {
             }
             if (weightIndex && weightIndex->TensorCount() > 0) {
                 std::unique_ptr<nvinfer1::IRefitter> refitter(
-                    nvinfer1::createInferRefitter(*cached.engine, gLogger));
+                    nvinfer1::createInferRefitter(*cached.engine, cached.logger));
                 if (!refitter) {
                     std::cout << "[TRTBuilder] createInferRefitter failed: " << enginePath << std::endl;
                     return nullptr;
