@@ -38,6 +38,8 @@ def main():
                'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body',
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
+    paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -174,6 +176,29 @@ def main():
         f=r['first_request_after_initialization']
         assert [c.strip() for c in cells[2:]]==[f"{f[k]['initialization_s']:.6f}" for k in ('control','candidate')]
         ndarray_native_numbers+=2
+    p=ROOT/'results/20261016/ndarray-weight-admission'
+    admission=json.loads((p/'verification.json').read_text())
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(admission['models'])==3 and admission['body_matrices']==498
+    admission_numbers=0
+    for cells,r in zip(rows,admission['models']):
+        assert cells[0].strip()==r['model']
+        observed=[int(c.strip().replace(',','').removesuffix(' bytes')) for c in cells[1:]]
+        assert observed==[r['matrices'],r['global_half_ready'],r['exact_half_ready'],len(r['no_exact_half']),r['no_exact_f32_cache_bytes']]
+        admission_numbers+=5
+    p=ROOT/'results/20261016/ndarray-selective-prefill'
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith(('| Initial |','| Repeat |'))]
+    decision=json.loads((p/'decision-repeat.json').read_text())
+    assert decision['native_integration_admitted'] and not decision['promote'] and len(rows)==4
+    selective_numbers=0
+    for i,(cells,record) in enumerate(zip(rows,[r for t in decision['trials'] for r in t['profiles']])):
+        label='initial' if i<2 else 'repeat';audit=json.loads((p/label/'verification.json').read_text())
+        profile=next(v for v in audit['profiles'] if v['model']=='Qwen3.5-0.8B' and v['batch']==record['batch'] and v['policy']==2)
+        assert cells[0].strip()==label.capitalize() and int(cells[1])==record['batch']
+        formatted=[' / '.join(f"{profile['means'][k][metric+'_ms']:.6f}" for k in ('control','candidate')) for metric in ('gpu','wall')]
+        formatted += [f"{record[k]:.6f}" for k in ('gpu_fraction','wall_fraction','null_gpu_fraction','null_wall_fraction')]
+        assert [c.strip() for c in cells[2:]]==formatted
+        selective_numbers+=8
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -192,7 +217,8 @@ def main():
                   component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,
                   selected_native_table_values_checked=selected_native_numbers,bf16_component_table_values_checked=bf16_numbers,
                   phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,ndarray_component_table_values_checked=ndarray_numbers,
-                  ndarray_native_table_values_checked=ndarray_native_numbers,status='passed',
+                  ndarray_native_table_values_checked=ndarray_native_numbers,weight_admission_table_values_checked=admission_numbers,
+                  ndarray_selective_component_table_values_checked=selective_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

@@ -1,0 +1,106 @@
+{
+  "model": "Qwen3.5-0.8B",
+  "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+  "cases": [
+    {
+      "name": "matrix-2",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_qkv.weight",
+      "rows": 6144,
+      "inner": 1024,
+      "raw_sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc",
+      "original_bytes": 12582912,
+      "global_half_ready": false,
+      "exact_half_ready": false,
+      "common_scale": 17,
+      "common": {
+        "admitted": false,
+        "bitwise_roundtrip": false,
+        "unrepresentable_values": 14336,
+        "unrepresentable_rows": 14
+      },
+      "rowwise": {
+        "admitted": false,
+        "bitwise_roundtrip": false,
+        "unrepresentable_values": 14336,
+        "unrepresentable_rows": 14
+      },
+      "full_f32_cache_bytes": 25165824,
+      "storage_cap_admitted": true
+    },
+    {
+      "name": "matrix-3",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_z.weight",
+      "rows": 2048,
+      "inner": 1024,
+      "raw_sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d",
+      "original_bytes": 4194304,
+      "global_half_ready": false,
+      "exact_half_ready": true,
+      "common_scale": 17,
+      "common": {
+        "admitted": false,
+        "bitwise_roundtrip": false,
+        "unrepresentable_values": 1,
+        "unrepresentable_rows": 1
+      },
+      "rowwise": {
+        "admitted": true,
+        "bitwise_roundtrip": true,
+        "unrepresentable_values": 0,
+        "unrepresentable_rows": 0
+      },
+      "full_f32_cache_bytes": 8388608,
+      "storage_cap_admitted": true
+    },
+    {
+      "name": "matrix-64",
+      "tensor": "model.language_model.layers.16.linear_attn.in_proj_qkv.weight",
+      "rows": 6144,
+      "inner": 1024,
+      "raw_sha256": "83bf31af185b7cfb4a421b6d1bb258912e66413c17a5c78a4599119203668e64",
+      "original_bytes": 12582912,
+      "global_half_ready": false,
+      "exact_half_ready": true,
+      "common_scale": 17,
+      "common": {
+        "admitted": false,
+        "bitwise_roundtrip": false,
+        "unrepresentable_values": 1,
+        "unrepresentable_rows": 1
+      },
+      "rowwise": {
+        "admitted": true,
+        "bitwise_roundtrip": true,
+        "unrepresentable_values": 0,
+        "unrepresentable_rows": 0
+      },
+      "full_f32_cache_bytes": 25165824,
+      "storage_cap_admitted": true
+    },
+    {
+      "name": "matrix-131",
+      "tensor": "model.language_model.layers.23.self_attn.v_proj.weight",
+      "rows": 512,
+      "inner": 1024,
+      "raw_sha256": "76f176150d89f315bd5dda307d25d541bfb61950bdffd5362fc8576d8f7b182f",
+      "original_bytes": 1048576,
+      "global_half_ready": false,
+      "exact_half_ready": true,
+      "common_scale": 16,
+      "common": {
+        "admitted": false,
+        "bitwise_roundtrip": false,
+        "unrepresentable_values": 1,
+        "unrepresentable_rows": 1
+      },
+      "rowwise": {
+        "admitted": true,
+        "bitwise_roundtrip": true,
+        "unrepresentable_values": 0,
+        "unrepresentable_rows": 0
+      },
+      "full_f32_cache_bytes": 2097152,
+      "storage_cap_admitted": true
+    }
+  ]
+}

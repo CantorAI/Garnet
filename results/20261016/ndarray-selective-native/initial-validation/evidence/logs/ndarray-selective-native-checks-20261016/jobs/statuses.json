@@ -1,0 +1,257 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-S",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source",
+      "-B",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill",
+      "-DGARNET_METAL=ON",
+      "-DGARNET_METAL_XMODEL=ON",
+      "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+      "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+      "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+      "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+      "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+      "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+      "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+      "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+      "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+      "-DGARNET_METAL_SCREENED_HEAD=ON",
+      "-DGARNET_METAL_PREFILL_STREAM=ON",
+      "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+      "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+      "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+      "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+      "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+      "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+      "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+      "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+      "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.700375916901976,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "-S",
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source",
+          "-B",
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill",
+          "-DGARNET_METAL=ON",
+          "-DGARNET_METAL_XMODEL=ON",
+          "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+          "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+          "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+          "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+          "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+          "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+          "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+          "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+          "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+          "-DGARNET_METAL_SCREENED_HEAD=ON",
+          "-DGARNET_METAL_PREFILL_STREAM=ON",
+          "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+          "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+          "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+          "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+          "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+          "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+          "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+          "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+          "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-DCMAKE_BUILD_TYPE=Release"
+        ],
+        "evidence": "attempts/configure/case0-attempt0",
+        "status": {
+          "name": "configure",
+          "command": [
+            "/opt/homebrew/bin/cmake",
+            "-S",
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source",
+            "-B",
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill",
+            "-DGARNET_METAL=ON",
+            "-DGARNET_METAL_XMODEL=ON",
+            "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+            "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+            "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+            "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+            "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+            "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+            "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+            "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+            "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+            "-DGARNET_METAL_SCREENED_HEAD=ON",
+            "-DGARNET_METAL_PREFILL_STREAM=ON",
+            "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+            "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+            "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+            "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+            "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+            "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+            "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+            "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+            "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+            "-DCMAKE_BUILD_TYPE=Release"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.3987897499464452
+        }
+      }
+    ]
+  },
+  {
+    "name": "build",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill",
+      "--parallel",
+      "4"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 15.27849437482655,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "--build",
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill",
+          "--parallel",
+          "4"
+        ],
+        "evidence": "attempts/build/case0-attempt0",
+        "status": {
+          "name": "build",
+          "command": [
+            "/opt/homebrew/bin/cmake",
+            "--build",
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill",
+            "--parallel",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 8.968375834170729
+        }
+      }
+    ]
+  },
+  {
+    "name": "ndarray-cache-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source/test2026/metal/ndarray_selective_prefill_cache_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs/ndarray_selective_prefill_cache_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.006216625217348,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/usr/bin/xcrun",
+          "clang++",
+          "-std=c++17",
+          "-fobjc-arc",
+          "-O3",
+          "-I/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source/src/backends/metal",
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source/test2026/metal/ndarray_selective_prefill_cache_gpu.mm",
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill/libgarnet_metal.a",
+          "-framework",
+          "Foundation",
+          "-framework",
+          "Metal",
+          "-framework",
+          "MetalPerformanceShaders",
+          "-o",
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs/ndarray_selective_prefill_cache_gpu"
+        ],
+        "evidence": "attempts/ndarray-cache-compile/case0-attempt0",
+        "status": {
+          "name": "ndarray-cache-compile",
+          "command": [
+            "/usr/bin/xcrun",
+            "clang++",
+            "-std=c++17",
+            "-fobjc-arc",
+            "-O3",
+            "-I/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source/src/backends/metal",
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/source/test2026/metal/ndarray_selective_prefill_cache_gpu.mm",
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill/libgarnet_metal.a",
+            "-framework",
+            "Foundation",
+            "-framework",
+            "Metal",
+            "-framework",
+            "MetalPerformanceShaders",
+            "-o",
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs/ndarray_selective_prefill_cache_gpu"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.387525832746178
+        }
+      }
+    ]
+  },
+  {
+    "name": "ndarray-cache",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs/ndarray_selective_prefill_cache_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.02621370786801,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs/ndarray_selective_prefill_cache_gpu"
+        ],
+        "evidence": "attempts/ndarray-cache/case0-attempt0",
+        "status": {
+          "name": "ndarray-cache",
+          "command": [
+            "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs/ndarray_selective_prefill_cache_gpu"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.406719499733299
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,25 @@
+Quiet interval verified; starting exclusive checks probe
+Starting configure
+Completed configure
+Completed all clean cases for configure
+Starting build
+Completed build
+Completed all clean cases for build
+Starting ndarray-cache-compile
+Completed ndarray-cache-compile
+Completed all clean cases for ndarray-cache-compile
+Starting ndarray-cache
+Completed ndarray-cache
+Completed all clean cases for ndarray-cache
+Starting ctest
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_ndarray_selective_native_checks.py", line 16, in <module>
+    if '--generate-only' not in sys.argv[3:]:exec(compile(source,str(destination),'exec'))
+                                             ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs.selective.complete30.executed.py", line 109, in <module>
+    run('ctest',['/opt/homebrew/bin/ctest','--test-dir',str(build),'--output-on-failure'])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/logs/ndarray-selective-native-checks-20261016/jobs.selective.complete30.executed.py", line 84, in run
+    if 'Another inference runtime is active' not in failure and 'Other GPU probe PID' not in failure:raise RuntimeError('Validation failed for non-contention reason: '+failure)
+                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Validation failed for non-contention reason: ('ctest', None)

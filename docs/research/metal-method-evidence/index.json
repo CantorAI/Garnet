@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T00:31:41.019407+00:00",
-  "source_commit": "b5ce548b0a162051a5c00cd26d9cc56a5c4a07d4",
+  "generated_at_utc": "2026-10-16T01:00:26.283435+00:00",
+  "source_commit": "136e548796e64e99767dc25a4d67e03389f1cf0c",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 158,
+  "report_count": 161,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -4105,6 +4105,92 @@
       "evidence_directories": [
         "evidence",
         "failed"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/ndarray-selective-native",
+      "title": "Selective no-exact-half NDArray: isolated native validation",
+      "report_path": "results/20261016/ndarray-selective-native/README.md",
+      "report_sha256": "90258bf2ea90bc099c6227fab593c1333b9a302ef817b395287a0722dc3aed29",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Selective no-exact-half NDArray: isolated native validation\n\nStatus: initial PID22114 failed one original CTest after successful compile\nand selective cache primitive. Failure archived/audited; packed-layout guard\nrepaired in a new isolated source/build. Fresh full30 PID23582 is running.\nLive observation: repaired compile, selective primitive and all seven CTests\nhave passed; subsequent trained gates are running. This is partial validation.\nComplete validation and performance remain unproven until terminal evidence\nis archived and audited. Retained serving library\n`c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`\nand defaults remain selected. Overall three-model matched target is unmet.\n\nAdmission: both [trained component cohorts](../ndarray-selective-prefill/README.md)\npass the predeclared >=5% GPU and wall improvement screen for both VL batches\nwith corresponding nulls within5%. All selective numerical checks pass under\nthe original bounds. This justifies a native test; it does not predict a\ncomplete-model speedup.\n\nPrivate Mac directory:\n`/Users/zsdx/garnet-metal-investigation/ndarray-selective-native-packed-investigation-20261016`.\nCopy1371 source files and apply eight confined transforms, recording the full\nbefore/after closure in `preparation.json`. Baseline parent/library, original\nMac checkout, GPT-OSS and Pi checkout stay unchanged. Add counters to native\nsession, prefill profile and workers, with backend marker\n`ndarray_prefill_selective_80_160`.\n\nThe repaired route requires packed FP32 physical rows80/160, non-vision, non-special key projection,\nand absence of BOTH original exact-half matrix and scales. Preserve all other\nnative routes. The full checkpoint audit predicts only VL first-layer QKV\nwill qualify: **one NDArray prefill dispatch per serving image, zero per decode**,\nwith the existing182 common-half calls retained. Text/coder expect zero NDArray.\nActual counters and complete chunk plans must prove those claims during native\ninference; profile labels alone are insufficient. Extra logical F32 payload\n24MiB is an estimate until observed; peak RSS is measured separately.\n\nUse two-source FP32 unit-alpha products, exact BF16 expansion, virtual weight\ntranspose, hoisted source pointer, strong owners and256-product cache with\noriginal native fallback after the cap or on older OS. A dedicated actual-library\nprimitive covers unsupported tiny-normal values, both serving row shapes,\nunchanged admitted-half routing, fresh input updates, cache256/fallback14,\ncached-after-cap reuse and abort/recovery. It supplements all original28 stages.\nExisting exact-owned-primitive process-group guard repair is reused; competing\ninference remains forbidden.\n\nBefore native timing: require fresh validation, all original numerical and full\noutput predicates, original FP64 bounds, source/library/asset identity, and\nindependent frozen archive audit. Then run all six complete native ABBA profiles,\nkeeping initialization, first-after-init, warm TTFT, decode and peak RSS separate.\nFor the native screen, require at least3% warm TTFT reduction in both active VL\nbatch profiles in an initial complete cohort before seeking an unchanged fresh\nconfirmation; require that gain in both cohorts and no repeated >=2% decode\nregression in any profile before promotion. Reject failed screens without\nsearching favorable repeats. No new vLLM ratios from native-only timings.\nThe complete goal still requires fresh repeated matched vLLM results across\nall six profiles; this gate does not redefine that goal.\n\n```text\npython3 prepare_ndarray_selective_native.py PARENT CANDIDATE\npython3 launch_ndarray_selective_native_checks.py CANDIDATE OUTPUT checks\n```\n\nOnly AST/source-generation preflights preceded the repaired launch. They are\nnot evidence of a successful repaired native compile or inference. Freeze all serving source and\nexternal drivers until the specific validation process is terminal and archived.\n\n## Initial validation failure and packed-layout repair\n\nInitial PID22114 exits1 in53.492590250s. The new library compiles; its actual\nselective primitive passes exact/update/cache256/fallback14/cached-after-cap/\nabort-recovery/both serving shapes/native-half tests. All six other CTests\npass, but `metal_wide_batch_prefill_reference` fails with\n`NDArray prototype requires packed FP32 matrices`; CTest exits8 without a\nguard interruption. Later trained/model stages never execute. This is a real\ncompatibility defect, not a contention event or a stale benchmark assertion.\n\nThe row160 extension intercepted an unsupported padded FP32 layout, then\nthrew at the prototype's packed-layout assertion. Add packed FP32 type/stride\nchecks to the outer admission predicate, leaving those layouts on the original\nnative fallback. Do not relax the existing test or numerical bounds. Packed\ntrained-component shapes still take the same tested NDArray operation. Old\ncandidate/source/build and failure remain preserved; no patch to that snapshot.\n\nArchive1366 files, SHA256\n`a04efb9061130bb856a399168e23967f5ecedd6a9254632507a20508b15dbf68`.\nMac and Windows failure auditors verify all members, regenerate eight source\ntransforms, four initial accepted stages, six passing/one failed original\nCTest and uninterrupted process guards. [Failure audit](initial-validation/failure-verification.json)\nand [raw manifest](initial-validation/evidence/manifest.json).\n\nOnly after terminal/archive/audits, update factory/driver and prepare a new\ndirectory/build `build-ndarray-selective-prefill-packedguard`, with no validation\nreuse. Original retained context SHA\n`813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59`;\ninitial transformed SHA\n`488005e0f17894e06aa294b3d160869bc65f0a04467c1449066588613b565c60`;\nrepaired context SHA\n`7410a44d4028d47188baa97e9ab030780c8438ddcc65de913e86577c142be3ae`.\nAll are source hashes, not compiled library hashes. All original full30 stages\nmust pass freshly before any native timing admission.\n\nController PID25901 waits the exact validation PID23582, then archives its\nterminal success/failure and independently audits successful full30 evidence.\nIt performs no inference and cannot promote the candidate or mark the overall\ngoal complete. Controller/source identities, observations and results live at\n`logs/ndarray-selective-native-finalize-20261016` on the parent Mac investigation.\n\nA local extraction attempted before SCP13062 completed received Windows file-lock\n`PermissionError`; it created no evidence folder and admitted no result.\nAfter that exact transfer reached terminal exit0, extraction and both-host\nfailure audits succeeded. This local workflow mistake does not change the\ncaptured CTest failure or require rerunning the failed GPU dataset.\n",
+      "commands_as_documented": [
+        "python3 prepare_ndarray_selective_native.py PARENT CANDIDATE\npython3 launch_ndarray_selective_native_checks.py CANDIDATE OUTPUT checks\n"
+      ],
+      "archive_hashes_as_documented": [
+        "488005e0f17894e06aa294b3d160869bc65f0a04467c1449066588613b565c60",
+        "7410a44d4028d47188baa97e9ab030780c8438ddcc65de913e86577c142be3ae",
+        "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+        "a04efb9061130bb856a399168e23967f5ecedd6a9254632507a20508b15dbf68",
+        "c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md"
+      ],
+      "verification_records": [],
+      "evidence_directories": [
+        "initial-validation"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/ndarray-selective-prefill",
+      "title": "Selective F32 NDArray: predeclared trained-component screen",
+      "report_path": "results/20261016/ndarray-selective-prefill/README.md",
+      "report_sha256": "aa9f6bbd315172f777fd3abf5a994116638237f166d40c75e2892f2f6219f4be",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Selective F32 NDArray: predeclared trained-component screen\n\nStatus: two actual Mac component cohorts complete, archived and independently\naudited on Mac and Windows. Both pass the predeclared selective screen.\nAn isolated native validation candidate is prepared; there is no complete-model\nspeed result yet. Full goal remains unmet; retained serving library/defaults unchanged.\n\nThe [full-checkpoint CPU audit](../ndarray-weight-admission/README.md) identifies\none unsupported exact-half body matrix in Qwen3.5-0.8B: first-layer linear\nattention QKV, 6144 by 1024. The other 185 VL matrices retain their common or\nrow-wise lossless half path. Text/coder have no unsupported body matrices.\nProjected additional FP32 weight payload is 24 MiB, not measured RSS. The\n[broad F32 native experiment](../../20261015/ndarray-native/README.md) added\n1.854 GiB of logical weight storage and was rejected after complete inference.\n\nPolicies: 1 expands all eligible non-special body matrices to F32 NDArray;\n2 expands only matrices lacking both common and row-wise exact half;\n3 retains the original native path. Both new products use two-source FP32\nunit alpha, beta zero, virtual transpose, stable input/output views, strong\nowners and a 256-product cache. New views after the cap keep the original\nfallback. The buffer contents pointer is read once per expansion; its\nfirst-use effect is unmeasured. Policies 1/2 share that change, so this test\ncannot isolate pointer-hoisting causality. Exact BF16 learned values and\nFP32 activations/output/accumulation are preserved.\n\nUse all original 29 trained first-layer fixtures, four activation patterns,\nall original physical prefill row shapes: text 24/44, coder 26/52, VL 80/160.\nKeep the original FP64 forward-error and original-control comparison bounds,\npadding/finite checks, 2 ABBA rounds and 8 measured samples per window. Failed\nnumerical groups receive no timings. Zero-operation policies must be bitwise\nidentical to control; their timing changes cannot establish algorithmic gain.\n\nBefore measurements: consider selective policy 2 for isolated native\nintegration only if **both GPU and wall fractions <=0.95** for VL B1 and B2\nin two complete fresh cohorts, with each corresponding null policy within\n0.95 through 1.05, and all selective numerical checks passing. Full F32 is a\ncomponent reference, already rejected for broad native promotion. No favorable\nrepeat search if the initial selective screen fails. Native integration, if\nadmitted, requires original fresh full validation and complete generated\noutputs, first/warm latency, decode, memory and independent archive audits.\nOnly fresh repeated matched vLLM cohorts can establish target progress.\n\n```text\npython3 launch_ndarray_selective_prefill.py ROOT OUTPUT component\npython3 archive_ndarray_selective_prefill.py ROOT ARCHIVE TRIAL\n```\n\nThese are projection components, not complete-model inference or a fresh\nvLLM comparison. No competing inference runtimes may execute concurrently.\n\n## Actual component results\n\nAll 24 selective and all 24 null numerical records pass per cohort. The full\nF32 reference passes 21 of 24; pattern 1 fails the original-control comparison\nfor text B1 and coder B1/B2 in both runs, despite passing the independent FP64\nbound. Those three groups receive no timings. No tolerance was relaxed.\nEach cohort has 72 records and 960 admitted timed executions. Actual dispatches:\nselective exactly one per VL projection set, zero per text/coder set; full\nreference 15 VL and six non-special text/coder; null zero. Every zero-operation\nrecord is bitwise identical to control. Zero-operation timing fluctuations\ncannot establish an algorithmic gain.\n\n| Cohort | VL batch | GPU ms control / selective | Wall ms control / selective | Selective GPU / control | Selective wall / control | Null GPU / control | Null wall / control |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n| Initial | 1 | 4.413000 / 3.970904 | 5.246760 / 4.842983 | 0.899820 | 0.923043 | 1.032385 | 1.029010 |\n| Initial | 2 | 7.551362 / 6.255000 | 8.459178 / 7.185711 | 0.828327 | 0.849457 | 1.015989 | 1.022998 |\n| Repeat | 1 | 4.532659 / 3.698501 | 5.428117 / 4.629496 | 0.815967 | 0.852873 | 1.024950 | 1.015859 |\n| Repeat | 2 | 7.320596 / 6.505921 | 8.173341 / 7.415698 | 0.888715 | 0.907303 | 1.036874 | 1.037128 |\n\nThese timings cover the original first-layer projection set in one submission,\nnot one isolated QKV operation and not a full decoder. Both cohorts have\nidentical captured sources/assets/generated context/header/harness/macros.\nInitial PID19306 exits0 in77.300869250s; repeat PID20686 exits0 in77.263889209s.\nEach archive has62 verified files. Full raw outputs, all passing/reference/null\ntimings and failed checks are in [initial evidence](initial/evidence/manifest.json)\nand [repeat evidence](repeat/evidence/manifest.json). Independent audits:\n[initial](initial/verification.json), [repeat](repeat/verification.json).\n\nArchive SHA256 initial:\n`f70a9eb265f99f768c0b23cbf033cadbffb758211febaaae1f5bc887638bf05f`.\nRepeat:\n`a4de900f6d79249ed4ef69c5ce6c5d51fc09fdcf50f7199ea1f570f4573a62b4`.\n\nThe [decision](decision-repeat.json) admits isolated native investigation,\nnot promotion. No new vLLM ratios or target passes. Native candidate details\nand the next gates are recorded [separately](../ndarray-selective-native/README.md).\n",
+      "commands_as_documented": [
+        "python3 launch_ndarray_selective_prefill.py ROOT OUTPUT component\npython3 archive_ndarray_selective_prefill.py ROOT ARCHIVE TRIAL\n"
+      ],
+      "archive_hashes_as_documented": [
+        "a4de900f6d79249ed4ef69c5ce6c5d51fc09fdcf50f7199ea1f570f4573a62b4",
+        "f70a9eb265f99f768c0b23cbf033cadbffb758211febaaae1f5bc887638bf05f"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "decision-initial.json",
+        "decision-repeat.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": [
+        "initial",
+        "repeat"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/ndarray-weight-admission",
+      "title": "Full body-weight admission: one VL matrix needs the original FP32 fallback",
+      "report_path": "results/20261016/ndarray-weight-admission/README.md",
+      "report_sha256": "b90aaaf579cac707649f955107c43e570e37312291b11569d27e5772467af66e",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Full body-weight admission: one VL matrix needs the original FP32 fallback\n\nStatus: both CPU jobs executed successfully and archived. Windows evidence\naudit passes. This is weight eligibility/provenance, not GPU performance or\ncomplete-model validation. The overall 2x/half-TTFT goal remains unmet.\n\n| Model | Body matrices | Common-scale exact half | Common or row-wise exact half | No exact half | Additional selective F32 payload |\n| --- | ---: | ---: | ---: | ---: | ---: |\n| Qwen3-0.6B | 168 | 168 | 168 | 0 | 0 |\n| Qwen2.5-Coder-0.5B-Instruct | 144 | 143 | 144 | 0 | 0 |\n| Qwen3.5-0.8B | 186 | 182 | 185 | 1 | 25,165,824 bytes |\n\nScan all 498 original BF16 body matrices in the full real checkpoints. Exclude\nthe special dense-text key projection that already uses a different FP32 path.\nKeep the current 16 MiB source-weight cap, aligned K, scale range +/-64 and\nall exact-value encoding tests. Eligibility assumes the retained validated\nhalf pipeline and successful allocation. It is not per-weight GPU routing\ninstrumentation. Reconcile predicted common-scale calls with 18 actual\nbaseline requests from the [completed native cohort](../../20261015/ndarray-native/README.md).\nEvery counter agrees with its original chunk plan.\n\nFour VL matrices lack a common scale, but three admit row-wise exact half:\nlayer 0 linear-attention Z, layer 16 linear-attention QKV and layer 23\nself-attention V. Coder layer 8 gate also admits row-wise half. Replacing\nall non-common matrices would unnecessarily replace these existing routes.\n\nThe only unsupported matrix is VL\n`model.language_model.layers.0.linear_attn.in_proj_qkv.weight`, 6144x1024.\nIts raw BF16 SHA256 is\n`8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc`.\nFourteen rows require scale 138, outside +/-64: 397,423,438,453,470,476,479,\n2445,2471,2486,2501,2518,2524,2527. Their maximum BF16 exponent is 4;\nthese are tiny normal BF16 values, not BF16 subnormals. Preserve every value.\nThe [earlier expanded-scale GPU experiment](../../20261013/extended-half-scale/README.md)\nalready tested lossless wider scales and found no useful speed gain. Do not\nrepeat that unchanged method or loosen numerical bounds.\n\nNumPy audits the complete checkpoints and verifies bitwise FP32 roundtrips\nfor admitted matrices. An independent Foundation-only C++ executable uses\nthe original frozen `exact_half_codec.h`, audits all five non-common matrices,\nmatches their SHA256 and flags, and checks **19,548,160** admitted values\nbit-for-bit through native `_Float16` and `std::ldexp`. The 14 rejected rows\nare excluded from that roundtrip count; they are not zeroed or admitted.\n\nThe Python job exits 0 in 63.683980790898204 s; original-C++ compile/audit job\nexits 0 in 1.4974965420551598 s. Full commands, versions, source identities,\ncheckpoint headers, terminal statuses, source snapshots and reported counters\nare retained under [evidence](evidence/manifest.json). Raw weights/checkpoints\nand compiled binary are omitted by size/SHA identity. The Windows verifier\nrecomputes archive-member hashes, header coverage, counts, budgets, raw-output\ncounter reconciliation and C++ log consistency; it cannot rerun omitted weight\narithmetic without those original assets. This distinction is part of the\n[verification scope](verification.json).\n\n```text\npython3 audit_ndarray_weight_admission.py ROOT OUTPUT\npython3 run_ndarray_weight_admission_cpp.py ROOT OUTPUT_CPP\npython3 archive_ndarray_weight_admission.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_ndarray_weight_admission.py ADMISSION_EVIDENCE NATIVE_COMPARISON_EVIDENCE AUDIT_JSON\n```\n\nArchive SHA256:\n`66d403a090e6275e9a623459b33b9a9ffd30de19e9811cc3ce84a36da74f8e4e`;\n24 verified files. New [selective component protocol](../ndarray-selective-prefill/README.md)\nuses `!ExactHalfReady()`, retaining the 185 admitted VL routes. Projected\nlogical F32 payload is 24 MiB versus 1,990,459,392 bytes (1.854 GiB) for broad\nexpansion; neither value is an observed RSS measurement. No inference defaults\nor retained library changed as a result of this CPU audit.\n",
+      "commands_as_documented": [
+        "python3 audit_ndarray_weight_admission.py ROOT OUTPUT\npython3 run_ndarray_weight_admission_cpp.py ROOT OUTPUT_CPP\npython3 archive_ndarray_weight_admission.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_ndarray_weight_admission.py ADMISSION_EVIDENCE NATIVE_COMPARISON_EVIDENCE AUDIT_JSON\n"
+      ],
+      "archive_hashes_as_documented": [
+        "66d403a090e6275e9a623459b33b9a9ffd30de19e9811cc3ce84a36da74f8e4e",
+        "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "archive-verification.json",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/ndarray-weight-admission/archive-verification.json",
+          "sha256": "4da1d3b8b6738029b709980ef0099a2c8929149d3cfcee50726a1b761e034d40"
+        },
+        {
+          "path": "results/20261016/ndarray-weight-admission/verification.json",
+          "sha256": "91e99179cccf34351a2fa0ff93856aead4ba65bd8d47cb64c0c2bdffa6febcec"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
       ]
     },
     {

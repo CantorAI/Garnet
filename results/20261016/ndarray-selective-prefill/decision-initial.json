@@ -1,0 +1,33 @@
+{
+  "trials": [
+    {
+      "label": "initial",
+      "profiles": [
+        {
+          "batch": 1,
+          "gpu_fraction": 0.8998195565798269,
+          "wall_fraction": 0.9230425190639213,
+          "null_gpu_fraction": 1.0323853289246678,
+          "null_wall_fraction": 1.0290097829488971,
+          "screen_pass": true
+        },
+        {
+          "batch": 2,
+          "gpu_fraction": 0.8283273948749532,
+          "wall_fraction": 0.8494573030509549,
+          "null_gpu_fraction": 1.0159887616343206,
+          "null_wall_fraction": 1.0229975175159187,
+          "screen_pass": true
+        }
+      ],
+      "screen_pass": true
+    }
+  ],
+  "initial_screen_pass": true,
+  "repeat_admitted": true,
+  "native_integration_admitted": false,
+  "promote": false,
+  "target_count_update": false,
+  "full_goal_met": false,
+  "scope": "Original trained component screen only. Native admission is permission to investigate, not proof of model/vLLM gain."
+}

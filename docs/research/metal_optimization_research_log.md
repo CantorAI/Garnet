@@ -1006,6 +1006,91 @@ read in expansion is a possible first-use bottleneck; hoisting remains an
 untested hypothesis. No claims or source edits to archived8e4 from that inference.
 [All native timings, initial costs, RSS and decision](../../results/20261015/ndarray-native/README.md#actual-complete-native-cohort-reject-broad-f32-ndarray-promotion).
 
+### 2026-10-16 UTC — full-checkpoint admission narrows the next candidate
+
+CPU Python scan exits0 in63.683980791s; independent original-C++ codec audit
+exits0 in1.497496542s. Freeze24-file archive66d403a0... before interpretation;
+Mac and Windows provenance/counter audits pass. Cover498 BF16 body matrices:
+text168/168 common/exact, coder143/144, VL182/185 out of186. Reconcile18
+actual retained-control requests with full chunk plans. NumPy bitwise weight
+roundtrips and5 exported non-common matrices through original compiled codec,
+19,548,160 admitted-value bitwise roundtrips. Omitted raw assets by identity;
+host evidence audit is not an arithmetic rerun of missing weights.
+
+Only first-layer VL linear-attention QKV lacks exact half. Fourteen tiny
+normal BF16 rows need scale138, beyond+/-64; no values dropped and no bounds
+relaxed. Coder gate and three other VL non-common matrices already have exact
+row-wise paths. Selective candidate must use !ExactHalfReady(), not absence
+of common scale. Logical added F32 payload24MiB versus broad1.854GiB; not RSS.
+Review existing20261013 expanded-scale report: correct bit rescale but no
+useful component gain, so do not repeat unchanged. Retainedc186 unchanged.
+[Full identities, coverage, caveats and CPU records](../../results/20261016/ndarray-weight-admission/README.md).
+
+### 2026-10-16 UTC — selective F32 trained-component initial screen passes
+
+Predeclare before execution: original29 fixtures/four patterns/all6 physical
+row shapes, same FP64 and original-control bounds; fullF32 reference, only
+no-exact-half F32, native null. All selective numerical groups must pass.
+Require>=5% GPU AND wall gain in both VL batch shapes and nullwithin5% in
+two fresh cohorts before isolated native integration. Exact zero-operation
+policies require bit identity; no inference/vLLM claim from component gains.
+
+Initial PID19306 exits0 in77.300869250s; archive62 filesf70a9eb2...;
+Mac/Windows independent regeneration/raw audits pass72 numerical records,
+960timed executions. Selective executes exactly1 projection per VL set,
+zero for text/coder. Original comparisons reject fullF32 textB1/coderB1/B2;
+no timings admitted for failed groups. All selective groups pass unchanged
+bounds. VL1 selective GPU/wall fractions.899819557/.923042519, null
+1.032385329/1.029009783; VL2 .828327395/.849457303, null
+1.015988762/1.022997518. Initial screen passes, no native promotion.
+
+Fresh complete confirmation PID20686 launched after initial terminal/archive
+and audited initial screen. Source stays frozen until terminal/archive.
+New path hoists buffer-contents read out of per-value loop for both reference
+and selective products; no isolated first-use causal claim. Strongowners,
+cachecap256/nativefallback preserved. Goal active/unmet.
+[Predeclared protocol and evidence](../../results/20261016/ndarray-selective-prefill/README.md).
+
+### 2026-10-16 UTC — selective confirmation passes; native compatibility failure preserved/repaired
+
+Confirmation PID20686 exits0 in77.263889209s;62-file archivea4de900f...,
+Mac/Windows audits pass. Same sources/assets/generatedcontext/header/harness/
+macros as initial. Both cohorts:24/24 selective checks,24/24 null checks;
+fullF32 reference21/24, original pattern1 failures remain excluded. Each has
+960timed executions. Repeat selective VL1 GPU/wall .815967281/.852873274,
+null1.024950009/1.015859208; VL2 .888714569/.907303111,
+null1.036873670/1.037127831. Both predeclared screens pass; admit isolated
+native investigation only, no promotion, vLLM ratios or new goal passes.
+
+Native initialPID22114 exits1 in53.492590250s. Build and actual selective
+cache/route/abort/native-half primitive pass; six original CTests pass, but
+wide-batch prefill fails because row160 intercepts padded FP32 then throws
+the packed assertion. CTestexit8, no guard interruption. No later trained
+stages or model timing. Freeze1366-file archivea04efb90... before any edits;
+both-host failure audits regenerate8transforms, verify4accepted stages,
+6pass/1fail CTests and guards. This is a compatibility bug, not contention.
+
+After terminal/archive/audits, add packed FP32 dtype/stride admission to
+the outer selective native predicate; preserve original padded fallback and
+all original tests/bounds. New isolated1371-file source and fresh packedguard
+build; full30 PID23582 launched, no partial validation reuse. Candidate
+context7410a44d... vs initial488005e0..., original813c5679.... All serving
+and external drivers frozen until terminal/archive. Retainedc186 unchanged.
+Local early extraction of still-copying SCP13062 received file-lock denial;
+wait its terminal0, then fresh extraction/audit succeeds, no result admitted
+from the incomplete copy. Record workflow failure separately from GPU result.
+[Full native failure, hashes and repair scope](../../results/20261016/ndarray-selective-native/README.md).
+
+### 2026-10-16 UTC — repaired partial validation passes original CTests
+
+LivePID23582: new packedguard build, selective cache primitive and all7CTests
+pass, including original padded wide-prefill failure. Vision fullgrid and
+trained head stages also pass so far; model/tail/recovery stages still run.
+No full validation claim from partial status. New unused controllerPID25901
+waits exact23582, archives terminal success/failure, then audits a successful
+full30 without rerunning GPU stages. Controller identities frozen separately;
+no concurrent inference, driver/source mutations, promotion or goal completion.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

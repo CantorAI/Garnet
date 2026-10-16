@@ -1,0 +1,25 @@
+Test project /Users/zsdx/garnet-metal-investigation/ndarray-selective-native-investigation-20261016/build-ndarray-selective-prefill
+    Start 1: metal_wide_batch_prefill_reference
+1/7 Test #1: metal_wide_batch_prefill_reference ......***Failed    0.53 sec
+NDArray prototype requires packed FP32 matrices
+
+    Start 2: metal_coalesced_bf16_body_reference
+2/7 Test #2: metal_coalesced_bf16_body_reference .....   Passed    0.68 sec
+    Start 3: metal_interleaved_bf16_body_reference
+3/7 Test #3: metal_interleaved_bf16_body_reference ...   Passed    0.60 sec
+    Start 4: metal_prefill_stream_reference
+4/7 Test #4: metal_prefill_stream_reference ..........   Passed    0.40 sec
+    Start 5: metal_dirty_prefix_reset_reference
+5/7 Test #5: metal_dirty_prefix_reset_reference ......   Passed    0.48 sec
+    Start 6: metal_mps_matmul_reference
+6/7 Test #6: metal_mps_matmul_reference ..............   Passed    1.80 sec
+    Start 7: metal_screened_head_reference
+7/7 Test #7: metal_screened_head_reference ...........   Passed    0.57 sec
+
+86% tests passed, 1 tests failed out of 7
+
+Total Test time (real) =   5.06 sec
+
+The following tests FAILED:
+	  1 - metal_wide_batch_prefill_reference (Failed)
+Errors while running CTest
