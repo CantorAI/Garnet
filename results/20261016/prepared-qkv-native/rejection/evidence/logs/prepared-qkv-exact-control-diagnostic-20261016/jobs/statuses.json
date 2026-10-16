@@ -1,0 +1,44 @@
+[
+  {
+    "name": "accepted-d52-exact-trained-fixture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/test2026/metal/run_dense_reference.py",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-countfix-20261016/jobs/trained-qkv-reference/layer0-b2-chunk22/fixture.json",
+      "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/build-vector-vision-width4",
+      "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 84.6920867501758,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/test2026/metal/run_dense_reference.py",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-countfix-20261016/jobs/trained-qkv-reference/layer0-b2-chunk22/fixture.json",
+          "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/build-vector-vision-width4",
+          "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source",
+          "bf16"
+        ],
+        "evidence": "attempts/accepted-d52-exact-trained-fixture/case0-attempt0",
+        "status": {
+          "name": "accepted-d52-exact-trained-fixture",
+          "command": [
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/test2026/metal/run_dense_reference.py",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-countfix-20261016/jobs/trained-qkv-reference/layer0-b2-chunk22/fixture.json",
+            "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/build-vector-vision-width4",
+            "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 78.39153962489218
+        }
+      }
+    ]
+  }
+]

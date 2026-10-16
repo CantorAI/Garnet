@@ -1,0 +1,78 @@
+{
+  "files": {
+    "evidence/compile.cmd": {
+      "bytes": 729,
+      "sha256": "381a5af56cb8f169d958d5db4b45910376baf90000d0b7f7c5d6976800e1b076"
+    },
+    "evidence/compile.log": {
+      "bytes": 1131,
+      "sha256": "fe275d06479ee572dfab4e1a95fc83e15b424efad8e590228328fd32e7c64bd6"
+    },
+    "evidence/exhaustive.log": {
+      "bytes": 346,
+      "sha256": "4e35b483b59f073c84650ce4643a92de39b4b96558e2ed4ea3e2f4fe408a80b8"
+    },
+    "evidence/exit.json": {
+      "bytes": 40,
+      "sha256": "67b5f8787400fd126d563eed6349bd1f19e7f59080a1139fd59d12204b7303ea"
+    },
+    "evidence/metadata.json": {
+      "bytes": 1632,
+      "sha256": "81289a986f310fccc39eedef18e6a08fe93ad382bb1ff7b167f8a717138e1188"
+    },
+    "evidence/report.json": {
+      "bytes": 659,
+      "sha256": "bc85355d74eb9e2ea26a6d806e09bb3f9722013c40a3c302596f3d22821e8986"
+    },
+    "evidence/source-snapshot/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/source-snapshot/prepared_half_inverse_bits.h": {
+      "bytes": 1307,
+      "sha256": "2ba0f45baff48f129743b7ee1c54c941ef8a0ec43e58ed686670a8a72882f7c5"
+    },
+    "evidence/source-snapshot/prepared_half_inverse_cpu.cpp": {
+      "bytes": 3418,
+      "sha256": "453537f95db59b29cf594300fa36515503fb79b3d8476384bb690a407acac75b"
+    },
+    "evidence/source-snapshot/run_prepared_half_inverse_windows.py": {
+      "bytes": 3741,
+      "sha256": "139e2319a80f63cb62fadb125989bdd06bffb9d95a719d8d629a51d38afe6699"
+    },
+    "evidence/statuses.json": {
+      "bytes": 485,
+      "sha256": "50d4b2c24382e3808ef43bb1b1f2343a5208780d0369dbb7c2df53e2ad970dbb"
+    },
+    "evidence/tools/archive_prepared_half_inverse_cpu.py": {
+      "bytes": 1793,
+      "sha256": "c2364a45588b0e4e3d8dd2cd3efa193c0e1b935d2bfbe49bfa6f2a8157d0dda5"
+    },
+    "evidence/tools/verify_prepared_half_inverse_cpu.py": {
+      "bytes": 2880,
+      "sha256": "eec68e97e8e050475303b4e173bff1c3febee12efb74119505c055ad4b95c01f"
+    }
+  },
+  "omitted": {
+    "prepared_half_inverse_cpu.exe": {
+      "bytes": 161792,
+      "sha256": "ae2ed014fb475560227e401286811027f87b93acd75763dffd723affb5a8cb82"
+    },
+    "prepared_half_inverse_cpu.obj": {
+      "bytes": 21600,
+      "sha256": "2aa9c0d7638f32ac0b4c11f7cd306be5e9dbefe788681dffedca0744087fdd11"
+    },
+    "compiler/cl.exe": {
+      "bytes": 893288,
+      "sha256": "315a654ea116864516a1674858e587e535e3bc3045ff32ed2f2739a2c1ec5640"
+    }
+  },
+  "jobs": {
+    "windows-exhaustive-cpu": {
+      "exit_code": 0,
+      "wall_seconds": 2.375
+    }
+  },
+  "scope": "Exhaustive unused integer inverse on Windows CPU only; no Mac/GPU/runtime/inference speed claim.",
+  "full_goal_met": false
+}

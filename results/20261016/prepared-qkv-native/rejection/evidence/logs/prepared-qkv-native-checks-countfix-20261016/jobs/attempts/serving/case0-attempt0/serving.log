@@ -1,0 +1,10 @@
+compiled Garnet decoder layer 0 linear_attention ms 9.76275
+Metal chunk serving lifecycle batch 1 PASS chunks 2/4/8/16/2, partial tails and profile replacement
+compiled Garnet decoder layer 0 linear_attention ms 1.034917
+Metal resident serving PASS batch 1 paused rows, reset, profile replacement and shared-graph session isolation
+Garnet Metal/MPS Apple M4; dense_key_split_k; qwen35_extended_prefill; qwen35_wide_batch_prefill; interleaved_bf16_body; coalesced_bf16_body; resident_kv_inplace; attention_prefix; prefill_stream; dirty_prefix_reset; global_half_alpha; screened_head; screen_seed_1024; interleaved_screen_index; serial_vision_prefetch; vector_vision_context4; prepared_qkv_text closed-loop MetalDecoder batch 1 PASS steps 8 last_layer_ms [] last_head_ms 0
+compiled Garnet decoder layer 0 linear_attention ms 7.631709
+Metal chunk serving lifecycle batch 2 PASS chunks 2/4/8/16/2, partial tails and profile replacement
+compiled Garnet decoder layer 0 linear_attention ms 1.267584
+Metal resident serving PASS batch 2 paused rows, reset, profile replacement and shared-graph session isolation
+Garnet Metal/MPS Apple M4; dense_key_split_k; qwen35_extended_prefill; qwen35_wide_batch_prefill; interleaved_bf16_body; coalesced_bf16_body; resident_kv_inplace; attention_prefix; prefill_stream; dirty_prefix_reset; global_half_alpha; screened_head; screen_seed_1024; interleaved_screen_index; serial_vision_prefetch; vector_vision_context4; prepared_qkv_text closed-loop MetalDecoder batch 2 PASS steps 8 last_layer_ms [] last_head_ms 0

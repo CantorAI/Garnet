@@ -1,8 +1,11 @@
 # Prepared heterogeneous Q/K/V: actual-context GPU investigation
 
 Current final component status: both complete cohorts audited on Mac/Windows;
-only Qwen3 text meets the repeated selection rule. Private native validation
-is a separate running stage; no full-model performance result is established.
+only Qwen3 text meets the repeated component selection rule. Subsequent private
+native validation rejects the full-QKV implementation: it violates the original
+trained key-cache bound while the accepted control passes the identical fixture.
+This supersedes component admission for native use. No full-model performance
+result is established. [Terminal native rejection](../prepared-qkv-native/README.md#final-rejection).
 
 Private generated context only. Accepted vector serving code, independent
 weights and original key policies remain unchanged. No model speed claim.

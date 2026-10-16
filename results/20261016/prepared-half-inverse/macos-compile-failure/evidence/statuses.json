@@ -1,0 +1,31 @@
+[
+  {
+    "name": "macros",
+    "command": [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
+      "-dM",
+      "-E",
+      "-x",
+      "c++",
+      "/dev/null"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.0243325000628829
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
+      "-std=c++17",
+      "-O3",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-I/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-20261016/source-snapshot",
+      "/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-20261016/source-snapshot/prepared_half_inverse_cpu.cpp",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-20261016/prepared_half_inverse_cpu"
+    ],
+    "exit_code": 1,
+    "wall_seconds": 0.028126041870564222
+  }
+]

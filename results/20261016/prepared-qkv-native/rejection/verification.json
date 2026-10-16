@@ -1,0 +1,14 @@
+{
+  "verified_files": 2195,
+  "reused_passing_stages": 25,
+  "fresh_passing_recovery_stages": 6,
+  "total_passing_stages_before_rejection": 31,
+  "candidate_failed_original_bound_ratio": 1.5165457144345686,
+  "accepted_control_worst_original_bound_ratio": 0.5204084868377323,
+  "exact_saved_fixture_inputs": 21,
+  "control_reference_steps": 3,
+  "candidate_rejected": true,
+  "native_performance_admitted": false,
+  "scope": "Full-QKV native path fails original trained key-cache bound while accepted d52 passes the exact saved fixture. No tolerance change, model benchmark or promotion.",
+  "full_goal_met": false
+}

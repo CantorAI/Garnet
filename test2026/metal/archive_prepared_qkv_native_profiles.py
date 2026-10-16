@@ -2,7 +2,7 @@
 from pathlib import Path
 p=Path(__file__).with_name('archive_ndarray_native_profiles.py');source=p.read_text()
 source=source.replace("'ndarray-native-20261015','ndarray-native-repaired-20261015','ndarray-native-confirm-20261015'","'prepared-qkv-native-20261016','prepared-qkv-native-confirm-20261016'").replace("else 'ndarray-native-20261015'","else 'prepared-qkv-native-20261016'")
-source=source.replace("validation=root/'ndarray-native-checks-repaired-20261015.tar.gz'","validation=Path(json.loads((root/'preparation.json').read_text())['parent'])/'prepared-qkv-native-checks-20261016.tar.gz'")
+source=source.replace("validation=root/'ndarray-native-checks-repaired-20261015.tar.gz'","validation=Path(json.loads((root/'preparation.json').read_text())['parent'])/'prepared-qkv-native-checks-countfix-20261016.tar.gz'")
 needle="hardware={name:subprocess.check_output"
 assert source.count(needle)==1
 source=source.replace(needle,"""# The new full source gate includes textual docs and small binary fixtures.

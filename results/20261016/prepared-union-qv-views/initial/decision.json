@@ -1,0 +1,626 @@
+{
+  "profiles": [
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "layer": 0,
+      "rows": 26,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06325878,
+            "b": 0.0630342
+          },
+          "wall_ms": {
+            "a": 0.44391413,
+            "b": 0.42852127
+          },
+          "gpu_ms": {
+            "a": 0.09147457778453827,
+            "b": 0.08712126407772303
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.06381375,
+            "b": 0.03527874
+          },
+          "wall_ms": {
+            "a": 0.66547002,
+            "b": 0.58250879
+          },
+          "gpu_ms": {
+            "a": 0.14792082365602255,
+            "b": 0.1212454354390502
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.9964498208786196,
+          "wall_ms": 0.9653246901602344,
+          "gpu_ms": 0.9524095785708991
+        },
+        "comparison": {
+          "encode_ms": 0.5528391608391608,
+          "wall_ms": 0.8753343839591752,
+          "gpu_ms": 0.8196644153428747
+        }
+      },
+      "null_pass": true,
+      "gain_pass": true,
+      "profile_pass": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "layer": 0,
+      "rows": 52,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06239078,
+            "b": 0.06248582
+          },
+          "wall_ms": {
+            "a": 0.4225862,
+            "b": 0.4195975
+          },
+          "gpu_ms": {
+            "a": 0.09933498222380877,
+            "b": 0.09920920711010695
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.0628038,
+            "b": 0.03554667
+          },
+          "wall_ms": {
+            "a": 0.47429754,
+            "b": 0.4452129
+          },
+          "gpu_ms": {
+            "a": 0.12561957351863384,
+            "b": 0.1217903895303607
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 1.0015233020007122,
+          "wall_ms": 0.992927596783804,
+          "gpu_ms": 0.998733828598082
+        },
+        "comparison": {
+          "encode_ms": 0.5659955289329627,
+          "wall_ms": 0.9386784928296276,
+          "gpu_ms": 0.9695176167135678
+        }
+      },
+      "null_pass": true,
+      "gain_pass": false,
+      "profile_pass": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "layer": 23,
+      "rows": 26,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06297371,
+            "b": 0.06294793
+          },
+          "wall_ms": {
+            "a": 0.56184291,
+            "b": 0.56072706
+          },
+          "gpu_ms": {
+            "a": 0.1256716577336192,
+            "b": 0.12127209454774857
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.06208667,
+            "b": 0.03433373
+          },
+          "wall_ms": {
+            "a": 0.39043504,
+            "b": 0.34830997
+          },
+          "gpu_ms": {
+            "a": 0.07435709238052368,
+            "b": 0.06045750342309475
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.9995906228170454,
+          "wall_ms": 0.9980139466385721,
+          "gpu_ms": 0.9649916037934646
+        },
+        "comparison": {
+          "encode_ms": 0.552996802695329,
+          "wall_ms": 0.8921073528646405,
+          "gpu_ms": 0.8130697622454419
+        }
+      },
+      "null_pass": true,
+      "gain_pass": true,
+      "profile_pass": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "layer": 23,
+      "rows": 52,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06338207,
+            "b": 0.06374828
+          },
+          "wall_ms": {
+            "a": 0.64886995,
+            "b": 0.67735417
+          },
+          "gpu_ms": {
+            "a": 0.17811335157603025,
+            "b": 0.1858608378097415
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.06341621,
+            "b": 0.03490627
+          },
+          "wall_ms": {
+            "a": 0.53821167,
+            "b": 0.48489959
+          },
+          "gpu_ms": {
+            "a": 0.13824583031237125,
+            "b": 0.12481830082833767
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 1.0057778169756841,
+          "wall_ms": 1.0438981956245623,
+          "gpu_ms": 1.0434975040622045
+        },
+        "comparison": {
+          "encode_ms": 0.5504313487040616,
+          "wall_ms": 0.9009458862161052,
+          "gpu_ms": 0.9028720833482383
+        }
+      },
+      "null_pass": true,
+      "gain_pass": true,
+      "profile_pass": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "layer": 0,
+      "rows": 24,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06244538,
+            "b": 0.06247622
+          },
+          "wall_ms": {
+            "a": 0.60404371,
+            "b": 0.62131125
+          },
+          "gpu_ms": {
+            "a": 0.26191624347120523,
+            "b": 0.27063251938670874
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.06389956,
+            "b": 0.03602586
+          },
+          "wall_ms": {
+            "a": 0.70537667,
+            "b": 0.66826131
+          },
+          "gpu_ms": {
+            "a": 0.3180308360606432,
+            "b": 0.30155832413583994
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 1.0004938716042724,
+          "wall_ms": 1.0285865736438178,
+          "gpu_ms": 1.0332788673202766
+        },
+        "comparison": {
+          "encode_ms": 0.5637888586400283,
+          "wall_ms": 0.9473822121165418,
+          "gpu_ms": 0.9482046705632587
+        }
+      },
+      "null_pass": true,
+      "gain_pass": true,
+      "profile_pass": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "layer": 0,
+      "rows": 44,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06258495,
+            "b": 0.06239953
+          },
+          "wall_ms": {
+            "a": 0.8430491,
+            "b": 0.85895663
+          },
+          "gpu_ms": {
+            "a": 0.4386874893680215,
+            "b": 0.4465208575129509
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.06434905,
+            "b": 0.03586955
+          },
+          "wall_ms": {
+            "a": 0.9472466,
+            "b": 0.83489289
+          },
+          "gpu_ms": {
+            "a": 0.505327102728188,
+            "b": 0.45635498594492674
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.9970373068924717,
+          "wall_ms": 1.0188690433333005,
+          "gpu_ms": 1.017856374605563
+        },
+        "comparison": {
+          "encode_ms": 0.5574215936365805,
+          "wall_ms": 0.8813891651867634,
+          "gpu_ms": 0.903088283769329
+        }
+      },
+      "null_pass": true,
+      "gain_pass": true,
+      "profile_pass": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "layer": 27,
+      "rows": 24,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06324918,
+            "b": 0.06310044
+          },
+          "wall_ms": {
+            "a": 0.60182253,
+            "b": 0.60480421
+          },
+          "gpu_ms": {
+            "a": 0.26257414370775223,
+            "b": 0.2600783295929432
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.0629471,
+            "b": 0.03549089
+          },
+          "wall_ms": {
+            "a": 0.85838918,
+            "b": 0.83799169
+          },
+          "gpu_ms": {
+            "a": 0.3889520652592182,
+            "b": 0.37845166865736246
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.9976483489588323,
+          "wall_ms": 1.0049544173761658,
+          "gpu_ms": 0.9904948214642684
+        },
+        "comparison": {
+          "encode_ms": 0.5638208908750363,
+          "wall_ms": 0.976237480067025,
+          "gpu_ms": 0.973003365865
+        }
+      },
+      "null_pass": true,
+      "gain_pass": false,
+      "profile_pass": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "layer": 27,
+      "rows": 44,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.06312007,
+            "b": 0.06306537
+          },
+          "wall_ms": {
+            "a": 0.75280498,
+            "b": 0.71427162
+          },
+          "gpu_ms": {
+            "a": 0.374837894923985,
+            "b": 0.3582087391987443
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.06341295,
+            "b": 0.03522919
+          },
+          "wall_ms": {
+            "a": 0.96740542,
+            "b": 0.92497257
+          },
+          "gpu_ms": {
+            "a": 0.5136833526194096,
+            "b": 0.4925558343529701
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.9991333976657503,
+          "wall_ms": 0.9488136223540924,
+          "gpu_ms": 0.9556364072298159
+        },
+        "comparison": {
+          "encode_ms": 0.555551981101652,
+          "wall_ms": 0.9561374692318759,
+          "gpu_ms": 0.9588705412415945
+        }
+      },
+      "null_pass": false,
+      "gain_pass": false,
+      "profile_pass": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "layer": 3,
+      "rows": 80,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.0887216,
+            "b": 0.08853499
+          },
+          "wall_ms": {
+            "a": 0.92033414,
+            "b": 0.94119423
+          },
+          "gpu_ms": {
+            "a": 0.4923020862042904,
+            "b": 0.49520415253937244
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.08944128999999999,
+            "b": 0.06218502
+          },
+          "wall_ms": {
+            "a": 1.06162542,
+            "b": 1.0086696
+          },
+          "gpu_ms": {
+            "a": 0.6189775373786688,
+            "b": 0.6033133575692773
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.997896679049972,
+          "wall_ms": 1.0226657787572675,
+          "gpu_ms": 1.0058948893705841
+        },
+        "comparison": {
+          "encode_ms": 0.6952607682648585,
+          "wall_ms": 0.9501181687981812,
+          "gpu_ms": 0.9746934599990037
+        }
+      },
+      "null_pass": true,
+      "gain_pass": false,
+      "profile_pass": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "layer": 3,
+      "rows": 160,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.08936041,
+            "b": 0.08886461999999999
+          },
+          "wall_ms": {
+            "a": 1.28317457,
+            "b": 1.27975588
+          },
+          "gpu_ms": {
+            "a": 0.873005404137075,
+            "b": 0.8618170907720923
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.08854124,
+            "b": 0.06150417
+          },
+          "wall_ms": {
+            "a": 1.21394623,
+            "b": 1.1876971
+          },
+          "gpu_ms": {
+            "a": 0.8090862166136503,
+            "b": 0.8054608106613159
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.9944517935851009,
+          "wall_ms": 0.9973357561161769,
+          "gpu_ms": 0.9871841419171492
+        },
+        "comparison": {
+          "encode_ms": 0.6946386791059173,
+          "wall_ms": 0.9783770241619352,
+          "gpu_ms": 0.9955191351948768
+        }
+      },
+      "null_pass": true,
+      "gain_pass": false,
+      "profile_pass": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "layer": 19,
+      "rows": 80,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.08798083,
+            "b": 0.08808495999999999
+          },
+          "wall_ms": {
+            "a": 0.98447037,
+            "b": 0.9703074700000001
+          },
+          "gpu_ms": {
+            "a": 0.5323050078004599,
+            "b": 0.5244203936308622
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.09007955,
+            "b": 0.06193747
+          },
+          "wall_ms": {
+            "a": 1.07858957,
+            "b": 1.01217412
+          },
+          "gpu_ms": {
+            "a": 0.6297708349302411,
+            "b": 0.6047471007332206
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 1.001183553280868,
+          "wall_ms": 0.9856136858644106,
+          "gpu_ms": 0.98518778885403
+        },
+        "comparison": {
+          "encode_ms": 0.6875863611663248,
+          "wall_ms": 0.9384237972929776,
+          "gpu_ms": 0.9602653333417823
+        }
+      },
+      "null_pass": true,
+      "gain_pass": false,
+      "profile_pass": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "layer": 19,
+      "rows": 160,
+      "means": {
+        "null": {
+          "encode_ms": {
+            "a": 0.09048996,
+            "b": 0.08978374
+          },
+          "wall_ms": {
+            "a": 1.29395205,
+            "b": 1.26277707
+          },
+          "gpu_ms": {
+            "a": 0.8695487258955836,
+            "b": 0.8406624989584088
+          }
+        },
+        "comparison": {
+          "encode_ms": {
+            "a": 0.08954456999999999,
+            "b": 0.06170451
+          },
+          "wall_ms": {
+            "a": 1.24299204,
+            "b": 1.18154828
+          },
+          "gpu_ms": {
+            "a": 0.8209854969754815,
+            "b": 0.7956433249637485
+          }
+        }
+      },
+      "fractions": {
+        "null": {
+          "encode_ms": 0.992195598274107,
+          "wall_ms": 0.9759071597745838,
+          "gpu_ms": 0.9667802090016018
+        },
+        "comparison": {
+          "encode_ms": 0.6890927054538316,
+          "wall_ms": 0.9505678572165271,
+          "gpu_ms": 0.9691320101206491
+        }
+      },
+      "null_pass": true,
+      "gain_pass": false,
+      "profile_pass": false
+    }
+  ],
+  "models": [
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "endpoint_profiles": 4,
+      "component_screen_pass": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "endpoint_profiles": 4,
+      "component_screen_pass": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "endpoint_profiles": 4,
+      "component_screen_pass": false
+    }
+  ],
+  "unchanged_confirmation_admitted": false,
+  "native_integration_admitted": false,
+  "fresh_vllm_comparison": false,
+  "full_goal_met": false,
+  "scope": "All ABBA arithmetic means; own-null is exclusion only; first/last CPU-admitted endpoints fixed before GPU results. No full-model gain."
+}

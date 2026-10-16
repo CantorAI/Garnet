@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Qwen3-0.6B-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 148.7831997917965
+  }
+]

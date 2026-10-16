@@ -1,7 +1,7 @@
 {
-  "checked_at_utc": "2026-10-16T04:00:47.869111+00:00",
-  "reports_verified": 171,
-  "local_links_checked": 433,
+  "checked_at_utc": "2026-10-16T04:42:38.353969+00:00",
+  "reports_verified": 177,
+  "local_links_checked": 458,
   "verification_hashes_checked": 100,
   "matched_table_values_checked": 72,
   "component_table_values_checked": 30,
@@ -38,6 +38,12 @@
   "prepared_qkv_learned_table_values_checked": 48,
   "prepared_qkv_complete_numerical_profiles": 232,
   "prepared_qkv_private_changes_regenerated": 12,
+  "rejected_qkv_table_values_checked": 2,
+  "half_inverse_cpu_table_values_checked": 9,
+  "half_inverse_actual_compiler_hosts": 2,
+  "qv_rejected_component_table_values_checked": 48,
+  "qv_preparation_cost_table_values_checked": 9,
+  "qv_output_view_table_values_checked": 48,
   "status": "passed",
   "scope": "Documentation consistency only; experiment numerical/performance audits are separate records"
 }

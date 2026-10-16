@@ -1,7 +1,46 @@
 # Private native text Q/K/V fusion after repeated component selection
 
-Status: private build compiles and native correctness suite is running. No native
-latency/decode or overall goal success is established; serving branch unchanged.
+Status: rejected after a trained key-cache numerical failure. The accepted
+implementation passes the identical saved fixture. No candidate native timing
+or promotion was admitted. The historical launch notes below are superseded
+by this terminal result; the serving implementation remains unchanged.
+
+## Final rejection
+
+The original driver exited 1 after 25 passing stages because its intermediate
+stage-count assertion still expected 23. Preserve that failed run and both
+terminal controllers before resuming only the missing stages. The resumed
+driver retains the original 25 records, source and library unchanged; six fresh
+recovery stages pass. The new trained test then fails at layer 0, batch 2,
+chunk 22, physical rows 44, first state step. The suite has 31 passing stages
+and an incomplete failing trained stage, not a full 33-stage pass.
+
+| Implementation on identical saved input | Worst original key error bound ratio | Result |
+| --- | ---: | --- |
+| Fused Q/K/V candidate | 1.516545714435 | Fail |
+| Accepted d52 control, all three state steps | 0.520408486838 | Pass |
+
+A ratio greater than 1 violates the unchanged bound. The diagnostic verifies
+all 21 saved input and expected-buffer identities and uses the original
+accepted driver. Both candidate session and graph fusion counters equal 1
+on the failing case. Exact packed weight values and FP32 arithmetic did not
+ensure acceptable downstream key-cache numerics. This observation does not
+identify an internal MPS rounding algorithm.
+
+The failed validation and its stopped controllers are frozen. The rejection
+bundle contains 2,195 files, original and resumed failures, reference fixture,
+control driver, and successful identical-input diagnostic. Both Mac and Windows
+audits pass. Archive SHA256:
+`bca55a5986356f6bf6f7c2320d59fb4d71f37f4a40f6b0cb4b027f1a6be6e556`.
+[Rejection audit](rejection/verification.json),
+[archive identity](rejection/archive-verification.json),
+[failed controller identities](count-failure-controllers/archive-verification.json).
+
+The full-QKV performance continuation stopped at the validation failure; no
+native model benchmark ran. The next algorithm packs Q/V only and preserves
+the original K GPU projection, with separate primitive, learned numerical,
+timing and native gates. Full-QKV component measurements cannot establish a
+Q/V or model gain.
 
 Selection: two complete unchanged learned component cohorts select only
 Qwen3-0.6B. Keep coder excluded despite a favorable repeat after initial failure;

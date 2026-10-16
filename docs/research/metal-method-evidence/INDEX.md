@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T04:00:46.872636+00:00
+Generated UTC: 2026-10-16T04:42:37.334951+00:00
 
-Base HEAD at generation: `c6aca309d39f8a3bcfbb22f34ea68de6d9c1e1d8`. Reports indexed: **171**.
+Base HEAD at generation: `aa6f6f342fcb6b9d04011067d64ebca09999109c`. Reports indexed: **177**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -161,9 +161,15 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
 | [results/20261016/ndarray-selective-prefill](../../../results/20261016/ndarray-selective-prefill/README.md) | Selective F32 NDArray: predeclared trained-component screen |
 | [results/20261016/ndarray-weight-admission](../../../results/20261016/ndarray-weight-admission/README.md) | Full body-weight admission: one VL matrix needs the original FP32 fallback |
+| [results/20261016/prepared-half-inverse](../../../results/20261016/prepared-half-inverse/README.md) | Exact half inverse CPU verification |
 | [results/20261016/prepared-qkv-native](../../../results/20261016/prepared-qkv-native/README.md) | Private native text Q/K/V fusion after repeated component selection |
+| [results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/README.md) | xModel |
 | [results/20261016/prepared-union-mlp](../../../results/20261016/prepared-union-mlp/README.md) | Prepared exact union weights and activation-only output |
 | [results/20261016/prepared-union-qkv](../../../results/20261016/prepared-union-qkv/README.md) | Prepared heterogeneous Q/K/V: actual-context GPU investigation |
+| [results/20261016/prepared-union-qv](../../../results/20261016/prepared-union-qv/README.md) | QV fusion with the original key projection |
+| [results/20261016/prepared-union-qv-views](../../../results/20261016/prepared-union-qv-views/README.md) | QV output views without a scatter dispatch |
 | [results/20261016/qkv-union-half-admission](../../../results/20261016/qkv-union-half-admission/README.md) | Separate Q/K/V exact union: full learned CPU eligibility |
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |

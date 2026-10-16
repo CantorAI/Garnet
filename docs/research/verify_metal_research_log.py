@@ -39,7 +39,7 @@ def main():
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
                'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     paths += [ROOT / 'results/20261016' / name / 'README.md' for name in
-              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native')]
+              ('ndarray-weight-admission','ndarray-selective-prefill','ndarray-selective-native','compact11-escape-cpu','vector-vision-calibrated','joined-union-half-admission','prepared-union-mlp','qkv-union-half-admission','prepared-union-qkv','prepared-qkv-native','prepared-half-inverse','prepared-union-qv','prepared-union-qv-views')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -394,6 +394,47 @@ def main():
     for name,operation in factory['OPERATIONS'].items():
         p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==prep['changes'][name]['before']
         assert hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==prep['changes'][name]['after']
+    rejected=ROOT/'results/20261016/prepared-qkv-native'
+    rejection=json.loads((rejected/'rejection/verification.json').read_text())
+    assert rejection['candidate_rejected'] and not rejection['native_performance_admitted'] and not rejection['full_goal_met']
+    assert (rejection['total_passing_stages_before_rejection'],rejection['reused_passing_stages'],rejection['fresh_passing_recovery_stages'],rejection['exact_saved_fixture_inputs'],rejection['control_reference_steps'])==(31,25,6,21,3)
+    rows=[line.split('|')[1:-1] for line in (rejected/'README.md').read_text().splitlines() if line.startswith(('| Fused Q/K/V','| Accepted d52'))]
+    assert len(rows)==2
+    assert [row[1].strip() for row in rows]==[f"{rejection[k]:.12f}" for k in ('candidate_failed_original_bound_ratio','accepted_control_worst_original_bound_ratio')]
+    inverse=ROOT/'results/20261016/prepared-half-inverse'
+    proofs=[json.loads((inverse/label/'verification.json').read_text()) for label in ('windows','macos')]
+    assert proofs[0]['counts']==proofs[1]['counts'] and proofs[1]['apple_clang_clz_branch']
+    header_sha=hashlib.sha256((ROOT/'test2026/metal/prepared_half_inverse_bits.h').read_bytes()).hexdigest()
+    assert all(p['integer_header_sha256']==header_sha and not p['full_goal_met'] for p in proofs)
+    counts=proofs[0]['counts'];assert not counts['gpu_or_model_test'] and counts['rejected_outputs_unchanged'] and counts['original_codec_and_float_reference_bits_exact']
+    rows=[line.split('|')[1:-1] for line in (inverse/'README.md').read_text().splitlines() if line.startswith(('| Original BF16','| Half words','| Six invalid'))]
+    values=[(counts['bf16_scale_cases'],counts['original_codec_admitted'],counts['original_codec_rejected']),(counts['half_scale_cases'],counts['finite_half_exact'],counts['nonfinite_half_rejected']),(counts['invalid_scale_cases'],0,counts['invalid_scale_cases'])]
+    assert len(rows)==3 and [[int(v.strip()) for v in row[1:]] for row in rows]==[list(v) for v in values]
+    qv=ROOT/'results/20261016/prepared-union-qv';qv_decision=json.loads((qv/'initial/decision.json').read_text());qv_audit=json.loads((qv/'initial/verification.json').read_text())
+    assert not qv_decision['unchanged_confirmation_admitted'] and not qv_decision['native_integration_admitted'] and not any(m['component_screen_pass'] for m in qv_decision['models'])
+    assert (qv_audit['complete_learned_profiles'],qv_audit['timing_samples'],qv_audit['original_fp32_key_matrices'])==(116,4800,52)
+    rows=[line.split('|')[1:-1] for line in (qv/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==15
+    for cells,r in zip(rows[:12],qv_decision['profiles']):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['layer'] and int(cells[2])==r['rows']
+        values=[r['fractions'][kind][field] for kind in ('comparison','null') for field in ('gpu_ms','wall_ms')]
+        assert [v.strip() for v in cells[3:7]]==[f'{v:.6f}' for v in values] and cells[7].strip()==('Yes' if r['profile_pass'] else 'No')
+    qv_cost=json.loads((qv/'cost-summary.json').read_text());assert qv_cost['source_sha256']==hashlib.sha256((ROOT/'test2026/metal/summarize_prepared_union_qv_costs.py').read_bytes()).hexdigest()
+    costs=qv_cost['cohorts'][0]['models'];assert sum(m['original_key_bit_checks'] for m in costs)==10723328
+    for cells,m in zip(rows[12:],costs):
+        assert cells[0].strip()==m['model'] and int(cells[1])==m['admitted_groups']
+        values=[m['logical_all_admitted_qv_weights_bytes']/2**20,m['first_shape_preparation_ms']['min'],m['first_shape_preparation_ms']['max']]
+        assert [v.strip() for v in cells[2:]]==[f'{values[0]:.3f}',f'{values[1]:.6f}',f'{values[2]:.6f}']
+    views=ROOT/'results/20261016/prepared-union-qv-views';view_decision=json.loads((views/'initial/decision.json').read_text());view_audit=json.loads((views/'initial/verification.json').read_text())
+    assert not view_decision['unchanged_confirmation_admitted'] and not any(m['component_screen_pass'] for m in view_decision['models'])
+    assert view_audit['complete_learned_profiles']==116 and view_audit['timing_samples']==4800
+    primitive=json.loads((views/'primitive/verification.json').read_text());assert primitive['canonical_view_offsets_and_guard_checked'] and primitive['no_scatter_encode_in_candidate'] and not primitive['downstream_gpu_consumers_adapted']
+    rows=[line.split('|')[1:-1] for line in (views/'README.md').read_text().splitlines() if line.startswith('| Qwen')];assert len(rows)==12
+    assert sum(r['profile_pass'] for r in view_decision['profiles'])==5
+    for cells,r in zip(rows,view_decision['profiles']):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['layer'] and int(cells[2])==r['rows']
+        values=[r['fractions'][kind][field] for kind in ('comparison','null') for field in ('gpu_ms','wall_ms')]
+        assert [v.strip() for v in cells[3:7]]==[f'{v:.6f}' for v in values] and cells[7].strip()==('Yes' if r['profile_pass'] else 'No')
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
@@ -414,7 +455,10 @@ def main():
                   prepared_union_learned_table_values_checked=48,prepared_union_complete_numerical_profiles=304,
                   qkv_union_cpu_groups_audited=58,qkv_union_cpu_table_values_checked=9,
                   prepared_qkv_primitive_cases_audited=24,prepared_qkv_learned_table_values_checked=48,
-                  prepared_qkv_complete_numerical_profiles=232,prepared_qkv_private_changes_regenerated=12,status='passed',
+                  prepared_qkv_complete_numerical_profiles=232,prepared_qkv_private_changes_regenerated=12,
+                  rejected_qkv_table_values_checked=2,half_inverse_cpu_table_values_checked=9,
+                  half_inverse_actual_compiler_hosts=2,qv_rejected_component_table_values_checked=48,
+                  qv_preparation_cost_table_values_checked=9,qv_output_view_table_values_checked=48,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

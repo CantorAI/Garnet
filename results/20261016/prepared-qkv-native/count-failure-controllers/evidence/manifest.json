@@ -1,0 +1,92 @@
+{
+  "files": {
+    "evidence/logs/prepared-qkv-native-continuation-20261016/exit.json": {
+      "bytes": 51,
+      "sha256": "f0ef6777d4cb46a324845d33144f44ae0bd37601937a63ffc926bf45cde80ed5"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/finalizer-archive.json": {
+      "bytes": 259,
+      "sha256": "fb9b13b3ac8f858a78bba83b1c764377f3f6b6136d094055185868e0ef930c64"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/metadata.json": {
+      "bytes": 980,
+      "sha256": "8c1b757ffa945aef282eab32473d0ef377944d65e371e6e9bc11200867b7c4d8"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/output.log": {
+      "bytes": 489,
+      "sha256": "8b87d96e6791badd97c07787b613a82a8ee87de25cca4a7130886584372dc257"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/pid.json": {
+      "bytes": 42,
+      "sha256": "38f045af0a2e3bd71f850b6662c1fcba2e689acefabb417d11bab30365c246f0"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/analyze_prepared_qkv_native_results.py": {
+      "bytes": 981,
+      "sha256": "45034319b3cca75a4ba5a501aad9095ec06660d0212f2393e0c178227edf0183"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/archive_prepared_qkv_native_profiles.py": {
+      "bytes": 1417,
+      "sha256": "c0228242cb3492d1082a1dc53228a7e80945be7c15d7c32c82c59748955c439e"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/compare_prepared_qkv_native.py": {
+      "bytes": 3046,
+      "sha256": "06699ac10dd5b4f76d736d14cb5b8110dba5a1c9cd89b255a82861ccc3471c2e"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/continue_prepared_qkv_native.py": {
+      "bytes": 6185,
+      "sha256": "b587ed4f82e4ba91d64f9fae36761dfccb8a8b2270d5482569590da4a3839568"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/launch_prepared_qkv_native_profiles.py": {
+      "bytes": 1453,
+      "sha256": "f790c83e621ae0c029da3f62930438a29457bc929c1c0f9054055703990c808e"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/run_prepared_qkv_native_profiles.py": {
+      "bytes": 808,
+      "sha256": "d721f23303ac46a732ce06a2f440637620798a7d866c7e81dcd2f92373e15a75"
+    },
+    "evidence/logs/prepared-qkv-native-continuation-20261016/source-snapshot/verify_prepared_qkv_native_profiles.py": {
+      "bytes": 2526,
+      "sha256": "13da0158c183913213d9f19947026296ab28c3b6dc2178599cb36cfb78b5e755"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/archive.log": {
+      "bytes": 158,
+      "sha256": "2e4a91d6c6e369a65fc185a9082728a059509688ac4711a96066d2a3d004b99e"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/exit.json": {
+      "bytes": 52,
+      "sha256": "45c59eafcf2486eab4806018e94d86c15698ce44811dc72f21be7bd87d6d3b6b"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/metadata.json": {
+      "bytes": 855,
+      "sha256": "2aab7240f7c0957f176be11df59fe69a433038b04a8bf101d89c8bf7f206976f"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/output.log": {
+      "bytes": 396,
+      "sha256": "547c4d0ee121e6c5692592f60795c792fd9be960133c7e32d8f6f81ac599f6bf"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/pid.json": {
+      "bytes": 36,
+      "sha256": "61c979292b1102b7aee570ea039b52b3054e7000deeddcc5b95e1c23ff333b72"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/statuses.json": {
+      "bytes": 421,
+      "sha256": "ab789e38d65b9d9659dd368b4e9641b6d6d743b80f50ffc2873d7e4bd84e7480"
+    },
+    "evidence/logs/prepared-qkv-native-finalize-20261016/terminal-archive.json": {
+      "bytes": 285,
+      "sha256": "a8a8f04529c5041abbf8143f05bcbf03be7064549588d43eb693539ef0a0faca"
+    }
+  },
+  "jobs": {
+    "prepared-qkv-native-finalize-20261016": {
+      "exit_code": 1,
+      "wall_seconds": 1077.0083073340356
+    },
+    "prepared-qkv-native-continuation-20261016": {
+      "exit_code": 1,
+      "wall_seconds": 458.3245147499256
+    }
+  },
+  "scope": "Both terminal failed bookkeeping controllers only; runtime validation failure archive remains separate.",
+  "full_goal_met": false
+}

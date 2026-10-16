@@ -7,7 +7,7 @@ def replace(old,new,count=1):
  assert source.count(old)==count,(old,source.count(old));source=source.replace(old,new)
 replace("[('control','build-coalesced-bf16-body'),('candidate','build-vector-vision-width4')]","[('control','build-vector-vision-width4'),('candidate','build-prepared-qkv-text')]")
 replace("assert metadata['library_sha256']['control']=='c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1'","assert metadata['library_sha256']['control']=='d52c37e09edf7afb61889037863b1cb338f9ac0b6d98ea62043c3a016af5b55e'")
-replace('logs/vector-vision-native-checks-20261016/jobs/metadata.json','logs/prepared-qkv-native-checks-20261016/jobs/metadata.json')
+replace('logs/vector-vision-native-checks-20261016/jobs/metadata.json','logs/prepared-qkv-native-checks-countfix-20261016/jobs/metadata.json')
 replace("assert value['vector_vision_context_enabled']==(policy=='candidate')","assert value['vector_vision_context_enabled']")
 replace("(vision_depth if vl and policy=='candidate' else 0)","(vision_depth if vl else 0)")
 needle="                assert value['vector_vision_context_enabled']"

@@ -1,0 +1,74 @@
+{
+  "files": {
+    "evidence/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/exhaustive.log": {
+      "bytes": 345,
+      "sha256": "49d9dd7627a6a826144d7c70e62a4e686816c27d4f1721301bdcd20d469dda37"
+    },
+    "evidence/exit.json": {
+      "bytes": 53,
+      "sha256": "b9cbd748f94720555b4a792911d4793467ce51c171091a5d2eecfa6f4ce7d387"
+    },
+    "evidence/macros.log": {
+      "bytes": 17053,
+      "sha256": "fca31eb0145e3c2c061b8cacd1721868e436e08b2523b6f6aef2524737ab7045"
+    },
+    "evidence/metadata.json": {
+      "bytes": 1979,
+      "sha256": "19608bafe249fac59f0890b794c420489a33fc4a2c14601ac2934f07c9d74212"
+    },
+    "evidence/report.json": {
+      "bytes": 623,
+      "sha256": "920b43881bb3ba2602d98606e51a7410ae25c746b7e821b7f9b2a44a318fc506"
+    },
+    "evidence/source-snapshot/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/source-snapshot/prepared_half_inverse_bits.h": {
+      "bytes": 1307,
+      "sha256": "2ba0f45baff48f129743b7ee1c54c941ef8a0ec43e58ed686670a8a72882f7c5"
+    },
+    "evidence/source-snapshot/prepared_half_inverse_cpu.cpp": {
+      "bytes": 3418,
+      "sha256": "453537f95db59b29cf594300fa36515503fb79b3d8476384bb690a407acac75b"
+    },
+    "evidence/source-snapshot/run_prepared_half_inverse_macos.py": {
+      "bytes": 3077,
+      "sha256": "6ca5fa5937b361daf7a85d04b128812af28e4bc0c2ec694d4bf2a6735e5c6f06"
+    },
+    "evidence/statuses.json": {
+      "bytes": 1096,
+      "sha256": "d6b9f7110406dfbb6df6deb709a3980632f0f57bf642da3bf1e8e00c6e7a690a"
+    },
+    "evidence/tools/archive_prepared_half_inverse_macos.py": {
+      "bytes": 1769,
+      "sha256": "7c560abb68d80ee1443925a112daf4e7c56f7db03c7be2d624fff910f8067f8e"
+    },
+    "evidence/tools/verify_prepared_half_inverse_macos.py": {
+      "bytes": 2837,
+      "sha256": "eea3d3246ad249afc574a800f16a9656641d1545e149ec7abcb58b84beb9a62c"
+    }
+  },
+  "omitted": {
+    "prepared_half_inverse_cpu": {
+      "bytes": 34408,
+      "sha256": "2321e6b67e251bbcd78be14cf173b1dd87f482f2a835040b39dd7038fd39e011"
+    },
+    "compiler/clang++": {
+      "bytes": 269128592,
+      "sha256": "d5ba7be6de1bac17bfd018e1591711e69cb94d199a0ba763427c8b2d67c50697"
+    }
+  },
+  "jobs": {
+    "macos-exhaustive-cpu": {
+      "exit_code": 0,
+      "wall_seconds": 0.9397461670450866
+    }
+  },
+  "scope": "Actual Apple-clang CLZ mathematical prerequisite only; no GPU/native/model speed claim.",
+  "full_goal_met": false
+}

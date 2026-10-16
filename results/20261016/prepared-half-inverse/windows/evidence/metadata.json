@@ -1,0 +1,24 @@
+{
+  "command": [
+    "test2026/metal/run_prepared_half_inverse_windows.py",
+    ".work/prepared-half-inverse-windows-20261016"
+  ],
+  "pid": 46960,
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "architecture": "AMD64",
+  "source_sha256": {
+    "D:/CantorAI/Garnet-metal/test2026/metal/run_prepared_half_inverse_windows.py": "139e2319a80f63cb62fadb125989bdd06bffb9d95a719d8d629a51d38afe6699",
+    "D:/CantorAI/Garnet-metal/test2026/metal/prepared_half_inverse_cpu.cpp": "453537f95db59b29cf594300fa36515503fb79b3d8476384bb690a407acac75b",
+    "D:/CantorAI/Garnet-metal/test2026/metal/prepared_half_inverse_bits.h": "2ba0f45baff48f129743b7ee1c54c941ef8a0ec43e58ed686670a8a72882f7c5",
+    "D:/CantorAI/Garnet-metal/src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+  },
+  "compiler": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe",
+  "compiler_sha256": "315a654ea116864516a1674858e587e535e3bc3045ff32ed2f2739a2c1ec5640",
+  "compile_script_sha256": "381a5af56cb8f169d958d5db4b45910376baf90000d0b7f7c5d6976800e1b076",
+  "inverse_branch": "Portable highest-bit loop: MSVC; Apple clang builtin branch not executed here",
+  "scope": "Compile and exhaustively verify an unused CPU bit inverse locally; no Mac workload interference.",
+  "full_goal_met": false,
+  "binary_sha256": "ae2ed014fb475560227e401286811027f87b93acd75763dffd723affb5a8cb82",
+  "object_sha256": "2aa9c0d7638f32ac0b4c11f7cd306be5e9dbefe788681dffedca0744087fdd11"
+}

@@ -1,0 +1,30 @@
+Quiet interval verified; starting exclusive resume probe
+Starting Qwen3-0.6B-prefix-recovery
+Completed Qwen3-0.6B-prefix-recovery
+Completed all clean cases for Qwen3-0.6B-prefix-recovery
+Starting Qwen3-0.6B-screened-recovery
+Completed Qwen3-0.6B-screened-recovery
+Completed all clean cases for Qwen3-0.6B-screened-recovery
+Starting Qwen2.5-Coder-0.5B-Instruct-prefix-recovery
+Completed Qwen2.5-Coder-0.5B-Instruct-prefix-recovery
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-prefix-recovery
+Starting Qwen2.5-Coder-0.5B-Instruct-screened-recovery
+Completed Qwen2.5-Coder-0.5B-Instruct-screened-recovery
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-screened-recovery
+Starting Qwen3.5-0.8B-prefix-recovery
+Completed Qwen3.5-0.8B-prefix-recovery
+Completed all clean cases for Qwen3.5-0.8B-prefix-recovery
+Starting Qwen3.5-0.8B-screened-recovery
+Completed Qwen3.5-0.8B-screened-recovery
+Completed all clean cases for Qwen3.5-0.8B-screened-recovery
+Original19, exact trained vision, trained heads and both recovery suites PASS
+Starting prepared-qkv-trained-reference
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/resume_prepared_qkv_native_checks.py", line 42, in <module>
+    exec(compile(resume_tail,str(resume_output/'resumed-tail.executed.py'),'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-countfix-20261016/jobs/resumed-tail.executed.py", line 8, in <module>
+    run('prepared-qkv-trained-reference',[py,str(s/'test_prepared_qkv_dense_reference.py'),runtime,str(build),str(r/'source'),str(models/'Qwen3-0.6B'),'bf16',str(output/'trained-qkv-reference')])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "archived_original_exclusive_validation_functions", line 85, in run
+RuntimeError: Validation failed for non-contention reason: ('prepared-qkv-trained-reference', None)

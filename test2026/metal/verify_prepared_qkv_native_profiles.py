@@ -2,7 +2,7 @@
 from pathlib import Path
 import ast
 p=Path(__file__).with_name('verify_vector_vision_native_profiles.py');source=p.read_text()
-source=source.replace('vector-vision-native','prepared-qkv-native').replace('verify_vector_vision_native_checks.py','verify_prepared_qkv_native_checks.py').replace('compare_vector_vision_native.py','compare_prepared_qkv_native.py')
+source=source.replace('vector-vision-native','prepared-qkv-native').replace('verify_vector_vision_native_checks.py','verify_prepared_qkv_native_checks_countfix.py').replace('compare_vector_vision_native.py','compare_prepared_qkv_native.py')
 old="source=source.replace('build-mlp-prefill-graph-guardfix','build-vector-vision-width4')";assert source.count(old)==1
 source=source.replace(old,"source=source.replace('build-mlp-prefill-graph-guardfix','build-prepared-qkv-text')\nsource=source.replace('build-coalesced-bf16-body','build-vector-vision-width4')")
 source=source.replace("assert row['vector_vision_context_enabled']==(policy=='candidate')","assert row['vector_vision_context_enabled']").replace("vision_depth if model=='Qwen3.5-0.8B' and policy=='candidate' else 0","vision_depth if model=='Qwen3.5-0.8B' else 0")

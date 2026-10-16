@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/continue_prepared_qkv_native.py", line 46, in <module>
+    status=wait(finalizer,watched);archive_finalizer(status);assert status['exit_code']==0,'Finalizer failed; preserve archive and stop before native timing'
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Finalizer failed; preserve archive and stop before native timing

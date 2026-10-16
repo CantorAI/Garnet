@@ -1,7 +1,7 @@
 """Wait exact full33 finalizer; archive it, then complete native cohorts with immutable evidence gates."""
 from pathlib import Path
 import hashlib,io,json,os,subprocess,sys,tarfile,time
-root=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve();watched=int(sys.argv[3]);parent=Path(json.loads((root/'preparation.json').read_text())['parent']);finalizer=parent/'logs/prepared-qkv-native-finalize-20261016';tools=Path(__file__).parent
+root=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve();watched=int(sys.argv[3]);parent=Path(json.loads((root/'preparation.json').read_text())['parent']);finalizer=parent/'logs/prepared-qkv-native-finalize-countfix-20261016';tools=Path(__file__).parent
 assert json.loads((finalizer/'pid.json').read_text())['pid']==watched
 if '--worker' not in sys.argv[4:]:
  out.mkdir(parents=True,exist_ok=False)
@@ -25,10 +25,10 @@ def run(name,command):
  with (out/(name+'.log')).open('w') as stream:p=subprocess.run(command,stdout=stream,stderr=subprocess.STDOUT)
  statuses.append(dict(name=name,command=command,exit_code=p.returncode));(out/'statuses.json').write_text(json.dumps(statuses,indent=2)+'\n');assert p.returncode==0,name
 def archive_finalizer(status):
- target=parent/'prepared-qkv-native-finalizer-20261016.tar.gz';assert not target.exists();files={}
+ target=parent/'prepared-qkv-native-finalizer-countfix-20261016.tar.gz';assert not target.exists();files={}
  for p in finalizer.rglob('*'):
   if p.is_file():files['evidence/'+p.relative_to(parent).as_posix()]=p
- for p in tools.glob('*prepared_qkv_native_checks.py'):files['evidence/tools/'+p.name]=p
+ for p in tools.glob('*prepared_qkv_native_checks*.py'):files['evidence/tools/'+p.name]=p
  gate=root/'prepared-qkv-native-checks-archive-verification.json'
  if gate.exists():files['evidence/published-checks-gate.json']=gate
  proof=dict(files={},jobs={finalizer.name:status},scope='Terminal full33 finalizer commands/source/gate only; actual numerical archive remains separate.',full_goal_met=False)

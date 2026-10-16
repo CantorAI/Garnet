@@ -1,0 +1,41 @@
+[
+  {
+    "name": "macros",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-dM",
+      "-E",
+      "-x",
+      "c++",
+      "/dev/null"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.03304379107430577
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-O3",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-I/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-xcrun-20261016/source-snapshot",
+      "/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-xcrun-20261016/source-snapshot/prepared_half_inverse_cpu.cpp",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-xcrun-20261016/prepared_half_inverse_cpu"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.1829453748650849
+  },
+  {
+    "name": "exhaustive",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/prepared-half-inverse-macos-xcrun-20261016/prepared_half_inverse_cpu"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.47017095796763897
+  }
+]

@@ -1,0 +1,1575 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-S",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "-B",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "-DGARNET_METAL=ON",
+      "-DGARNET_METAL_XMODEL=ON",
+      "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+      "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+      "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+      "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+      "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+      "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+      "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+      "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+      "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+      "-DGARNET_METAL_SCREENED_HEAD=ON",
+      "-DGARNET_METAL_PREFILL_STREAM=ON",
+      "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+      "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+      "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+      "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+      "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+      "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+      "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+      "-DGARNET_METAL_PREPARED_QKV_TEXT=ON",
+      "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+      "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.67534766625613,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "-S",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "-B",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "-DGARNET_METAL=ON",
+          "-DGARNET_METAL_XMODEL=ON",
+          "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+          "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+          "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+          "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+          "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+          "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+          "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+          "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+          "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+          "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+          "-DGARNET_METAL_SCREENED_HEAD=ON",
+          "-DGARNET_METAL_PREFILL_STREAM=ON",
+          "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+          "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+          "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+          "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+          "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+          "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+          "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+          "-DGARNET_METAL_PREPARED_QKV_TEXT=ON",
+          "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+          "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-DCMAKE_BUILD_TYPE=Release"
+        ],
+        "evidence": "attempts/configure/case0-attempt0",
+        "status": {
+          "name": "configure",
+          "command": [
+            "/opt/homebrew/bin/cmake",
+            "-S",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "-B",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "-DGARNET_METAL=ON",
+            "-DGARNET_METAL_XMODEL=ON",
+            "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+            "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+            "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+            "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+            "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+            "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+            "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+            "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+            "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+            "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+            "-DGARNET_METAL_SCREENED_HEAD=ON",
+            "-DGARNET_METAL_PREFILL_STREAM=ON",
+            "-DGARNET_METAL_DIRTY_PREFIX_RESET=ON",
+            "-DGARNET_METAL_SERIAL_VISION_PREFETCH=ON",
+            "-DGARNET_METAL_SMALL_SCREEN_SEED=ON",
+            "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=ON",
+            "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=ON",
+            "-DGARNET_METAL_INTERLEAVED_BF16_BODY=ON",
+            "-DGARNET_METAL_COALESCED_BF16_BODY=ON",
+            "-DGARNET_METAL_PREPARED_QKV_TEXT=ON",
+            "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+            "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+            "-DCMAKE_BUILD_TYPE=Release"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.3965930417180061
+        }
+      }
+    ]
+  },
+  {
+    "name": "build",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "--parallel",
+      "4"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 14.567589334212244,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "--build",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "--parallel",
+          "4"
+        ],
+        "evidence": "attempts/build/case0-attempt0",
+        "status": {
+          "name": "build",
+          "command": [
+            "/opt/homebrew/bin/cmake",
+            "--build",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "--parallel",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 8.97387362504378
+        }
+      }
+    ]
+  },
+  {
+    "name": "vector-vision-primitive-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/vector_vision_native_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.979765833821148,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/usr/bin/xcrun",
+          "clang++",
+          "-std=c++17",
+          "-fobjc-arc",
+          "-O3",
+          "-I/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/src/backends/metal",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text/libgarnet_metal.a",
+          "-framework",
+          "Foundation",
+          "-framework",
+          "Metal",
+          "-framework",
+          "MetalPerformanceShaders",
+          "-o",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/vector_vision_native_gpu"
+        ],
+        "evidence": "attempts/vector-vision-primitive-compile/case0-attempt0",
+        "status": {
+          "name": "vector-vision-primitive-compile",
+          "command": [
+            "/usr/bin/xcrun",
+            "clang++",
+            "-std=c++17",
+            "-fobjc-arc",
+            "-O3",
+            "-I/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/src/backends/metal",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/vector_vision_native_gpu.mm",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text/libgarnet_metal.a",
+            "-framework",
+            "Foundation",
+            "-framework",
+            "Metal",
+            "-framework",
+            "MetalPerformanceShaders",
+            "-o",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/vector_vision_native_gpu"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.379948082845658
+        }
+      }
+    ]
+  },
+  {
+    "name": "vector-vision-primitive",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/vector_vision_native_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.682019416708499,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/vector_vision_native_gpu"
+        ],
+        "evidence": "attempts/vector-vision-primitive/case0-attempt0",
+        "status": {
+          "name": "vector-vision-primitive",
+          "command": [
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/vector_vision_native_gpu"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 2.0803553331643343
+        }
+      }
+    ]
+  },
+  {
+    "name": "prepared-qkv-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/prepared_union_qkv_primitive.mm",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/prepared_qkv_native_probe"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.709366832859814,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/usr/bin/xcrun",
+          "clang++",
+          "-std=c++17",
+          "-fobjc-arc",
+          "-O3",
+          "-I/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/src/backends/metal",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/prepared_union_qkv_primitive.mm",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text/libgarnet_metal.a",
+          "-framework",
+          "Foundation",
+          "-framework",
+          "Metal",
+          "-framework",
+          "MetalPerformanceShaders",
+          "-o",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/prepared_qkv_native_probe"
+        ],
+        "evidence": "attempts/prepared-qkv-compile/case0-attempt0",
+        "status": {
+          "name": "prepared-qkv-compile",
+          "command": [
+            "/usr/bin/xcrun",
+            "clang++",
+            "-std=c++17",
+            "-fobjc-arc",
+            "-O3",
+            "-I/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/src/backends/metal",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/prepared_union_qkv_primitive.mm",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text/libgarnet_metal.a",
+            "-framework",
+            "Foundation",
+            "-framework",
+            "Metal",
+            "-framework",
+            "MetalPerformanceShaders",
+            "-o",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/prepared_qkv_native_probe"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 1.3878441248089075
+        }
+      }
+    ]
+  },
+  {
+    "name": "prepared-qkv-primitive",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/prepared_qkv_native_probe"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.310646916739643,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/prepared_qkv_native_probe"
+        ],
+        "evidence": "attempts/prepared-qkv-primitive/case0-attempt0",
+        "status": {
+          "name": "prepared-qkv-primitive",
+          "command": [
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/prepared_qkv_native_probe"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 0.7042605830356479
+        }
+      }
+    ]
+  },
+  {
+    "name": "ctest",
+    "command": [
+      "/opt/homebrew/bin/ctest",
+      "--test-dir",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "--output-on-failure"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 11.876647292170674,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/bin/ctest",
+          "--test-dir",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "--output-on-failure"
+        ],
+        "evidence": "attempts/ctest/case0-attempt0",
+        "status": {
+          "name": "ctest",
+          "command": [
+            "/opt/homebrew/bin/ctest",
+            "--test-dir",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "--output-on-failure"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 5.601783333811909
+        }
+      }
+    ]
+  },
+  {
+    "name": "vision-full-grid",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_serial_vision_grid.py",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/full-grid",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 17.392324083019048,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_serial_vision_grid.py",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/full-grid",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text"
+        ],
+        "evidence": "attempts/vision-full-grid/case0-attempt0",
+        "status": {
+          "name": "vision-full-grid",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_serial_vision_grid.py",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/full-grid",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 11.773668624926358
+        }
+      }
+    ]
+  },
+  {
+    "name": "screened-real-heads",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_screened_head_real.py",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/trained-heads",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 14.025503333192319,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_screened_head_real.py",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/trained-heads",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text"
+        ],
+        "evidence": "attempts/screened-real-heads/case0-attempt0",
+        "status": {
+          "name": "screened-real-heads",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_screened_head_real.py",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/logs/prepared-qkv-native-checks-20261016/jobs/trained-heads",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 8.426008250098675
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-exact-tails",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 490.0922280419618,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "0"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "0"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 27.993755124974996
+        }
+      },
+      {
+        "case_index": 1,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "1"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case1-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "1"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 28.673318167217076
+        }
+      },
+      {
+        "case_index": 2,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "2"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case2-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "2"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 82.53592366725206
+        }
+      },
+      {
+        "case_index": 3,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "3"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case3-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "3"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 82.6774383331649
+        }
+      },
+      {
+        "case_index": 4,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "4"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case4-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 28.074168750084937
+        }
+      },
+      {
+        "case_index": 5,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "5"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case5-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "5"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 28.83651629090309
+        }
+      },
+      {
+        "case_index": 6,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "6"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case6-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "6"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 82.36393483309075
+        }
+      },
+      {
+        "case_index": 7,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16",
+          "7"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-exact-tails/case7-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16",
+            "7"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 83.22017708281055
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 107.2379299593158,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "0"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "0"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.903094832785428
+        }
+      },
+      {
+        "case_index": 1,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "1"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "1"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 5.609681415837258
+        }
+      },
+      {
+        "case_index": 2,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "2"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "2"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.795753374695778
+        }
+      },
+      {
+        "case_index": 3,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "3"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "3"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 10.51742612477392
+        }
+      },
+      {
+        "case_index": 4,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "4"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "4"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.926630333065987
+        }
+      },
+      {
+        "case_index": 5,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "5"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "5"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 5.61735637485981
+        }
+      },
+      {
+        "case_index": 6,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "6"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "6"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.802561416756362
+        }
+      },
+      {
+        "case_index": 7,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16",
+          "7"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-exact-tails",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_exact_dense_tail_case_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16",
+            "7"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 10.544762999750674
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-private-kv",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 53.088799708057195,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-private-kv/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-private-kv",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 47.34486029203981
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-private-kv",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 14.86711945803836,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-private-kv",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 9.14441812504083
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-private-kv",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 30.157796749845147,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/Qwen3.5-0.8B-private-kv/case0-attempt0",
+        "status": {
+          "name": "Qwen3.5-0.8B-private-kv",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_resident_kv_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 24.424950666725636
+        }
+      }
+    ]
+  },
+  {
+    "name": "serving",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_decoder_model.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.039177124854177,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_decoder_model.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+        ],
+        "evidence": "attempts/serving/case0-attempt0",
+        "status": {
+          "name": "serving",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_decoder_model.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.289554667193443
+        }
+      }
+    ]
+  },
+  {
+    "name": "mixed-image-pipeline",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_image_pipeline.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.8756409590132535,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_image_pipeline.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+        ],
+        "evidence": "attempts/mixed-image-pipeline/case0-attempt0",
+        "status": {
+          "name": "mixed-image-pipeline",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_image_pipeline.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 2.1167245828546584
+        }
+      }
+    ]
+  },
+  {
+    "name": "qwen35-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_chunk_graph.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 81.37455583317205,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_chunk_graph.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B",
+          "bf16"
+        ],
+        "evidence": "attempts/qwen35-layers/case0-attempt0",
+        "status": {
+          "name": "qwen35-layers",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_chunk_graph.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 75.62534583266824
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 154.5281670000404,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+          "bf16"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-layers/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-layers",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 148.7831997917965
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-layers",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bf16"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 29.92741704080254,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+          "bf16"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-layers",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_dense_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct",
+            "bf16"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 24.15924183325842
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-head",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 13.574939916841686,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/Qwen3.5-0.8B-head/case0-attempt0",
+        "status": {
+          "name": "Qwen3.5-0.8B-head",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 7.792096792254597
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-head",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.727315874770284,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B"
+        ],
+        "evidence": "attempts/Qwen3-0.6B-head/case0-attempt0",
+        "status": {
+          "name": "Qwen3-0.6B-head",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3-0.6B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.9592732498422265
+        }
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-head",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.754278582986444,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+        ],
+        "evidence": "attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0",
+        "status": {
+          "name": "Qwen2.5-Coder-0.5B-Instruct-head",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_head_bf16.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen2.5-Coder-0.5B-Instruct"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.94974495889619
+        }
+      }
+    ]
+  },
+  {
+    "name": "vision-small",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_vision_graph.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 10.095236292108893,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_vision_graph.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+        ],
+        "evidence": "attempts/vision-small/case0-attempt0",
+        "status": {
+          "name": "vision-small",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_vision_graph.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 4.306072040926665
+        }
+      }
+    ]
+  },
+  {
+    "name": "vision-pretrained",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_pretrained_vision_graph.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 8.674796415958554,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_pretrained_vision_graph.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/vision-pretrained/case0-attempt0",
+        "status": {
+          "name": "vision-pretrained",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_pretrained_vision_graph.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 2.878849584143609
+        }
+      }
+    ]
+  },
+  {
+    "name": "qwen35-extended-prefill",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_qwen35_extended_prefill_reference.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+      "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 165.29270845791325,
+    "accepted_cases": [
+      {
+        "case_index": 0,
+        "command": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_qwen35_extended_prefill_reference.py",
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+          "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+        ],
+        "evidence": "attempts/qwen35-extended-prefill/case0-attempt0",
+        "status": {
+          "name": "qwen35-extended-prefill",
+          "command": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source/test2026/metal/test_qwen35_extended_prefill_reference.py",
+            "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/build-prepared-qkv-text",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/source",
+            "/Users/zsdx/garnet-metal-investigation/prepared-qkv-native-investigation-20261016/models/Qwen3.5-0.8B"
+          ],
+          "exit_code": 0,
+          "interruption": null,
+          "wall_seconds": 159.50281720794737
+        }
+      }
+    ]
+  }
+]

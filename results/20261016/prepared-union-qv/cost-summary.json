@@ -1,0 +1,77 @@
+{
+  "cohorts": [
+    {
+      "cohort": "initial",
+      "numeric_log_sha256": "653fd1e18f1e709b9499729ebb0e54558dfbd4e196238ad10022d45cd6efd451",
+      "models": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "admitted_groups": 24,
+          "first_shape_preparation_ms": {
+            "min": 53.863292,
+            "max": 55.618375
+          },
+          "second_shape_preparation_ms": {
+            "min": 0.011375,
+            "max": 0.055042
+          },
+          "original_weight_upload_ms": {
+            "min": 2.262125,
+            "max": 2.419
+          },
+          "logical_all_admitted_qv_weights_bytes": 44040192,
+          "original_key_bit_checks": 958464,
+          "rejected_shape_preparation_ms": []
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "admitted_groups": 28,
+          "first_shape_preparation_ms": {
+            "min": 195.198459,
+            "max": 200.536792
+          },
+          "second_shape_preparation_ms": {
+            "min": 0.012834,
+            "max": 0.09175
+          },
+          "original_weight_upload_ms": {
+            "min": 16.628292,
+            "max": 18.86875
+          },
+          "logical_all_admitted_qv_weights_bytes": 176160768,
+          "original_key_bit_checks": 7798784,
+          "rejected_shape_preparation_ms": []
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "admitted_groups": 4,
+          "first_shape_preparation_ms": {
+            "min": 277.112834,
+            "max": 281.483834
+          },
+          "second_shape_preparation_ms": {
+            "min": 0.03825,
+            "max": 0.068583
+          },
+          "original_weight_upload_ms": {
+            "min": 23.705417,
+            "max": 26.132042
+          },
+          "logical_all_admitted_qv_weights_bytes": 37748736,
+          "original_key_bit_checks": 1966080,
+          "rejected_shape_preparation_ms": [
+            37.912625,
+            37.563666,
+            262.131208,
+            261.780666
+          ]
+        }
+      ],
+      "numeric_peak_rss_bytes": 323403776,
+      "timing_peak_rss_bytes": 150257664,
+      "scope": "One learned group at a time. Payload sums are estimates if all admitted weights were resident; setup times and process peaks are component-only."
+    }
+  ],
+  "source_sha256": "02b6be9986de270be083e54a3b375469f3b61b0cef0a3408eb52078654111b64",
+  "full_goal_met": false
+}

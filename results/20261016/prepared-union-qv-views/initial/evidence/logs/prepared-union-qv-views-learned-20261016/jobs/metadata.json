@@ -1,0 +1,101 @@
+{
+  "source_sha256": {
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_prepared_union_qv_views_learned.py": "5e411c2ed520430bc58ba6436433441f7919d0175f83fc2b9fa35ee8cf1995a9",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_prepared_union_qv_views.py": "a5ec5859ce543d79df04bb91cef552f24a36af3cffb4f253788c9f2ca0d4f103",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepared_union_qv_views_learned.mm": "64b2ff0fb8e5614f2080f0d8a3b03985d0ef4b302cb471a781c5de1f2f83b3b5",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_constant_bf16_probe.py": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/launch_prepared_union_qv_views.py": "b4f3ea09336ad45162755c9eb58bc0526a06a88d275e6e14a7275bc471a7bdf4",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/launch_quiet_prefill_residual_norm_probe.py": "6ac2816980940c131ed281a90ac6ac9b04fbca0890ee9dd3c29776d97914820b",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/build-vector-vision-width4/CMakeFiles/garnet_metal.dir/flags.make": "7035f6426ed40d8e2efefe5093c2171325986480bb0ff9b2b4468aabde130210",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/coalesced_body_block_shader.h": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/screened_head_native_impl.h": "6ba7906bb0560d6113c3b2deeb9c1d2f92ddedc03527a109cf5800ce8990c1e2",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/screened_head_shader.h": "5f827261980ca1af04734eb74aa2fdba6d78b9fe05bee925038b7bd66b5df689",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/serial_vision_prefetch_shader.h": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/decoder_session.h": "d6638d9478f70f241507a8c6e03bd92396389c8d60fe58114e4f059754d3b23b",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/mlp_prefill_graph_impl.h": "4c886a0288aab0e4d58f64738a853640e32e52cd2d99c3ccd5f1d3989ab24519",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/compiled_graph.h": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/body_shape_shader.h": "d5053a0b10a3ce0a08e1dce6591066abf6da291e9152518a4f75555838582b34",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/parallel_vision_context_shader.h": "4b126294e70f0aabcf3dd574ea555be15fa4b9e18504bdbed62e57aef9ab73cf",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/metal_context.mm": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/fused_head_argmax_shader.h": "04fd51053519882b5cc6d2d0a8df22c99d9fe3e0dcb9c4cb6130a23223b3b34d",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/screened_head_index.h": "3eb62e8c510ca49ac718ec510b36c7dec017b91d03ec9c4816de48e167e3726a",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/interleaved_bf16_body_shader.h": "65ca4710cd576e1fddce73adb3bd0922721a8702bf1949bb9fd68329a71a5ecd",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016/source/src/backends/metal/metal_context.h": "426a4795b1d109b4bd7ef9faf5c5b77363213668b8349b7e903a5f486ad9f159"
+  },
+  "generated_sha256": {
+    "metal_context.mm": "7eb574667bc21f55c8ab73ebdc38a03989a6f0d1cee5f312e859fc00ea8be1a3",
+    "metal_context.h": "b94f2318fa5f2f7a4a6afbe072b7fd03a85ad19088f48dd879e5c19838d2a146"
+  },
+  "defines": [
+    "-DGARNET_METAL_ATTENTION_PREFIX=1",
+    "-DGARNET_METAL_COALESCED_BF16_BODY=1",
+    "-DGARNET_METAL_DIRTY_PREFIX_RESET=1",
+    "-DGARNET_METAL_EXACT_HALF_PREFILL=1",
+    "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=1",
+    "-DGARNET_METAL_GLOBAL_HALF_ALPHA=1",
+    "-DGARNET_METAL_INTERLEAVED_BF16_BODY=1",
+    "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=1",
+    "-DGARNET_METAL_LINEAR_CHUNK_CONV=1",
+    "-DGARNET_METAL_LINEAR_CHUNK_DELTA=1",
+    "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1",
+    "-DGARNET_METAL_MPS_VISION_SCORES=1",
+    "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=1",
+    "-DGARNET_METAL_PREFILL_STREAM=1",
+    "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=1",
+    "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=1",
+    "-DGARNET_METAL_RESIDENT_KV_INPLACE=1",
+    "-DGARNET_METAL_SCREENED_HEAD=1",
+    "-DGARNET_METAL_SERIAL_VISION_PREFETCH=1",
+    "-DGARNET_METAL_SMALL_OUTPUT_DECODE=1",
+    "-DGARNET_METAL_SMALL_SCREEN_SEED=1"
+  ],
+  "reference_library_sha256": "d52c37e09edf7afb61889037863b1cb338f9ac0b6d98ea62043c3a016af5b55e",
+  "cpu_report_sha256": "f616f5c6389672a0e735329e800749640f873eafc845b40c39409fb0958de5d1",
+  "timing_design": {
+    "common_warmup_ms": 2000,
+    "rounds": 10,
+    "window_order": "ABBA",
+    "samples_per_window": 5,
+    "warm_calls_per_window": 3,
+    "null_before_comparison": true,
+    "all_samples_retained": true,
+    "timed_layers": {
+      "Qwen3-0.6B": [
+        0,
+        27
+      ],
+      "Qwen2.5-Coder-0.5B-Instruct": [
+        0,
+        23
+      ],
+      "Qwen3.5-0.8B": [
+        3,
+        19
+      ]
+    },
+    "endpoint_selection": "First/last previously admitted triple, frozen before QV execution; original triple scale and eligibility retained"
+  },
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "limitations": "Structured dyadic input, not captured activations. Pack Q/V only; original K GPU call and bit identity required. Keep all previous triple eligibility and common scales conservatively. Extra QV payload plus one guard row; no GPU scatter. Only offset-aware Download consumes views here. Downstream GPU kernels, host writes and full native behavior remain unimplemented and unvalidated; no native-model admission.",
+  "assets": {
+    "Qwen3-0.6B": {
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "bytes": 1503300328,
+      "layers": 28
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+      "bytes": 988097824,
+      "layers": 24
+    },
+    "Qwen3.5-0.8B": {
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "bytes": 1746942600,
+      "layers": 24
+    }
+  },
+  "full_goal_met": false,
+  "binary_sha256": "16223ea225b08b78c6e60f6ca2fa11613a8cd0053906a9fea6d6403148673c33"
+}

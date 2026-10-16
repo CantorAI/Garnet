@@ -1731,6 +1731,112 @@ omission may invalidate later independent checks. Fresh full-model timing and
 Windows raw audits remain pending; the full matched-vLLM goal stays active.
 [Exact continuation and current live-stage record](../../results/20261016/prepared-qkv-native/README.md#sequential-continuation-armed-after-the-exact-validation-finalizer).
 
+### 2026-10-16 UTC — full QKV native integration rejected on original key bound
+
+The original validation driver exits 1 after 25 passing stages because its
+intermediate assertion still expects 23; freeze that run and both stopped
+controllers before repair. A separate resume driver copies the original 25
+records unchanged and executes only missing suites against the same e34
+candidate library. Six recovery stages pass, then the added trained random
+test fails at layer 0, batch 2, chunk 22, physical rows 44, first state step.
+There are 31 passing stages, not a full 33-stage success. No performance
+continuation or candidate model benchmark is admitted.
+
+The candidate key-cache worst original-bound ratio is 1.5165457144345686.
+The accepted d52 implementation passes all three state steps on the exact
+saved fixture, worst ratio 0.5204084868377323. All 21 saved input/expected
+buffer identities and the original accepted driver are verified; candidate
+graph and session counters both equal 1. Preserve the original bounds. Reject
+full-QKV integration despite its repeated text component timing. Packed
+weight equality and FP32 arithmetic are insufficient to infer downstream
+numerical equivalence; the observation does not identify an internal MPS
+algorithm. Both-host rejection audit verifies 2,195 frozen files. The next
+variant must retain the original K GPU projection and receive new evidence.
+[Terminal failures, same-fixture control and archive hashes](../../results/20261016/prepared-qkv-native/README.md#final-rejection).
+
+### 2026-10-16 UTC — integer half inverse passes exhaustive Windows and Mac CPU tests
+
+Hypothesis: replace the expensive half-to-float plus ldexp verification in a
+future setup loop with an exact integer bit inverse. This is separate from
+the Q/V GPU experiment and is not installed in any runtime. The same header
+passes Windows MSVC x64 and actual Apple clang ARM64 CLZ-branch exhaustive
+tests: 8,454,144 original-codec cases, 8,454,144 half-word cases and 393,216
+invalid-scale cases per host. All 1,122,816 admitted codec results and
+8,189,952 finite half reconstructions match original FP32 bits/independent
+floating reference; rejected outputs remain unchanged.
+
+Preserve the first Mac compile failure, cstdint not found from a direct
+resolved compiler invocation, before repairing only the runner to invoke
+xcrun clang++. No mathematical header or acceptance condition changes.
+Windows archive and failed/successful Mac archives are verified locally;
+successful Mac evidence is also audited there. Setup performance, learned
+packing and runtime effects remain unmeasured.
+[Counts, compiler commands and frozen proofs](../../results/20261016/prepared-half-inverse/README.md).
+
+### 2026-10-16 UTC — QV scatter variant preserves key bits but fails complete timing screen
+
+Change the rejected full-QKV algorithm: pack only Q/V, retain conservative
+previous triple admission/common scale, and invoke original EncodeBF16MatVec
+for K. Inspection confirms text/coder floatPrefill uses the split BF16 key
+projection with FP32 accumulation, not an FP32-weight MPS call. The archived
+factory comment about an original K MPS call is imprecise; the actual function
+call and bit-identical K outputs are checked. Keep all original independent
+outputs, alias/readiness/foreign ownership checks and fallbacks.
+
+Primitive 42044 exits 0 in 11.290640791 s. Learned 42323 exits 0 in
+83.629794833 s, with all 116 numerical profiles, 464 changed structured-input
+cases, 52 original FP32-accumulation key matrices, 16 fallback cases,
+177,553,408 reference-value checks, 48,758,784 scatter-bit checks and
+10,723,328 original-K bit checks. Both-host source/context regeneration and
+complete data audits pass. The previous eligibility excludes two VL groups;
+this is not complete independent pair admission.
+
+Keep first/last endpoints and both batches, 2 s warmup, own-null and 10 ABBA
+rounds, all 4,800 samples. No model meets >=5% GPU AND wall gain at all four
+profiles with own-null within 5%. Text GPU fractions 1.063689, 1.096286,
+1.071997, 1.075359 are worse despite approximately 42% less CPU encode time.
+Coder is mixed; VL is slower. Reject without confirmation or native build.
+Extra duplicate QV payload estimates are text 168 MiB, coder 42 MiB and admitted
+VL 36 MiB. Text preparation is 195.198459–200.536792 ms per first shape/group;
+these component costs are not measured model setup. The integer inverse is
+not used. Freeze all source/logs before evaluating the next algorithm.
+[Full endpoint table, costs and frozen artifacts](../../results/20261016/prepared-union-qv/README.md).
+
+### 2026-10-16 UTC — canonical QV output views remove scatter but fail full model endpoint rule
+
+After the scatter variant is terminal and archived, prepare a new private
+context component. Keep original K, previous triple eligibility/common scale
+and exact Q/V weights; create canonical disjoint column views of one joined
+output, with one extra guard row. Adapt only Download to honor offsets. The
+candidate directly writes those Q/V views through the joined product and
+encodes no scatter. No downstream GPU/host-write or native graph/session
+support is claimed. An unused compiled scatter pipeline remains outside the
+candidate encode path. Serving source/library are unchanged.
+
+Primitive 44008 exits 0 in 11.285164042 s; all 24 changed-input offset/guard,
+original-key, ownership, pending, abort/recovery, fallback and bounded cache
+cases pass. Learned 44331 exits 0 in 83.593469917 s; all 116 profiles, 464
+changed structured-input cases, 177,553,408 reference checks, 48,758,784 exact
+view-bit checks and 10,723,328 original-K bit checks pass. Source/context
+regeneration, all 4,800 timing samples and original numerical gates are audited
+on both hosts. The guard row is checked at every candidate validation.
+
+Retain the unchanged >=5% GPU AND wall gain at all four endpoints/model and
+own-null within 5%. Only five individual profiles pass. Text last-layer
+profiles miss the gain rule; last-layer batch-2 null wall fraction .948814
+also fails. Coder first-layer batch-2 GPU fraction .969518 misses; VL misses
+GPU gains. No model qualifies for confirmation, so reject without repeating
+or integrating the unchanged method. Better individual component times do
+not establish a new native or vLLM ratio. Additional guard storage and
+unimplemented consumer support are explicit limitations.
+[Complete output-view evidence and timing exclusions](../../results/20261016/prepared-union-qv-views/README.md).
+
+Next investigation: inspect whether Q and K normalization/RoPE can share one
+dispatch while preserving the existing per-head SIMD reduction, precise
+trigonometry, output writes and original FP32 behavior. This is a proposed
+method, not an executed optimization. It could affect both decode and
+prefill, unlike the prefill-only Q/V union experiments.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
