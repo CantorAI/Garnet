@@ -1,0 +1,15 @@
+{
+  "experiment": "WS-M5-07",
+  "declared_utc": "2026-10-16T22:18:43.160518+00:00",
+  "method": "4B physical prefill64 versus16; raise opt-in packed-width admission to64*2560 with native chunk limit64 unchanged. Same original BF16/FP32 kernels, capacity, pixels, prompt and decoder. Text reasoner stays16.",
+  "tradeoffs": "Larger activation/graph allocations, potential padding work and longer GPU batches; fewer repeated body-weight reads. Both chunk-keyed graph sets retained warm for same-process ablation, with shared weights. No answer/image cache. Logical extra allocations and RSS do not equal peak GPU memory.",
+  "stage": "Correctness native checks and32-layer state/token equivalence before single-car WorldSense ABBA screen, four samples per policy/model. Fresh full three-frame/search ABBA/BAAB confirmation required for promotion.",
+  "gates": {
+    "exact_tokens_and_32_state_bits": true,
+    "actual_chunk_plan": true,
+    "4b_ttft_min_gain": 0.1,
+    "4b_total_min_gain": 0.03,
+    "decode_max_regression": 0.02,
+    "text_total_ttft_max_regression": 0.02
+  }
+}

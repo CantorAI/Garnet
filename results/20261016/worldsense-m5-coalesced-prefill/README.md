@@ -9,3 +9,5 @@ Worker 1 uses ABBA, fresh worker 2 BAAB after both modes warm. Four-B TTFT incre
 Representative GPU prefill is 3471 ms control versus 4565 ms candidate; CPU encoding approximately 10.5 ms in both. These measurements establish the observed GPU-stage cost, not a hardware occupancy explanation. Process RSS and swap are retained but are not peak GPU allocation measurements. Small samples, one Mac and correlated fixed inputs limit generalization.
 
 The initial duplicate-Argmax shader assembly failure is retained; it generated no model timing. Source snapshots describe the isolated prototype, not a deployed kernel. Controller Python is lifecycle automation; timed requests run through XLang3 and native WorldSense/Galaxy/Garnet. Credentials are supplied through environment variables and are not part of this archive.
+
+Archive repair: added the previously omitted native backend/CMake/48-case test source overlay from the retained isolated tree. Raw measurements and decisions unchanged. This is an evidence packaging correction, not a new run.

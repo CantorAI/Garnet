@@ -1,0 +1,373 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -1,3 +1,12 @@
++option(GARNET_METAL_SHARED_EXACT_HALF "Share lossless half storage across prefill and strict FP32 decode" OFF)
++if(GARNET_METAL_SHARED_EXACT_HALF)
++    if(NOT GARNET_METAL_EXACT_HALF_PREFILL OR NOT GARNET_METAL_GLOBAL_HALF_ALPHA OR NOT GARNET_METAL_BODY_SHAPE)
++        message(FATAL_ERROR "Shared exact half requires exact-half, common-alpha and body shape")
++    endif()
++    if(GARNET_METAL_FUSED_HEAD_ARGMAX OR GARNET_METAL_JOINED_PREFILL OR GARNET_METAL_JOINED_GLOBAL_MLP OR GARNET_METAL_INTERLEAVED_BF16_BODY OR GARNET_METAL_NATIVE_BFLOAT_BODY OR GARNET_METAL_DENSE_KEY_SPLIT_K OR GARNET_METAL_SMALL_OUTPUT_DECODE)
++        message(FATAL_ERROR "Shared exact half is an isolated storage policy")
++    endif()
++endif()
+ # Native MPS kernels, with optional captured Qwen xModel package integration.
+ set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+@@ -7,6 +16,9 @@
+ find_library(GARNET_MPS_FRAMEWORK MetalPerformanceShaders REQUIRED)
+ find_library(GARNET_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+ add_library(garnet_metal STATIC src/backends/metal/metal_context.mm)
++if(GARNET_METAL_SHARED_EXACT_HALF)
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_SHARED_EXACT_HALF=1)
++endif()
+ option(GARNET_METAL_MLP_PREFILL_GRAPH "Test complete FP32 MLP graphs during prefill" OFF)
+ if(GARNET_METAL_MLP_PREFILL_GRAPH)
+     if(GARNET_METAL_JOINED_GLOBAL_MLP OR GARNET_METAL_JOINED_PREFILL)
+@@ -343,3 +355,20 @@
+ if(GARNET_METAL_NATIVE_BFLOAT_BODY)
+     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_NATIVE_BFLOAT_BODY=1)
+ endif()
++if(GARNET_METAL_SHARED_EXACT_HALF)
++    add_executable(garnet_shared_half_test test2026/metal/shared_half_test.cpp)
++    target_link_libraries(garnet_shared_half_test PRIVATE garnet_metal)
++    add_test(NAME metal_shared_half_reference COMMAND garnet_shared_half_test)
++endif()
++if(GARNET_METAL_SHARED_EXACT_HALF)
++    add_executable(garnet_shared_half_inverse_test test2026/metal/shared_half_inverse_test.mm)
++    target_include_directories(garnet_shared_half_inverse_test PRIVATE src/backends/metal)
++    target_compile_options(garnet_shared_half_inverse_test PRIVATE -fobjc-arc -fno-fast-math -ffp-contract=off)
++    target_link_libraries(garnet_shared_half_inverse_test PRIVATE ${GARNET_METAL_FRAMEWORK} ${GARNET_FOUNDATION_FRAMEWORK})
++    add_test(NAME metal_shared_half_inverse COMMAND garnet_shared_half_inverse_test)
++endif()
++if(GARNET_METAL_SHARED_EXACT_HALF)
++    add_executable(garnet_audit_shared_half test2026/metal/audit_shared_half_weights.cpp src/model/safetensors_index.cpp)
++    target_include_directories(garnet_audit_shared_half PRIVATE src/model third_party)
++    target_link_libraries(garnet_audit_shared_half PRIVATE garnet_metal)
++endif()
+--- a/src/backends/metal/metal_context.h
++++ b/src/backends/metal/metal_context.h
+@@ -34,6 +34,8 @@
+     bool Valid() const {return bool(impl_);}
+     bool ExactHalfReady() const;
+     bool GlobalHalfReady() const;
++    bool SharedExactHalfReady() const;
++    size_t RetainedStorageBytes() const;
+     bool InterleavedBodyReady() const;
+     bool CoalescedBlockReady() const;
+     size_t CoalescedBlockCount() const;
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -19,6 +19,9 @@
+ #endif
+ #ifdef GARNET_METAL_BODY_SHAPE
+ #include "body_shape_shader.h"
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++#include "shared_half_shader.h"
++#endif
+ #include <shared_mutex>
+ #endif
+ #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+@@ -76,6 +79,7 @@
+     MPSMatrix* exactHalf;
+     id<MTLBuffer> halfScales;
+     size_t halfScalesOffset=0;
++    bool sharedExactHalf=false;
+     bool globalHalf=false;
+     bool visionPrefill=false;
+     int32_t globalHalfScale=0;
+@@ -83,6 +87,8 @@
+     bool floatPrefill=false;
+ };
+ bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
++size_t MetalBF16Weight::RetainedStorageBytes() const {return impl_?impl_->buffer.length+(impl_->halfScales?impl_->halfScales.length:0)+(impl_->exactHalf&&impl_->exactHalf.data!=impl_->buffer?impl_->exactHalf.data.length:0):0;}
++bool MetalBF16Weight::SharedExactHalfReady() const {return impl_&&impl_->sharedExactHalf;}
+ bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
+ bool MetalBF16Weight::CoalescedBlockReady() const {
+ #ifdef GARNET_METAL_COALESCED_BF16_BODY
+@@ -125,6 +131,10 @@
+ #ifdef GARNET_METAL_BODY_SHAPE
+     std::shared_mutex bodyShapeMutex;
+     std::map<std::array<size_t,5>,id<MTLComputePipelineState>> bodyShape;
++#endif
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++    std::map<std::array<size_t,5>,id<MTLComputePipelineState>> sharedHalfBodyShape;
++    id<MTLComputePipelineState> sharedHalfDecode;
+ #endif
+     id<MTLComputePipelineState> argmax;
+ #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+@@ -1317,6 +1327,9 @@
+ #endif
+ #ifdef GARNET_METAL_BODY_SHAPE
+         source=[source stringByAppendingString:[NSString stringWithUTF8String:kBodyShapeShader]];
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++        source=[source stringByAppendingString:[NSString stringWithUTF8String:kSharedHalfShader]];
++#endif
+ #endif
+ #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+         source=[source stringByAppendingString:[NSString stringWithUTF8String:kInterleavedBF16BodyShader]];
+@@ -1357,6 +1370,10 @@
+ #ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+         impl_->kernels->kvInplace=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update_inplace"] error:&error];
+         if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
++#endif
++        #ifdef GARNET_METAL_SHARED_EXACT_HALF
++        impl_->kernels->sharedHalfDecode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"shared_half_decode"] error:&error];
++        if(!impl_->kernels->sharedHalfDecode)throw std::runtime_error("Cannot create shared exact-half decoder");
+ #endif
+         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+ #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+@@ -1550,7 +1567,12 @@
+ #ifdef GARNET_METAL_EXACT_HALF_PREFILL
+         // Preserve original BF16 decode storage. Pack only modest body matrices;
+         // a single nonexact value disables the optional representation entirely.
+-        if(!floatPrefill&&bytes<=16*1024*1024&&impl_->kernels->halfRescale) {
++        #ifdef GARNET_METAL_SHARED_EXACT_HALF
++        const size_t halfLimit=64*1024*1024;
++#else
++        const size_t halfLimit=16*1024*1024;
++#endif
++        if(!floatPrefill&&bytes<=halfLimit&&impl_->kernels->halfRescale) {
+             const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat16];
+             if(stride<=impl_->device.maxBufferLength/rows) {
+                 id<MTLBuffer> encoded=[impl_->device newBufferWithLength:rows*stride options:MTLResourceStorageModeShared];
+@@ -1590,6 +1612,11 @@
+                     value->exactHalf=[[MPSMatrix alloc] initWithBuffer:encoded descriptor:descriptor];
+                     value->halfScales=[impl_->device newBufferWithBytes:scales.data() length:rows*sizeof(int32_t) options:MTLResourceStorageModeShared];
+                     if(!value->exactHalf||!value->halfScales)throw std::runtime_error("Exact half metadata allocation failed");
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++                    // Immutable shared layout: MPS and strict FP32 decode use
++                    // the same exact words; the old BF16 allocation is released.
++                    value->buffer=encoded;value->sharedExactHalf=true;
++#endif
+                 }
+             }
+         }
+@@ -1861,8 +1888,13 @@
+         for(auto value:key)if(value>UINT32_MAX)return false;
+         std::unique_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);
+         auto& cache=impl_->kernels->bodyShape;
+-        auto found=cache.find(key);if(found!=cache.end())return found->second!=nil;
+-        if(cache.size()>=128)return false;
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++        auto& selectedCache=w->sharedExactHalf?impl_->kernels->sharedHalfBodyShape:cache;
++#else
++        auto& selectedCache=cache;
++#endif
++        auto found=selectedCache.find(key);if(found!=selectedCache.end())return found->second!=nil;
++        if(selectedCache.size()>=128)return false;
+         bool small=false;
+ #ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
+         small=o.columns<=256;
+@@ -1872,12 +1904,19 @@
+         for(NSUInteger i=0;i<5;++i)[constants setConstantValue:&dimensions[i] type:MTLDataTypeUInt atIndex:i];
+         bool noTail=o.columns%(small?4:16)==0;
+         [constants setConstantValue:&noTail type:MTLDataTypeBool atIndex:5];
++        #ifdef GARNET_METAL_SHARED_EXACT_HALF
++        uint32_t weightStride=w->sharedExactHalf?uint32_t(w->exactHalf.rowBytes/2):uint32_t(w->columns);
++        if(w->sharedExactHalf)[constants setConstantValue:&weightStride type:MTLDataTypeUInt atIndex:6];
++        NSString* functionName=w->sharedExactHalf?@"specialized_shared_half_decode":small?@"specialized_bf16_decode_small":@"specialized_bf16_decode";
++#else
++        NSString* functionName=small?@"specialized_bf16_decode_small":@"specialized_bf16_decode";
++#endif
+         NSError* error=nil;
+-        auto function=[impl_->kernels->library newFunctionWithName:small?@"specialized_bf16_decode_small":@"specialized_bf16_decode" constantValues:constants error:&error];
++        auto function=[impl_->kernels->library newFunctionWithName:functionName constantValues:constants error:&error];
+         id<MTLComputePipelineState> pipeline=nil;
+         if(function)pipeline=[impl_->device newComputePipelineStateWithFunction:function error:&error];
+         if(pipeline&&(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<(small?64:128)))pipeline=nil;
+-        cache.emplace(key,pipeline);return pipeline!=nil;
++        selectedCache.emplace(key,pipeline);return pipeline!=nil;
+     }
+ #else
+     (void)input;(void)weight;(void)output;return false;
+@@ -1885,7 +1924,11 @@
+ }
+ size_t MetalContext::BodyShapePipelineCount() const {
+ #ifdef GARNET_METAL_BODY_SHAPE
+-    std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);return impl_->kernels->bodyShape.size();
++    std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);return impl_->kernels->bodyShape.size()
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++        +impl_->kernels->sharedHalfBodyShape.size()
++#endif
++        ;
+ #else
+     return 0;
+ #endif
+@@ -1969,6 +2012,30 @@
+             [encoder setBuffer:o.data offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];
+             const auto total=Elements(o.rows,o.columns);
+             [encoder dispatchThreads:MTLSizeMake(total,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(total,size_t(impl_->kernels->halfRescale.maxTotalThreadsPerThreadgroup)),1,1)];
++            [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;
++            if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
++            return;
++        }
++#endif
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++        if(w->sharedExactHalf) {
++            if(a.rows>2)throw std::logic_error("Shared exact-half prefill failed to use MPS");
++            auto pipeline=impl_->kernels->sharedHalfDecode;
++            if(o.columns<100000) {
++                const std::array<size_t,5> key{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
++                std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);
++                auto found=impl_->kernels->sharedHalfBodyShape.find(key);
++                if(found!=impl_->kernels->sharedHalfBodyShape.end()&&found->second) {pipeline=found->second;++impl_->bodyShapeDispatches;}
++                else ++impl_->bodyShapeMisses;
++            }
++            struct SharedParams {uint64_t rows,inner,columns,aStride,oStride,wStride;};
++            SharedParams p{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4,w->exactHalf.rowBytes/2};
++            auto encoder=[impl_->command computeCommandEncoder];
++            if(!encoder)throw std::runtime_error("Cannot create shared exact-half projection encoder");
++            [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
++            [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
++            [encoder setBytes:&p length:sizeof(p) atIndex:3];[encoder setBuffer:w->halfScales offset:w->halfScalesOffset atIndex:4];
++            [encoder dispatchThreadgroups:MTLSizeMake((o.columns+15)/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+             [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;
+             if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+             return;
+--- /dev/null
++++ b/src/backends/metal/shared_half_shader.h
+@@ -0,0 +1,86 @@
++// Derived from the original strict FP32 BF16 dot/reduction kernels.
++#pragma once
++namespace Garnet {
++inline constexpr const char* kSharedHalfShader=R"SHAREDHALF(
++struct SharedHalfParams { ulong rows,inner,columns,aStride,oStride,wStride; };
++constant uint fixed_wStride [[function_constant(6)]];
++inline float shared_half_value(ushort h,int scale) {
++    uint sign=uint(h&0x8000)<<16, fraction=uint(h&1023), exponent=uint(h>>10)&31;
++    // Normal half conversion is exact. Adjust the FP32 exponent as integer
++    // bits; only subnormals need normalization below (never a half float load).
++    if(exponent) return as_type<float>(as_type<uint>(float(as_type<half>(h))) - (uint(scale)<<23));
++    if(!fraction)return as_type<float>(sign);
++    uint top=31-clz(fraction);
++    return as_type<float>(sign | (uint(int(top)+103-scale)<<23) | ((fraction-(1u<<top))<<(23-top)));
++}
++kernel void shared_half_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant SharedHalfParams& p [[buffer(3)]], device const int* scales [[buffer(4)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    ulong column=ulong(group)*16+simd*4;
++    if(column>=p.columns)return;
++    float4 sum0=0.0f,sum1=0.0f;
++    if(p.inner%4==0) {
++        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
++            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
++            ushort4 b0=*(device const ushort4*)(weight+column*p.wStride+k),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
++            if(column+1<p.columns)b1=*(device const ushort4*)(weight+(column+1)*p.wStride+k);
++            if(column+2<p.columns)b2=*(device const ushort4*)(weight+(column+2)*p.wStride+k);
++            if(column+3<p.columns)b3=*(device const ushort4*)(weight+(column+3)*p.wStride+k);
++            for(uint j=0;j<4;++j) {
++                float4 w=float4(shared_half_value(b0[j],scales[column]), column+1<p.columns?shared_half_value(b1[j],scales[column+1]):0.0f, column+2<p.columns?shared_half_value(b2[j],scales[column+2]):0.0f, column+3<p.columns?shared_half_value(b3[j],scales[column+3]):0.0f);
++                sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
++            }
++        }
++    } else {
++    for(ulong k=lane;k<p.inner;k+=32) {
++        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
++        float4 w=0.0f;
++        w.x=shared_half_value(weight[column*p.wStride+k],scales[column]);
++        if(column+1<p.columns)w.y=shared_half_value(weight[(column+1)*p.wStride+k],scales[column+1]);
++        if(column+2<p.columns)w.z=shared_half_value(weight[(column+2)*p.wStride+k],scales[column+2]);
++        if(column+3<p.columns)w.w=shared_half_value(weight[(column+3)*p.wStride+k],scales[column+3]);
++        sum0+=x*w;if(p.rows==2)sum1+=y*w;
++    }
++    }
++    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
++    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
++    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
++}
++kernel void specialized_shared_half_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant SharedHalfParams& p [[buffer(3)]], device const int* scales [[buffer(4)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    ulong column=ulong(group)*16+simd*4;
++    if(!fixed_no_tail&&column>=ulong(fixed_columns))return;
++    float4 sum0=0.0f,sum1=0.0f;
++    if(ulong(fixed_inner)%4==0) {
++        for(ulong k=ulong(lane)*4;k<ulong(fixed_inner);k+=128) {
++            float4 x=*(device const float4*)(a+k),y=ulong(fixed_rows)==2?*(device const float4*)(a+ulong(fixed_aStride)+k):float4(0.0f);
++            ushort4 b0=*(device const ushort4*)(weight+column*ulong(fixed_wStride)+k),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
++            if(fixed_no_tail||column+1<ulong(fixed_columns))b1=*(device const ushort4*)(weight+(column+1)*ulong(fixed_wStride)+k);
++            if(fixed_no_tail||column+2<ulong(fixed_columns))b2=*(device const ushort4*)(weight+(column+2)*ulong(fixed_wStride)+k);
++            if(fixed_no_tail||column+3<ulong(fixed_columns))b3=*(device const ushort4*)(weight+(column+3)*ulong(fixed_wStride)+k);
++            for(uint j=0;j<4;++j) {
++                float4 w=float4(shared_half_value(b0[j],scales[column]), column+1<p.columns?shared_half_value(b1[j],scales[column+1]):0.0f, column+2<p.columns?shared_half_value(b2[j],scales[column+2]):0.0f, column+3<p.columns?shared_half_value(b3[j],scales[column+3]):0.0f);
++                sum0+=x[j]*w;if(ulong(fixed_rows)==2)sum1+=y[j]*w;
++            }
++        }
++    } else {
++    for(ulong k=lane;k<ulong(fixed_inner);k+=32) {
++        float x=a[k],y=ulong(fixed_rows)==2?a[ulong(fixed_aStride)+k]:0.0f;
++        float4 w=0.0f;
++        w.x=shared_half_value(weight[column*ulong(fixed_wStride)+k],scales[column]);
++        if(fixed_no_tail||column+1<ulong(fixed_columns))w.y=shared_half_value(weight[(column+1)*ulong(fixed_wStride)+k],scales[column+1]);
++        if(fixed_no_tail||column+2<ulong(fixed_columns))w.z=shared_half_value(weight[(column+2)*ulong(fixed_wStride)+k],scales[column+2]);
++        if(fixed_no_tail||column+3<ulong(fixed_columns))w.w=shared_half_value(weight[(column+3)*ulong(fixed_wStride)+k],scales[column+3]);
++        sum0+=x*w;if(ulong(fixed_rows)==2)sum1+=y*w;
++    }
++    }
++    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
++    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
++    if(lane==0)for(uint j=0;j<4&&(fixed_no_tail||column+j<ulong(fixed_columns));++j){out[column+j]=sum0[j];if(ulong(fixed_rows)==2)out[ulong(fixed_oStride)+column+j]=sum1[j];}
++}
++kernel void shared_half_inverse_test(device float* out [[buffer(0)]],constant int& scale [[buffer(1)]],uint i [[thread_position_in_grid]]) {
++    if(i<65536)out[i]=((i>>10)&31)==31?0.0f:shared_half_value(ushort(i),scale);
++}
++)SHAREDHALF";
++}
+--- a/src/entry/metal_main.cpp
++++ b/src/entry/metal_main.cpp
+@@ -110,6 +110,9 @@
+ #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+         info+="; reused_zero_source";
+ #endif
++#ifdef GARNET_METAL_SHARED_EXACT_HALF
++        info += "; shared_exact_half";
++#endif
+ #ifdef GARNET_METAL_BODY_SHAPE
+         info+="; body_shape";
+ #endif
+--- /dev/null
++++ b/test2026/metal/audit_shared_half_weights.cpp
+@@ -0,0 +1,17 @@
++// Checkpoint representation/admission audit. No inference-speed measurement.
++#include "metal_context.h"
++#include "safetensors_index.h"
++#include <nlohmann/json.hpp>
++#include <algorithm>
++#include <fstream>
++#include <iostream>
++#include <stdexcept>
++int main(int argc,char**argv){try{
++ if(argc!=3)return 2;Garnet::SafeTensorsIndex index;std::string error;if(!index.Open(argv[1],error))throw std::runtime_error(error);
++ Garnet::MetalContext gpu;std::vector<std::string> names;for(const auto& p:index.Entries())if(p.first.find("model.language_model.layers.")==0&&p.second.dataType=="BF16"&&p.second.shape.size()==2)names.push_back(p.first);std::sort(names.begin(),names.end());
++ nlohmann::json rows=nlohmann::json::array();uint64_t original=0,retained=0,admitted=0;size_t count=0;
++ for(const auto& name:names){const auto& m=*index.Find(name);Garnet::SafeTensorsMappedFile file;if(!file.Open(m.filePath,error))throw std::runtime_error(error);auto* data=file.DataAt(m.dataOffset,m.dataSize);if(!data)throw std::runtime_error("Checkpoint tensor outside mapping");auto weight=gpu.UploadBF16(data,m.dataSize,m.shape[0],m.shape[1]);auto storage=weight.RetainedStorageBytes();original+=m.dataSize;retained+=storage;if(weight.SharedExactHalfReady()){admitted+=m.dataSize;++count;if(storage>m.dataSize+uint64_t(m.shape[0])*260)throw std::runtime_error("Second full weight buffer retained");}
++ rows.push_back({{"name",name},{"shape",m.shape},{"original_bytes",m.dataSize},{"retained_storage_bytes",storage},{"shared_exact_half",weight.SharedExactHalfReady()},{"common_scale",weight.GlobalHalfReady()}});
++ }
++ if(names.empty())throw std::runtime_error("No model layer matrices found");nlohmann::json report={{"scope","Individual decoded-layer BF16 matrices; logical Metal buffer bytes, not model peak memory or speed"},{"matrices",rows},{"original_bytes",original},{"retained_bytes",retained},{"shared_original_bytes",admitted},{"shared_matrix_count",count}};std::ofstream out(argv[2]);out<<report.dump(2);if(!out)throw std::runtime_error("Cannot write audit");std::cout<<"Checkpoint shared storage audit complete: "<<count<<"/"<<names.size()<<" matrices\n";return 0;
++}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/shared_half_inverse_test.mm
+@@ -0,0 +1,23 @@
++// Exhaustive correctness test of the GPU inverse; not a timing benchmark.
++#import <Foundation/Foundation.h>
++#import <Metal/Metal.h>
++#include "shared_half_shader.h"
++#include <cmath>
++#include <cstring>
++#include <cstdint>
++#include <iostream>
++#include <stdexcept>
++int main(){@autoreleasepool{try{
++ auto device=MTLCreateSystemDefaultDevice();auto queue=[device newCommandQueue];
++ NSString* prefix=@"#include <metal_stdlib>\nusing namespace metal;\nstruct BF16Params {ulong rows,inner,columns,aStride,oStride;};\nconstant uint fixed_rows [[function_constant(0)]];constant uint fixed_inner [[function_constant(1)]];constant uint fixed_columns [[function_constant(2)]];constant uint fixed_aStride [[function_constant(3)]];constant uint fixed_oStride [[function_constant(4)]];constant bool fixed_no_tail [[function_constant(5)]];\n";
++ auto options=[MTLCompileOptions new];options.fastMathEnabled=NO;NSError* error=nil;
++ auto library=[device newLibraryWithSource:[prefix stringByAppendingString:[NSString stringWithUTF8String:Garnet::kSharedHalfShader]] options:options error:&error];
++ if(!library)throw std::runtime_error(error.localizedDescription.UTF8String);
++ auto pipeline=[device newComputePipelineStateWithFunction:[library newFunctionWithName:@"shared_half_inverse_test"] error:&error];if(!pipeline)throw std::runtime_error("Inverse test pipeline unavailable");
++ auto buffer=[device newBufferWithLength:65536*4 options:MTLResourceStorageModeShared];size_t checked=0;
++ for(int scale=-64;scale<=64;++scale){auto command=[queue commandBuffer];auto e=[command computeCommandEncoder];[e setComputePipelineState:pipeline];[e setBuffer:buffer offset:0 atIndex:0];[e setBytes:&scale length:4 atIndex:1];[e dispatchThreads:MTLSizeMake(65536,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[e endEncoding];[command commit];[command waitUntilCompleted];if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error("GPU inverse command failed");
++  const auto* actual=static_cast<const float*>(buffer.contents);
++  for(uint32_t i=0;i<65536;++i){if(((i>>10)&31)==31)continue;uint16_t word=uint16_t(i);__fp16 half;std::memcpy(&half,&word,2);float expected=std::ldexp(float(half),-scale);if(std::memcmp(&expected,actual+i,4))throw std::runtime_error("GPU inverse changed FP32 bits");++checked;}
++ }
++ std::cout<<"Exhaustive GPU finite-half inverse and signed-zero bit equality PASS "<<checked<<" values across 129 scales\n";return 0;
++}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}}

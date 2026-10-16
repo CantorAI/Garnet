@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T22:20:57.722674+00:00",
-  "source_commit": "1177350de313270c7a08cc2c797d59483b557dd9",
+  "generated_at_utc": "2026-10-16T22:25:52.613036+00:00",
+  "source_commit": "0df1a8e61122bc4f113d0bc4dafd9eabf0062b8b",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -34,6 +34,9 @@
     "results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal/README.md",
     "results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/README.md",
     "results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-chunk64/source/xModel/README.md",
+    "results/20261016/worldsense-m5-chunk64/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-chunk64/source/xModel/qwen35/vl_4b/README.md",
     "results/20261016/worldsense-m5-coalesced-nopad/source/xModel/README.md",
     "results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen35/vl_4b/README.md",
@@ -44,7 +47,7 @@
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 195,
+  "report_count": 196,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5013,12 +5016,62 @@
       ]
     },
     {
+      "experiment_id": "results/20261016/worldsense-m5-chunk64",
+      "title": "WS-M5-07: VLM-only prefill64 — rejected",
+      "report_path": "results/20261016/worldsense-m5-chunk64/README.md",
+      "report_sha256": "df6fb1642b0fcc0a94a0d8dbacc99791823b6542aa441cdd578027dd884870cd",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-07: VLM-only prefill64 — rejected\n\nVLM-only prefill64 versus16 with opt-in packed-width admission64x2560. Same original BF16/FP32 native arithmetic and chunk limit64. Text reasoner remains16. Both chunk-keyed graph sets stay warm and share weights; this consumes more activation/graph storage. Native reference and complete32-layer/token bit comparison pass. All20 model calls in the WorldSense single-car ABBA screen match golden inputs/tokens/text, actual chunk plans validate. Four measured calls per policy/model after both warm.\n\n4B TTFT improves34.34%, total12.59%, decode decreases0.83%. However, Qwen3-1.7B reasoning TTFT increases18.81%, total9.96%, decode decreases1.10%. Skill native-call median improves13.7442 to12.4779 seconds, a descriptive component-path observation. The experiment FAILS its prospective text preservation gate and is REJECTED; no full confirmation or promotion. No causal explanation for reasoner regression is established. Original library/live assignments restored.\n\nThe next dual-model chunk experiment changes reasoner policy as well and is a distinct method; do not treat its outcome as an unchanged favorable retry of this result. These fixed archived-frame Skill/model timings exclude decoding, scheduling, persistence and retrieval/ranking. Small sample, one scene, one M5: no broad hardware or significance claim. Decoder-source equality and actual chunk plans support path validation; no new kernel route counter was added for the configuration-only choice. Full generated tokens/states are correctness evidence on the recorded cases, not universal numerical proof. Controller CPython is lifecycle automation; timed HTTP clients use XLang3/native production pipeline, no external image helper. All warmups and measurements retained.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "CMakeCache.txt",
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "build.log",
+        "calls.csv",
+        "cases.json",
+        "cohort-manifest.json",
+        "controller.log",
+        "controller.py",
+        "file-manifest.json",
+        "flags.make",
+        "paired-1.cantor-stderr.log",
+        "paired-1.cantor.log",
+        "paired-1.client.log",
+        "paired-1.json",
+        "prepare.py",
+        "protocol.json",
+        "reconstruction-verification.json",
+        "reconstruction.json",
+        "report-body.txt",
+        "server-paired-1.log",
+        "server-restored-control.log",
+        "source-overlay.patch",
+        "starting-source-manifest.json",
+        "state-guard.json",
+        "state-guard.log",
+        "state_guard.py",
+        "tests.log"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-chunk64/reconstruction-verification.json",
+          "sha256": "513aaca8ab366faa51e35d5ba69ce9f36a687608b8a0a44f270a7b5244385b62"
+        }
+      ],
+      "evidence_directories": [
+        "source"
+      ]
+    },
+    {
       "experiment_id": "results/20261016/worldsense-m5-coalesced-nopad",
       "title": "WS-M5-05: unpadded coalesced BF16 prefill — rejected",
       "report_path": "results/20261016/worldsense-m5-coalesced-nopad/README.md",
-      "report_sha256": "a87e057069f949fbe719f3109ca971c06c1196834606ccef46a1b8f382c145bc",
+      "report_sha256": "beb802305d09a59a11c63bf27fdf2a371702ddd37e1cb410cbb15308ace0d675",
       "classification": "historical_report_requires_scope_and_status_review",
-      "report_text": "# WS-M5-05: unpadded coalesced BF16 prefill — rejected\n\nProspective single-car current-event screen through WorldSense/Galaxy, preserving original shared stride 64 while coalescing global reads. See protocol.json for gates declared before timing. Both modes warmed, two ABBA blocks, four measured samples per policy/model. Two models per frame: Qwen3.5-4B and Qwen3-1.7B. All 20 model outputs match, actual routes validate, and correctness-only native/32-layer state-bit tests pass. No direct-model timing used.\n\n4B median TTFT increases 35.47%, total increases 16.55%, decode decreases 2.95%. Text TTFT increases 12.14%, total increases 6.60%. Skill native-call median increases from 15.226 to 17.569 seconds. Failed prospective gates; rejected without full confirmation or unchanged rerun. Original production library and live assignments restored. No optimization promoted.\n\nThese are warm archived-frame model/Skill measurements, excluding video decode, scheduling, persistence and retrieval. Small sample and single frame limit generalization. RSS/swap are not peak GPU memory. Full raw calls include warmups; analysis.json preserves metrics, exact checks and route counters. source/ contains isolated prototype code, not deployed production kernels. Controller Python performs lifecycle automation; timed HTTP requests use XLang3. Native tests provide correctness evidence only.\n",
+      "report_text": "# WS-M5-05: unpadded coalesced BF16 prefill — rejected\n\nProspective single-car current-event screen through WorldSense/Galaxy, preserving original shared stride 64 while coalescing global reads. See protocol.json for gates declared before timing. Both modes warmed, two ABBA blocks, four measured samples per policy/model. Two models per frame: Qwen3.5-4B and Qwen3-1.7B. All 20 model outputs match, actual routes validate, and correctness-only native/32-layer state-bit tests pass. No direct-model timing used.\n\n4B median TTFT increases 35.47%, total increases 16.55%, decode decreases 2.95%. Text TTFT increases 12.14%, total increases 6.60%. Skill native-call median increases from 15.226 to 17.569 seconds. Failed prospective gates; rejected without full confirmation or unchanged rerun. Original production library and live assignments restored. No optimization promoted.\n\nThese are warm archived-frame model/Skill measurements, excluding video decode, scheduling, persistence and retrieval. Small sample and single frame limit generalization. RSS/swap are not peak GPU memory. Full raw calls include warmups; analysis.json preserves metrics, exact checks and route counters. source/ contains isolated prototype code, not deployed production kernels. Controller Python performs lifecycle automation; timed HTTP requests use XLang3. Native tests provide correctness evidence only.\n\nArchive repair: added the previously omitted native backend/CMake/48-case test source overlay from the retained isolated tree. Raw measurements and decisions unchanged. This is an evidence packaging correction, not a new run.\n",
       "commands_as_documented": [],
       "archive_hashes_as_documented": [],
       "adjacent_files": [
@@ -5037,14 +5090,22 @@
         "paired-1.client.log",
         "paired-1.json",
         "protocol.json",
+        "reconstruction-verification.json",
+        "reconstruction.json",
         "server-paired-1.log",
         "server-restored-control.log",
+        "source-overlay.patch",
         "state-guard.json",
         "state-guard.log",
         "state_guard.py",
         "tests.log"
       ],
-      "verification_records": [],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-coalesced-nopad/reconstruction-verification.json",
+          "sha256": "f89e0e1e6454709d08b20243a687575be1b475766deac0714e8a9e90db975f23"
+        }
+      ],
       "evidence_directories": [
         "source"
       ]
@@ -5053,9 +5114,9 @@
       "experiment_id": "results/20261016/worldsense-m5-coalesced-prefill",
       "title": "WS-M5-04: padded coalesced BF16 prefill — rejected",
       "report_path": "results/20261016/worldsense-m5-coalesced-prefill/README.md",
-      "report_sha256": "13a5b2aa5203e05f96f65b567f9a041f4677e34d624b8d048ead1c26070430f5",
+      "report_sha256": "d43bb860ef20b66167db384496a1bd2adece6c72c7e539bf2125df6d369926e9",
       "classification": "historical_report_requires_scope_and_status_review",
-      "report_text": "# WS-M5-04: padded coalesced BF16 prefill — rejected\n\nPaired WorldSense/Galaxy archived-frame inference and text planning, using Qwen3.5-4B and Qwen3-1.7B on the M5. This is not video-to-persisted-event or search-retrieval latency. See protocol.json for prospective gates, cases manifests for fixed inputs, and raw paired JSON for every warmup and measured call.\n\nThe method changes contiguous-K global reads and transposes into 65-column shared tiles. It preserves BF16 weights, FP32 arithmetic order, decoder and budgets; shared memory increases by 256/128 bytes per wide tile. Full native reference tests and all 32-layer state bits pass. All 72 model-call outputs match, control counters are zero and candidate counters positive, with zero decode dispatches.\n\nWorker 1 uses ABBA, fresh worker 2 BAAB after both modes warm. Four-B TTFT increases 16.36% / 13.70%; total increases 5.64% / 4.63%. Decode changes +1.11% / -0.67%. Both fail the declared 10% TTFT and 5% total improvement gates. No favorable rerun or promotion. Original production library restored. analysis.json contains exact medians, counts and checks.\n\nRepresentative GPU prefill is 3471 ms control versus 4565 ms candidate; CPU encoding approximately 10.5 ms in both. These measurements establish the observed GPU-stage cost, not a hardware occupancy explanation. Process RSS and swap are retained but are not peak GPU allocation measurements. Small samples, one Mac and correlated fixed inputs limit generalization.\n\nThe initial duplicate-Argmax shader assembly failure is retained; it generated no model timing. Source snapshots describe the isolated prototype, not a deployed kernel. Controller Python is lifecycle automation; timed requests run through XLang3 and native WorldSense/Galaxy/Garnet. Credentials are supplied through environment variables and are not part of this archive.\n",
+      "report_text": "# WS-M5-04: padded coalesced BF16 prefill — rejected\n\nPaired WorldSense/Galaxy archived-frame inference and text planning, using Qwen3.5-4B and Qwen3-1.7B on the M5. This is not video-to-persisted-event or search-retrieval latency. See protocol.json for prospective gates, cases manifests for fixed inputs, and raw paired JSON for every warmup and measured call.\n\nThe method changes contiguous-K global reads and transposes into 65-column shared tiles. It preserves BF16 weights, FP32 arithmetic order, decoder and budgets; shared memory increases by 256/128 bytes per wide tile. Full native reference tests and all 32-layer state bits pass. All 72 model-call outputs match, control counters are zero and candidate counters positive, with zero decode dispatches.\n\nWorker 1 uses ABBA, fresh worker 2 BAAB after both modes warm. Four-B TTFT increases 16.36% / 13.70%; total increases 5.64% / 4.63%. Decode changes +1.11% / -0.67%. Both fail the declared 10% TTFT and 5% total improvement gates. No favorable rerun or promotion. Original production library restored. analysis.json contains exact medians, counts and checks.\n\nRepresentative GPU prefill is 3471 ms control versus 4565 ms candidate; CPU encoding approximately 10.5 ms in both. These measurements establish the observed GPU-stage cost, not a hardware occupancy explanation. Process RSS and swap are retained but are not peak GPU allocation measurements. Small samples, one Mac and correlated fixed inputs limit generalization.\n\nThe initial duplicate-Argmax shader assembly failure is retained; it generated no model timing. Source snapshots describe the isolated prototype, not a deployed kernel. Controller Python is lifecycle automation; timed requests run through XLang3 and native WorldSense/Galaxy/Garnet. Credentials are supplied through environment variables and are not part of this archive.\n\nArchive repair: added the previously omitted native backend/CMake/48-case test source overlay from the retained isolated tree. Raw measurements and decisions unchanged. This is an evidence packaging correction, not a new run.\n",
       "commands_as_documented": [],
       "archive_hashes_as_documented": [],
       "adjacent_files": [
@@ -5089,18 +5150,26 @@
         "prepare.py",
         "protocol.json",
         "rebuild.log",
+        "reconstruction-verification.json",
+        "reconstruction.json",
         "repaired-tests.log",
         "schedule-tests.log",
         "server-paired-1.log",
         "server-paired-2.log",
         "server-restored-control.log",
         "shader-assembly-failure.log",
+        "source-overlay.patch",
         "state-guard.json",
         "state-guard.log",
         "state_guard.py",
         "tests.log"
       ],
-      "verification_records": [],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-coalesced-prefill/reconstruction-verification.json",
+          "sha256": "dbaec55332bd13fcb137214d762bb726d3748a867f9d74d11b7beb7085902ef6"
+        }
+      ],
       "evidence_directories": [
         "source"
       ]
@@ -5274,6 +5343,8 @@
         "prepare.py",
         "protocol.json",
         "rebuild.log",
+        "reconstruction-verification.json",
+        "reconstruction.json",
         "sample-command.log",
         "server-candidate-1.log",
         "server-candidate-2.log",
@@ -5282,6 +5353,7 @@
         "server-restored-control.log",
         "service-root-build.log",
         "service-root-tests.log",
+        "source-overlay.patch",
         "starting-source-manifest.json",
         "state-candidate.json",
         "state-candidate.log",
@@ -5294,7 +5366,12 @@
         "weight-audit.log",
         "weight-storage-audit.json"
       ],
-      "verification_records": [],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-shared-half/reconstruction-verification.json",
+          "sha256": "7b0f6719c675d32c7aceba2db2dce0461c0f708df145f6ee9d1b0a6b01a9eb0d"
+        }
+      ],
       "evidence_directories": [
         "documents-root-attempt",
         "executed-native-tests",
@@ -5333,15 +5410,23 @@
         "preparation-failure.txt",
         "prepare.py",
         "protocol.json",
+        "reconstruction-verification.json",
+        "reconstruction.json",
         "server-paired-1.log",
         "server-restored-control.log",
+        "source-overlay.patch",
         "starting-source-manifest.json",
         "state-guard.json",
         "state-guard.log",
         "state_guard.py",
         "tests.log"
       ],
-      "verification_records": [],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-small-prefill/reconstruction-verification.json",
+          "sha256": "31f384762c70b0ca416ed2d5116baabb8a88ff84f248d3ce17817a98bd398b9e"
+        }
+      ],
       "evidence_directories": [
         "source"
       ]
