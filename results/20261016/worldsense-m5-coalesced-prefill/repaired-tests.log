@@ -1,0 +1,9 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-coalesced-prefill
+    Start 1: metal_mps_matmul_reference
+1/2 Test #1: metal_mps_matmul_reference ..........   Passed    1.09 sec
+    Start 2: metal_coalesced_prefill_reference
+2/2 Test #2: metal_coalesced_prefill_reference ...   Passed    4.53 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   5.62 sec

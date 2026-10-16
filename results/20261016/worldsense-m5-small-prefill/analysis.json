@@ -1,0 +1,391 @@
+{
+  "status": "rejected",
+  "passed": false,
+  "exact_outputs_and_inputs": true,
+  "actual_routes_valid": true,
+  "checks": [
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "candidate",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase1"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    },
+    {
+      "worker": "paired-1",
+      "key": [
+        "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+        "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode",
+        "phase3"
+      ],
+      "policy": "control",
+      "tokens_equal": true,
+      "text_equal": true,
+      "inputs_equal": true,
+      "correct_prefill_route": true,
+      "decode_untouched": true,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-small-prefill/source/runtime/metal_serving.py"
+    }
+  ],
+  "metrics": {
+    "paired-1": {
+      "Qwen3-1.7B": {
+        "control": {
+          "samples": 4,
+          "total_seconds_p50": 2.6170621045021107,
+          "ttft_seconds_p50": 1.4312326250001206,
+          "decode_tps_p50": 28.746578028982228,
+          "stages_p50": {
+            "reset_seconds": 0.029320458503207192,
+            "vision_seconds": 0.0,
+            "host_input_seconds": 0.0009149579927907325,
+            "prefill_seconds": 1.3996846244990593,
+            "decode_seconds": 1.1803390624991152
+          }
+        },
+        "candidate": {
+          "samples": 4,
+          "total_seconds_p50": 2.5531623124988982,
+          "ttft_seconds_p50": 1.3722967295034323,
+          "decode_tps_p50": 28.75889682361949,
+          "stages_p50": {
+            "reset_seconds": 0.029404082997643854,
+            "vision_seconds": 0.0,
+            "host_input_seconds": 0.0009099579983740114,
+            "prefill_seconds": 1.3423547295024036,
+            "decode_seconds": 1.1821169994946104
+          }
+        }
+      },
+      "Qwen3.5-4B": {
+        "control": {
+          "samples": 4,
+          "total_seconds_p50": 11.312479958505719,
+          "ttft_seconds_p50": 4.212675250004395,
+          "decode_tps_p50": 13.108484226871813,
+          "stages_p50": {
+            "reset_seconds": 0.013524416499421932,
+            "vision_seconds": 0.4417476039961912,
+            "host_input_seconds": 0.0024250010028481483,
+            "prefill_seconds": 3.753551437504939,
+            "decode_seconds": 7.094478583501768
+          }
+        },
+        "candidate": {
+          "samples": 4,
+          "total_seconds_p50": 11.301537937499234,
+          "ttft_seconds_p50": 4.152868999997736,
+          "decode_tps_p50": 13.009431371916888,
+          "stages_p50": {
+            "reset_seconds": 0.013611333502922207,
+            "vision_seconds": 0.41775356249854667,
+            "host_input_seconds": 0.0024529165020794608,
+            "prefill_seconds": 3.720810833503492,
+            "decode_seconds": 7.148474041496229
+          }
+        }
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "worker": "paired-1",
+      "model": "Qwen3-1.7B",
+      "decode_gain": 0.00042853081938454274,
+      "ttft_change": -0.04117841814616496,
+      "total_change": -0.024416612770971735
+    },
+    {
+      "worker": "paired-1",
+      "model": "Qwen3.5-4B",
+      "decode_gain": -0.007556392733178985,
+      "ttft_change": -0.014196738760386629,
+      "total_change": -0.0009672521893183683
+    }
+  ],
+  "current_skill_native_wall_p50": {
+    "paired-1": {
+      "control": 13.960282437503338,
+      "candidate": 13.86125347900088
+    }
+  },
+  "scope": "Paired WorldSense/Galaxy current-Skill and text planning; no decode/storage/event-scheduler end-to-end claim"
+}

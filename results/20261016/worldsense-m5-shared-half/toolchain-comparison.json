@@ -1,0 +1,35 @@
+{
+  "garnet-metal-native-image": {
+    "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+    "CMAKE_CXX_FLAGS": "",
+    "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+    "CMAKE_OBJCXX_COMPILER": "/usr/bin/c++",
+    "CMAKE_OSX_SYSROOT": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+    "CMAKE_OSX_DEPLOYMENT_TARGET": "",
+    "CMAKE_OSX_ARCHITECTURES": "",
+    "GARNET_METAL_FRAMEWORK": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework",
+    "GARNET_MPS_FRAMEWORK": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/MetalPerformanceShaders.framework"
+  },
+  "garnet-metal-worldsense-fused-head": {
+    "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+    "CMAKE_CXX_FLAGS": "",
+    "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+    "CMAKE_OBJCXX_COMPILER": "/usr/bin/c++",
+    "CMAKE_OSX_SYSROOT": "",
+    "CMAKE_OSX_DEPLOYMENT_TARGET": "",
+    "CMAKE_OSX_ARCHITECTURES": "",
+    "GARNET_METAL_FRAMEWORK": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework",
+    "GARNET_MPS_FRAMEWORK": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/MetalPerformanceShaders.framework"
+  },
+  "garnet-metal-worldsense-shared-half": {
+    "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+    "CMAKE_CXX_FLAGS": "",
+    "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+    "CMAKE_OBJCXX_COMPILER": "/usr/bin/c++",
+    "CMAKE_OSX_SYSROOT": "",
+    "CMAKE_OSX_DEPLOYMENT_TARGET": "",
+    "CMAKE_OSX_ARCHITECTURES": "",
+    "GARNET_METAL_FRAMEWORK": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework",
+    "GARNET_MPS_FRAMEWORK": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/MetalPerformanceShaders.framework"
+  }
+}

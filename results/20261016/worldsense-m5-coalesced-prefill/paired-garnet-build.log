@@ -1,0 +1,10 @@
+[ 15%] Built target garnet_native_image
+[ 30%] Built target garnet_metal
+[ 46%] Building CXX object CMakeFiles/garnet.dir/src/entry/metal_main.cpp.o
+[ 46%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/decoder_session.cpp.o
+[ 53%] Linking CXX shared library libgarnet.dylib
+[100%] Built target garnet
+[ 50%] Built target garnet_metal
+[100%] Built target garnet_metal_matmul_test
+[ 50%] Built target garnet_metal
+[100%] Built target garnet_coalesced_prefill_test

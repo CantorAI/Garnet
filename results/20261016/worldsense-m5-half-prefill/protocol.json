@@ -1,0 +1,27 @@
+{
+  "started_utc": "2026-10-16T18:11:50Z",
+  "experiment": "WS-M5-02",
+  "baseline_live_seconds": 180,
+  "abandoned_launcher": "Initial Popen without persistent exec session exited before capture; no timings produced. Replaced by attached exec session; no speed-dependent exclusion.",
+  "libraries": {
+    "before-libgalaxy_garnetfilter.dylib": "cb0947a9ae01ac83912c3fa17385414588e5a995e458fe560ea1b8bdea9cf7d2",
+    "before-libgarnet.dylib": "3a7e49a14156f55a3bd6b20b5dede3ef80707b797ce717fdb6f3d5669063619d"
+  },
+  "commits": {
+    "Garnet": "6c4a42393fc2fc49d0de79d986e3d3b740f071e8",
+    "Galaxy": "11a9c83e9eb571bc8d272a47ad68f4787e54c4e6",
+    "WorldSense": "0ba2a573a1334bfdf880729d6ada508fa1bde3e1",
+    "xWorld": "cb003bd2d961c4ed173774302c78edfe5d0d8583",
+    "Cantor": "fb06172aa412b81205231ee78ac2191aa71cdb77"
+  },
+  "machine": "hw.model: Mac17,4\nhw.memsize: 25769803776\nmachdep.cpu.brand_string: Apple M5\n",
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6\nBuildVersion:\t\t25G72\n",
+  "gates": {
+    "exact_tokens_and_inputs": true,
+    "4b_ttft_min_gain": 0.1,
+    "4b_total_min_gain": 0.05,
+    "4b_and_text_decode_max_regression": 0.02,
+    "text_total_ttft_max_regression": 0.02
+  },
+  "candidate": "EXACT_HALF_PREFILL=ON and GLOBAL_HALF_ALPHA=ON; fused-head OFF"
+}

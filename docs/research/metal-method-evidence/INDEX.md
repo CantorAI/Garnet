@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T17:22:08.837789+00:00
+Generated UTC: 2026-10-16T22:20:22.133659+00:00
 
-Base HEAD at generation: `2745f5eeecf2ad525957898175668f8ee1e0d732`. Reports indexed: **210**.
+Base HEAD at generation: `6c4a42393fc2fc49d0de79d986e3d3b740f071e8`. Reports indexed: **225**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -206,6 +206,21 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [results/20261016/wide-block-packed-prefill](../../../results/20261016/wide-block-packed-prefill/README.md) | Wide output block packed prefill rejected by timing |
+| [results/20261016/worldsense-m5-coalesced-nopad](../../../results/20261016/worldsense-m5-coalesced-nopad/README.md) | WS-M5-05: unpadded coalesced BF16 prefill — rejected |
+| [results/20261016/worldsense-m5-coalesced-nopad/source/xModel](../../../results/20261016/worldsense-m5-coalesced-nopad/source/xModel/README.md) | xModel |
+| [results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen3/text_1_7b](../../../results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen35/vl_4b](../../../results/20261016/worldsense-m5-coalesced-nopad/source/xModel/qwen35/vl_4b/README.md) | Qwen3.5 4B Metal xModel |
+| [results/20261016/worldsense-m5-coalesced-prefill](../../../results/20261016/worldsense-m5-coalesced-prefill/README.md) | WS-M5-04: padded coalesced BF16 prefill — rejected |
+| [results/20261016/worldsense-m5-coalesced-prefill/source/xModel](../../../results/20261016/worldsense-m5-coalesced-prefill/source/xModel/README.md) | xModel |
+| [results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen3/text_1_7b](../../../results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen35/vl_4b](../../../results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen35/vl_4b/README.md) | Qwen3.5 4B Metal xModel |
+| [results/20261016/worldsense-m5-fused-head](../../../results/20261016/worldsense-m5-fused-head/README.md) | WS-M5-01: fused greedy head through WorldSense — rejected screen |
+| [results/20261016/worldsense-m5-half-prefill](../../../results/20261016/worldsense-m5-half-prefill/README.md) | WS-M5-02: limited exact-half prefill through WorldSense — rejected |
+| [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |
+| [results/20261016/worldsense-m5-small-prefill](../../../results/20261016/worldsense-m5-small-prefill/README.md) | WS-M5-06: existing smaller BF16 prefill tile — rejected |
+| [results/20261016/worldsense-m5-small-prefill/source/xModel](../../../results/20261016/worldsense-m5-small-prefill/source/xModel/README.md) | xModel |
+| [results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b](../../../results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b](../../../results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md) | Qwen3.5 4B Metal xModel |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |

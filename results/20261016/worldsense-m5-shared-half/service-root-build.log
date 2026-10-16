@@ -1,0 +1,56 @@
+loading initial cache file /Users/shawn/CantorAI/out/research/worldsense-shared-half/source/cmake/MetalWorldSense4B.cmake
+-- The CXX compiler identification is AppleClang 21.0.0.21000334
+-- The OBJCXX compiler identification is AppleClang 21.0.0.21000334
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting OBJCXX compiler ABI info
+-- Detecting OBJCXX compiler ABI info - done
+-- Check for working OBJCXX compiler: /usr/bin/c++ - skipped
+-- Found JPEG: /opt/homebrew/opt/jpeg-turbo/lib/libjpeg.dylib (found version "80")
+-- Found ZLIB: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libz.tbd (found version "1.2.12")
+-- Found PNG: /opt/homebrew/opt/libpng/lib/libpng.dylib (found version "1.6.59")
+-- Configuring done (0.8s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-shared-half
+[ 15%] Building OBJCXX object CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o
+[ 15%] Building CXX object CMakeFiles/garnet_native_image.dir/src/image/native_image.cpp.o
+[ 23%] Linking CXX static library libgarnet_native_image.a
+[ 23%] Built target garnet_native_image
+[ 30%] Linking OBJCXX static library libgarnet_metal.a
+[ 30%] Built target garnet_metal
+[ 61%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/decoder_session.cpp.o
+[ 61%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/compiled_graph.cpp.o
+[ 61%] Building CXX object CMakeFiles/garnet.dir/src/tensor/garnet_tensor.cpp.o
+[ 61%] Building CXX object CMakeFiles/garnet.dir/src/entry/metal_main.cpp.o
+[ 69%] Building CXX object CMakeFiles/garnet.dir/src/tensor/graph_capture.cpp.o
+[ 76%] Building CXX object CMakeFiles/garnet.dir/src/core/lowering_context.cpp.o
+[ 84%] Building CXX object CMakeFiles/garnet.dir/src/model/safetensors_index.cpp.o
+[ 92%] Building CXX object CMakeFiles/garnet.dir/src/tokenizer/qwen_tokenizer.cpp.o
+[100%] Linking CXX shared library libgarnet.dylib
+[100%] Built target garnet
+[ 50%] Built target garnet_metal
+[ 75%] Building CXX object CMakeFiles/garnet_metal_matmul_test.dir/test2026/metal/matmul_test.cpp.o
+[100%] Linking CXX executable garnet_metal_matmul_test
+[100%] Built target garnet_metal_matmul_test
+[ 50%] Built target garnet_metal
+[ 75%] Building CXX object CMakeFiles/garnet_shared_half_test.dir/test2026/metal/shared_half_test.cpp.o
+[100%] Linking CXX executable garnet_shared_half_test
+[100%] Built target garnet_shared_half_test
+[ 50%] Building OBJCXX object CMakeFiles/garnet_shared_half_inverse_test.dir/test2026/metal/shared_half_inverse_test.mm.o
+/Users/shawn/CantorAI/out/research/worldsense-shared-half/source/test2026/metal/shared_half_inverse_test.mm:13:47: warning: 'fastMathEnabled' is deprecated: first deprecated in macOS 15.0 - Use mathMode instead [-Wdeprecated-declarations]
+   13 |  auto options=[MTLCompileOptions new];options.fastMathEnabled=NO;NSError* error=nil;
+      |                                               ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLLibrary.h:326:39: note: 'fastMathEnabled' has been explicitly marked deprecated here
+  326 | @property (readwrite, nonatomic) BOOL fastMathEnabled API_DEPRECATED("Use mathMode instead", macos(10.11, 15.0), ios(8.0, 18.0));
+      |                                       ^
+1 warning generated.
+[100%] Linking OBJCXX executable garnet_shared_half_inverse_test
+[100%] Built target garnet_shared_half_inverse_test
+[ 40%] Built target garnet_metal
+[ 80%] Building CXX object CMakeFiles/garnet_audit_shared_half.dir/test2026/metal/audit_shared_half_weights.cpp.o
+[ 80%] Building CXX object CMakeFiles/garnet_audit_shared_half.dir/src/model/safetensors_index.cpp.o
+[100%] Linking CXX executable garnet_audit_shared_half
+[100%] Built target garnet_audit_shared_half

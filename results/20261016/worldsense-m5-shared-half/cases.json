@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "observation_id": "0A8C13C2-1F23-4468-999A-2D7E8A5BB01C",
+      "start_ms": 1792174238865,
+      "end_ms": 1792174238867,
+      "skill_ref": "Expanded Video Tests/current_only.yaml#current_absent_elephant"
+    },
+    {
+      "observation_id": "6663E057-C15F-4000-B6A9-655FF434FE62",
+      "start_ms": 1792174145532,
+      "end_ms": 1792174145534,
+      "skill_ref": "Expanded Video Tests/bunny.yaml#search_only"
+    },
+    {
+      "observation_id": "F4647DAE-362F-41E1-98FE-10DEC31F3D4F",
+      "start_ms": 1792174183761,
+      "end_ms": 1792174183763,
+      "skill_ref": "Expanded Video Tests/current_only.yaml#current_vehicle_shared_episode"
+    }
+  ],
+  "repeats": 2,
+  "queries": [
+    "a passenger car"
+  ]
+}

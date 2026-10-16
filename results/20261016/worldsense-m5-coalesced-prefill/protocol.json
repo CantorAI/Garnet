@@ -1,0 +1,25 @@
+{
+  "experiment": "WS-M5-04",
+  "status": "prepared, uncompiled/unmeasured",
+  "declared_utc": "2026-10-16T19:17:03Z",
+  "hypothesis": "Coalesced contiguous-K BF16 loads plus 65-column threadgroup transpose reduce global transaction dispersion/bank conflicts for existing 16x64x64 and 32x64x32 FP32 MMA tiles. Same values, K reduction order and original decode path.",
+  "tradeoffs": "Extra 256/128 bytes of shared memory per wide tile; transpose stores and SIMD stride may cost latency. No extra model weight copies. Small-row/small-output fallback unchanged.",
+  "gates": {
+    "native_wide_tile_fp32_bit_equality": true,
+    "fp64_original_envelopes": true,
+    "full_tokens_and_states_bit_equal": true,
+    "4b_ttft_min_gain": 0.1,
+    "4b_total_min_gain": 0.05,
+    "4b_and_text_decode_max_regression": 0.02,
+    "text_total_ttft_max_regression": 0.02
+  },
+  "sequence": "After WS-M5-03 terminal: correctness tests then fresh WorldSense ABBA on unchanged cases. Fresh confirmation only on pass. No performance timing outside WorldSense.",
+  "scheduling_amendment_before_any_performance": {
+    "declared_utc": "2026-10-16T19:30:33Z",
+    "reason": "Prior process-level comparisons show large drift; isolate dispatcher in the same loaded binary and WorldSense process. Actual counters distinguish disabled vs enabled and prove decode untouched.",
+    "worker_1": "Warm A/B windows then ABBA windows, same three fixed cases/query per window; two measured repeats per policy",
+    "worker_2": "Fresh process, warm B/A then BAAB; prospective confirmation if initial screen passes",
+    "scope": "Same native binary, model weights, contexts, prompts, compiler and pipeline. Policy restored after every call, including inference exception. All model calls still pass through WorldSense/Galaxy.",
+    "selection": "Both fresh workers must pass unchanged performance gates and all output/route/state checks. No retrospective selection of favorable windows."
+  }
+}

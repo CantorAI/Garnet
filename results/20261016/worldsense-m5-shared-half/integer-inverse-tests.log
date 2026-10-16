@@ -1,0 +1,11 @@
+Test project /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-shared-half/build
+    Start 1: metal_mps_matmul_reference
+1/3 Test #1: metal_mps_matmul_reference .......   Passed    1.24 sec
+    Start 2: metal_shared_half_reference
+2/3 Test #2: metal_shared_half_reference ......   Passed    0.81 sec
+    Start 3: metal_shared_half_inverse
+3/3 Test #3: metal_shared_half_inverse ........   Passed    0.37 sec
+
+100% tests passed out of 3
+
+Total Test time (real) =   2.43 sec

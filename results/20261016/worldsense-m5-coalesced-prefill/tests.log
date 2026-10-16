@@ -1,0 +1,36 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-coalesced-prefill
+    Start 1: metal_mps_matmul_reference
+1/2 Test #1: metal_mps_matmul_reference ..........***Failed    0.47 sec
+program_source:834:63: warning: unused variable 'batchBase' [-Wunused-variable]
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+                                                              ^
+program_source:1047:8: error: redefinition of 'ArgmaxParams'
+struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
+       ^
+program_source:197:8: note: previous definition is here
+struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
+       ^
+
+
+    Start 2: metal_coalesced_prefill_reference
+2/2 Test #2: metal_coalesced_prefill_reference ...***Failed    0.30 sec
+program_source:834:63: warning: unused variable 'batchBase' [-Wunused-variable]
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+                                                              ^
+program_source:1047:8: error: redefinition of 'ArgmaxParams'
+struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
+       ^
+program_source:197:8: note: previous definition is here
+struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
+       ^
+
+
+
+0% tests passed, 2 tests failed out of 2
+
+Total Test time (real) =   0.77 sec
+
+The following tests FAILED:
+	  1 - metal_mps_matmul_reference (Failed)
+	  2 - metal_coalesced_prefill_reference (Failed)
+Errors while running CTest

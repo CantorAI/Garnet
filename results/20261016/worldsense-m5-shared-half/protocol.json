@@ -1,0 +1,35 @@
+{
+  "experiment": "WS-M5-03",
+  "status": "fresh matched comparison after source-root deployment repair",
+  "declared_utc": "2026-10-16T18:46:52Z",
+  "hypothesis": "Share exact scaled-half weight words between strict FP32 decode and MPS prefill, raising per-matrix admission from 16 to 64 MiB without retaining original BF16 plus a second half buffer. Exact unsupported weights retain BF16 fallback.",
+  "method": "Immutable shared layout; integer inverse preserves original FP32 learned values, including signed zero and encoded half subnormals. Existing FP32 dot/reduction and body specialization retained. Additional integer decode instructions and startup packing are explicit tradeoffs.",
+  "gates": {
+    "all_complete_tokens_and_decisions_equal": true,
+    "native_decode_bit_equal": true,
+    "native_fp64_envelope_preserved": true,
+    "exhaustive_finite_half_gpu_inverse_bit_equal": true,
+    "one_retained_weight_buffer": true,
+    "4b_ttft_min_gain": 0.2,
+    "4b_total_min_gain": 0.1,
+    "4b_and_text_decode_max_regression": 0.05,
+    "text_total_ttft_max_regression": 0.05
+  },
+  "timing": "Only after native tests: fresh WorldSense ABBA, same fixed cases and model assets. No standalone Garnet timing accepted. Fresh confirmation required on any screen pass.",
+  "scope": "Architecture tradeoff permits up to 5% decode cost for a large repeatable TTFT/total gain; distinct from the rejected WS-M5-01 head and WS-M5-02 limited-prefill gates.",
+  "preflight": "Recheck existing BF16 MPS compatibility probe on actual M5; capability only, not inference performance.",
+  "normal_conversion_refinement": "Before timing: exact normal-half conversion plus integer FP32 exponent correction; subnormals use integer normalization. Both variants pass exhaustive GPU inverse tests. No standalone inference performance was used for selection.",
+  "pre_timing_updated_utc": "2026-10-16T18:51:22Z",
+  "deployment_failure": {
+    "cause": "Model initialization blocked opening the isolated serving source under Documents; process sample records import filesystem open, no model allocations or candidate timing samples. Suspected macOS service folder authorization.",
+    "repair": "Copy identical prototype sources under CantorAI/out/research and rebuild only for runtime source-root identity. Fresh full comparison required; original attempted control retained.",
+    "stalled_library_sha256": "cd6bbc29301e9d6c82da031ad7c876bda00c1944f89e76117e52d93afe936874"
+  },
+  "fresh_comparison": {
+    "source_root": "/Users/shawn/CantorAI/out/research/worldsense-shared-half/source",
+    "control": "fresh build from identical source with shared-half/exact-half/common-alpha OFF; original seven flags retained",
+    "candidate": "same source/compiler/options, three storage/prefill flags ON",
+    "production_rollback": "original before-libgarnet.dylib remains the final restored library until gates pass",
+    "confirmation_if_screen_pass": "Fresh candidate then control workers with the same unchanged two warm repeats and all correctness/preservation thresholds."
+  }
+}

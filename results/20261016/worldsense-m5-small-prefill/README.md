@@ -1,0 +1,7 @@
+# WS-M5-06: existing smaller BF16 prefill tile — rejected
+
+Use the existing 16x32x32 tile instead of 16x64x64 only for physical rows 16. Less shared memory per threadgroup, more output tiles/input rereads, unchanged BF16 weights and FP32 values. Occupancy benefit was a hypothesis, not measured causal evidence. Native reference tests and 32-layer state/token bit checks pass; actual counters prove control/candidate routing with decode untouched.
+
+Prospectively declared single-car WorldSense/Galaxy current-event screen: both policies warm, two ABBA blocks, four measured calls per policy/model. All 20 calls match golden tokens/text/input hashes. Four-B median TTFT improves 1.42%, total 0.10%, decode decreases 0.76%; text TTFT improves 4.12%, total 2.44%. Skill native-call median 13.9603 versus 13.8613 seconds. Fails the 10% TTFT / 3% total improvement gate: rejected, no unchanged retry or full confirmation, original library/live assignments restored.
+
+Raw calls/warmups, protocol, analysis, correctness, code/build identities and environment capture are retained. Initial preparation encoding/path failures produced no model timing. Environment timestamp is during this process, not per-call thermal telemetry. The lifecycle controller uses CPython; timed requests use XLang3 and production native WorldSense/Galaxy/Garnet. No external Python image helper. These archived-frame measurements exclude decoding/scheduling/persistence and retrieval/ranking. Single scene, small sample, one M5: no statistical or general hardware claim.

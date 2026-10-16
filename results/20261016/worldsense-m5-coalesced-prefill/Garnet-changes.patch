@@ -1,0 +1,213 @@
+diff --git a/docs/research/metal_optimization_research_log.md b/docs/research/metal_optimization_research_log.md
+index 683a29577..cbc6fe08e 100644
+--- a/docs/research/metal_optimization_research_log.md
++++ b/docs/research/metal_optimization_research_log.md
+@@ -2392,3 +2392,126 @@ no Windows build is claimed. Original flags/chunk16/precision/portal preserved.
+ The earlier rejected chunk32 attempt is retained in this evidence; no partial
+ validation is promoted. [Raw calls, component clocks, source/binary identities,
+ format/state checks, rejected attempt and deployment limitations](../../results/20261016/native-image-input/README.md).
++
++## 2026 10 16 WorldSense-driven M5 4B optimization (running)
++
++User requires future optimization performance decisions to use WorldSense's
++Galaxy pipeline, with XLang3 orchestration and video-file inputs. Research
++records are intended for paper preparation. Preserve unsuccessful trials;
++do not reuse historical M4/smaller-model gains as M5/4B serving evidence.
++
++Experiment WS-M5-01 is planned/running, not a selected optimization. Initial
++600-second live-video capture uses WorldSense main 0ba2a57, Garnet
++feature/qwen35-metal 6c4a42393, existing four mounted video sources and their
++unchanged assignments. This observational cohort measures normal system
++behavior, not controlled replay: loop phase, output length and sibling Skills
++vary. Successful persisted calls exclude retries, failures, queues and loading.
++
++Before candidate timing, add a fixed recorded-frame benchmark exposed through
++WorldSense and executed by the same Galaxy Garnet-VLM filter. A current-frame
++Skill evaluation must not commit WorldState or emit production events. Keep
++ordinary live evidence as a separate integration workload. Fix source image
++bytes, prompts, model weights, pixels, output limits and scheduling. Preserve
++full outputs, stage timings, first/cold calls and setup separately. No competing
++GPU benchmark may run during a timed window. Record source/library hashes and
++machine/memory state. Future confirmatory runs are fresh, after selection.
++
++First candidate hypothesis: existing opt-in fused greedy vocabulary projection
++and argmax can reduce decode bandwidth/submission costs on 4B. Keep original
++BF16 values and FP32 arithmetic; test original output/state/error behavior.
++Initial screen requires all recorded-frame outputs/decisions to match, at
++least 5% median decode improvement, and no median TTFT or total regression
++over 2%. A screen pass is not publication confirmation. Candidate is not
++deployed or measured yet at protocol declaration. A failed screen remains
++archived without an unchanged favorable rerun. Instrumentation is identical
++in baseline/candidate.
++
++WS-M5-01 is now terminal/rejected. Four fresh WorldSense HTTP suites retain
++72 complete matching model-call outputs. Actual fused-head counters change
++only in the candidate. The first 4B comparison improves decode 15.15% and total
++12.97%, but the second has 0.62% lower decode, 3.05% higher total and 2.42%
++higher TTFT. The second text route also exceeds the total/TTFT preservation
++limit. Do not discard control drift or promote the first favorable pair.
++Original library/profile restored; no fresh favorable retry admitted.
++Instrumentation smoke failures and repairs remain in the archive.
++[Protocol, complete calls, stage metrics, memory observations and failed gate](../../results/20261016/worldsense-m5-fused-head/README.md).
++
++WS-M5-02 planned before new candidate timing: exact-half/common-alpha prefill
++on top of the original deployed seven-flag control, with fused-head OFF.
++Existing admission preserves original BF16 decode buffers and only encodes
++eligible matrices ≤16 MiB; every value must be exactly representable under
++the admitted power-of-two scale. This trades additional retained half buffers
++and setup work for faster mixed FP32/FP16 MPS prefill. It does not quantize
++learned values or promise unchanged MPS accumulation results. Require full
++output parity, ≥10% median 4B TTFT improvement and ≥5% median 4B total
++improvement in both fresh WorldSense comparisons; preserve 4B/text decode and
++text TTFT/total within 2%. Retain raw memory/swap and cold/warm records. Reject
++on gate failure without an unchanged favorable retry. No result existed at
++protocol declaration.
++
++WS-M5-02 is terminal/rejected. Four fresh WorldSense suites retain all72
++matching complete model-call outputs and actual nonzero common-alpha counters.
++The first4B pair has14.12% higher total,26.29% higher TTFT and7.68% lower decode;
++the second has1.05% higher total, only0.66% lower TTFT and0.29% lower decode.
++Text preservation also fails in the first pair. Original library restored;
++do not discard the control drift. Header-size audit finds only1.285% of4B
++decoder layer-matrix bytes can pass the existing16MiB admission bound before
++exactness checks. This motivates a distinct storage design, not a reinterpretation
++of this failed screen. [All calls, size audit, actual counters, gates and tradeoffs](../../results/20261016/worldsense-m5-half-prefill/README.md).
++
++WS-M5-03 planned/prototype, not measured: share one immutable exact scaled-half
++weight allocation between MPS prefill and strict FP32 decode. Raise admission
++to64MiB without retaining a second full BF16 body allocation; retain original
++fallback when exact representation is unavailable. Integer reconstruction
++avoids hardware half-subnormal flushing; dot/reduction order and bounded body
++shape specialization are retained. Costs are integer decode instructions,
++startup packing and added implementation complexity. No quantization, CUDA or
++default-policy change is proposed. Source is isolated under the local work
++tree. Require exhaustive GPU finite-half inverse bits, native decode bits/FP64
++envelopes, one-buffer accounting, context isolation and abort recovery before
++WorldSense timing. Screen gates declared before compilation: exact full outputs,
++≥20%4B TTFT/≥10%total gain, ≤5%decode cost on either model and ≤5%text total/TTFT
++regression, then fresh confirmation. This explicitly accepts a small decoder
++tradeoff for large prefill gains; it does not relax the two rejected screens.
++The actual M5 MPSMatrix BF16 capability probe succeeds for FP32 control and
++aborts all three BF16 combinations, matching the earlier API limitation;
++header enum availability alone is not runtime support. This is capability
++evidence, never an inference-speed benchmark. The first isolated compile missed
++the repository nlohmann header; its failed log is preserved before copying
++the unchanged dependency and rebuilding. Native validation was pending at
++that declaration.
++
++WS-M5-03 is terminal/rejected. Exhaustive GPU inverse8,189,952cases and24
++native decode/FP64/ownership/recovery cases pass. Actual checkpoint audit
++admits247/248matrices,99.706%of body-matrix bytes, with4.309MiB logical retained
++overhead rather than a second full weight copy. One32-layer/16-token request
++has equal output and finite states but nonidentical state bits (max abs0.0001295;
++pointwise diagnostic is not an original deep numerical-suite pass).
++The first Documents-root service attempt blocks on an import filesystem open,
++with no candidate model samples; stack, attempted control and logs are retained.
++After identical-source packaging under CantorAI and fresh matched builds,
++all72WorldSense model-call outputs match. TTFT improves11.09%/33.13%, but4B
++decode falls27.33%/20.82% and total rises22.87%/6.81%. Reject and restore the
++original profile. [Exact storage, source/root repair, raw calls, numerical caveats and failed gates](../../results/20261016/worldsense-m5-shared-half/README.md).
++
++WS-M5-04 prepared/native-validated, timing running: coalesce original BF16
++global reads along K and transpose into65-column padded threadgroup storage
++for the existing16×64×64/32×64×32FP32 MMA kernels. Arithmetic/reduction order,
++original weights, chunk16 and decode remain unchanged. Extra shared bytes are
++256/128 per wide tile. Small-row/output/device fallback remains original.
++Initial source extraction duplicated an adjacent Argmax declaration; preserve
++the shader-assembly failure before correcting the extraction, with no numeric
++or performance samples yet. Native48-case full FP32-bit/FP64/tail/route/recovery
++tests and a full4B32-layer/16-token state-bit comparison pass.
++
++Before any WS-M5-04 timing, replace coarse process-level attribution with a
++same-binary dispatch ablation inside WorldSense. Prior controls drifted heavily.
++Warm both policies; worker1 uses ABBA windows and a fresh prospective worker2
++uses mirrored BAAB windows, each with the same three cases/query per window
++and two measured repeats per policy. Actual counters require0 control and
++positive candidate prefill use, and zero decode use. Native RAII restores the
++live policy even after inference exceptions; XLang3 schedule/failure tests pass.
++No direct-model timing replaces WorldSense evidence. Both fresh workers must
++meet declared exact-output/state/route gates, ≥10%4B TTFT/≥5%total gain, ≤2%
++decode regression on both models and ≤2%text total/TTFT regression. No result
++or promotion is claimed yet; all roots and warmups are retained.
+diff --git a/runtime/metal_serving.py b/runtime/metal_serving.py
+index dc304d39a..a97aaf980 100644
+--- a/runtime/metal_serving.py
++++ b/runtime/metal_serving.py
+@@ -74,9 +74,11 @@ class Model:
+ 
+     def infer(self, prompt, image, limit):
+         start = time.monotonic()
++        stages = {}
+         hidden, positions = [], []
+         current = 0
+         self.decoder.reset()
++        stages['reset_seconds'] = time.monotonic() - start
+         def append_text(text):
+             nonlocal current
+             for token in self.tokenizer.encode(text):
+@@ -91,6 +93,7 @@ class Model:
+             prepared = garnet.prepare_image(image, self.image_options)
+             image_preprocess_seconds = time.monotonic()-image_start
+             gh, gw = prepared[1], prepared[2]
++            vision_start = time.monotonic()
+             if self.grid != [gh, gw]:
+                 # Keep the current graph usable if construction fails. Shared
+                 # native weights own their buffers after the old graph closes.
+@@ -101,6 +104,8 @@ class Model:
+                 if previous is not None:
+                     previous.close()
+             embedding = self.vision.encode_patches(prepared[0])
++            stages['vision_seconds'] = time.monotonic() - vision_start
++            stages['image_grid'] = [gh, gw]
+             append_text('<|vision_start|>')
+             merge = self.config['vision_config']['spatial_merge_size']
+             mh, mw = gh // merge, gw // merge
+@@ -113,9 +118,18 @@ class Model:
+         append_text(prompt + '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
+         if len(hidden) + limit > self.capacity:
+             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
++        prefill_start = time.monotonic()
+         prediction = self.decoder.prefill_sequence(hidden, [positions])
+         first = time.monotonic()
++        stages['prefill_seconds'] = first - prefill_start
++        stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
++        stages['prefill_profile'] = self.decoder.prefill_profile
++        stages['input_tokens'] = len(hidden)
++        stages['prefill_chunk_plan'] = self.decoder.prefill_chunk_plan
++        stages['host_input_seconds'] = prefill_start - start - stages['reset_seconds'] - stages.get('vision_seconds', 0) - (image_preprocess_seconds if image else 0)
+         output = []
++        decode_profile = dict(prepare_ms=0, encode_ms=0, gpu_ms=0, wait_ms=0)
++        fused_head_dispatches = 0
+         for index in range(limit):
+             token = prediction[0]
+             if token in self.stops:
+@@ -124,9 +138,16 @@ class Model:
+             if index + 1 == limit:
+                 break
+             prediction = self.decoder.step(prediction, active=[1], positions=[[current, current, current]])
++            for key in decode_profile:
++                decode_profile[key] += getattr(self.decoder.session, key)
++            fused_head_dispatches += self.decoder.session.fused_head_argmax_dispatches
+             current += 1
++        stages['decode_seconds'] = time.monotonic() - first
++        stages['decode_profile'] = decode_profile
++        stages['decode_fused_head_dispatches'] = fused_head_dispatches
+         return dict(image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
+                     backend=garnet.backend_info(), generated_tokens=len(output),
++                    timings=stages, generated_token_ids=output,
+                     ttft_seconds=first-start, total_seconds=time.monotonic()-start)
+ 
+ 
+diff --git a/test2026/metal/fused_head_argmax_test.cpp b/test2026/metal/fused_head_argmax_test.cpp
+index fdad89dc9..f45a36620 100644
+--- a/test2026/metal/fused_head_argmax_test.cpp
++++ b/test2026/metal/fused_head_argmax_test.cpp
+@@ -11,7 +11,7 @@
+ static void need(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
+ int main(){try{
+     Garnet::MetalContext gpu;size_t checks=0;
+-    for(const auto shape:std::vector<std::array<size_t,2>>{{7,1},{7,3},{7,17},{7,33},{896,151936},{1024,151936},{1024,248320}}){
++    for(const auto shape:std::vector<std::array<size_t,2>>{{7,1},{7,3},{7,17},{7,33},{896,151936},{1024,151936},{1024,248320},{2048,151936},{2560,248320}}){
+         size_t k=shape[0],n=shape[1];std::vector<uint16_t> bits(k*n);
+         for(size_t i=0;i<bits.size();++i){float value=float(int(i%17)-8)/128;uint32_t raw;std::memcpy(&raw,&value,4);bits[i]=uint16_t(raw>>16);}
+         auto weight=gpu.UploadBF16(bits.data(),bits.size()*2,n,k);

@@ -74,9 +74,11 @@ class Model:
 
     def infer(self, prompt, image, limit):
         start = time.monotonic()
+        stages = {}
         hidden, positions = [], []
         current = 0
         self.decoder.reset()
+        stages['reset_seconds'] = time.monotonic() - start
         def append_text(text):
             nonlocal current
             for token in self.tokenizer.encode(text):
@@ -91,6 +93,7 @@ class Model:
             prepared = garnet.prepare_image(image, self.image_options)
             image_preprocess_seconds = time.monotonic()-image_start
             gh, gw = prepared[1], prepared[2]
+            vision_start = time.monotonic()
             if self.grid != [gh, gw]:
                 # Keep the current graph usable if construction fails. Shared
                 # native weights own their buffers after the old graph closes.
@@ -101,6 +104,8 @@ class Model:
                 if previous is not None:
                     previous.close()
             embedding = self.vision.encode_patches(prepared[0])
+            stages['vision_seconds'] = time.monotonic() - vision_start
+            stages['image_grid'] = [gh, gw]
             append_text('<|vision_start|>')
             merge = self.config['vision_config']['spatial_merge_size']
             mh, mw = gh // merge, gw // merge
@@ -113,9 +118,18 @@ class Model:
         append_text(prompt + '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
         if len(hidden) + limit > self.capacity:
             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
+        prefill_start = time.monotonic()
         prediction = self.decoder.prefill_sequence(hidden, [positions])
         first = time.monotonic()
+        stages['prefill_seconds'] = first - prefill_start
+        stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
+        stages['prefill_profile'] = self.decoder.prefill_profile
+        stages['input_tokens'] = len(hidden)
+        stages['prefill_chunk_plan'] = self.decoder.prefill_chunk_plan
+        stages['host_input_seconds'] = prefill_start - start - stages['reset_seconds'] - stages.get('vision_seconds', 0) - (image_preprocess_seconds if image else 0)
         output = []
+        decode_profile = dict(prepare_ms=0, encode_ms=0, gpu_ms=0, wait_ms=0)
+        fused_head_dispatches = 0
         for index in range(limit):
             token = prediction[0]
             if token in self.stops:
@@ -124,9 +138,16 @@ class Model:
             if index + 1 == limit:
                 break
             prediction = self.decoder.step(prediction, active=[1], positions=[[current, current, current]])
+            for key in decode_profile:
+                decode_profile[key] += getattr(self.decoder.session, key)
+            fused_head_dispatches += self.decoder.session.fused_head_argmax_dispatches
             current += 1
+        stages['decode_seconds'] = time.monotonic() - first
+        stages['decode_profile'] = decode_profile
+        stages['decode_fused_head_dispatches'] = fused_head_dispatches
         return dict(image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
                     backend=garnet.backend_info(), generated_tokens=len(output),
+                    timings=stages, generated_token_ids=output,
                     ttft_seconds=first-start, total_seconds=time.monotonic()-start)
 
 

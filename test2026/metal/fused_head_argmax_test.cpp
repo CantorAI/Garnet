@@ -11,7 +11,7 @@
 static void need(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
 int main(){try{
     Garnet::MetalContext gpu;size_t checks=0;
-    for(const auto shape:std::vector<std::array<size_t,2>>{{7,1},{7,3},{7,17},{7,33},{896,151936},{1024,151936},{1024,248320}}){
+    for(const auto shape:std::vector<std::array<size_t,2>>{{7,1},{7,3},{7,17},{7,33},{896,151936},{1024,151936},{1024,248320},{2048,151936},{2560,248320}}){
         size_t k=shape[0],n=shape[1];std::vector<uint16_t> bits(k*n);
         for(size_t i=0;i<bits.size();++i){float value=float(int(i%17)-8)/128;uint32_t raw;std::memcpy(&raw,&value,4);bits[i]=uint16_t(raw>>16);}
         auto weight=gpu.UploadBF16(bits.data(),bits.size()*2,n,k);

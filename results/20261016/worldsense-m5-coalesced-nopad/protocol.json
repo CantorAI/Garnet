@@ -1,0 +1,15 @@
+{
+  "experiment": "WS-M5-05",
+  "declared_utc": "2026-10-16T19:59:26Z",
+  "method": "Coalesced contiguous-K BF16 loading, original 64-column shared stride; remove prior padding and preserve original shared allocation/MMA load alignment. Same exact values, reduction order, decoder and model budgets.",
+  "stage": "Single-car current-event WorldSense screen: warm both modes, two ABBA blocks/four timed repeats per policy. No search-plan query. No promotion without fresh three-frame/search confirmation.",
+  "gates": {
+    "exact_all_tokens_and_32_state_bits": true,
+    "actual_route_counters": true,
+    "4b_ttft_min_gain": 0.1,
+    "4b_total_min_gain": 0.03,
+    "decode_max_regression": 0.02,
+    "text_total_ttft_max_regression": 0.02
+  },
+  "threshold_scope": "Distinct smaller component screen; 3% total gate declared before timing, not applied to any earlier failed method. Both earlier load paths had negative TTFT gains."
+}

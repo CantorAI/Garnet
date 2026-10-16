@@ -2392,3 +2392,155 @@ no Windows build is claimed. Original flags/chunk16/precision/portal preserved.
 The earlier rejected chunk32 attempt is retained in this evidence; no partial
 validation is promoted. [Raw calls, component clocks, source/binary identities,
 format/state checks, rejected attempt and deployment limitations](../../results/20261016/native-image-input/README.md).
+
+## 2026 10 16 WorldSense-driven M5 4B optimization (running)
+
+User requires future optimization performance decisions to use WorldSense's
+Galaxy pipeline, with XLang3 orchestration and video-file inputs. Research
+records are intended for paper preparation. Preserve unsuccessful trials;
+do not reuse historical M4/smaller-model gains as M5/4B serving evidence.
+
+Experiment WS-M5-01 is planned/running, not a selected optimization. Initial
+600-second live-video capture uses WorldSense main 0ba2a57, Garnet
+feature/qwen35-metal 6c4a42393, existing four mounted video sources and their
+unchanged assignments. This observational cohort measures normal system
+behavior, not controlled replay: loop phase, output length and sibling Skills
+vary. Successful persisted calls exclude retries, failures, queues and loading.
+
+Before candidate timing, add a fixed recorded-frame benchmark exposed through
+WorldSense and executed by the same Galaxy Garnet-VLM filter. A current-frame
+Skill evaluation must not commit WorldState or emit production events. Keep
+ordinary live evidence as a separate integration workload. Fix source image
+bytes, prompts, model weights, pixels, output limits and scheduling. Preserve
+full outputs, stage timings, first/cold calls and setup separately. No competing
+GPU benchmark may run during a timed window. Record source/library hashes and
+machine/memory state. Future confirmatory runs are fresh, after selection.
+
+First candidate hypothesis: existing opt-in fused greedy vocabulary projection
+and argmax can reduce decode bandwidth/submission costs on 4B. Keep original
+BF16 values and FP32 arithmetic; test original output/state/error behavior.
+Initial screen requires all recorded-frame outputs/decisions to match, at
+least 5% median decode improvement, and no median TTFT or total regression
+over 2%. A screen pass is not publication confirmation. Candidate is not
+deployed or measured yet at protocol declaration. A failed screen remains
+archived without an unchanged favorable rerun. Instrumentation is identical
+in baseline/candidate.
+
+WS-M5-01 is now terminal/rejected. Four fresh WorldSense HTTP suites retain
+72 complete matching model-call outputs. Actual fused-head counters change
+only in the candidate. The first 4B comparison improves decode 15.15% and total
+12.97%, but the second has 0.62% lower decode, 3.05% higher total and 2.42%
+higher TTFT. The second text route also exceeds the total/TTFT preservation
+limit. Do not discard control drift or promote the first favorable pair.
+Original library/profile restored; no fresh favorable retry admitted.
+Instrumentation smoke failures and repairs remain in the archive.
+[Protocol, complete calls, stage metrics, memory observations and failed gate](../../results/20261016/worldsense-m5-fused-head/README.md).
+
+WS-M5-02 planned before new candidate timing: exact-half/common-alpha prefill
+on top of the original deployed seven-flag control, with fused-head OFF.
+Existing admission preserves original BF16 decode buffers and only encodes
+eligible matrices ≤16 MiB; every value must be exactly representable under
+the admitted power-of-two scale. This trades additional retained half buffers
+and setup work for faster mixed FP32/FP16 MPS prefill. It does not quantize
+learned values or promise unchanged MPS accumulation results. Require full
+output parity, ≥10% median 4B TTFT improvement and ≥5% median 4B total
+improvement in both fresh WorldSense comparisons; preserve 4B/text decode and
+text TTFT/total within 2%. Retain raw memory/swap and cold/warm records. Reject
+on gate failure without an unchanged favorable retry. No result existed at
+protocol declaration.
+
+WS-M5-02 is terminal/rejected. Four fresh WorldSense suites retain all72
+matching complete model-call outputs and actual nonzero common-alpha counters.
+The first4B pair has14.12% higher total,26.29% higher TTFT and7.68% lower decode;
+the second has1.05% higher total, only0.66% lower TTFT and0.29% lower decode.
+Text preservation also fails in the first pair. Original library restored;
+do not discard the control drift. Header-size audit finds only1.285% of4B
+decoder layer-matrix bytes can pass the existing16MiB admission bound before
+exactness checks. This motivates a distinct storage design, not a reinterpretation
+of this failed screen. [All calls, size audit, actual counters, gates and tradeoffs](../../results/20261016/worldsense-m5-half-prefill/README.md).
+
+WS-M5-03 planned/prototype, not measured: share one immutable exact scaled-half
+weight allocation between MPS prefill and strict FP32 decode. Raise admission
+to64MiB without retaining a second full BF16 body allocation; retain original
+fallback when exact representation is unavailable. Integer reconstruction
+avoids hardware half-subnormal flushing; dot/reduction order and bounded body
+shape specialization are retained. Costs are integer decode instructions,
+startup packing and added implementation complexity. No quantization, CUDA or
+default-policy change is proposed. Source is isolated under the local work
+tree. Require exhaustive GPU finite-half inverse bits, native decode bits/FP64
+envelopes, one-buffer accounting, context isolation and abort recovery before
+WorldSense timing. Screen gates declared before compilation: exact full outputs,
+≥20%4B TTFT/≥10%total gain, ≤5%decode cost on either model and ≤5%text total/TTFT
+regression, then fresh confirmation. This explicitly accepts a small decoder
+tradeoff for large prefill gains; it does not relax the two rejected screens.
+The actual M5 MPSMatrix BF16 capability probe succeeds for FP32 control and
+aborts all three BF16 combinations, matching the earlier API limitation;
+header enum availability alone is not runtime support. This is capability
+evidence, never an inference-speed benchmark. The first isolated compile missed
+the repository nlohmann header; its failed log is preserved before copying
+the unchanged dependency and rebuilding. Native validation was pending at
+that declaration.
+
+WS-M5-03 is terminal/rejected. Exhaustive GPU inverse8,189,952cases and24
+native decode/FP64/ownership/recovery cases pass. Actual checkpoint audit
+admits247/248matrices,99.706%of body-matrix bytes, with4.309MiB logical retained
+overhead rather than a second full weight copy. One32-layer/16-token request
+has equal output and finite states but nonidentical state bits (max abs0.0001295;
+pointwise diagnostic is not an original deep numerical-suite pass).
+The first Documents-root service attempt blocks on an import filesystem open,
+with no candidate model samples; stack, attempted control and logs are retained.
+After identical-source packaging under CantorAI and fresh matched builds,
+all72WorldSense model-call outputs match. TTFT improves11.09%/33.13%, but4B
+decode falls27.33%/20.82% and total rises22.87%/6.81%. Reject and restore the
+original profile. [Exact storage, source/root repair, raw calls, numerical caveats and failed gates](../../results/20261016/worldsense-m5-shared-half/README.md).
+
+WS-M5-04 prepared/native-validated, timing running: coalesce original BF16
+global reads along K and transpose into65-column padded threadgroup storage
+for the existing16×64×64/32×64×32FP32 MMA kernels. Arithmetic/reduction order,
+original weights, chunk16 and decode remain unchanged. Extra shared bytes are
+256/128 per wide tile. Small-row/output/device fallback remains original.
+Initial source extraction duplicated an adjacent Argmax declaration; preserve
+the shader-assembly failure before correcting the extraction, with no numeric
+or performance samples yet. Native48-case full FP32-bit/FP64/tail/route/recovery
+tests and a full4B32-layer/16-token state-bit comparison pass.
+
+Before any WS-M5-04 timing, replace coarse process-level attribution with a
+same-binary dispatch ablation inside WorldSense. Prior controls drifted heavily.
+Warm both policies; worker1 uses ABBA windows and a fresh prospective worker2
+uses mirrored BAAB windows, each with the same three cases/query per window
+and two measured repeats per policy. Actual counters require0 control and
+positive candidate prefill use, and zero decode use. Native RAII restores the
+live policy even after inference exceptions; XLang3 schedule/failure tests pass.
+No direct-model timing replaces WorldSense evidence. Both fresh workers must
+meet declared exact-output/state/route gates, ≥10%4B TTFT/≥5%total gain, ≤2%
+decode regression on both models and ≤2%text total/TTFT regression. No result
+or promotion is claimed yet; all roots and warmups are retained.
+
+
+WS-M5-04 terminal/rejected: all72 outputs and actual routes match; all32-layer state bits pass. Fresh ABBA/BAAB workers increase4B TTFT16.36%/13.70% and total5.64%/4.63%, failing prospective gates. GPU prefill dominates the observed regression, while CPU encoding is approximately10.5ms. No promotion; original library restored. [Raw calls, exact analysis, failures, source and limitations](../../results/20261016/worldsense-m5-coalesced-prefill/README.md).
+
+WS-M5-05 prospective distinct screen: remove65-column shared padding while retaining coalesced reads and original64-column alignment. Native reference tests and32-layer state-bit equivalence pass. Fixed car frame/current-event Skill only, both modes warmed, four measured samples per mode in ABBA blocks. Gates declared before timing:10%4B TTFT/3%total improvement, decode and text preservation within2%, exact outputs and actual route counters. This smaller component screen cannot promote without a fresh full three-frame/search confirmation. No result claimed at declaration.
+
+
+## Paper evidence policy (2026-10-16)
+
+The user intends these records for paper writing. Freeze each completed experiment with its prospective hypothesis, inclusion/exclusion rules, exact code/library/model/input hashes, machine/toolchain identity, execution order and warmup policy. Preserve every raw sample, failed attempt, correctness check and keep/reject decision. Report the sample unit (model call, frame/Skill invocation or fresh process); repeated calls and copied camera files are not independent devices or independent scenes.
+
+Keep model total, TTFT, generated-token count, decode rate and native Skill wall separate. Record units and rate formulas. Archived-frame Skill timing excludes video decoding, scheduling, state/event persistence and retrieval/ranking, so it cannot support an end-to-end video-event latency claim. Live observational loops are not synchronized replay controls. Cold startup, warm measurements and compilation must remain separately labeled.
+
+Record memory metric provenance; process RSS, system swap and logical weight bytes cannot establish peak Metal/GPU memory. Include power/thermal observations where available, without inventing missing telemetry or causal hardware explanations. Current small paired screens are descriptive engineering evidence: medians and percentage changes are not statistical significance, confidence intervals or broad hardware generalization. A paper-level inference needs an explicitly designed replication set; do not treat earlier exploratory screens as preregistered confirmatory trials.
+
+Rejected candidates stay in the evidence index. Any later change to thresholds, workload or implementation becomes a separately labeled experiment before timing. Promote only after the stated correctness and fresh WorldSense confirmation gates pass. Freeze archive SHA-256 manifests after final README edits, preserve immutable raw data, and cite the containing Git commit plus archive identity. Secrets and authentication tokens must never enter publication artifacts.
+
+
+WS-M5-05 terminal/rejected:20 model outputs/input hashes match, native routes validate and32-layer state bits pass. Four measured samples per policy/model:4B TTFT+35.47%,total+16.55%,decode−2.95%; text TTFT+12.14%,total+6.60%. Failed prospective screen, so no full confirmation or promotion. Original library/live assignments restored. [Raw calls, source, tests and limitations](../../results/20261016/worldsense-m5-coalesced-nopad/README.md).
+
+
+WS-M5-06 terminal/rejected: existing smaller16×32×32BF16 tile for physical16-row prefill; reduced shared storage but more output tiles/input rereads. Prospective single-car paired WorldSense screen, both modes warm/twoABBA blocks/four measured calls per policy/model. Native reference and32-layer state bits pass, all20tokens/text/inputs match and routes validate.4B TTFT−1.42%,total−0.10%,decode−0.76%; text TTFT−4.12%,total−2.44%. Fails declared10%TTFT/3%total screen. No full confirmation or promotion; restore original library/live assignments. [Protocol, failures, raw samples, exact analysis and source](../../results/20261016/worldsense-m5-small-prefill/README.md).
+
+Next bottleneck hypothesis, not yet implemented or measured: larger64-token prefill could reduce repeated weight traffic. Current4B packed-width validation admits only16 tokens; raising it requires native shape/memory guards and complete state/output checks before WorldSense measurement. Earlier32-token trial was rejected and must not be reinterpreted as success.
+
+
+WorldSense per-call CSV exports retain every eligible root-cohort model record, including warmups, with raw artifact SHA-256 and phase/policy/repetition. Nested failed attempts are explicitly outside this table and remain in their archived directories. Decode rate is `(generated_tokens−1)/(total_seconds−ttft_seconds)`; generated token IDs exclude stop tokens, while elapsed decode may include the final stop prediction and host loop overhead. It is a serving-phase rate, not kernel-only throughput. Never pool rows as independent scenes or hide these metric boundaries.
+
+WS-M5-07 prospective/prepared:64-token4B prefill with opt-in packed-width bound64×2560, unchanged chunk limit64 and original BF16/FP32 kernels. Native reference and one full32-layer/token state comparison pass; text reasoner stays16. Both chunk-keyed graph sets remain cached with shared weights for paired warming. Larger activation/cache memory and padding are costs. Before timing, declare same single-car WorldSense ABBA screen/four measured calls per policy/model, exact tokens/states and actual chunk-plan checks,10%4B TTFT/3%total gains, decode/text preservation2%. Fresh full three-frame/search mirrored confirmation required before promotion. No timing result existed at declaration.
