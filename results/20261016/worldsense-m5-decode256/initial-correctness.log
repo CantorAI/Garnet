@@ -1,0 +1,20 @@
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Bootstrap failed: 5: Input/output error
+Try re-running the command as root for richer errors.
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-decode256/correctness.py", line 9, in <module>
+    run(['/opt/homebrew/bin/ctest','--test-dir','/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256','--output-on-failure'],'tests.log')
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-decode256/correctness.py", line 5, in run
+    with (w/log).open('w')as stream:subprocess.run(args,stdout=stream,stderr=subprocess.STDOUT,check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/opt/homebrew/bin/ctest', '--test-dir', '/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256', '--output-on-failure']' returned non-zero exit status 8.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-decode256/correctness.py", line 14, in <module>
+    subprocess.run(['launchctl','bootstrap','gui/501',plist],check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['launchctl', 'bootstrap', 'gui/501', '/Users/shawn/Library/LaunchAgents/com.cantorai.cantor.plist']' returned non-zero exit status 5.

@@ -1,0 +1,17 @@
+from pathlib import Path
+import subprocess,os,json,traceback
+w=Path(__file__).resolve().parent;n=Path('/Users/shawn/CantorAI/out/build/macos-arm64-release/bin');job='gui/501/com.cantorai.cantor';plist='/Users/shawn/Library/LaunchAgents/com.cantorai.cantor.plist'
+def run(args,log):
+ with (w/log).open('w')as stream:subprocess.run(args,stdout=stream,stderr=subprocess.STDOUT,check=True)
+subprocess.run(['sh',str(n/'WorldSense/stop.sh')],check=False)
+subprocess.run(['launchctl','bootout',job],check=False)
+try:
+ run(['/opt/homebrew/bin/ctest','--test-dir','/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256','--output-on-failure'],'tests.log')
+ run([str(n/'xlang3'),'-B',str(w/'state_guard.py')],'state-guard.log')
+ run([str(n/'xlang3'),'-B',str(w/'prefix_model_guard.py')],'prefix-model-guard.log')
+ (w/'correctness-result.json').write_text(json.dumps({'native_tests':True,'all32_VLM_state_bits_and_tokens_match_previous_confirmed_and_new_policies':True,'prefix_reasoner_guard':True},indent=2));print('ALL CORRECTNESS GUARDS PASS',flush=True)
+finally:
+ subprocess.run(['launchctl','bootstrap','gui/501',plist],check=True)
+ env=dict(os.environ,WORLDSENSE_STORAGE_DIR='/Users/shawn/CantorAI/out/data/worldsense');env.pop('WORLDSENSE_ENABLE_BENCHMARK',None)
+ log=(w/'restored-normal-server.log').open('ab');subprocess.Popen(['sh',str(n/'WorldSense/start.sh')],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ print('RESTORED VALIDATED PRODUCTION LIBRARY AND NORMAL SERVICE',flush=True)

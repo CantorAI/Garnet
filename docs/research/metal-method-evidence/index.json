@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T23:39:33.722780+00:00",
-  "source_commit": "0b463799c553ccdacf40194d767ca82183be9cf3",
+  "generated_at_utc": "2026-10-16T23:59:13.480716+00:00",
+  "source_commit": "ce4842b7d4abaaba113513785cc44b871f70eb90",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -43,6 +43,9 @@
     "results/20261016/worldsense-m5-coalesced-prefill/source/xModel/README.md",
     "results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-coalesced-prefill/source/xModel/qwen35/vl_4b/README.md",
+    "results/20261016/worldsense-m5-decode256/source/xModel/README.md",
+    "results/20261016/worldsense-m5-decode256/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-decode256/source/xModel/qwen35/vl_4b/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen35/vl_4b/README.md",
@@ -56,7 +59,7 @@
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 200,
+  "report_count": 201,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5177,6 +5180,80 @@
         {
           "path": "results/20261016/worldsense-m5-coalesced-prefill/reconstruction-verification.json",
           "sha256": "dbaec55332bd13fcb137214d762bb726d3748a867f9d74d11b7beb7085902ef6"
+        }
+      ],
+      "evidence_directories": [
+        "source"
+      ]
+    },
+    {
+      "experiment_id": "results/20261016/worldsense-m5-decode256",
+      "title": "WS-M5-11 shape-restricted eight-SIMD-group decode rejected",
+      "report_path": "results/20261016/worldsense-m5-decode256/README.md",
+      "report_sha256": "ae6e1c8a105c9416a8a7fdb239598376981e1d18e9c85eeca3a26fd15d03e05a",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-11 shape-restricted eight-SIMD-group decode rejected\n\nWS-M5-11 is terminal/rejected. Shape-restricted4B BF16 body decode uses256threads/32outputs instead of128/16. Same shader/binary across policies; independent SIMD groups retain original per-output lane products/reduction order. Both sides retain production VLM64 and text16 native prefix reuse. Candidate shapes:row1,inner2560/9216,output257..99999 with32-divisible output OR tail-checked non16-divisible output. Other shapes retain original route. Costs:changed group scheduling/occupancy/input rereads and native actual-counter overhead, no extra weights/scratch layout.\n\nAll native72 numerical policy cases, tails/FP64 bounds and fallback checks pass. Complete32-layer VLM state/token bits match both policies and previous confirmed source;28-layer reasoner prefix checks also match prior confirmed guard. Initial shader declaration failed MSL scalar/vector input validation; initial cleanup raced launchd unload and was recovered. Native tests rerun only after scalar declaration/controller fixes. Failures retained; no speed sample came from those failures. The copied state-guard stdout says unchanged decode path, an inherited label: grouping changes; only state/token bits are proved equal. Actual executed harness/source retained.\n\nProspective car-only WorldSense twoABBA-block screen returned20 complete model calls including both warmups. Full golden output/token/input hashes, prompt/nonpolicy budgets, frozen source/library identities, exact warmup/repetition/order and native actual counters pass. Four measured calls per model/policy. 4B decode7.9844→7.6958tok/s(−3.61%),TTFT28.4353→36.6986s(+29.06%),total40.2297→49.3051s(+22.56%). Reasoner decode+4.22%,TTFT−24.15%,total−23.25%. Native Skill wall57.1627→64.5267s. Fails original≥5%decode/≥3%total/≤2%TTFT screen. No broader confirmation, promotion or unchanged favorable retry.\n\nSwap used grows4680.44→10573.31MiB across the cohort. Large timing shifts also occur in unchanged prefill/vision/text work; do not attribute all changes to decode grouping or claim a pure kernel speed ratio. This run remains a failed retention screen, not a causal diagnosis or retroactive resource exclusion. All individual measurements preserved. Rate=(generated_tokens−1)/(total−TTFT), serving-phase rate including host/stop costs. No end-to-end video/storage/retrieval/accuracy claim.\n\nThe exact previously validated WS-M5-10 library and live assignments were restored by finally, then normal WorldSense restarted without benchmark access. No CUDA source/default backend changes and no external CPython image processing. The prior M4 short smaller-model threadgroup rejection remains separate. Next investigation should measure actual Metal allocation/working-set pressure through WorldSense before another bandwidth-oriented kernel candidate; a possible resource issue is not proof of its cause.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "CMakeCache.txt",
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "build-initial-profile.cmake",
+        "build.log",
+        "calls.csv",
+        "cases.json",
+        "cohort-manifest.json",
+        "controller.log",
+        "controller.py",
+        "correctness-result.json",
+        "correctness.log",
+        "correctness.py",
+        "environment.json",
+        "file-manifest.json",
+        "flags.make",
+        "initial-build-before-tail-review.log",
+        "initial-correctness.log",
+        "initial-correctness.py",
+        "initial-restoration-recovery.log",
+        "initial-tests.log",
+        "model-assets.json",
+        "model-identity-verification.json",
+        "native-ctest-detail.log",
+        "paired-1.cantor-stderr.log",
+        "paired-1.cantor.log",
+        "paired-1.client.log",
+        "paired-1.json",
+        "prefix-model-guard.json",
+        "prefix-model-guard.log",
+        "prefix-model-progress.json",
+        "prefix_model_guard.py",
+        "prepare.py",
+        "prior-reasoner-parity.json",
+        "protocol.json",
+        "report-body.txt",
+        "restoration-verification.json",
+        "restored-final-normal.log",
+        "restored-normal-server.log",
+        "server-paired-1.log",
+        "server-restored-control.log",
+        "source-overlay.patch",
+        "source-reconstruction.json",
+        "starting-source-manifest.json",
+        "state-guard.json",
+        "state-guard.log",
+        "state_guard.py",
+        "tests.log"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-decode256/model-identity-verification.json",
+          "sha256": "3bb2c07221255de4cc0dac8436a73474f0f1664fa78f2b1a2b94cb330bf3b834"
+        },
+        {
+          "path": "results/20261016/worldsense-m5-decode256/restoration-verification.json",
+          "sha256": "86ccc35c324da3d0da6db953cc86f24cd5064d298f7e500a90a25cbc3fe0329f"
         }
       ],
       "evidence_directories": [

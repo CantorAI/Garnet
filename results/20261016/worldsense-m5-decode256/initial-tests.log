@@ -1,0 +1,76 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256
+    Start 1: metal_decode256_reference
+1/3 Test #1: metal_decode256_reference ........***Failed    0.40 sec
+program_source:834:63: warning: unused variable 'batchBase' [-Wunused-variable]
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+                                                              ^
+program_source:917:13: error: expecting input declarations with either all scalar types or all vector types with the same number of elements
+kernel void specialized_bf16_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+            ^
+program_source:919:10: note: declaration with attribute 'threadgroup_position_in_grid' of type 'uint' (aka 'unsigned int') here
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint3 groupThreads [[threads_per_threadgroup]]) {
+    ~~~~~^~~~~
+program_source:919:140: note: declaration with attribute 'threads_per_threadgroup' of type 'uint3' (vector of 3 'unsigned int' values) here
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint3 groupThreads [[threads_per_threadgroup]]) {
+                                                                                                                                     ~~~~~~^~~~~~~~~~~~
+
+
+    Start 2: metal_prefix_copy_reference
+Could not find executable /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/garnet_prefix_copy_test
+Looked in the following places:
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Release/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Release/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Debug/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Debug/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/MinSizeRel/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/MinSizeRel/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/RelWithDebInfo/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/RelWithDebInfo/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Deployment/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Deployment/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Development/garnet_prefix_copy_test
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Development/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Release/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Release/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Debug/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Debug/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/MinSizeRel/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/MinSizeRel/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/RelWithDebInfo/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/RelWithDebInfo/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Deployment/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Deployment/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Development/garnet_prefix_copy_test
+Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/Development/garnet_prefix_copy_test
+Unable to find executable: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-decode256/garnet_prefix_copy_test
+2/3 Test #2: metal_prefix_copy_reference ......***Not Run   0.00 sec
+    Start 3: metal_mps_matmul_reference
+3/3 Test #3: metal_mps_matmul_reference .......***Failed    0.25 sec
+program_source:834:63: warning: unused variable 'batchBase' [-Wunused-variable]
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+                                                              ^
+program_source:917:13: error: expecting input declarations with either all scalar types or all vector types with the same number of elements
+kernel void specialized_bf16_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+            ^
+program_source:919:10: note: declaration with attribute 'threadgroup_position_in_grid' of type 'uint' (aka 'unsigned int') here
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint3 groupThreads [[threads_per_threadgroup]]) {
+    ~~~~~^~~~~
+program_source:919:140: note: declaration with attribute 'threads_per_threadgroup' of type 'uint3' (vector of 3 'unsigned int' values) here
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint3 groupThreads [[threads_per_threadgroup]]) {
+                                                                                                                                     ~~~~~~^~~~~~~~~~~~
+
+
+
+0% tests passed, 3 tests failed out of 3
+
+Total Test time (real) =   0.66 sec
+
+The following tests FAILED:
+	  1 - metal_decode256_reference (Failed)
+	  2 - metal_prefix_copy_reference (Not Run)
+	  3 - metal_mps_matmul_reference (Failed)
+Errors while running CTest

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T23:39:33.722780+00:00
+Generated UTC: 2026-10-16T23:59:13.480716+00:00
 
-Base HEAD at generation: `0b463799c553ccdacf40194d767ca82183be9cf3`. Reports indexed: **200**.
+Base HEAD at generation: `ce4842b7d4abaaba113513785cc44b871f70eb90`. Reports indexed: **201**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -188,6 +188,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-chunk64](../../../results/20261016/worldsense-m5-chunk64/README.md) | WS-M5-07: VLM-only prefill64 — rejected |
 | [results/20261016/worldsense-m5-coalesced-nopad](../../../results/20261016/worldsense-m5-coalesced-nopad/README.md) | WS-M5-05: unpadded coalesced BF16 prefill — rejected |
 | [results/20261016/worldsense-m5-coalesced-prefill](../../../results/20261016/worldsense-m5-coalesced-prefill/README.md) | WS-M5-04: padded coalesced BF16 prefill — rejected |
+| [results/20261016/worldsense-m5-decode256](../../../results/20261016/worldsense-m5-decode256/README.md) | WS-M5-11 shape-restricted eight-SIMD-group decode rejected |
 | [results/20261016/worldsense-m5-dual-chunk64](../../../results/20261016/worldsense-m5-dual-chunk64/README.md) | WS-M5-08: dual-model prefill64 — rejected after fresh confirmation |
 | [results/20261016/worldsense-m5-fused-head](../../../results/20261016/worldsense-m5-fused-head/README.md) | WS-M5-01: fused greedy head through WorldSense — rejected screen |
 | [results/20261016/worldsense-m5-half-prefill](../../../results/20261016/worldsense-m5-half-prefill/README.md) | WS-M5-02: limited exact-half prefill through WorldSense — rejected |
