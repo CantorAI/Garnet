@@ -35,6 +35,10 @@ public:
         result.Append(X::Value(image.gridH));result.Append(X::Value(image.gridW));
         result.Append(X::Value(image.decodeMs));result.Append(X::Value(image.resizeMs));result.Append(X::Value(image.packMs));return result;
     }
+    std::string BenchmarkPrefillPolicy(X::Value enabled) {
+        auto module=Serving(enabled.host());
+        return module["set_benchmark_prefill_policy"](enabled).ToString();
+    }
     std::string ServeModel(X::Value root, X::Value xmodel, X::Value cache,
             X::Value profile, X::Value model) {
         auto module = Serving(root.host());
@@ -110,6 +114,12 @@ public:
 #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
         info+="; reused_zero_source";
 #endif
+#ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
+        info+="; qwen35_4b_wide_prefill";
+#endif
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+        info+="; dense_prefix_cache";
+#endif
 #ifdef GARNET_METAL_BODY_SHAPE
         info+="; body_shape";
 #endif
@@ -177,6 +187,7 @@ public:
         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
         APISET().AddFunc<4>("infer_json",&GarnetMetalAPI::InferJson);
+        APISET().AddFunc<1>("set_benchmark_prefill_policy",&GarnetMetalAPI::BenchmarkPrefillPolicy);
         APISET().AddFunc<0>("shutdown",&GarnetMetalAPI::Shutdown);
     END_PACKAGE
 };

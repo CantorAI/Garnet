@@ -3,6 +3,7 @@
 import json
 import os
 import threading
+import hashlib
 import time
 
 # The native package registers import roots with XLang3. Embedded Cantor
@@ -43,13 +44,19 @@ class Model:
         self.capacity = int(profile.get('maxInputTokens', 1536)) + int(profile.get('maxOutputTokens', 512))
         if self.capacity < 64 or self.capacity > 8192:
             raise ValueError('Metal serving capacity must be between 64 and 8192 tokens')
+        self._prefix_supported = not self.visual and self.text_config.get('model_type') == 'qwen3' and self.text_config.get('hidden_size') == 2048 and self.text_config.get('num_hidden_layers') == 28 and 'dense_prefix_cache' in garnet.backend_info()
+        self.text_prefix_cache = bool(profile.get('textPrefixCache', False))
+        if self.text_prefix_cache and not self._prefix_supported:
+            raise ValueError('Native prefix cache requires the validated Qwen3-1.7B profile')
+        self._prefix_keys = {}
         self.tokenizer = garnet.tokenizer()
         self.tokenizer.open(root)
         index = os.path.join(root, 'model.safetensors.index.json')
         checkpoint = index if os.path.isfile(index) else os.path.join(root, 'model.safetensors')
         self.checkpoint = checkpoint
         cls = MetalDecoder if self.visual else DenseMetalDecoder
-        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > 65536:
+        packed_limit = 64 * 2560 if self.visual and self.xmodel == 'vl_4b' and 'qwen35_4b_wide_prefill' in garnet.backend_info() else 65536
+        if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > packed_limit:
             raise ValueError('Metal prefill chunk times hidden size exceeds the packed width limit')
         self.model_factory = None
         if self.visual and self.xmodel == 'vl_4b':
@@ -72,16 +79,70 @@ class Model:
         elif eos is not None:
             self.stops.append(eos)
 
+    def _prefill_with_prefix(self, hidden, positions, token_ids, stages):
+        stages['prefix_cache_hit'] = False
+        stages['prefix_cache_restored_tokens'] = 0
+        stages['prefix_cache_captured_tokens'] = 0
+        stages['prefix_cache_restore_seconds'] = 0
+        stages['prefix_cache_capture_seconds'] = 0
+        stages['executed_prefill_tokens'] = len(hidden)
+        if not self.text_prefix_cache or self.visual or len(hidden) <= 80:
+            return self.decoder.prefill_sequence(hidden, [positions])
+        if not self._prefix_supported or self.decoder.chunk != 16 or len(token_ids) != len(hidden):
+            raise ValueError('Prefix policy requires validated dense text and chunk16')
+        if any(positions[i] != [i, i, i] for i in range(64)):
+            raise ValueError('Prefix positions must be identical canonical text positions')
+        key = tuple(token_ids[:64])
+        stages['prefix_cache_key_sha256'] = hashlib.sha256(json.dumps(list(key)).encode()).hexdigest()
+        if key in self._prefix_keys:
+            handle = self._prefix_keys.pop(key)
+            began = time.monotonic()
+            try:
+                restored = self.decoder.session.restore_prefix(handle)
+                if restored != 64:
+                    raise ValueError('Native prefix length changed')
+            except:
+                self._prefix_keys.clear()
+                self.decoder.session.clear_prefix_cache()
+                raise
+            stages['prefix_cache_restore_seconds'] = time.monotonic() - began
+            self._prefix_keys[key] = handle
+            self.decoder.slots = [64]
+            stages['prefix_cache_hit'] = True
+            stages['prefix_cache_restored_tokens'] = 64
+            stages['executed_prefill_tokens'] = len(hidden) - 64
+            return self.decoder.prefill_sequence(hidden[64:], [positions[64:]])
+        self.decoder.prefill_sequence(hidden[:64], [positions[:64]], predict=False)
+        prefix_profile = dict(self.decoder.prefill_profile)
+        prefix_plan = list(self.decoder.prefill_chunk_plan)
+        prefix_compile = self.decoder.prefill_compile_ms
+        prefix_inference = self.decoder.prefill_inference_ms
+        began = time.monotonic()
+        handle = self.decoder.session.capture_prefix(64)
+        stages['prefix_cache_capture_seconds'] = time.monotonic() - began
+        stages['prefix_cache_captured_tokens'] = 64
+        self._prefix_keys[key] = handle
+        while len(self._prefix_keys) > 2:
+            self._prefix_keys.pop(next(iter(self._prefix_keys)))
+        prediction = self.decoder.prefill_sequence(hidden[64:], [positions[64:]])
+        self.decoder.prefill_compile_ms += prefix_compile
+        self.decoder.prefill_inference_ms += prefix_inference
+        self.decoder.prefill_chunk_plan = prefix_plan + self.decoder.prefill_chunk_plan
+        for name, value in prefix_profile.items():
+            self.decoder.prefill_profile[name] = self.decoder.prefill_profile.get(name, 0) + value
+        return prediction
+
     def infer(self, prompt, image, limit):
         start = time.monotonic()
         stages = {}
-        hidden, positions = [], []
+        hidden, positions, token_ids = [], [], []
         current = 0
         self.decoder.reset()
         stages['reset_seconds'] = time.monotonic() - start
         def append_text(text):
             nonlocal current
             for token in self.tokenizer.encode(text):
+                token_ids.append(token)
                 hidden.append(self.decoder.io.embedding([token]))
                 positions.append([current, current, current])
                 current += 1
@@ -119,7 +180,7 @@ class Model:
         if len(hidden) + limit > self.capacity:
             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
         prefill_start = time.monotonic()
-        prediction = self.decoder.prefill_sequence(hidden, [positions])
+        prediction = self._prefill_with_prefix(hidden, positions, token_ids, stages)
         first = time.monotonic()
         stages['prefill_seconds'] = first - prefill_start
         stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
@@ -145,7 +206,12 @@ class Model:
         stages['decode_seconds'] = time.monotonic() - first
         stages['decode_profile'] = decode_profile
         stages['decode_fused_head_dispatches'] = fused_head_dispatches
-        return dict(image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
+        stages['prefix_cache_native_bytes'] = self.decoder.session.prefix_cache_bytes
+        stages['prefix_cache_native_entries'] = self.decoder.session.prefix_cache_entries
+        stages['prefix_restore_native_bytes'] = self.decoder.session.prefix_restore_bytes
+        stages['prefix_capture_native_bytes'] = self.decoder.session.prefix_capture_bytes
+        stages['serving_source'] = __file__
+        return dict(input_prompt_sha256=hashlib.sha256(prompt.encode()).hexdigest(), serving_configuration=dict(text_prefix_cache=self.text_prefix_cache, capacity=self.capacity, image_pixels=self.image_pixels, prefill_chunk=self.decoder.chunk, requested_output_limit=int(limit), share_vision_weights=self.share_vision_weights), image_preprocess_backend='native-cpp' if image else '', image_preprocess_seconds=image_preprocess_seconds if image else 0, status='ok', text=self.tokenizer.decode(output), model_id=self.name,
                     backend=garnet.backend_info(), generated_tokens=len(output),
                     timings=stages, generated_token_ids=output,
                     ttft_seconds=first-start, total_seconds=time.monotonic()-start)
@@ -173,3 +239,21 @@ def infer_json(prompt, image, limit, name):
             return json.dumps(_models[name].infer(prompt, image, int(limit)))
         except Exception as error:
             return json.dumps(dict(status='error', error_message=str(error), model_id=name))
+
+
+def set_benchmark_prefill_policy(enabled):
+    """Benchmark combined VLM64/text16+prefix policy; validate before mutation."""
+    with _lock:
+        if 'dense_prefix_cache' not in garnet.backend_info() or not _models:
+            return json.dumps(dict(supported=False))
+        for model in _models.values():
+            if model.visual:
+                if model.xmodel != 'vl_4b' or model.text_config['hidden_size'] != 2560 or not model.decoder.linear_chunk:
+                    raise ValueError('Prefix experiment requires validated4B VLM')
+            elif not model._prefix_supported:
+                raise ValueError('Prefix experiment requires validated1.7B reasoner')
+        for model in _models.values():
+            model.decoder.chunk = (64 if enabled else 16) if model.visual else 16
+            model.prefill_chunk = model.decoder.chunk
+            model.text_prefix_cache = bool(enabled) if not model.visual else False
+        return json.dumps(dict(supported=True, enabled=bool(enabled)))

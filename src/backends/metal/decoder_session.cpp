@@ -5,6 +5,8 @@
 #include <chrono>
 #include <cmath>
 #include <stdexcept>
+#include <atomic>
+#include <limits>
 namespace Garnet {
 namespace {
 MetalCompiledGraph* Graph(const X::Value& value,X3PackageHost* host) {
@@ -19,6 +21,9 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 }
 void MetalDecoderSession::Clear() {
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    prefixCache_.clear();prefixBytes_=prefixRestoreBytes_=prefixCaptureBytes_=0;prefixClock_=0;prefixFreshReset_=false;
+#endif
     screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
     reusedSourceBytes_=reusedCopyBytes_=reusedCopyStates_=0;
 #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
@@ -33,6 +38,9 @@ void MetalDecoderSession::Clear() {
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    prefixFreshReset_=false;prefixRestoreBytes_=prefixCaptureBytes_=0;
+#endif
     screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
     reusedCopyBytes_=reusedCopyStates_=0;
     prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;bodyShapeDispatches_=bodyShapeMisses_=0;deferredZeroBytes_=deferredZeroStates_=0;
@@ -78,6 +86,9 @@ void MetalDecoderSession::ResetUnlocked() {
 #endif
     }
     hidden_=MetalMatrix();hiddenShape_.clear();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    prefixFreshReset_=true;
+#endif
 }
 void MetalDecoderSession::Reset() {std::lock_guard<std::mutex> lock(mutex_);ResetUnlocked();}
 bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
@@ -108,6 +119,10 @@ bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
                 state.prefixLayout[k]=graph->CanResetKVPrefix(k+1);
 #endif
             }
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+            state.prefixEligible=batch==1&&graph->CanResetKVPrefix(1)&&graph->CanResetKVPrefix(2);
+            state.prefixOwnerGeneration=graph->generation_;
+#endif
             states_.push_back(std::move(state));owners_.push_back(std::move(owner));
         }
         if(head.IsValid()&&!head.IsNone()) {
@@ -190,6 +205,9 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
     screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
     const auto prepared=std::chrono::steady_clock::now();
     prepareMs_=std::chrono::duration<double,std::milli>(prepared-start).count();
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    prefixFreshReset_=false;
+#endif
     kvInplaceUpdates_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;wideBatchPrefillDispatches_=0;interleavedBodyDispatches_=0;coalescedBlockDispatches_=0;mlpGraphDispatches_=0;joinedGlobalMlpBlocks_=0;poisoned_=true;gpu_->Begin();
     try {
         auto current=layers[0]->slots_[layers[0]->inputs_[0]].matrix;
@@ -275,5 +293,110 @@ X::Value MetalDecoderSession::Hidden() {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!gpu_||poisoned_||hiddenShape_.empty())throw std::logic_error("Metal session hidden unavailable");
     return TensorValue(Host(),*gpu_,hidden_,hiddenShape_);
+}
+}
+
+namespace Garnet {
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+namespace {
+constexpr size_t kPrefixCacheBytes=64*1024*1024;
+std::atomic<int64_t> nextPrefixId{1};
+int64_t NewPrefixId() {
+    auto id=nextPrefixId.load();
+    for(;;){if(id<=0||id==std::numeric_limits<int64_t>::max())throw std::overflow_error("Prefix cache IDs exhausted");
+        if(nextPrefixId.compare_exchange_weak(id,id+1))return id;}
+}
+}
+void MetalDecoderSession::ValidatePrefixOwners(std::vector<std::unique_lock<std::mutex>>& locks) {
+    std::vector<MetalCompiledGraph*> graphs;
+    for(size_t i=0;i<states_.size();++i)graphs.push_back(Graph(owners_.at(i),Host()));
+    auto ordered=graphs;if(head_)ordered.push_back(head_);std::sort(ordered.begin(),ordered.end(),std::less<MetalCompiledGraph*>());
+    if(std::adjacent_find(ordered.begin(),ordered.end())!=ordered.end())throw std::invalid_argument("Prefix owners must be distinct");
+    for(auto graph:ordered)locks.emplace_back(graph->mutex_);
+    for(size_t i=0;i<states_.size();++i){const auto& state=states_[i];auto graph=graphs[i];
+        if(!state.prefixEligible||!graph->ready_||graph->generation_!=state.prefixOwnerGeneration)
+            throw std::logic_error("Prefix cache requires unchanged dense-attention graph owners");
+        for(size_t k=0;k<2;++k){const auto& shape=state.shape[k];
+            if(shape.size()!=4||shape[0]!=1||shape[1]<=0||shape[2]<64||shape[3]<=0||state.rows!=1)
+                throw std::invalid_argument("Prefix cache requires batch-one dense KV layout");}}
+    if(head_&&(!head_->ready_||head_->generation_!=headGeneration_))throw std::logic_error("Prefix head owner changed");
+}
+#endif
+int64_t MetalDecoderSession::CapturePrefix(int64_t tokens) {
+    std::lock_guard<std::mutex> lock(mutex_);
+#ifndef GARNET_METAL_DENSE_PREFIX_CACHE
+    (void)tokens;throw std::logic_error("Dense prefix cache is not enabled");
+#else
+    if(!gpu_||poisoned_||prefixFreshReset_||states_.empty())throw std::logic_error("Capture requires a completed nonempty inference prefix");
+    if(tokens!=64)throw std::invalid_argument("Only the validated64-token prefix is admitted");
+    std::vector<std::unique_lock<std::mutex>> locks;ValidatePrefixOwners(locks);
+    PrefixSnapshot snapshot;snapshot.tokens=64;
+    for(const auto& state:states_)for(size_t k=0;k<2;++k){const auto& shape=state.shape[k];
+        const auto count=size_t(shape[1])*64*size_t(shape[3]);
+        if(count>kPrefixCacheBytes/sizeof(float)||snapshot.bytes>kPrefixCacheBytes-count*sizeof(float))
+            throw std::invalid_argument("Prefix cache byte budget exceeded");
+        snapshot.bytes+=count*sizeof(float);}
+    for(const auto& state:states_){std::array<std::vector<float>,2> layer;
+        for(size_t k=0;k<2;++k){const auto& shape=state.shape[k];layer[k]=gpu_->ReadPrefixGroups(state.matrix[k],size_t(shape[1]),size_t(shape[2]),size_t(shape[3]),64);
+            if(!std::all_of(layer[k].begin(),layer[k].end(),[](float v){return std::isfinite(v);}))throw std::runtime_error("Cannot cache nonfinite KV state");}
+        snapshot.layers.push_back(std::move(layer));}
+    const auto id=NewPrefixId();snapshot.lastUse=++prefixClock_;const auto bytes=snapshot.bytes;
+    prefixCache_.emplace(id,std::move(snapshot));prefixBytes_+=bytes;
+    while(prefixCache_.size()>2||prefixBytes_>kPrefixCacheBytes){auto oldest=std::min_element(prefixCache_.begin(),prefixCache_.end(),[](const auto& a,const auto& b){return a.second.lastUse<b.second.lastUse;});prefixBytes_-=oldest->second.bytes;prefixCache_.erase(oldest);}
+    prefixCaptureBytes_+=bytes;return id;
+#endif
+}
+int64_t MetalDecoderSession::RestorePrefix(int64_t id) {
+    std::lock_guard<std::mutex> lock(mutex_);
+#ifndef GARNET_METAL_DENSE_PREFIX_CACHE
+    (void)id;throw std::logic_error("Dense prefix cache is not enabled");
+#else
+    if(!gpu_||poisoned_||!prefixFreshReset_)throw std::logic_error("Restore requires a fresh successful full reset");
+    auto found=prefixCache_.find(id);if(found==prefixCache_.end())throw std::invalid_argument("Unknown, evicted or foreign prefix handle");
+    std::vector<std::unique_lock<std::mutex>> locks;ValidatePrefixOwners(locks);auto& snapshot=found->second;
+    if(snapshot.layers.size()!=states_.size()||snapshot.tokens!=64)throw std::logic_error("Prefix metadata changed");
+    for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k){const auto& shape=states_[i].shape[k];
+        if(snapshot.layers[i][k].size()!=size_t(shape[1])*64*size_t(shape[3]))throw std::logic_error("Prefix shape changed");}
+    // All owners/layouts/counts are proved before any session state is written.
+    prefixFreshReset_=false;poisoned_=true;
+    try {for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k){const auto& shape=states_[i].shape[k];
+        gpu_->WritePrefixGroups(states_[i].matrix[k],size_t(shape[1]),size_t(shape[2]),size_t(shape[3]),64,snapshot.layers[i][k]);}
+        poisoned_=false;snapshot.lastUse=++prefixClock_;prefixRestoreBytes_+=snapshot.bytes;return 64;
+    }catch(...){throw;}
+#endif
+}
+bool MetalDecoderSession::ClearPrefixCache() {std::lock_guard<std::mutex> lock(mutex_);
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    prefixCache_.clear();prefixBytes_=prefixRestoreBytes_=prefixCaptureBytes_=0;
+#endif
+    return true;
+}
+size_t MetalDecoderSession::PrefixCacheBytes(){std::lock_guard<std::mutex> lock(mutex_);
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    return prefixBytes_;
+#else
+    return 0;
+#endif
+}
+size_t MetalDecoderSession::PrefixCacheEntries(){std::lock_guard<std::mutex> lock(mutex_);
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    return prefixCache_.size();
+#else
+    return 0;
+#endif
+}
+size_t MetalDecoderSession::PrefixRestoreBytes(){std::lock_guard<std::mutex> lock(mutex_);
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    return prefixRestoreBytes_;
+#else
+    return 0;
+#endif
+}
+size_t MetalDecoderSession::PrefixCaptureBytes(){std::lock_guard<std::mutex> lock(mutex_);
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    return prefixCaptureBytes_;
+#else
+    return 0;
+#endif
 }
 }

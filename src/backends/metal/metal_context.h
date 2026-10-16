@@ -12,7 +12,11 @@ inline constexpr size_t kMetalPrefillChunkLimit=80;
 inline constexpr size_t kMetalPrefillPackedHiddenLimit=80*1024;
 #else
 inline constexpr size_t kMetalPrefillChunkLimit=64;
+#ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
+inline constexpr size_t kMetalPrefillPackedHiddenLimit=64*2560;
+#else
 inline constexpr size_t kMetalPrefillPackedHiddenLimit=65536;
+#endif
 #endif
 class MetalMatrix {
     struct Impl;
@@ -121,6 +125,8 @@ public:
     size_t LastDeferredZeroBytes() const;
     size_t LastDeferredZeroStates() const;
     // Caller proves the remaining logical elements are already positive zero.
+    std::vector<float> ReadPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t tokens);
+    void WritePrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t tokens,const std::vector<float>&);
     void ZeroPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t dirtyTokens);
     void Begin();
     // Commit an ordered partial batch and continue encoding without CPU wait.

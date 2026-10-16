@@ -2,6 +2,7 @@
 #pragma once
 #include "compiled_graph.h"
 #include <array>
+#include <map>
 namespace Garnet {
 // One synchronous request context. Graph owners are retained; request state is
 // private to this session, including when graphs are reused by another session.
@@ -11,6 +12,9 @@ class MetalDecoderSession {
         std::array<std::vector<int64_t>,2> shape;
         std::array<size_t,2> columns;
         size_t rows;
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+        bool prefixEligible=false;uint64_t prefixOwnerGeneration=0;
+#endif
 #ifdef GARNET_METAL_DIRTY_PREFIX_RESET
         std::array<bool,2> prefixLayout{false,false},zeroOutsideDirty{false,false};
         std::array<size_t,2> dirtyExtent{0,0};
@@ -47,6 +51,13 @@ class MetalDecoderSession {
     bool poisoned_=false;
     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
     std::mutex mutex_;
+#ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+    struct PrefixSnapshot {size_t tokens=0,bytes=0;uint64_t lastUse=0;std::vector<std::array<std::vector<float>,2>> layers;};
+    std::map<int64_t,PrefixSnapshot> prefixCache_;
+    size_t prefixBytes_=0,prefixRestoreBytes_=0,prefixCaptureBytes_=0;
+    uint64_t prefixClock_=0;bool prefixFreshReset_=false;
+    void ValidatePrefixOwners(std::vector<std::unique_lock<std::mutex>>& locks);
+#endif
     void Clear();
     void ResetUnlocked();
 public:
@@ -54,6 +65,13 @@ public:
     X::Value Run(X::Value graphs,X::Value hidden,X::Value positions,
         X::Value slots,X::Value active,int64_t predictionToken);
     void Reset();
+    int64_t CapturePrefix(int64_t tokens);
+    int64_t RestorePrefix(int64_t id);
+    bool ClearPrefixCache();
+    size_t PrefixCacheBytes();
+    size_t PrefixCacheEntries();
+    size_t PrefixRestoreBytes();
+    size_t PrefixCaptureBytes();
     X::Value Snapshot(int64_t layer);
     X::Value Hidden();
     void Close();
@@ -94,6 +112,13 @@ public:
         APISET().AddFunc<2>("build",&MetalDecoderSession::Build);
         APISET().AddFunc<6>("run",&MetalDecoderSession::Run);
         APISET().AddFunc<0>("reset",&MetalDecoderSession::Reset);
+        APISET().AddFunc<1>("capture_prefix",&MetalDecoderSession::CapturePrefix);
+        APISET().AddFunc<1>("restore_prefix",&MetalDecoderSession::RestorePrefix);
+        APISET().AddFunc<0>("clear_prefix_cache",&MetalDecoderSession::ClearPrefixCache);
+        APISET().AddProp("prefix_cache_bytes",&MetalDecoderSession::PrefixCacheBytes);
+        APISET().AddProp("prefix_cache_entries",&MetalDecoderSession::PrefixCacheEntries);
+        APISET().AddProp("prefix_restore_bytes",&MetalDecoderSession::PrefixRestoreBytes);
+        APISET().AddProp("prefix_capture_bytes",&MetalDecoderSession::PrefixCaptureBytes);
         APISET().AddFunc<1>("snapshot",&MetalDecoderSession::Snapshot);
         APISET().AddFunc<0>("hidden",&MetalDecoderSession::Hidden);
         APISET().AddFunc<0>("close",&MetalDecoderSession::Close);

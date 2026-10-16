@@ -1,0 +1,17 @@
+{
+  "all_eight_overlay_paths_equal_to_confirmed_source": true,
+  "opt_in_profile_flags": [
+    "GARNET_METAL_PARALLEL_DELTA_SPLIT",
+    "GARNET_METAL_LINEAR_CHUNK_CONV",
+    "GARNET_METAL_LINEAR_CHUNK_DELTA",
+    "GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE",
+    "GARNET_METAL_ATTENTION_PREFIX",
+    "GARNET_METAL_RESIDENT_KV_INPLACE",
+    "GARNET_METAL_BODY_SHAPE",
+    "GARNET_METAL_DENSE_PREFIX_CACHE",
+    "GARNET_METAL_QWEN35_4B_WIDE_PREFILL"
+  ],
+  "native_build_and_reference_tests": "passed",
+  "CUDA_source_or_default_build_path_changed": false,
+  "cuda_hardware_execution": "not available on this Mac; not claimed"
+}

@@ -2098,6 +2098,33 @@ void MetalContext::Zero(const MetalMatrix& matrix) {
             0,native.columns*sizeof(float));
     matrix.impl_->ready=true;
 }
+std::vector<float> MetalContext::ReadPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens) {
+    if(impl_->command)throw std::logic_error("Prefix read requires a closed command batch");
+    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix read matrix/device");
+    if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix read requires completed initialized state");
+    const auto& native=matrix.impl_->matrix;
+    if(!groups||!capacity||!width||!tokens||tokens>capacity||capacity>SIZE_MAX/width||
+       groups>SIZE_MAX/(capacity*width)||groups*capacity*width!=native.columns||!native.data.contents)
+        throw std::invalid_argument("Prefix read layout/bounds mismatch");
+    std::vector<float> result(Elements(native.rows,groups*tokens*width));
+    for(size_t row=0;row<native.rows;++row)for(size_t group=0;group<groups;++group)
+        std::memcpy(result.data()+(row*groups+group)*tokens*width,
+            static_cast<const char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),tokens*width*sizeof(float));
+    return result;
+}
+void MetalContext::WritePrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens,const std::vector<float>& values) {
+    if(impl_->command)throw std::logic_error("Prefix write requires a closed command batch");
+    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix write matrix/device");
+    if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix write requires completed initialized state");
+    const auto& native=matrix.impl_->matrix;
+    if(!groups||!capacity||!width||!tokens||tokens>capacity||capacity>SIZE_MAX/width||
+       groups>SIZE_MAX/(capacity*width)||groups*capacity*width!=native.columns||!native.data.contents||
+       values.size()!=Elements(native.rows,groups*tokens*width))throw std::invalid_argument("Prefix write layout/bounds mismatch");
+    for(size_t row=0;row<native.rows;++row)for(size_t group=0;group<groups;++group)
+        std::memcpy(static_cast<char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),
+            values.data()+(row*groups+group)*tokens*width,tokens*width*sizeof(float));
+    matrix.impl_->ready=true;
+}
 void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t dirtyTokens) {
     if(impl_->command)throw std::logic_error("Host prefix zero requires a closed command batch");
     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
