@@ -78,3 +78,18 @@ python3 ROOT/source/test2026/metal/queue_compact_fused_projection_groups.py ROOT
 The controller records the exact expanded compile/run/archive/audit commands
 when dispatched. Frozen raw data, numerical gates, complete ABBA windows and
 negative outcomes must be retained before any repair or next candidate.
+
+## Dependency resumed after preserved upstream audit-path failure
+
+Original queue73358 exits1 before launching any component: native inference
+completed, but its auditor expected a wrong expanded-script filename. The
+terminal controller/queue failure is preserved in the vector-native45-file
+252aeda0... archive. The repaired audit passes on Mac/Windows without changing
+or rerunning the native initial benchmark. Native initial passes its prospective
+screen and unchanged confirmation is running under new controller93884.
+
+New queue94685 at `logs/compact-fused-projection-groups-queue-repaired-20261016`
+watches exact93884 using new dependency-only wrappers. Original component
+runner, shader generator, precision/gain/null gates, cases and sampling are
+unchanged. No GPU experiment has yet executed here; all old failure statuses
+remain preserved. Repaired helper files freeze while queued.

@@ -91,3 +91,12 @@ python3 ROOT/source/test2026/metal/queue_mps_half_triplet_lower_bound.py ROOT RO
 
 ROOT is `/Users/zsdx/garnet-metal-investigation`; exact compile/run/archive/audit
 commands are captured when executed. No compilation or GPU result exists yet.
+
+Original queue83151 exits1 before launching this probe because the upstream
+native audit-path failure stopped compact queue73358. All are preserved in the
+vector-native45-file252aeda0... failure archive. Dependency-only repaired
+wrappers resume as new queue94813 at
+`logs/mps-half-triplet-lower-bound-queue-repaired-20261016`, watching compact
+queue94685. Probe source, diagnostics, source reconstruction and sampling are
+unchanged; the CPU evidence still pins847f1dc1.... No failed capability test is
+being retried: no capability process has yet launched. All old statuses remain.

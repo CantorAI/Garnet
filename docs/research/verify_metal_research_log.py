@@ -261,6 +261,26 @@ def main():
         assert [c.strip() for c in cells[2:]]==[f"{r[k]:.6f}" for k in ('gpu_fraction','wall_fraction','null_gpu_fraction','null_wall_fraction')]
         vector_calibrated_numbers+=4
     p=ROOT/'results/20261016/vector-vision-native'
+    vector_native=json.loads((p/'comparison/decision-initial.json').read_text())
+    vector_audit=json.loads((p/'comparison/initial/verification.json').read_text())
+    assert vector_native['repeat_admitted'] and not vector_native['native_confirmation_pass'] and not vector_native['promote']
+    assert vector_audit['full_output_requests']==72 and vector_audit['actual_vector_vision_routes'] and vector_audit['audit_path_repair_only']
+    assert vector_audit['regenerated_native_comparators']==6 and vector_audit['distinct_expanded_script_files']==3
+    assert json.loads((p/'validation/verification.json').read_text())['validation_stages']==30
+    assert json.loads((p/'auditor-path-failure/archive-verification.json').read_text())['verified_files']==45
+    vector_rows=vector_native['trials'][0]['profiles'];native_text=(p/'README.md').read_text()
+    rows=[line.split('|')[1:-1] for line in native_text.splitlines() if line.startswith('| Native Qwen')]
+    assert len(rows)==len(vector_rows)==6;vector_native_numbers=0
+    for cells,r in zip(rows,vector_rows):
+        assert cells[0].strip()=='Native '+r['model'] and int(cells[1])==r['batch']
+        table_values=[' / '.join(f"{r['means'][k][metric]:.4f}" for k in ('control','candidate')) for metric in ('decode_tps','ttft_ms')]
+        table_values += [f"{r[k]:.6f}" for k in ('decode_ratio','ttft_fraction')]+[f"{r['added_mean_worker_peak_rss_gib']*1024:.3f}"]
+        assert [c.strip() for c in cells[2:]]==table_values;vector_native_numbers+=7
+    rows=[line.split('|')[1:-1] for line in native_text.splitlines() if line.startswith('| First native Qwen')];assert len(rows)==6
+    for cells,r in zip(rows,vector_rows):
+        assert cells[0].strip()=='First native '+r['model'] and int(cells[1])==r['batch']
+        first=r['first_request_after_initialization']
+        assert [c.strip() for c in cells[2:]]==[' / '.join(f"{first[k]['initialization_s']:.6f}" for k in ('control','candidate')),' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate'))];vector_native_numbers+=4
     retained_phases=json.loads((p/'retained-control-phase-analysis.json').read_text())
     assert retained_phases['source_archive_sha256']=='1861996b1455f4a6aa7e81fb89bac30a2be2526d359eb332cc974d31aa6e520e'
     assert len(retained_phases['raw_file_sha256'])==18 and not retained_phases['full_goal_met']
@@ -304,7 +324,8 @@ def main():
                   vector_initial_table_values_checked=vector_initial_numbers,vector_null_calibration_table_values_checked=vector_calibration_numbers,
                   vector_calibrated_component_table_values_checked=vector_calibrated_numbers,
                   retained_control_phase_table_values_checked=retained_phase_numbers,
-                  half_triplet_cpu_profiles_checked=24,half_triplet_finite_edge_cases_checked=4590,status='passed',
+                  half_triplet_cpu_profiles_checked=24,half_triplet_finite_edge_cases_checked=4590,
+                  vector_native_initial_table_values_checked=vector_native_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

@@ -1,0 +1,20 @@
+{
+  "upstream_pid": 67688,
+  "source_sha256": {
+    "queue_compact_fused_projection_groups.py": "25e7a0e255ab8af03e0dd5ac91226703b502df66d5ad2e7b059acc193cee86c2",
+    "launch_compact_fused_projection_groups.py": "761419333fe0659dde63cd84ce6d6c8c5f3f31a1f595bec91481d705e423bed1",
+    "run_compact_fused_projection_groups.py": "894bbcdf9757a624bd40603f43179e11b3f99c2aa87ac5d5d6adf5f037473520",
+    "make_compact_fused_projection_groups.py": "62de5345cc14b4696028ffae403bcb40ed0a233be70ad6c266c35334b1ce2641",
+    "archive_compact_fused_projection_groups.py": "b5e80190d25f6b38bbd594e39439af52fb5508ad15ed36b6a270ad585c598a9f",
+    "verify_compact_fused_projection_groups.py": "e12ead6146f8b5fd94a1e7e2f5e05d0ab932731f83c587cf7547c095ef7499b5",
+    "analyze_compact_fused_projection_groups.py": "9cb9d892bc679dad141629536387a4c9c711b06c5cc83c06bc869d351f4d2ff9"
+  },
+  "command": [
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/queue_compact_fused_projection_groups.py",
+    "/Users/zsdx/garnet-metal-investigation",
+    "/Users/zsdx/garnet-metal-investigation/logs/compact-fused-projection-groups-queue-20261016",
+    "67688",
+    "--worker"
+  ],
+  "full_goal_met": false
+}

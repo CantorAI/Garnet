@@ -1379,6 +1379,56 @@ favorable-repeat search. Freeze six consumed helpers. Current vector validation
 serving, mixedimage and Qwen3.5/text layers. No full validation/TTFT gain yet.
 [Complete equations, CPU evidence, limits and command](../../results/20261016/half-triplet-lower-bound/README.md).
 
+### 2026-10-16 UTC — vector native all30 pass; first model cohort running
+
+Exact validation64007 exits0 in1437.991319083s. Finalizer66876 exits0 after
+terminal archival and independent Mac raw/regeneration audit:1764-file
+239dbf64... archive. All30 fresh stages,7CTests,96 vector primitive cases,
+80 retained compact primitive cases,51trainedhead queries/78rows,4vision grids,
+6+6recoveries and4wide profiles/12steps pass. Worst original wide bound fraction
+.5432836183473805; all eight changes and owned driver regenerate. Candidate
+libraryd52c37e0..., retainedc186 unchanged. Windows archive audit deferred until
+measured work is terminal to avoid heavy copy during performance.
+
+Continuation67688 admits initial fullsix-profile cohort89884 only after audit,
+verified live. No native timing gain yet; current full-model outputs/counters,
+TTFT/decode/init/first/warm/RSS will be independently audited before selection.
+Compact and synthetic triplet queues remain sequential behind that chain.
+[Archive/library identity and test scope](../../results/20261016/vector-vision-native/README.md#full-native-validation-passes-model-timing-running).
+
+### 2026-10-16 UTC — native initial passes after preserved auditor filename repair
+
+Initial native89884 exits0 in192.701290041s: allsix profiles and72 complete
+outputs. Freeze5611-file4391422a... full archive. Original auditor passes all
+raw outputs, routes and clock/bound checks, then fails expecting per-profile
+`name+'.executed.py'`; frozen comparator actually uses `with_suffix` and writes
+three per-model generic expanded files shared by six argv-distinct profiles.
+Generated source is identical for both batches. Controller67688 and waiting
+queues73358/83151 stop1; no component/capability GPU job launched. Freeze all
+three terminal controllers/sources in45-file252aeda0... failure archive before
+repair. No runtime/benchmark/numerical gate or initial data changed/rerun.
+
+New audit shim pins frozen original e53bbdd3..., repairs only pathname lookup
+to exact comparator behavior and records3 distinct files/6 full profile checks.
+Mac and Windows full archive/audits now pass; Windows also independently audits
+1764-file full30 and45-file failed-controller archive. The partial audit JSON
+remains rejected until repaired process0; no provisional metrics admitted.
+
+Initial VL B1 control/candidate warmTTFT177.9961/172.5206ms, B2
+294.5845/287.8972ms:3.076%/2.270% reductions. Decode61.1809/61.2709 and
+55.1446/55.2624 TPS:flat+0.147%/+0.214%. Every profile decode fraction>=.98.
+Actual candidate VL counts12vector/image; text/coder/control0. Other model
+variation is not attributed to vision. Init/first/warm/RSS all retained; small
+peak process RSS changes do not prove logical/GPU memory savings.
+
+After completed archive transfer and both-host audit, new controller93884
+reuses initial complete cohort and launches one unchanged confirmation93898.
+No favorable-repeat search. New dependency-only wrappers queue compact94685
+after93884, synthetic triplet94813 after94685; numerical source/gates and
+sampling for both remain unchanged. Do not mutate consumed live source. No
+promotion, fresh vLLM ratio or goal target-count update.
+[Complete initial table, cost clocks and failure evidence](../../results/20261016/vector-vision-native/README.md#initial-model-cohort-passes-after-audit-path-repair).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

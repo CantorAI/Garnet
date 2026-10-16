@@ -1,0 +1,21 @@
+{
+  "upstream_pid": 66876,
+  "source_sha256": {
+    "continue_vector_vision_native.py": "5bb3ba0c83642ef27975794634e90d2c8661810dd83150bc65dc17b228f5a56b",
+    "launch_vector_vision_native_profiles.py": "b624fdc2157161358b9581796d75518ab11c7dfa4bb541e13c62828001066f6b",
+    "run_vector_vision_native_profiles.py": "34a7df40f18fbde241ba82b0fc8dacc93c7bd3651871252505a0b99c4c611b83",
+    "compare_vector_vision_native.py": "4f62647d60e6dcbfbc5f5d948a943101bb85e3334664ed96979237156bfd248e",
+    "archive_vector_vision_native_profiles.py": "b4f5112d9c21ea99bf9ea4d418ced85f41ec2de1ec271a8201c9e2fdf9bd32b2",
+    "verify_vector_vision_native_profiles.py": "e53bbdd3bd4449435811aa6924ba0eb4c03b3fc7832c0296c69ffda45d059071",
+    "analyze_vector_vision_native_results.py": "e2c40b94da48554fe6cc268e5f0b52ece57c10b180fcf88e4b51e40aef7f8855"
+  },
+  "command": [
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/continue_vector_vision_native.py",
+    "/Users/zsdx/garnet-metal-investigation/vector-vision-native-investigation-20261016",
+    "/Users/zsdx/garnet-metal-investigation/logs/vector-vision-native-continuation-20261016",
+    "66876",
+    "--worker"
+  ],
+  "scope": "Wait exact full30 controller, then guarded native cohorts, archive/audit, and predeclared decision.",
+  "full_goal_met": false
+}
