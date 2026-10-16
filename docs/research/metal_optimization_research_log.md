@@ -1429,6 +1429,25 @@ sampling for both remain unchanged. Do not mutate consumed live source. No
 promotion, fresh vLLM ratio or goal target-count update.
 [Complete initial table, cost clocks and failure evidence](../../results/20261016/vector-vision-native/README.md#initial-model-cohort-passes-after-audit-path-repair).
 
+### 2026-10-16 UTC — actual vector native confirmation passes; compact component running
+
+Confirmation93898 exits0 in192.768228250s; repaired controller93884 exits0.
+Freeze5615-filee7536a9b... archive and Mac independent72-output/route/raw audit;
+all original numerical bounds and three-script/six-profile regeneration pass.
+Serving source/library/cases/limits unchanged. RepeatVL B1 TTFT179.4877->
+174.9992ms (-2.501%), B2 297.7506->287.7258ms (-3.367%). Decodefractions
+.996983/1.001774; all six repeat decode profiles>=.98. Both complete native
+cohorts pass the prospective2% both-VL screen. TextB1 repeatTTFT35.8427->
+36.7988ms cost remains recorded; do not attribute/exclude it. No freshvLLM ratio
+or fullgoal/targetcount update, retainedc186 unchanged.
+
+Compact component97616 actually starts after native terminal/archive/audit;
+MPS synthetic probe waits behind its exact controller. Defer heavy Windows
+repeat archive transfer until measurements are terminal, then independently
+audit before installing any selected source change. Current source/driver
+remain frozen while live.
+[Repeat scope, costs and archive identity](../../results/20261016/vector-vision-native/README.md#confirmation-passes-native-screen-on-mac-windows-archive-audit-pending).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

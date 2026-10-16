@@ -1,6 +1,6 @@
 # Ordered float4 vision context: private native integration
 
-Status: full validation and initial native cohort audited on both hosts; initial VL TTFT screen passes. Unchanged confirmation running; full goal unmet.
+Status: both full native cohorts pass the predeclared screen on Mac; validation/initial cohort also audited on Windows. Confirmation Windows audit pending; full goal unmet.
 
 Motivation: full repeated matched FP32 comparison still misses half-TTFT for
 Qwen3.5-0.8B B1/B2 by about 28.3% of Garnet's current TTFT. Decode already exceeds
@@ -181,3 +181,26 @@ search: this is the one predeclared confirmation. Old failures are not rewritten
 Native inference sources/library/cases and sampling remain identical; added
 audit/queue helpers are provenance tools, not measured inference changes.
 No promotion or fresh vLLM target pass before repeated actual evidence.
+
+## Confirmation passes native screen on Mac; Windows archive audit pending
+
+Confirmation93898 exits0 in192.768228250s; controller93884 exits0 after terminal
+archive/raw audit and unchanged two-cohort decision. Archive5615 files, SHA256:
+`e7536a9bca8493fc0b61589a8ef54953490f8e150dee0d094ce5d75452de6b90`.
+All72 confirmation outputs, actual vector routes and full original bounds pass
+the repaired auditor, including three shared expanded files/six profile checks.
+Candidate library and all measured serving source/cases/limits are unchanged.
+
+Repeat VL B1 control/candidate TTFT179.4877/174.9992ms (2.501% reduction),
+B2 297.7506/287.7258ms (3.367%). Decode61.4103/61.2250 and
+55.1113/55.2091 TPS, fractions0.996983/1.001774. Every repeat profile decode
+fraction>=.98. Both complete native cohorts therefore pass the predeclared
+>=2% both-VL TTFT/no>2% decode-regression screen. Text B1 warm TTFT also rises
+35.8427->36.7988ms in the repeat; this observed cost remains in the full data,
+without a causal attribution or exclusion from future matched comparison.
+
+Windows confirmation archive transfer/audit is deferred until downstream GPU
+measurements finish. Retained serving c186 remains unchanged; d52 is a confirmed
+native candidate, not a fresh vLLM ratio or proof of the overall target.
+Compact component97616 is now actually executing after the complete native
+chain; synthetic MPS probe remains queued behind it.
