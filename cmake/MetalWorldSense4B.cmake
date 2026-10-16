@@ -8,3 +8,6 @@ set(GARNET_METAL_LINEAR_CHUNK_DELTA ON CACHE BOOL "Register-resident chunk recur
 set(GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE ON CACHE BOOL "Direct recurrent output writes")
 set(GARNET_METAL_ATTENTION_PREFIX ON CACHE BOOL "GPU-verified contiguous prompt slots")
 set(GARNET_METAL_RESIDENT_KV_INPLACE ON CACHE BOOL "Private resident token-slot updates")
+
+# Bounded body-only specialization; complete 4B state/token guards passed.
+set(GARNET_METAL_BODY_SHAPE ON CACHE BOOL "Specialize body decode dimensions")

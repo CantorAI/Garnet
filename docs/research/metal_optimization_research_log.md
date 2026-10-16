@@ -2344,3 +2344,24 @@ reference passes; this does not substitute for original trained numerical gates.
 Opt-in profile only; no default/CUDA change, quantization, general speed claim
 or fresh M4/vLLM ratio. The handover's full six-profile goal remains unmet.
 [Selection, full token outputs, all clocks, memory, source/library identities and limitations](../../results/20261016/4b-m5-chunk/README.md).
+
+## 2026 10 16 Further M5 4B vision sharing and body specialization
+
+First execute fixed-grid immutable-weight sharing against the already optimized
+six-flag4B control. All eight outputs/policy match and total/TTFT improve, but
+repeat decode11.5320→11.2561tok/s fails the predeclared2% limit. Reject without
+an unchanged favorable retry. Preserve raw runs and selection.
+
+A new candidate adds existing bounded body-only fixed-shape kernels to address
+that preservation failure. Two fresh ABBA cohorts retain all complete tokens,
+actual248 specialized last-decode projections and zero misses. Warm total
+11.340→9.087s and10.781→8.915s; TTFT4.279→2.455s and3.605→2.233s;
+decode11.389→12.154 and11.287→12.124tok/s. Initialization/first and memory
+remain separate; no vLLM ratio or full numerical equivalence is claimed.
+
+642,560 actual vision values match bits across three grids and return; source
+close, failed replacement recovery and changed-input checks pass. After one
+separate16-token car request at512capacity, all32 decoder-state layers match
+bits; three1.7B text outputs match. Native matmul and model-contract tests pass.
+Retain opt-in BODY_SHAPE plus4B Metal sharing. CUDA/default flags unchanged.
+[Both candidates, original gates, full outputs, source/library hashes, state/vision checks, memory and deployment](../../results/20261016/4b-m5-vision-shape/README.md).

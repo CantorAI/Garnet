@@ -20,8 +20,10 @@ class CPUImageEncoder:
         @T.fusion(name='qwen35_cpu_still_image',boundary='required')
         def forward(patches):return Qwen35VisionEncoder(patches,config,grid_h,grid_w)
         self.graph=garnet.compiled_graph()
-        try:self.graph.build(forward(symbol),[symbol],checkpoint)
+        try:self._build_graph(forward(symbol),[symbol],checkpoint)
         except:self.graph.close();raise
         self.io=garnet.tensor_io()
+    def _build_graph(self,output,symbols,checkpoint):
+        self.graph.build(output,symbols,checkpoint)
     def encode_file(self,path):return self.graph.run([self.io.read_f32(path,self.shape)])
     def close(self):self.graph.close()

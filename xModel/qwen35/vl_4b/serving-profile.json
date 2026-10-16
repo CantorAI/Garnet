@@ -3,5 +3,6 @@
   "maxOutputTokens": 512,
   "imagePixels": 65536,
   "prefillChunk": 16,
-  "linearChunk": true
+  "linearChunk": true,
+  "shareVisionWeights": true
 }

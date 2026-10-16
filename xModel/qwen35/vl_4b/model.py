@@ -27,6 +27,6 @@ def create_decoder(checkpoint, config, capacity):
     return MetalDecoder(checkpoint, config['text_config'], 1, capacity)
 
 
-def create_vision(checkpoint, config, gh, gw):
+def create_vision(checkpoint, config, gh, gw, shared_encoder=None):
     validate_config(config)
-    return MetalImageEncoder(checkpoint, config['vision_config'], gh, gw, 1)
+    return MetalImageEncoder(checkpoint, config['vision_config'], gh, gw, 1, shared_encoder)

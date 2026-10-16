@@ -1,0 +1,21 @@
+{
+  "file_sources_online": 4,
+  "specialized_observations": [
+    {
+      "timestamp": 1792168577783,
+      "model": "Qwen3.5-4B",
+      "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; body_shape",
+      "ttft_seconds": 3.88104641699465,
+      "total_seconds": 9.744626833999064
+    },
+    {
+      "timestamp": 1792168530542,
+      "model": "Qwen3.5-4B",
+      "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; body_shape",
+      "ttft_seconds": 17.48678766600642,
+      "total_seconds": 27.17887858299946
+    }
+  ],
+  "single_launchd_cantor_pid": 80252,
+  "scope": "Deployment smoke; not matched timing"
+}

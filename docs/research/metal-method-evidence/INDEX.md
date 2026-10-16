@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T16:09:30.523217+00:00
+Generated UTC: 2026-10-16T16:38:30.348933+00:00
 
-Base HEAD at generation: `50890a5ca83494096e5708cf851f96d0fe12fa78`. Reports indexed: **208**.
+Base HEAD at generation: `6c4f55f9bdd86778bb0b04ff13382c865868767a`. Reports indexed: **209**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -155,6 +155,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
 | [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |
 | [results/20261016/4b-m5-chunk](../../../results/20261016/4b-m5-chunk/README.md) | M5 Qwen3.5-4B low-copy native kernel profile |
+| [results/20261016/4b-m5-vision-shape](../../../results/20261016/4b-m5-vision-shape/README.md) | Further 4B optimization: shared vision weights and fixed body shapes |
 | [results/20261016/block-packed-prefill](../../../results/20261016/block-packed-prefill/README.md) | K32 N64 block packed prefill rejected by numerical gate |
 | [results/20261016/compact-fused-projection-groups](../../../results/20261016/compact-fused-projection-groups/README.md) | Compact-aware independent decode projections |
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |

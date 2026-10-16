@@ -34,6 +34,7 @@ class Model:
         self.prefill_chunk = int(profile.get('prefillChunk', 16))
         if self.prefill_chunk not in (2, 4, 8, 16, 32, 64):
             raise ValueError('Unsupported Metal prefillChunk')
+        self.share_vision_weights = bool(profile.get('shareVisionWeights', self.xmodel == 'vl_4b'))
         self.text_config = self.config['text_config'] if self.visual else self.config
         self.capacity = int(profile.get('maxInputTokens', 1536)) + int(profile.get('maxOutputTokens', 512))
         if self.capacity < 64 or self.capacity > 8192:
@@ -92,10 +93,14 @@ class Model:
                 metadata = json.loads(stream.read())
             gh, gw = metadata['grid']
             if self.grid != [gh, gw]:
-                if self.vision is not None:
-                    self.vision.close()
-                self.vision = self.model_factory.create_vision(self.checkpoint, self.config, gh, gw) if self.model_factory else MetalImageEncoder(self.checkpoint, self.config['vision_config'], gh, gw, 1)
-                self.grid = [gh, gw]
+                # Keep the current graph usable if construction fails. Shared
+                # native weights own their buffers after the old graph closes.
+                previous = self.vision
+                shared = previous if self.share_vision_weights else None
+                replacement = self.model_factory.create_vision(self.checkpoint, self.config, gh, gw, shared) if self.model_factory else MetalImageEncoder(self.checkpoint, self.config['vision_config'], gh, gw, 1, shared)
+                self.vision, self.grid = replacement, [gh, gw]
+                if previous is not None:
+                    previous.close()
             embedding = self.vision.encode_file(stem + '.f32')
             append_text('<|vision_start|>')
             merge = self.config['vision_config']['spatial_merge_size']

@@ -48,3 +48,20 @@ token sequences on three fixture images. Warm median total time improved about
 not a full numerical validation, general speed guarantee or M4/vLLM comparison.
 See `results/20261016/4b-m5-chunk/README.md` for individual measurements, memory
 costs, source/binary identities and remaining validation.
+
+## Mixed-video shapes and further decode tuning
+
+The optional profile now also enables BODY_SHAPE (body projections only), and
+4B Metal serving defaults to `shareVisionWeights: true`. Fixed-grid replacements
+share checked immutable native weight buffers and release the prior graph only
+after the replacement is ready. Fresh images are always encoded; no image or
+answer cache is added. Explicit false disables sharing.
+
+Two fresh cohorts against the prior six-flag optimized build measured another
+17–20% lower median total time and38–43% lower TTFT, with7–8% higher decode rate
+on the three-image smoke workload. Complete tokens, sampled32-layer state bits,
+vision embedding bits and source-close/failure recovery checks passed. The
+sharing-only attempt failed a decode-preservation gate and is retained as
+rejected evidence. See results/20261016/4b-m5-vision-shape/README.md.
+For an existing build cache, explicitly set GARNET_METAL_BODY_SHAPE=ON; a cache
+initializer does not overwrite an existing OFF value.
