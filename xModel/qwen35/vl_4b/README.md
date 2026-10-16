@@ -31,3 +31,20 @@ run with the built native Garnet module available. The helper does image
 preparation only; inference uses Garnet Metal. Record `/usr/bin/time -l` output
 separately to compare process footprint. The original fixture hashes and actual
 MacBook comparison are documented in the WorldSense physical AI experiment report.
+
+## Optional native kernel profile
+
+The serving JSON's `linearChunk` selects the graph algorithm; it does not enable
+the optional native chunk kernels. For a separate Metal build, pass
+`-C cmake/MetalWorldSense4B.cmake` at first configuration, together with the
+existing Metal/xModel, SDK and runtime settings. This opts into six low-copy
+kernel policies without changing checkpoint precision, image pixels or outputs.
+It leaves global defaults and CUDA builds unchanged. Explicit `-D...=OFF`
+overrides remain available; inspect CMakeCache.txt rather than assuming flags.
+
+Two fresh M5/24 GiB control/candidate cohorts retained identical full generated
+token sequences on three fixture images. Warm median total time improved about
+23–25%, with roughly 48% lower TTFT. These are a small serving regression sample,
+not a full numerical validation, general speed guarantee or M4/vLLM comparison.
+See `results/20261016/4b-m5-chunk/README.md` for individual measurements, memory
+costs, source/binary identities and remaining validation.

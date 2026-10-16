@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-16T07:37:19.912216+00:00
+Generated UTC: 2026-10-16T16:09:30.523217+00:00
 
-Base HEAD at generation: `028e5c1039c5ae84b88a2ab67a163786bd44e0a8`. Reports indexed: **207**.
+Base HEAD at generation: `50890a5ca83494096e5708cf851f96d0fe12fa78`. Reports indexed: **208**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -154,21 +154,22 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/wide-batch-prefill](../../../results/20261015/wide-batch-prefill/README.md) | Exact 160-row VL batch-2 prefill investigation |
 | [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
 | [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |
+| [results/20261016/4b-m5-chunk](../../../results/20261016/4b-m5-chunk/README.md) | M5 Qwen3.5-4B low-copy native kernel profile |
 | [results/20261016/block-packed-prefill](../../../results/20261016/block-packed-prefill/README.md) | K32 N64 block packed prefill rejected by numerical gate |
 | [results/20261016/compact-fused-projection-groups](../../../results/20261016/compact-fused-projection-groups/README.md) | Compact-aware independent decode projections |
 | [results/20261016/compact11-escape-cpu](../../../results/20261016/compact11-escape-cpu/README.md) | Three-bit exponent tags plus escapes: descriptive CPU study |
 | [results/20261016/delta-value-tiles-addresses](../../../results/20261016/delta-value-tiles-addresses/README.md) | Wider delta value tiles CPU prerequisite |
 | [results/20261016/delta-value-tiles-gpu](../../../results/20261016/delta-value-tiles-gpu/README.md) | Wider delta value tiles GPU component investigation |
-| [results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
-| [results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/README.md) | xModel |
 | [results/20261016/delta-value-tiles-native](../../../results/20261016/delta-value-tiles-native/README.md) | Private native width64 recurrent prefill investigation |
+| [results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
+| [results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/logs/delta-value-tile64-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/delta-value-tiles-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/half-triplet-lower-bound](../../../results/20261016/half-triplet-lower-bound/README.md) | Three exact half-storage activation planes: prefill feasibility |
 | [results/20261016/joined-union-half-admission](../../../results/20261016/joined-union-half-admission/README.md) | Exact common-scale union: all learned feed-forward pairs |
 | [results/20261016/ndarray-selective-native](../../../results/20261016/ndarray-selective-native/README.md) | Selective no-exact-half NDArray: rejected after complete native inference |
@@ -177,21 +178,21 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/nibble-screen-index](../../../results/20261016/nibble-screen-index/README.md) | Four bit greedy head rejection index rejected |
 | [results/20261016/paired-norm-rope](../../../results/20261016/paired-norm-rope/README.md) | Paired query and key normalization and RoPE |
 | [results/20261016/paired-norm-rope-chain](../../../results/20261016/paired-norm-rope-chain/README.md) | Chained paired normalization and RoPE measurements |
-| [results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/README.md) | xModel |
-| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
-| [results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
-| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/README.md) | xModel |
 | [results/20261016/paired-norm-rope-native](../../../results/20261016/paired-norm-rope-native/README.md) | Private native paired normalization and RoPE investigation |
+| [results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/checks/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/README.md) | xModel |
+| [results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/logs/paired-norm-rope-native-20261016/jobs/source-snapshot/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
+| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/paired-norm-rope-native/initial/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/prepared-half-inverse](../../../results/20261016/prepared-half-inverse/README.md) | Exact half inverse CPU verification |
 | [results/20261016/prepared-qkv-native](../../../results/20261016/prepared-qkv-native/README.md) | Private native text Q/K/V fusion after repeated component selection |
 | [results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/test2026/metal/README.md) | Garnet native Metal/MPS: Qwen3.5-0.8B |
-| [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/README.md) | xModel |
+| [results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b](../../../results/20261016/prepared-qkv-native/rejection/evidence/source/xModel/qwen3/text_1_7b/README.md) | Qwen3-1.7B |
 | [results/20261016/prepared-union-mlp](../../../results/20261016/prepared-union-mlp/README.md) | Prepared exact union weights and activation-only output |
 | [results/20261016/prepared-union-qkv](../../../results/20261016/prepared-union-qkv/README.md) | Prepared heterogeneous Q/K/V: actual-context GPU investigation |
 | [results/20261016/prepared-union-qv](../../../results/20261016/prepared-union-qv/README.md) | QV fusion with the original key projection |
@@ -203,11 +204,11 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [results/20261016/wide-block-packed-prefill](../../../results/20261016/wide-block-packed-prefill/README.md) | Wide output block packed prefill rejected by timing |
+| [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
 | [test2026/metal/results/20261012/vllm-metal/prefill-tiles](../../../test2026/metal/results/20261012/vllm-metal/prefill-tiles/README.md) | Validated wide prefill tiles |
 | [test2026/metal/results/20261012/vllm-metal/pruned-head-gpu](../../../test2026/metal/results/20261012/vllm-metal/pruned-head-gpu/README.md) | Measured native GPU partial-head prototypes |
-| [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261013/decode-input-tiles](../../../test2026/metal/results/20261013/decode-input-tiles/README.md) | Rejected BF16 decode input tiles |
 | [test2026/metal/results/20261013/decoder-codec](../../../test2026/metal/results/20261013/decoder-codec/README.md) | Rejected lossless decoder packing |
 | [test2026/metal/results/20261013/delta-split](../../../test2026/metal/results/20261013/delta-split/README.md) | Validated direct delta state outputs |

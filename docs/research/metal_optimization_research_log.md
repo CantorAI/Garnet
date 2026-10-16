@@ -2328,3 +2328,19 @@ identities and the displayed matched/component table values. It does not
 replace the separate numerical or benchmark audits. The index captures the
 base commit plus exact report bytes; uncommitted reports must not be represented
 as if they were already present in that base commit.
+
+## 2026 10 16 M5 4B low-copy chunk and cache profile
+
+A separate MacBook M5/24 GiB serving smoke experiment applies six existing
+chunk-recurrence/cache flags to Qwen3.5-4B. The current WorldSense build had all
+optional kernel flags off. Preserve precision, pixels, checkpoint and prompts;
+freeze consumed source and run control/candidate/candidate/control sequentially
+with WorldSense paused and restored. Two cohorts retain eight complete matching
+4B token outputs per runtime; a separate three-prompt 1.7B guard also matches.
+
+Warm median total11.210→8.659s and11.587→8.664s; TTFT4.816→2.470s
+and4.649→2.410s. First requests/init and process memory are separate. Matmul
+reference passes; this does not substitute for original trained numerical gates.
+Opt-in profile only; no default/CUDA change, quantization, general speed claim
+or fresh M4/vLLM ratio. The handover's full six-profile goal remains unmet.
+[Selection, full token outputs, all clocks, memory, source/library identities and limitations](../../results/20261016/4b-m5-chunk/README.md).
