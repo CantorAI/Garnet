@@ -147,6 +147,33 @@ def main():
         assert cells[0].strip()==a['model'] and int(cells[1])==a['batch'] and cells[2].strip()=={1:'mixed',2:'F32',3:'null'}[a['policy']]
         assert [c.strip() for c in cells[3:]]==[f'{v:.6f}' for v in (a['gpu_fraction'],a['wall_fraction'],b['gpu_fraction'],b['wall_fraction'])]
         ndarray_numbers+=4
+    p=ROOT/'results/20261015/ndarray-native'
+    native_nd=json.loads((p/'comparison/verification.json').read_text())
+    nd_decision=json.loads((p/'decision-analysis.json').read_text())
+    assert native_nd['full_output_requests']==72 and native_nd['actual_ndarray_prefill_routes']
+    assert not nd_decision['promote'] and not nd_decision['request_confirmation'] and not nd_decision['fresh_vllm_run']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(native_nd['profiles'])==len(nd_decision['profiles'])==6
+    ndarray_native_numbers=0
+    for cells,r,d in zip(rows,native_nd['profiles'],nd_decision['profiles']):
+        assert cells[0].strip()==r['model']==d['model'] and int(cells[1])==r['batch']==d['batch']
+        m=r['means'];f=r['first_request_after_initialization'];rss=r['peak_individual_rss_bytes']
+        formatted=[str(d['ndarray_prefill_calls']),
+            ' / '.join(f"{m[k]['decode_tps']:.4f}" for k in ('control','candidate')),
+            ' / '.join(f"{m[k]['ttft_ms']:.4f}" for k in ('control','candidate')),
+            f"{r['decode_ratio']:.6f}",f"{r['ttft_fraction']:.6f}",
+            ' / '.join(f"{f[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
+            f"{(rss['candidate']-rss['control'])/2**30:.3f}"]
+        assert [c.strip() for c in cells[2:]]==formatted
+        assert d['aggregate_decode_tps']=={k:v['decode_tps']*r['batch'] for k,v in m.items()}
+        ndarray_native_numbers+=10
+    initrows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| init Qwen')]
+    assert len(initrows)==6
+    for cells,r in zip(initrows,native_nd['profiles']):
+        assert cells[0].strip()=='init '+r['model'] and int(cells[1])==r['batch']
+        f=r['first_request_after_initialization']
+        assert [c.strip() for c in cells[2:]]==[f"{f[k]['initialization_s']:.6f}" for k in ('control','candidate')]
+        ndarray_native_numbers+=2
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -164,7 +191,8 @@ def main():
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
                   component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,
                   selected_native_table_values_checked=selected_native_numbers,bf16_component_table_values_checked=bf16_numbers,
-                  phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,ndarray_component_table_values_checked=ndarray_numbers,status='passed',
+                  phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,ndarray_component_table_values_checked=ndarray_numbers,
+                  ndarray_native_table_values_checked=ndarray_native_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

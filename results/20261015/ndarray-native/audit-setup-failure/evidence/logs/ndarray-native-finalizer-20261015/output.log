@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_ndarray_native_checks.py", line 8, in <module>
+    exec(compile(source,__file__,'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_ndarray_native_checks.py", line 40, in <module>
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_ndarray_native_checks.py", line 22, in run
+AssertionError: ('audit', 1)

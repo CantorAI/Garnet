@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "tensorrt-mxfp4-reference",
+  "backend": "tensorrt",
+  "device": "CUDA",
+  "precision": "bf16",
+  "entrypoint": "prefill",
+  "runtime_options": {},
+  "capabilities": {
+    "single_request_generation": false,
+    "continuous_batching": false
+  },
+  "notes": "Explicit tensor-input prefill/decode baseline. MXFP4 experts remain packed. Host handles Harmony, generation loop and batch admission. Performance not validated."
+}

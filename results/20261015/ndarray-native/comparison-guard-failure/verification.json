@@ -1,0 +1,12 @@
+{
+  "verified_files": 5194,
+  "full_output_records": 54,
+  "successful_runtime_workers": 18,
+  "complete_ABBA_profiles": 4,
+  "incomplete_vision_profile_workers": 2,
+  "actual_NDArray_image_requests": 3,
+  "NDArray_dispatches_per_image": 186,
+  "failure": "Stale benchmark assumption: full NDArray route correctly has zero legacy global-half-alpha calls.",
+  "scope": "Incomplete benchmark; all54 captured complete outputs match and actual NDArray routes verified. No admitted full-cohort timing, gain, vLLM ratio or target pass.",
+  "full_goal_met": false
+}

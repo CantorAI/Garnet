@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "openvino-cpu-int4",
+  "backend": "openvino",
+  "device": "CPU",
+  "precision": "int4_fp16",
+  "entrypoint": "prefill",
+  "runtime_options": {
+    "native_cpu_decode": true,
+    "weight_group_size": -1
+  },
+  "capabilities": {
+    "single_request_generation": true,
+    "continuous_batching": false
+  }
+}

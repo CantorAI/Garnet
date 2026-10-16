@@ -1,0 +1,11 @@
+Starting exclusive native worker Qwen3.5-0.8B-b1-control-0
+Completed exact native worker Qwen3.5-0.8B-b1-control-0
+Starting exclusive native worker Qwen3.5-0.8B-b1-candidate-0
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_ndarray_native.py", line 35, in <module>
+    if '--generate-only' not in sys.argv[3:]:exec(compile(source,str(destination),'exec'))
+                                             ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/logs/ndarray-native-20261015/jobs/Qwen3.5-0.executed.py", line 157, in <module>
+    assert value['prefill_profile'].get('global_half_alpha_dispatches',0)>0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

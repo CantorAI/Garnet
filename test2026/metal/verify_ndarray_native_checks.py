@@ -47,6 +47,8 @@ def replace(old,new):
 replace('assert len(stages)==28','assert len(stages)==30')
 replace("assert stages[:27]==oldstatus and stages[27]['name']=='wide-batch-trained-reference'","assert stages[29]['name']=='wide-batch-trained-reference'")
 replace("assert {v['name'] for v in stages}==names","assert {v['name'] for v in stages}==names|{'ndarray-cache-compile','ndarray-cache'}")
+replace("        assert (folder/(stage['name']+'.log')).stat().st_size>0","""        log=folder/(stage['name']+'.log');assert log.is_file()
+        if stage['name']!='ndarray-cache-compile':assert log.stat().st_size>0""")
 assert source.count(".relative_to('/Users/zsdx/garnet-metal-investigation')")==3
 source=source.replace(".relative_to('/Users/zsdx/garnet-metal-investigation')",".relative_to(preparation['target'])")
 replace("assert 'metal_mlp_prefill_graph_reference' in ctext and '0 tests failed out of 8' in ctext","assert '0 tests failed out of 7' in ctext")
@@ -57,6 +59,13 @@ needle='Path(sys.argv[2]).write_bytes'
 replace(needle,"""cache=next(v for v in stages if v['name']=='ndarray-cache')['accepted_cases'][0]
 text=(checks/cache['evidence']/'ndarray-cache.log').read_text()
 assert text.strip()=='NDArray native exact/update/cache256/fallback14/cached-after-cap/abort-recovery/shape-fallback PASS'
+compiled=next(v for v in stages if v['name']=='ndarray-cache-compile')['accepted_cases'][0]
+command=compiled['command'];assert command[1]=='clang++' and cache['command']==[command[command.index('-o')+1]]
+from pathlib import PurePosixPath
+binary=PurePosixPath(cache['command'][0]).relative_to(preparation['target']).as_posix()
+assert proof['omitted'][binary]['bytes']>0 and len(proof['omitted'][binary]['sha256'])==64
+assert (checks/compiled['evidence']/'ndarray-cache-compile.log').is_file()
+result['silent_new_compiler_logs_admitted']=int((checks/compiled['evidence']/'ndarray-cache-compile.log').stat().st_size==0)
 result.update(regenerated_changes=8,external_driver_files=len(external),regenerated_guard_and_full30_runner=True)
 """+needle)
 exec(compile(source,__file__,'exec'))

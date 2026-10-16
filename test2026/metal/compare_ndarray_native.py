@@ -30,6 +30,9 @@ replace("                wide_count=value['prefill_profile'].get('wide_batch_pre
                 assert value['prefill_profile'].get('ndarray_prefill_dispatches',0)==expected_nd
                 assert not value['mlp_prefill_graph_enabled'] and not any(value['mlp_prefill_graph_counts'])
                 wide_count=value['prefill_profile'].get('wide_batch_prefill_dispatches',0)""")
+replace("                assert value['prefill_profile'].get('global_half_alpha_dispatches',0)>0","""                legacy_alpha=value['prefill_profile'].get('global_half_alpha_dispatches',0)
+                if expected_nd:assert legacy_alpha==0
+                else:assert legacy_alpha>0""")
 source=repr(__doc__)+source[source.index('\n'):]
 destination=Path(sys.argv[2]).with_suffix('.executed.py');destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(source.encode())
 if '--generate-only' not in sys.argv[3:]:exec(compile(source,str(destination),'exec'))

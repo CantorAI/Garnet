@@ -1,0 +1,34 @@
+[
+  {
+    "label": "archive",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/archive_ndarray_native_repaired_checks.py",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/ndarray-native-checks-repaired-20261015.tar.gz"
+    ],
+    "exit_code": 0
+  },
+  {
+    "label": "extract",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/work/freeze_mlp_evidence.py",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/ndarray-native-checks-repaired-20261015.tar.gz",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/validation-audits/ndarray-native-checks-repaired-20261015",
+      "f60abf2cfd3a3b1a335e096a291b5343118772a50c9ee8d5f68c37db7fd0e388"
+    ],
+    "exit_code": 0
+  },
+  {
+    "label": "audit",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/verify_ndarray_native_checks.py",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/validation-audits/ndarray-native-checks-repaired-20261015",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/ndarray-native-checks-verification.json",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/ndarray-native-checks-repaired-20261015.tar.gz"
+    ],
+    "exit_code": 1
+  }
+]

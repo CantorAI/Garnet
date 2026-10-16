@@ -1,0 +1,12 @@
+{
+  "verified_files": 14,
+  "reproduced_failure": {
+    "kind": "AssertionError",
+    "expanded_line": 17,
+    "stage": "ndarray-cache-compile",
+    "successful_compile_exit": 0,
+    "compiler_log_bytes": 0
+  },
+  "scope": "Frozen CPU audit-setup failure reproduced; no inference, numerical gate change, performance or goal claim.",
+  "full_goal_met": false
+}

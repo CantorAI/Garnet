@@ -6,11 +6,11 @@ def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 for name,info in proof['files'].items():
     p=(base/name).resolve();assert p.is_relative_to(base) and p.stat().st_size==info['bytes'] and digest(p)==info['sha256']
 native_trial=sys.argv[3] if len(sys.argv)>3 else 'ndarray-native-20261015'
-assert native_trial in ('ndarray-native-20261015','ndarray-native-confirm-20261015') and proof['jobs'][native_trial]['exit_code']==0
+assert native_trial in ('ndarray-native-20261015','ndarray-native-repaired-20261015','ndarray-native-confirm-20261015') and proof['jobs'][native_trial]['exit_code']==0
 saved=sys.argv[:]
 try:
     sys.argv=[saved[0],str(base),str(base/'checks-reverification.json')]
-    helper=Path(__file__).with_name('verify_ndarray_native_checks.py')
+    helper=root/'external-tools/verify_ndarray_native_checks.py'
     exec(compile(helper.read_text(),str(helper),'exec'),{'__file__':str(helper)})
 finally:sys.argv=saved
 checks_audit=json.loads((base/'checks-reverification.json').read_text());jobs=root/'logs'/native_trial/'jobs'
@@ -42,6 +42,10 @@ replace("            assert row['coalesced_block_enabled']","""            asser
             assert row['ndarray_prefill_available']==(policy=='candidate')
             assert row['ndarray_prefill_counts']==[expected_nd]+[0]*row['decode_steps_after_first']
             assert row['prefill_profile'].get('ndarray_prefill_dispatches',0)==expected_nd""")
+replace("            assert row['prefill_profile'].get('ndarray_prefill_dispatches',0)==expected_nd","""            assert row['prefill_profile'].get('ndarray_prefill_dispatches',0)==expected_nd
+            legacy_alpha=row['prefill_profile'].get('global_half_alpha_dispatches',0)
+            if expected_nd:assert legacy_alpha==0
+            else:assert legacy_alpha>0""")
 replace("    assert meta['mlp_graph']==dict(candidate=True,control=False,fp32_arithmetic=True,original_bf16_values=True,queue='same-native-queue',synchronous=True,lazy_graph_compile=True,encode_ms_includes_graph_gpu_work=True)","""    nd=meta['ndarray_prefill']
     assert {k:v for k,v in nd.items() if k!='tensors'}==dict(physical_rows=80,policy='exact-expanded-F32',fp32_activations=True,
         fp32_results=True,source_count=2,alpha=1,beta=0,cache_limit=256,native_fallback=True,added_weight_storage=True)""")

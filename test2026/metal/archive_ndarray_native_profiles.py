@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib,io,json,struct,subprocess,sys,tarfile
 root=Path(sys.argv[1]).resolve();target=Path(sys.argv[2]).resolve();trial=sys.argv[3] if len(sys.argv)>3 else 'ndarray-native-20261015'
-assert trial in ('ndarray-native-20261015','ndarray-native-confirm-20261015') and not target.exists()
+assert trial in ('ndarray-native-20261015','ndarray-native-repaired-20261015','ndarray-native-confirm-20261015') and not target.exists()
 def digest(p):
     with p.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 jobs=root/'logs'/trial/'jobs';status=json.loads((jobs.parent/'exit.json').read_text());assert isinstance(status['exit_code'],int)

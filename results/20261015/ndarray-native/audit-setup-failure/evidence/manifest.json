@@ -1,0 +1,70 @@
+{
+  "files": {
+    "evidence/consumed-tools/archive_ndarray_audit_failure.py": {
+      "bytes": 2200,
+      "sha256": "a96e4e8fde5af2a27932209ef2b816b946800d8c07e683f9814d42dbda4b0bd2"
+    },
+    "evidence/consumed-tools/archive_ndarray_native_repaired_checks.py": {
+      "bytes": 891,
+      "sha256": "1ea7d6f6ae46bc4499eef14ef2865d0c6f08431cbc9f71cd9e2bed8e406b9a96"
+    },
+    "evidence/consumed-tools/finalize_ndarray_native_checks.py": {
+      "bytes": 880,
+      "sha256": "516e8e6883000a2df7b2b408277a8ef659340b25b0d2a4575eb9dd866b562e8b"
+    },
+    "evidence/consumed-tools/finalize_shape_selected_two_checks.py": {
+      "bytes": 3437,
+      "sha256": "5a8f8444eca4a46e01a9819e8be78f0eedeed64eb924ffd04c197b2607c9d44b"
+    },
+    "evidence/consumed-tools/verify_ndarray_native_checks.py": {
+      "bytes": 5918,
+      "sha256": "e1fe8dbaf9bd254a07e94e530f74c55834bf3feb55037204316a4040fcebf444"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/archive.log": {
+      "bytes": 158,
+      "sha256": "fc574ba647fa5b1a85d8ef6888755e1d067f024fb1f651a6164af73f72db09c7"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/audit.log": {
+      "bytes": 535,
+      "sha256": "a5d2247912a3d0a70737b7e8730a39cb9e9b47cbed749caf08c8f81eb7be5a7f"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/commands.json": {
+      "bytes": 1650,
+      "sha256": "26d6b4cf7817457bf211cf5dc4090e05b1ddd62c6195ccfc7543fb0a02fc513b"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/exit.json": {
+      "bytes": 93,
+      "sha256": "73f967343ee6ede1d2374a8d292b05d91d50103c4b399e9bc9ed5070db5c05fd"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/extract.log": {
+      "bytes": 236,
+      "sha256": "051fdadf7606ad1596fab9fe15cc7cdd89fbbcf15a318f9c95ce24ea5c9260c0"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/last-handle-observation.json": {
+      "bytes": 237,
+      "sha256": "81cf87f505600f1bb93038cc35138c4acd8cdeb9b53320c181757d31baeaca3d"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/output.log": {
+      "bytes": 520,
+      "sha256": "f9b53265f6fa6d7f88e0e8ffae0a1d4d397fb60f8673269c4011dfd19f514600"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "7573e573d7cf8bd7c59bec96a369b569b3be07c9e4e6359539b63e2f2242aeb3"
+    },
+    "evidence/logs/ndarray-native-finalizer-20261015/validation-terminal.json": {
+      "bytes": 184,
+      "sha256": "1a78edd233bf8e0bd12d9e774a67706d156e0879c4e132d19cdb807ea43ed08d"
+    }
+  },
+  "jobs": {
+    "ndarray-native-finalizer-20261015": {
+      "exit_code": 1,
+      "state": "archiving_terminal_validation",
+      "wall_seconds": 1116.735433541704
+    }
+  },
+  "validation_archive_sha256": "f60abf2cfd3a3b1a335e096a291b5343118772a50c9ee8d5f68c37db7fd0e388",
+  "scope": "Terminal audit setup failure only. Runtime validation completed; nonempty log assumption rejected a silent compiler. No native timing launched.",
+  "full_goal_met": false
+}

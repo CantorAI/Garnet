@@ -1,0 +1,14 @@
+{
+  "name": "Qwen3-0.6B-b1-candidate-0",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source/test2026/metal/run_matched_garnet.py",
+    "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/build-ndarray-prefill-shape80-guardrepair",
+    "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source",
+    "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/models/Qwen3-0.6B",
+    "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/logs/ndarray-native-repaired-20261015/jobs/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-case.json"
+  ],
+  "exit_code": 0
+}

@@ -932,6 +932,80 @@ No Mac source/driver mutation or competing inference. Qwen3.5 trained layer
 checks have completed and text layer validation continues. Goal active/unmet.
 [Header provenance, complete tensor list and limitations](../../results/20261015/ndarray-native/header-coverage.json).
 
+### 2026-10-16 UTC — NDArray fresh30 passed; audit setup repaired; native ABBA live
+
+PID84121 exits0 in1440.044627875s; archivef60abf2c... contains1,693 files.
+Every30 stage fresh. Controller90454 archives/extracts but its auditor rejects
+the new silent successful compiler log. Preserve14-file ce435dc7... failure
+and faulty auditor e1fe8dba... before repair; zero native inference dispatched.
+Do not relabel executed runtime validation as failed accuracy/performance.
+
+Correct only the new `ndarray-cache-compile` nonempty-log assumption, retain
+the original28 log predicates and every numerical/guard bound, add matching
+compiler/executed artifact identity and actual primitive PASS. Auditor9ec11306...
+passes the same frozen archive on Mac:30 fresh stages, seven CTests,80 body
+cases, cache256/fallback14,51/78 trained heads, four vision profiles,6+6 recovery,
+four wide profiles/12 carried steps, worst original bound0.5432836183. No GPU
+rerun or serving-source change. Windows transfer/audit waits until timing ends.
+
+Actual native PID10943 dispatched after successful direct re-audit, all six
+profiles and original72 complete outputs/counts pending. Keep runtime and
+consumed external-driver closure frozen until terminal/archive. No additional
+inference, GPU probe or large transfer during timing. Init/first/warm/RSS stay
+separate. Retainc186, no fresh vLLM ratio or target pass yet. Goal active/unmet.
+[Exact stage/repair identities and current scope](../../results/20261015/ndarray-native/README.md#actual-fresh30-completion-and-silent-compiler-audit-repair).
+
+### 2026-10-16 UTC — first native cohort guard failure audited; fresh full cohort running
+
+Native PID10943 exits1 in137.186741167s on an inherited `legacy_alpha>0`
+benchmark assertion. Archive5,194 files8288bb6c... before repair. Mac/Windows
+independent audits confirm54 complete matching outputs across18 successful
+workers: four full text/coder profiles plus three control/three candidate VL B1
+requests. Each candidate image executes186 NDArray prefill calls, zero decode
+and zero legacy calls; control has182 legacy calls. This is actual routing,
+not inference from a label. The stale predicate expected a replaced route to
+execute. No numerical/runtime failure or admitted full-cohort timing result.
+
+After all original jobs/archives are terminal, transfer/re-audit fresh30 F60
+on Windows successfully. Reproduce14-file silent-compiler audit failure locally
+using its frozen old auditor, expanded line17. Preserve every old error; no
+model test rerun or numerical predicate changes. Fix only the new comparison's
+route-aware legacy expectation, strengthen frozen audit equivalently, retain
+the same validated8e4 source/library. Expand/AST preflights pass locally/Mac.
+
+Fresh whole six-profile native PID13840 starts after successful failure audit
+and transfer completion, all72 outputs/timings/RSS required, no reused partial
+timings. Original repeated>=3% VL B1 warm-TTFT/no repeated>=2% decode-regression
+rule unchanged. No favorable-repeat search from incomplete data. Source and
+external drivers frozen until terminal/archive; no other inference/large copy.
+[All failed output/counter evidence and repair scope](../../results/20261015/ndarray-native/README.md#initial-native-cohort-stale-legacy-counter-assertion-preserved).
+
+### 2026-10-16 UTC — full NDArray native cohort correct but not useful; reject promotion
+
+Fresh native PID13840 exits0 in199.862149500s. Freeze5,320-file archive7ed9d48e...
+before interpretation. Mac and Windows audits verify72 complete outputs,
+1,251 serving/1,028 external-tool identities, fresh30 validation and actual
+186-call prefill/zero-decode routes for VL B1, zero NDArray in all other profiles.
+The legacy counter repair is exact: zero on full NDArray, positive on control/
+unaffected paths. Old failed54-output dataset remains separate, not reused.
+
+VL B1 warm TTFT181.973854 ->181.494229ms, only0.264% lower; fails declared3%
+screen. Decode61.370864 ->58.948862steps/s/row, ~3.947% worse. First-after-init
+TTFT268.619520 ->3354.833000ms, peak individual RSS +1.716GiB. Init5.519764 /
+5.536633s distinct. Logical added weight storage1.854GiB is not observed RSS.
+Other profiles execute no NDArray; mixed timing changes cannot establish a
+benefit from executing the new operation. Preserve every profile/cost.
+
+Reject8e4 broad-F32 promotion, retainc186, no favorable confirmation search,
+no fresh vLLM ratio and no new matched target passes. Component improvements
+did not predict full inference. Goal stays active/unmet. Next inspect full
+weight admission (common versus row-wise exact half) before selectively using
+F32. Control182 legacy versus186 NDArray calls suggests a small exception set,
+but not its identities or original fallback type. A per-value `MTLBuffer.contents`
+read in expansion is a possible first-use bottleneck; hoisting remains an
+untested hypothesis. No claims or source edits to archived8e4 from that inference.
+[All native timings, initial costs, RSS and decision](../../results/20261015/ndarray-native/README.md#actual-complete-native-cohort-reject-broad-f32-ndarray-promotion).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
