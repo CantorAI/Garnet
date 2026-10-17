@@ -1,0 +1,21 @@
+{
+  "experiment": "WS-M5-19",
+  "state": "prototype_correctness_passed_frozen_worldsense_resource_running",
+  "created_utc": "2026-10-17T03:20:36.493366+00:00",
+  "motivation": "WS18 actualWorldSense physical-4.275%/~736MiB misses5%gate. EarlierWS14 inventory other_graph_storage includes large vision buffers (~1GBcombined leading shapes), while WS18 only admits3-output resident layers. Target ordinary one-output vision execution, not threshold changes/retries.",
+  "mechanism": "Graph-owned exact-layout scratch pool for ordinary graph.Run on non-layer single-output graphs, using all-operation liveness. Preserve WS18 session-private decoder pools and unchanged outputs/math/context.",
+  "plan": [
+    "Audit LowerVision and Encode Vision operands/aliasing. Initially reuse only existing proven fully-overwriting plain MatMul/BF16/Norm/Silu/Add/Bias/Mask/Slice/Layout0/KVChunk outputs; custom Vision producers excluded until separately proven. Custom Vision operations still count as conservative readers of a/b/arguments.",
+    "BuildWorkspacePlan must distinguish3-output resident mask from ordinary full-operation execution. A graph cannot reuse resident-only intervals for full generic layer.Run; retain separate-materialization fallback for3-output layer graphs. Ordinary plan only on non-layer single output.",
+    "Protect all weights/held records/constants/inputs/returned root/output aliases, require singleton standard/hazard-tracked buffers and one full writer before reads. Strict same-op overlap and exact rows/columns coloring unchanged. Unsupported multi-op fusion rejected.",
+    "Either share plan machinery by immutable graph output contract or store explicit separate modes; Clear/rebuild invalidates all. No plan cache that can mix all-op and resident-op intervals.",
+    "Ordinary Run validates/updates host inputs first, allocates graph-owned pool before GPU Begin, constructs nonthrowing binding transaction, runs all ops, SubmitAndWait, clears arena graph-slot bindings on success/error before unlock. Returned root protected and downloaded/copied after completion; pool strongly held across queue work.",
+    "Generic3-output layer.Run continues distinct scratch materialization for session plans; avoid changing full-private-session semantics. Head graph encodeGreedy bypasses Run and must not accidentally see nil generic scratch; no pool binding/retirement until actual ordinary Run.",
+    "Add graph-workspace inventory owner role/counters and explicit actual route checks. Graph.Close/rebuild releases graph pool; multi-grid vision graph lifecycle must retain required shared weights correctly.",
+    "Test ordinary synthetic graphs that exercise same-op/read-after-write hazards, shapes/tails/inactive/oldNaN, unsupported views/constants/aliases, shared-source-close, repeated runs/rebuild and failure cleanup/abort/root lifetime. Then full32VLM/28text state/token/prefix/capacity parity includes real vision embeddings.",
+    "Separate fault-only pool grow/generic materialization/encoder error tests, no private/caller/root corruption beyond documented failed-output semantics; strong owners and binding clear verified by native inventory.",
+    "Freeze prospective resource/speed protocol before realWorldSense. Keep WS18 gates (>=10%Metal/>=5%task footprint resource;<=2%bothmodels TTFT/total/decode andSkillwall speed), fresh pairs and two full3frame/query mirrored confirmations. Allsetup/failures/logs retained; no promotion until independently confirmed."
+  ],
+  "evidence_scope": "remaining-inventory-prior-evidence.json is earlier WS14 prioritization, not measured WS18 residual. Do not claim all vision storage eligible or physical saving before actualWorldSense.",
+  "implemented": true
+}

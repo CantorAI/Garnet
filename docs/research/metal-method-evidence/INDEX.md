@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T03:20:38.111451+00:00
+Generated UTC: 2026-10-17T03:45:44.427822+00:00
 
-Base HEAD at generation: `9dfe9371cbcf67512e2380d2e2fd41192b0ee6ca`. Reports indexed: **208**.
+Base HEAD at generation: `4bcdade1399d0f49d4eab3ec30b75dfc77014899`. Reports indexed: **209**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -191,6 +191,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-decode256](../../../results/20261016/worldsense-m5-decode256/README.md) | WS-M5-11 shape-restricted eight-SIMD-group decode rejected |
 | [results/20261016/worldsense-m5-dual-chunk64](../../../results/20261016/worldsense-m5-dual-chunk64/README.md) | WS-M5-08: dual-model prefill64 — rejected after fresh confirmation |
 | [results/20261016/worldsense-m5-fused-head](../../../results/20261016/worldsense-m5-fused-head/README.md) | WS-M5-01: fused greedy head through WorldSense — rejected screen |
+| [results/20261016/worldsense-m5-graph-workspace](../../../results/20261016/worldsense-m5-graph-workspace/README.md) | WS-M5-19 ordinary graph workspace: rejected decode preservation |
 | [results/20261016/worldsense-m5-half-prefill](../../../results/20261016/worldsense-m5-half-prefill/README.md) | WS-M5-02: limited exact-half prefill through WorldSense — rejected |
 | [results/20261016/worldsense-m5-inputs](../../../results/20261016/worldsense-m5-inputs/README.md) | Fixed WorldSense M5 experiment inputs |
 | [results/20261016/worldsense-m5-inventory](../../../results/20261016/worldsense-m5-inventory/README.md) | WS-M5-14 native graph and session buffer-owner inventory |

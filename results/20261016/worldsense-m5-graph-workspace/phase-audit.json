@@ -1,0 +1,90 @@
+{
+  "warm_median_phases": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "vision_seconds": 8.980870875500841,
+        "host_input_seconds": 0.050573311498737894,
+        "prefill_seconds": 16.844064270495437,
+        "decode_seconds": 11.3594777085018,
+        "reset_seconds": 0.06320266650436679,
+        "prefix_cache_restore_seconds": 0.0,
+        "decode_profile": {
+          "encode_ms": 89.42387400000003,
+          "gpu_ms": 10922.990291641327,
+          "prepare_ms": 11.498354499999998,
+          "wait_ms": 11174.393248999997
+        },
+        "prefill_profile": {
+          "encode_ms": 6.656020000000001,
+          "gpu_ms": 15608.071333321277,
+          "prepare_ms": 11.024584,
+          "wait_ms": 16790.719479
+        }
+      },
+      "Qwen3-1.7B": {
+        "vision_seconds": null,
+        "host_input_seconds": 0.012787520499841776,
+        "prefill_seconds": 7.975770750002994,
+        "decode_seconds": 1.4363132915023016,
+        "reset_seconds": 0.3532169794998481,
+        "prefix_cache_restore_seconds": 0.009728854500281159,
+        "decode_profile": {
+          "encode_ms": 12.913168499999998,
+          "gpu_ms": 1358.7362708276487,
+          "prepare_ms": 3.5412685,
+          "wait_ms": 1416.2357929999998
+        },
+        "prefill_profile": {
+          "encode_ms": 4.7899995,
+          "gpu_ms": 7201.417354161094,
+          "prepare_ms": 2.0401045,
+          "wait_ms": 7932.812959
+        }
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "vision_seconds": 1.4559304579961463,
+        "host_input_seconds": 0.007804084008967038,
+        "prefill_seconds": 5.505453083496832,
+        "decode_seconds": 10.417772021006385,
+        "reset_seconds": 0.08263368799816817,
+        "prefix_cache_restore_seconds": 0.0,
+        "decode_profile": {
+          "encode_ms": 64.733898,
+          "gpu_ms": 10261.362208293576,
+          "prepare_ms": 9.6256255,
+          "wait_ms": 10301.926440000003
+        },
+        "prefill_profile": {
+          "encode_ms": 4.775188,
+          "gpu_ms": 5244.901979182032,
+          "prepare_ms": 1.9203535,
+          "wait_ms": 5495.690979500001
+        }
+      },
+      "Qwen3-1.7B": {
+        "vision_seconds": null,
+        "host_input_seconds": 0.0046245414996519685,
+        "prefill_seconds": 1.6392710420041112,
+        "decode_seconds": 1.7654772914975183,
+        "reset_seconds": 0.267478083500464,
+        "prefix_cache_restore_seconds": 0.004473312998015899,
+        "decode_profile": {
+          "encode_ms": 18.383333500000003,
+          "gpu_ms": 1682.480312541884,
+          "prepare_ms": 5.110042,
+          "wait_ms": 1692.546084
+        },
+        "prefill_profile": {
+          "encode_ms": 6.289268999999999,
+          "gpu_ms": 1368.3985416646465,
+          "prepare_ms": 1.581521,
+          "wait_ms": 1625.962521
+        }
+      }
+    }
+  },
+  "interpretation": "Descriptive same-run phases only. No causal attribution of decode regression or confirmed general speed gain. Original failed gate retained.",
+  "audit_failure": "First audit assumed vision_seconds exists on text model; KeyError corrected by emitting null for absent phase. No rerun or raw data changed."
+}

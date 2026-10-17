@@ -1,0 +1,14 @@
+{
+  "seed": "/Users/shawn/CantorAI/out/research/worldsense-resident-workspace/source",
+  "changes": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/entry/metal_main.cpp"
+  ],
+  "cuda_sources_unchanged": true,
+  "all_low_level_Metal_kernels_byte_identical": true,
+  "model_preprocessing_checkpoint_math_unchanged": true
+}

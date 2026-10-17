@@ -1,0 +1,56 @@
+{
+  "status": "control_exact_only_no_comparison",
+  "source_result_sha256": "6db03b0637394981eb98ce32a03e624d03faea2c566a53728894fe274e2bfa1e",
+  "checks": [
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    }
+  ]
+}
