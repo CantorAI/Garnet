@@ -3929,3 +3929,51 @@ REJECT due to text decoding. The raw text storage policy alone did not remove th
 All28 returned model calls and14 parent requests are exported once. Derived decode=(generated-1)/(total-TTFT), including host/stop/post-loop and possible extra EOS work, not pure GPU throughput. Parent Skill wall is counted once per frame. Fixed video-derived frames traverse actual WorldSense Skill -> Galaxy -> Garnet; these measurements exclude live decoding, scheduling, event persistence/world-state writes, retrieval and ranking. Four normal video files are mounted; the second car is correlated material, not independent-camera fusion. This M5/24GiB/4B result is separate from the unmet M4 mini/small-model/vLLM handover objective.
 
 Archive: results/20261017/worldsense-m5-wide-cached-prefill. Independent audit passed340 SHA files,1717 source files/nine overlays,28 model calls/14 parent requests, numerical state/token/word/projection and per-call metrics/CSV/decision consistency.
+
+
+# WS-M5-54 — Full packed-kernel library isolation rejected on text decoding
+
+Full correctness and resource feasibility passed, but the first speed screen against actual deployed WS10 failed: companion text derived decoding regressed 8.542990%, exceeding the unchanged 2% limit. Favorable 4B and Skill-call results remain unconfirmed single-screen observations. REJECT, no unchanged retry, no later stages or promotion. Validated WS10 was restored with four video files online, no camera and a valid benchmark POST returning404.
+
+## Prospective method and source
+
+The design/protocol were written before implementation. WS53's valid failure guided source review: the GPU-span measurement implementation was byte-identical WS10/53, profiles accumulated through the same decoder loop, and all warm text calls generated35tokens. Descriptive decode-phase/profile differences did not identify a cause. The new hypothesis moves ALL packed kernels out of MAIN, unlike WS48/49's vector-prefill-only isolation. This is a distinct joint method, not an unchanged retry or a claim that library composition caused historical regressions.
+
+Default-OFF GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY requires primary weights and existing isolated vector prefill. Only four files differ from immutable WS53: CMake, Metal context source, entry capability marker and a new minimal declaration header. Source1718 files/ten overlays over canonical f21c1a2584031ee9d1c129d1e58818f9d1c826d2. All original kernel bodies, CPU codec, native tests, compiled graph/session, xModels, wrapper, learned bits, math/order, geometry, budgets, prefix policy and CUDA files are unchanged. CUDA execution is not tested on this Mac.
+
+MAIN omits the full primary fragment. The EXISTING secondary library combines exact minimal Metal/namespace/BF16Params declarations, the original six body-shape function constants (same types/indices), unchanged full primary shader and unchanged vector-prefill fragment. No duplicate raw MAIN, no third retained library, no new PSOs. Generic/scalar/vector/readback primary PSOs resolve from the secondary; dynamic primary-specialized decode also resolves there. Raw and raw-specialized functions resolve in MAIN. Same compilation options, cache keys and dispatches; no per-token policy switch. Compiler/initialization/metadata costs remain part of the candidate.
+
+Controls retain the prospective53 order/gates: raw has all9 optionsOFF; storage control PRIMARY/WIDE/LAZY ON, other6 OFF; candidate all9ON; fault candidate plus original fault injection. Raw/candidate9flag contrast; storage/candidate6 (vector/prefill-isolation/direct-upload/K32/CACHED/full-isolation). Packing remains VLM-only, retirement global. This is a joint candidate comparison, not isolated full-isolation causality.
+
+## Correctness and identities before timing
+
+All seven original native tests in four builds passed (28runs), including cached/live-MPS properties, all65536 direct-upload patterns and specialized decode cases. All186 complete original projection records are byte-identical across builds. Actual constructor dumps prove candidate/fault MAIN equals rawOFF and immutable53 rawMAIN. Storage-control MAIN equals immutable53 storage-control MAIN. Candidate secondary is exactly new minimal declarations + original full primary + original vector fragment. Declaration indices/ABI, original host context recovered by a narrow inverse transformation, library retention/lookup routes and default/invalid option behavior were audited. Six invalid option configurations rejected as expected. Program source identity is not GPU ISA/performance identity.
+
+All201 packed matrices passed five GPU readers EACH4,200,857,600 original FP32words. All245 raw matrices passed a separate HOST original-storage reader checking1,724,383,232words. Together446 unique matrices cover5,925,240,832 original words; do not sum five readers as independent outputs. Retained original packed/raw storage9,850,930,176B. Direct native upload checked546 selected vision/norm/depthwise/patch candidates/334,609,152words, a superset of prompt accesses. HOST readback is not GPU execution.
+
+Full32VLM/28text finite state bits and generated tokens, vision grids, trained layers, prefix/cache bounds, capacity/error recovery, private/host/session isolation, shared close/rebuild and ordinary/resident rehydration passed all three API modes/five records each. Text primary deltas remain zero; local owners zero, joint VLM201 allowed. Normal retirement positive/rehydration zero for both storage policies. Short API capacities512/256 differ from actual WorldSense2048 as declared; VLM prefill64/text16,image65536,prefix64tokens/two entries64MiB unchanged. Every image freshly encoded, no answer/image cache. Original numerical/golden/source/metric AST checks and15 actual-call/adversarial route guards passed. Source/build/model/input/frame/Skill/runtime identities and1872 build/SDK/host dependencies were pinned and unchanged after timing. C++/Metal/XLang3 perform inference/images; CPython only orchestrates/audits.
+
+One inherited native-report label was clarified after native terminal: original_legacy_lookups_use_main_library became original_raw_lookups_use_main_library. Original report and erratum retained; all measured program bytes, source, numerical cases/outputs/gates unchanged, no test rerun.
+
+## Fresh actual WorldSense measurements
+
+Eight exact/native-valid resource calls over two fresh workers: post-decode sampled Metal21,903,376,384 ->16,870,899,712B (-22.975803%); process footprint18,059,327,912 ->16,561,715,336B (-8.292737%). Gate passed. Snapshots are not peaks/freeRAM/residency. Resource timings are excluded from speed claims.
+
+The actual-WS10 speed stage used two freshly initialized workers, five identical single-car Skill requests each: one first-after-initialization retained separately and four warm requests/model/worker. All20 generated-token/text/prompt/effective-config/image/Skill/interpreted-semantic and native-policy checks passed. Warm medians:
+
+| Model | TTFT seconds control / candidate | Total seconds control / candidate | Derived tokens/s control / candidate |
+|---|---:|---:|---:|
+| Qwen3-1.7B | 8.219679 / 2.392747 | 9.586505 / 4.215280 | 20.245155 / 18.515613 |
+| Qwen3.5-4B | 19.726200 / 5.806308 | 32.341022 / 15.681500 | 7.444310 / 9.364811 |
+
+4B TTFT-70.565503%, total-51.512045%, derived decode+25.798239%. Text TTFT-70.890024%, total-56.029023%, derived decode-8.542990%. Complete native Skill wall40.216744125 ->19.982966688s (-50.311824%). The old actual WS10 lacks memory telemetry, so its memory values/ratio remain unavailable/null; the separate resource stage is not its substitute denominator.
+
+Both workers reported AC power/100% before/after. OS thermal fields are unavailable; no claim about GPU clocks or lack of throttling. No verified exclusion or favorable subset. Text decode-phase medians1.724072 ->1.834867s; GPU spans1639.230667 ->1787.794646ms and encode17.628334 ->24.025998ms. These nonadditive profiles include gaps/overlap and cannot identify a kernel-level cause. The per-call residual (total-TTFT-decode_phase), aggregated AFTER subtraction, was0.000515 ->0.001464s. This does not support treating post-decode bookkeeping as the whole slowdown. Other medians must not be subtracted as if paired observations.
+
+## Decision and limits
+
+REJECT. Isolation alone is not established as a fix. Do not compare the8.54% regression to WS53's14.97% as an isolated causal improvement: cohorts/controls differ. Storage-control20/raw-control20/full mirrored48, canonical rebuild/reproof and actual-production mirrored48 were NOT dispatched. The next method requires a new evidence-based design; all numerical and2%preservation thresholds stay intact.
+
+All28 returned model calls/14 parent requests are preserved and exported once. Derived decode=(generated-1)/(total-TTFT), including host/stop/post-loop/possible extraEOS, not pure GPU throughput. Skill wall is counted once per parent frame. Fixed video-derived frames traverse WorldSense Skill -> Galaxy -> Garnet; exclude live decoding/scheduling/event persistence/shared-state writes/retrieval/ranking. Four normal files restored; second-car material is correlated, not independent-camera fusion. M5/24GiB/4B remains separate from unmet M4mini/small-model/vLLM handover. No consumed source/driver edits, builds, competing investigation GPU jobs or archive copying during timing. Full promotion and broader objective remain unproven.
+
+Archive: results/20261017/worldsense-m5-isolated-primary. Independent audit passed344 SHA files,1718 source files/ten overlays,28 model calls/14 parent requests, original numerical states/tokens/words/projection coverage and CSV/metric/rejection consistency.

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T20:52:55.987700+00:00
+Generated UTC: 2026-10-17T21:24:33.334450+00:00
 
-Base HEAD at generation: `44eb9a49088e6b1457057572561218d53481f484`. Reports indexed: **244**.
+Base HEAD at generation: `aebaf00eace8fc4e512db5ca1704ae77af540123`. Reports indexed: **245**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -228,6 +228,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-weight-residency](../../../results/20261016/worldsense-m5-weight-residency/README.md) | WS-M5-32: bounded BF16 weight residency preparation — rejected |
 | [results/20261017/worldsense-m5-direct-float-upload](../../../results/20261017/worldsense-m5-direct-float-upload/README.md) | WS-M5-50 — Direct FP32 weight upload rejected on text decode preservation |
 | [results/20261017/worldsense-m5-duo-prefill](../../../results/20261017/worldsense-m5-duo-prefill/README.md) | WS-M5-49 — Minimal program and duo prefill rejected on memory preservation |
+| [results/20261017/worldsense-m5-isolated-primary](../../../results/20261017/worldsense-m5-isolated-primary/README.md) | WS-M5-54 — Full packed-kernel library isolation rejected on text decoding |
 | [results/20261017/worldsense-m5-isolated-vector-prefill](../../../results/20261017/worldsense-m5-isolated-vector-prefill/README.md) | WS-M5-48 — Isolated vector prefill library rejected by matched timing |
 | [results/20261017/worldsense-m5-k32-prefill](../../../results/20261017/worldsense-m5-k32-prefill/README.md) | WS-M5-51 — Hoisted upload and K32-only prefill rejected on text preservation |
 | [results/20261017/worldsense-m5-primary-cached-lazy](../../../results/20261017/worldsense-m5-primary-cached-lazy/README.md) | WS-M5-52 — Primary, lazy defaults and cached metadata rejected on text preservation |
