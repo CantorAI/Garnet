@@ -1,0 +1,145 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -266,6 +266,9 @@
+     "${GARNET_METAL_FRAMEWORK}" "${GARNET_MPS_FRAMEWORK}"
+     "${GARNET_FOUNDATION_FRAMEWORK}")
+ enable_testing()
++add_executable(garnet_memory_stats_test test2026/metal/memory_stats_test.mm)
++target_link_libraries(garnet_memory_stats_test PRIVATE garnet_metal)
++add_test(NAME metal_memory_stats_reference COMMAND garnet_memory_stats_test)
+ if(GARNET_METAL_DENSE_PREFIX_CACHE)
+     add_executable(garnet_prefix_copy_test test2026/metal/prefix_copy_test.cpp)
+     target_link_libraries(garnet_prefix_copy_test PRIVATE garnet_metal)
+--- a/runtime/metal_serving.py
++++ b/runtime/metal_serving.py
+@@ -19,6 +19,7 @@
+ 
+ class Model:
+     def __init__(self, root, xmodel, cache, profile, name):
++        self.initialization_memory = dict(before=json.loads(garnet.memory_stats_json()), other_model_ids_at_start=list(_models))
+         self.root, self.name = root, name
+         self.cache = cache or os.path.join(root, 'metal-cache')
+         os.makedirs(self.cache, exist_ok=True)
+@@ -79,6 +80,8 @@
+         elif eos is not None:
+             self.stops.append(eos)
+ 
++        self.initialization_memory['after_decoder_ready'] = json.loads(garnet.memory_stats_json())
++
+     def _prefill_with_prefix(self, hidden, positions, token_ids, stages):
+         stages['prefix_cache_hit'] = False
+         stages['prefix_cache_restored_tokens'] = 0
+@@ -134,7 +137,7 @@
+ 
+     def infer(self, prompt, image, limit):
+         start = time.monotonic()
+-        stages = {}
++        stages = dict(initialization_memory=self.initialization_memory, memory_before_request=json.loads(garnet.memory_stats_json()))
+         hidden, positions, token_ids = [], [], []
+         current = 0
+         self.decoder.reset()
+@@ -179,8 +182,10 @@
+         append_text(prompt + '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
+         if len(hidden) + limit > self.capacity:
+             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
++        stages['memory_after_input'] = json.loads(garnet.memory_stats_json())
+         prefill_start = time.monotonic()
+         prediction = self._prefill_with_prefix(hidden, positions, token_ids, stages)
++        stages['memory_after_prefill'] = json.loads(garnet.memory_stats_json())
+         first = time.monotonic()
+         stages['prefill_seconds'] = first - prefill_start
+         stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
+@@ -204,6 +209,7 @@
+             fused_head_dispatches += self.decoder.session.fused_head_argmax_dispatches
+             current += 1
+         stages['decode_seconds'] = time.monotonic() - first
++        stages['memory_after_decode'] = json.loads(garnet.memory_stats_json())
+         stages['decode_profile'] = decode_profile
+         stages['decode_fused_head_dispatches'] = fused_head_dispatches
+         stages['prefix_cache_native_bytes'] = self.decoder.session.prefix_cache_bytes
+--- a/src/backends/metal/metal_context.h
++++ b/src/backends/metal/metal_context.h
+@@ -50,6 +50,10 @@
+     std::vector<uint32_t> kept;
+     std::vector<float> querySafe;
+ };
++struct MetalMemoryStats {
++    uint64_t allocated=0,recommended=0,registry=0,physical=0,resident=0,compressed=0,internal=0,virtualBytes=0;
++    int taskStatus=-1;
++};
+ class MetalContext {
+     struct Impl;
+     std::unique_ptr<Impl> impl_;
+@@ -64,6 +68,7 @@
+     MetalContext& operator=(const MetalContext&) = delete;
+     std::string DeviceName() const;
+     static std::string AvailableDeviceName();
++    static MetalMemoryStats MemoryStats();
+     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
+     MetalMatrix Allocate(size_t rows, size_t columns);
+     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -33,6 +33,7 @@
+ #include <chrono>
+ #endif
+ #include <cstring>
++#include <mach/mach.h>
+ #include <algorithm>
+ #include <cmath>
+ #include <cstdint>
+@@ -1849,6 +1850,19 @@
+ size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
+ size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
+ size_t MetalContext::LastVisionVectorDispatches() const {return impl_->visionVectorDispatches;}
++MetalMemoryStats MetalContext::MemoryStats() {
++    @autoreleasepool {
++        id<MTLDevice> device=MTLCreateSystemDefaultDevice();
++        if(!device)throw std::runtime_error("No Metal device for memory snapshot");
++        MetalMemoryStats stats;stats.allocated=device.currentAllocatedSize;
++        stats.recommended=device.recommendedMaxWorkingSetSize;stats.registry=device.registryID;
++        task_vm_info_data_t info{};mach_msg_type_number_t count=TASK_VM_INFO_COUNT;
++        stats.taskStatus=task_info(mach_task_self(),TASK_VM_INFO,reinterpret_cast<task_info_t>(&info),&count);
++        if(stats.taskStatus==KERN_SUCCESS){stats.physical=info.phys_footprint;stats.resident=info.resident_size;
++            stats.compressed=info.compressed;stats.internal=info.internal;stats.virtualBytes=info.virtual_size;}
++        return stats;
++    }
++}
+ bool MetalContext::PrepareBF16BodyShape(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
+ #ifdef GARNET_METAL_BODY_SHAPE
+     @autoreleasepool {
+--- a/src/entry/metal_main.cpp
++++ b/src/entry/metal_main.cpp
+@@ -21,6 +21,13 @@
+         return X::Module(host, "metal_serving");
+     }
+ public:
++    std::string MemoryStatsJson() {
++        const auto m=MetalContext::MemoryStats();
++        return nlohmann::json{{"metal_allocated_bytes",m.allocated},{"metal_recommended_working_set_bytes",m.recommended},
++            {"metal_registry_id",m.registry},{"task_info_status",m.taskStatus},{"task_physical_footprint_bytes",m.physical},
++            {"task_resident_bytes",m.resident},{"task_compressed_bytes",m.compressed},{"task_internal_bytes",m.internal},
++            {"task_virtual_bytes",m.virtualBytes},{"scope","process Metal device resources and current task; snapshots, not peak or system free RAM"}}.dump();
++    }
+     X::Value PrepareImage(X::Value path,X::Value options) {
+         auto params=nlohmann::json::parse(options.ToString());
+         Image::NativeImageConfig c;
+@@ -183,6 +190,7 @@
+         APISET().AddClass<0,ModelTensorIO>("tensor_io");
+         APISET().AddClass<0,CPUTokenizer>("tokenizer");
+         APISET().AddFunc<2>("prepare_image",&GarnetMetalAPI::PrepareImage);
++        APISET().AddFunc<0>("memory_stats_json",&GarnetMetalAPI::MemoryStatsJson);
+         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
+         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
+         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
+--- /dev/null
++++ b/test2026/metal/memory_stats_test.mm
+@@ -0,0 +1,8 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++int main(){try{Garnet::MetalContext gpu;auto before=Garnet::MetalContext::MemoryStats();if(!before.recommended||before.taskStatus||before.virtualBytes<before.resident)throw std::runtime_error("Memory metadata unavailable");
++uint64_t retained=0,afterScope=0;
++@autoreleasepool{{auto a=gpu.Allocate(1024,1024);gpu.Zero(a);auto alias=a;auto b=Garnet::MetalContext::MemoryStats();if(b.registry!=before.registry||b.allocated<before.allocated+4*1024*1024)throw std::runtime_error("Live allocation missing from snapshot");a=Garnet::MetalMatrix();auto c=Garnet::MetalContext::MemoryStats();if(c.allocated<b.allocated)throw std::runtime_error("Retained alias lost allocation");retained=c.allocated;}
++afterScope=Garnet::MetalContext::MemoryStats().allocated;}
++auto after=Garnet::MetalContext::MemoryStats();if(after.allocated>=retained)throw std::runtime_error("Explicit pool drain did not release allocation");std::cout<<"Device allocation/alias/release with explicit pool and task metadata PASS before="<<before.allocated<<" retained="<<retained<<" after_cpp_scope="<<afterScope<<" after_pool="<<after.allocated<<" recommended="<<before.recommended<<"\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

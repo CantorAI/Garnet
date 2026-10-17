@@ -1,0 +1,9 @@
+{
+  "experiment": "WS-M5-12 diagnostic",
+  "declared_utc": "2026-10-17T00:01:26.119166+00:00",
+  "hypothesis": "Recent large phase variability may involve Metal allocation/working-set or task compression pressure; measure before attributing cause or choosing memory change.",
+  "method": "Unchanged WS10 inference math/policy; passive native device currentAllocatedSize/recommendedMaxWorkingSetSize plus mach task_vm_info snapshots at model init start/ready and each real WorldSense request input/prefill/decode boundary. All snapshots process scoped, not per-model allocations/peak/free system RAM.",
+  "workload": "Three fixed archived frames/Skills and one query per window, two windows total. Fresh image encodes; VLM64 and text16 native prefix retained.12 expected model calls including first window, not a performance comparison.",
+  "validation": "Native reference tests and snapshot lifecycle allocation/release tests, complete full model output/prompt/config/input identity parity against WS10 confirmation. No memory/speed improvement claim or promotion from diagnostic instrumentation.",
+  "restoration": "Controller finally restores exact validated WS10 binary/live assignments; restart normal without benchmark access."
+}

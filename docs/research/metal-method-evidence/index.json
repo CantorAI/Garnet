@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-16T23:59:13.480716+00:00",
-  "source_commit": "ce4842b7d4abaaba113513785cc44b871f70eb90",
+  "generated_at_utc": "2026-10-17T00:11:56.257904+00:00",
+  "source_commit": "ed1c6e8c57d8d52ce24f6a6c0ae431a74f857d40",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -49,6 +49,9 @@
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-dual-chunk64/source/xModel/qwen35/vl_4b/README.md",
+    "results/20261016/worldsense-m5-memory/source/xModel/README.md",
+    "results/20261016/worldsense-m5-memory/source/xModel/qwen3/text_1_7b/README.md",
+    "results/20261016/worldsense-m5-memory/source/xModel/qwen35/vl_4b/README.md",
     "results/20261016/worldsense-m5-mixed-chunk/source/xModel/README.md",
     "results/20261016/worldsense-m5-mixed-chunk/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-mixed-chunk/source/xModel/qwen35/vl_4b/README.md",
@@ -59,7 +62,7 @@
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-small-prefill/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 201,
+  "report_count": 202,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5457,6 +5460,73 @@
       ],
       "verification_records": [],
       "evidence_directories": []
+    },
+    {
+      "experiment_id": "results/20261016/worldsense-m5-memory",
+      "title": "WS-M5-12 native WorldSense memory and lifetime diagnostic",
+      "report_path": "results/20261016/worldsense-m5-memory/README.md",
+      "report_sha256": "98e8d9ac41bbfb85abd41eb4da7ff7419276fa7a88abe51e01fa325b1de58585",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-12 native WorldSense memory and lifetime diagnostic\n\nWS-M5-12 is a completed passive memory diagnostic, not a performance comparison or optimization promotion. The unchanged WS10 math, VLM64, text16 and exact native prefix cache serve three archived image/Skills and one query per window, two windows.12 complete model calls match WS10 confirmation tokens/text, actual prompt/config/input counts and image/Skill hashes.48 native per-request snapshots and model-start/ready samples are retained. First-window work and setup are not pooled with later work as speed evidence.\n\nMetal currentAllocatedSize counts process device resources; recommendedMaxWorkingSetSize is a recommended performance budget, not free/total RAM. Task footprint/resident/compressed counters overlap with graphics and must not be added to Metal allocations. Snapshots are not peaks. Largest sampled Metal allocation21914648576bytes(20.409GiB), recommended19069665280bytes(17.760GiB). Largest sampled task physical footprint18104565000bytes(16.861GiB), compressed14742028288bytes(13.730GiB). Window-end allocations21907488768 and21914517504bytes plateau within about6.7MiB; this does not show an unbounded per-request leak.\n\nBoth decoders ready:14515224576bytes(13.518GiB) Metal. First VLM input/vision raises allocation to15.432GiB, first VLM prefill to17.028GiB, first reasoner prefill to19.100GiB, car image/16-token-tail graph to20.403GiB. Inputs369/368 use six64chunks; car393 uses six64 plus16. These are process-scoped differences, not exact attribution to a single model or resource category. The plateau and differing graph/tail caches suggest retained graph resources; above-budget allocations/compression support a memory investigation but do not prove the cause of every latency shift or active GPU residency.\n\nA native lifecycle unit identifies a separate concrete retention mechanism: a4MiB allocation remains counted after C++ references leave scope, then returns exactly to737280-byte baseline after an explicit Objective-C autorelease pool drains. Initial test incorrectly expected immediate release and failed; original test/log retained. Corrected test distinguishes C++ lexical scope from pool lifetime, preserving live-alias checks and requiring release after pool drain. Native memory, prefix-copy and matmul references plus XLang3 JSON contract pass. No serving math changed. This controlled mechanism is not by itself proof of a WorldSense leak.\n\nRead-only vmmap snapshots cover idle Cantor(~38MiB footprint, models not loaded) and loaded same-role service(~16.8GiB footprint); they are not a matched speed/memory-reduction comparison. vmmap was collected during this diagnostic; no performance claim is made. Task birth identity retained. Raw phase times reflect instrumentation and uncontrolled system pressure and must not be substituted for matched optimization cohorts.\n\nDecision: use this evidence to test a native request-boundary autorelease scope with fresh independent control/candidate workers, full state/output/failure-recovery checks and matched resource/latency measurements. A within-process cache-policy toggle would retain earlier unpooled resources and confound this lifetime experiment. Do not claim a gain yet. Validated WS10 library/normal service restored, four video files online, camera unmounted, benchmark disabled404. No CUDA changes/external CPython image processing.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "CMakeCache.txt",
+        "LastTest.log",
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "api-guard.log",
+        "api-idle.json",
+        "api_guard.py",
+        "build-initial-profile.cmake",
+        "build.log",
+        "calls.csv",
+        "cases.json",
+        "cohort-manifest.json",
+        "controller.log",
+        "controller.py",
+        "environment.json",
+        "file-manifest.json",
+        "flags.make",
+        "initial-memory-stats-test.cpp",
+        "initial-release-assumption-tests.log",
+        "live-vmmap-summary.txt",
+        "loaded-task-identity.json",
+        "loaded-vmmap-summary.txt",
+        "memory-1.cantor-stderr.log",
+        "memory-1.cantor.log",
+        "memory-1.client.log",
+        "memory-1.json",
+        "memory-snapshots.csv",
+        "model-assets.json",
+        "model-identity-verification.json",
+        "prepare.py",
+        "protocol.json",
+        "report-body.txt",
+        "restoration-verification.json",
+        "restored-final-normal.log",
+        "sdk-memory-api-identity.json",
+        "server-memory-1.log",
+        "server-restored-control.log",
+        "source-overlay.patch",
+        "source-reconstruction.json",
+        "starting-source-manifest.json",
+        "tests.log"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-memory/model-identity-verification.json",
+          "sha256": "71c24736d7021f03cd345926886513e090b428e2bfe938d21a0e607a5bacb8db"
+        },
+        {
+          "path": "results/20261016/worldsense-m5-memory/restoration-verification.json",
+          "sha256": "2a66bb911c7da5601ffd0ff1ad3814ae787225d8eb372a4f772a398039bf5cf9"
+        }
+      ],
+      "evidence_directories": [
+        "source"
+      ]
     },
     {
       "experiment_id": "results/20261016/worldsense-m5-mixed-chunk",

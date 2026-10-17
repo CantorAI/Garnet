@@ -1,0 +1,13 @@
+{
+  "compatible_committed_base": "ed1c6e8c57d8d52ce24f6a6c0ae431a74f857d40",
+  "description": "Compatible base selected after diagnostic; exact launch source hashes recorded separately, derived bytecode excluded. Initial CMake profile copied separately.",
+  "changed_paths": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/memory_stats_test.mm"
+  ],
+  "git_apply_check": true
+}
