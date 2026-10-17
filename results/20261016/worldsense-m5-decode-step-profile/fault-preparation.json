@@ -1,0 +1,8 @@
+{
+  "files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/compiled_graph.cpp"
+  ],
+  "method": "Verified CMake oldfault append-only; append exact delta to new main; Graph sources byte-identical to WS25 so apply unchanged fault versions. No performance source modified."
+}

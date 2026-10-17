@@ -1,0 +1,15 @@
+{
+  "stage": "All correctness/defaultOFF/fault/profile integrity checks passed; frozen actualWorldSense diagnostic running",
+  "source_changes": [
+    "cmake/GarnetMetal.cmake",
+    "src/entry/metal_main.cpp",
+    "runtime/metal_serving.py"
+  ],
+  "native_decoder_kernel_model_image_CUDA_sources_unchanged_from_WS25": true,
+  "existing_decoder_step_call_and_four_getter_loop_AST_preserved": true,
+  "common_trace_flag": "ON identically in off/on diagnostic builds; disabled third build OFF tested actual native inference",
+  "profile_semantics": "Host span around existing decoder.step only. Cached last_session_ms and existing4native readings reused. Dictionary/getter/loop overhead outside host span remains in original decode_seconds. GPU/wait overlap; no sum-as-work claim.",
+  "validation": "Native9off/on/disabled/fault; full32VLM28text states/tokens/prefix/capacity; multigridvision; original/private4/6/mixedhead; ordinary/weight/privatefault; actualAPI no stale error trace/reset recovery; limit and temporary syntheticEOS checks; profile sums/indices/token transitions/position/bounds.",
+  "stop_test_scope": "Temporary synthetic stop membership test restores original stop IDs; all benchmark workers start fresh canonical stop lists. No altered stop condition is benchmarked.",
+  "measurement_status": "32call mirrored actualSkill/PlanSearch diagnostic; no optimization/promotion or comparison-as-speed-gain against untraced runs."
+}

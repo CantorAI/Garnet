@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T06:12:06.133936+00:00
+Generated UTC: 2026-10-17T06:39:25.272738+00:00
 
-Base HEAD at generation: `dc1c605f148500fb1bf4850cfef56c2238b7ea98`. Reports indexed: **215**.
+Base HEAD at generation: `5bc1d13ec050e18c96dc65a7d79d280272e1ef0d`. Reports indexed: **216**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -189,6 +189,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-coalesced-nopad](../../../results/20261016/worldsense-m5-coalesced-nopad/README.md) | WS-M5-05: unpadded coalesced BF16 prefill — rejected |
 | [results/20261016/worldsense-m5-coalesced-prefill](../../../results/20261016/worldsense-m5-coalesced-prefill/README.md) | WS-M5-04: padded coalesced BF16 prefill — rejected |
 | [results/20261016/worldsense-m5-decode-sequence](../../../results/20261016/worldsense-m5-decode-sequence/README.md) | WS-M5-22 WorldSense repeated-search sequence diagnostic |
+| [results/20261016/worldsense-m5-decode-step-profile](../../../results/20261016/worldsense-m5-decode-step-profile/README.md) | WS-M5-26 per-token native GPU and wait diagnostic |
 | [results/20261016/worldsense-m5-decode256](../../../results/20261016/worldsense-m5-decode256/README.md) | WS-M5-11 shape-restricted eight-SIMD-group decode rejected |
 | [results/20261016/worldsense-m5-dual-chunk64](../../../results/20261016/worldsense-m5-dual-chunk64/README.md) | WS-M5-08: dual-model prefill64 — rejected after fresh confirmation |
 | [results/20261016/worldsense-m5-fused-head](../../../results/20261016/worldsense-m5-fused-head/README.md) | WS-M5-01: fused greedy head through WorldSense — rejected screen |

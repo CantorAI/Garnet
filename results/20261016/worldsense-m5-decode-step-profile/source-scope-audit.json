@@ -1,0 +1,12 @@
+{
+  "seed": "/Users/shawn/CantorAI/out/research/worldsense-private-execution/source",
+  "changes": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/entry/metal_main.cpp"
+  ],
+  "all_decoder_kernel_CUDA_model_image_sources_byte_identical": true,
+  "original_step_call_AST_identical": true,
+  "existing_native_profile_getter_loop_AST_identical": true,
+  "scope": "Only three source files differ. Tracing adds local dictionaries/clock calls/response data; no extra native profile getters, GPU work or image preparation."
+}
