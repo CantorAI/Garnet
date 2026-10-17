@@ -1,0 +1,6 @@
+{
+  "status": "design_only",
+  "rows_gt_256_matrices": 398,
+  "initial_GPU_admission_projected_BF16_bytes_plus_original_small_rows": 9079938304,
+  "scope": "CPU byte count projection, not Metal allocation/physical memory or speed. Preserves original small-output kernels."
+}

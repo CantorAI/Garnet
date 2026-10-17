@@ -1,0 +1,11 @@
+{
+  "experiment": "WS-M5-36 feasibility",
+  "declared_utc": "2026-10-17T10:28:59.809771+00:00",
+  "purpose": "Evaluate distinct sole-primary lossless compact/raw BF16 block storage against measured graphics footprint, before GPU integration. No inference/performance claim.",
+  "prior_evidence": "Coalesced-body-native/block achieved exact values and some small-model decode gains but retained raw master, interleaved and compact copies. Hybrid byte estimates existed; no sole-primary execution identified. WS-M5-03 shared-half removed a master but failed full-state equivalence and performance; WS-M5-04/05 coalesced prefill failed WorldSense performance. Retain those decisions.",
+  "format": "Four output rows x128K,512BF16 words. If exponent range<=15:512sign/mantissa bytes+256exponent nibbles; otherwise1024raw interleaved bytes. One variable payload and one8byte metadata perblock, with256-byte-unit offset, compact flag and exponent base. No retained raw/interleaved second full copy. Unsupported dimensions or non-saving matrices keep original representation.",
+  "selection": "All446actualWS35globalBF16buffers,249VLM+197text including vocabulary heads;11,850,481,664rawbytes. VisionFP32/unrelatedslots excluded. No first-layer extrapolation.",
+  "correctness": "NativeCPU encode/reconstruct every original selected BF16 word; exhaustive65280finite words plus signedzero/subnormal/mixed-exponent/15-versus16/tail/metadata bounds tests; reject nonfinite data. Freeze all matrices, model files, source, compiler and per-tensor hashes. No arithmetic is performed on reconstructed values, no quantization.",
+  "accounting": "Report original bytes, compact/raw blocks, variable payload+metadata, unsupported/non-saving fallback, page-rounded estimates, encoding hashes and source identities. These are codec/logical-byte feasibility counts, not actual Metal allocation/physical RAM/latency or a WorldSense speed result.",
+  "next_gate": "Only if exactness/budgets feasible, design separate default-OFF nativeMetal support for decode+prefill preserving original FP32 operation order, generic fallbacks and CUDA, then native/fullstate correctness and freshWorldSense resource/speed/two-full-pair gates before promotion. No favorable unchanged retry."
+}
