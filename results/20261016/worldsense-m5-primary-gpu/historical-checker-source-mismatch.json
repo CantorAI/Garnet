@@ -1,0 +1,71 @@
+{
+  "baseline_HEAD": "88f40eb77ca9ae90847f3296b6202c86314ef388",
+  "all_8_source_files_unchanged_from_baseline_HEAD": true,
+  "historical_source_hash_comparison": [
+    {
+      "path": "src/backends/metal/metal_context.mm",
+      "historical_expected": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41",
+      "current_sha256": "329ac5fa4a7c4146e2cab8d6ff5c9f9c8165d0f4e72dc94fd0abb452ccdb2ee3",
+      "committed_HEAD_sha256": "329ac5fa4a7c4146e2cab8d6ff5c9f9c8165d0f4e72dc94fd0abb452ccdb2ee3",
+      "unchanged_from_HEAD": true,
+      "matches_historical": false
+    },
+    {
+      "path": "src/backends/metal/metal_context.h",
+      "historical_expected": "426a4795b1d109b4bd7ef9faf5c5b77363213668b8349b7e903a5f486ad9f159",
+      "current_sha256": "fdb297343c9e70d0cc32ff32ad1044d1f8558fb40176a9aa3421f00da0e84cd7",
+      "committed_HEAD_sha256": "fdb297343c9e70d0cc32ff32ad1044d1f8558fb40176a9aa3421f00da0e84cd7",
+      "unchanged_from_HEAD": true,
+      "matches_historical": false
+    },
+    {
+      "path": "src/backends/metal/compiled_graph.cpp",
+      "historical_expected": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd",
+      "current_sha256": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd",
+      "committed_HEAD_sha256": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd",
+      "unchanged_from_HEAD": true,
+      "matches_historical": true
+    },
+    {
+      "path": "src/backends/metal/compiled_graph.h",
+      "historical_expected": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+      "current_sha256": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+      "committed_HEAD_sha256": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+      "unchanged_from_HEAD": true,
+      "matches_historical": true
+    },
+    {
+      "path": "src/entry/metal_main.cpp",
+      "historical_expected": "4dc7d6f716c77e0b0c35085a62c63bd22d8f7f96ad734ec899ba68d4528dfab8",
+      "current_sha256": "38993fd93131bff5c4af41af4ec2407e52a0224fd8d64eb4259eca9bd0501a08",
+      "committed_HEAD_sha256": "38993fd93131bff5c4af41af4ec2407e52a0224fd8d64eb4259eca9bd0501a08",
+      "unchanged_from_HEAD": true,
+      "matches_historical": false
+    },
+    {
+      "path": "test2026/metal/frame_worker_garnet.py",
+      "historical_expected": "f8db7fb265d2ccfb87313a438dfe94851619c5ecade26b19d97b83ef09551c3e",
+      "current_sha256": "f8db7fb265d2ccfb87313a438dfe94851619c5ecade26b19d97b83ef09551c3e",
+      "committed_HEAD_sha256": "f8db7fb265d2ccfb87313a438dfe94851619c5ecade26b19d97b83ef09551c3e",
+      "unchanged_from_HEAD": true,
+      "matches_historical": true
+    },
+    {
+      "path": "test2026/metal/run_matched_garnet.py",
+      "historical_expected": "9d8d7afda20b192d4a7423be459623b630358aa8bc3c732e350df3ea00ccdc31",
+      "current_sha256": "9d8d7afda20b192d4a7423be459623b630358aa8bc3c732e350df3ea00ccdc31",
+      "committed_HEAD_sha256": "9d8d7afda20b192d4a7423be459623b630358aa8bc3c732e350df3ea00ccdc31",
+      "unchanged_from_HEAD": true,
+      "matches_historical": true
+    },
+    {
+      "path": "src/backends/metal/serial_vision_prefetch_shader.h",
+      "historical_expected": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea",
+      "current_sha256": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea",
+      "committed_HEAD_sha256": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea",
+      "unchanged_from_HEAD": true,
+      "matches_historical": true
+    }
+  ],
+  "interpretation": "Whole research checker now passes report inventory after aligning existing snapshot exclusions, then fails a historical vector-vision integration assertion comparing old source hashes to evolving current source. The mismatch pre-exists WS37. No old hash was rewritten or assertion bypassed. WS37 standalone archive checks pass separately."
+}

@@ -1,0 +1,29 @@
+WS-M5-37 — lossless sole-primary BF16 storage: correctness/resource pass, speed reject
+
+Hypothesis and implementation
+A native C++ loader selects one compact/raw primary representation, without retaining a full original BF16 duplicate. Four output rows by128K carry512sign/mantissa bytes plus256exponent-nibble bytes when exponent range<=15, otherwise1024raw bytes;8byte metadata per block. Original BF16 bits and FP32 arithmetic are preserved.398large actual matrices are admitted;48small matrices keep original storage. Metadata and payload share native ownership across graphs, with separate raw/packed pipelines. Default-OFF Metal-only capability; CUDA and original shader/math bodies preserved. Lazy defaults and cached-matrix metadata are OFF in both variants. XLang3/native image preparation and inference; CPython only drives/audits tests.
+
+Prospective tests and failures
+All7native tests pass in OFF,ON,and test-only fault builds.186complete FP32projection records are byte-identical. All398actualpacked checkpoint matrices reconstruct5,921,308,672original FP32bitwords onGPU;48smallraw fallbacks unchanged. All32VLM/28text finite states,token IDs,prefix/capacity recovery,vision grids,trained layer isolation,shared ownership,pending/Abort/raw-packed pipeline separation and injected partial-allocation recovery pass. Test fault macro uses the same source; it is absent from production variants. Owner counters are not physical-driver liveness or a driver-level leak proof.
+
+Retained development failures: initial C++ diagnostic print string failed compilation; repaired quoting only. An added prefill test incorrectly reused a decode-only FP64 bound and failed the OFF control before candidate execution. It was corrected to the existing wide_batch_prefill_test.cpp bound5e-6+5e-5*abs(reference); original154decode controls and their bounds were unchanged. All186complete OFF/ONFP32word comparisons remained mandatory. Original inventory test assumed one raw buffer; updated exact two-buffer identity/length/dedup schema for admitted primary storage. Initial source versions, failed logs, diagnostic words and correction reasons are retained. No timing-selected repair or numerical-gate relaxation.
+
+WorldSense measurements and decision
+Separate fresh8call resource cohort passes unchanged10%Metal/5%footprint gates: sampled Metal21,903,376,384→19,137,150,976B(-12.629219%);sampled process footprint18,059,573,576→15,685,613,320B(-13.145162%). These are sampled post-decode maxima, not peaks or free RAM. Logical primary weight bytes9,079,938,304 are a separate measurement.
+
+A NEW20call speed cohort retains all first/warm outputs and4warm calls per model/worker. All28total WorldSense calls across both stages match confirmed tokens/text,prompt/config/image/Skill identities and interpreted Skill semantics. Candidate GPU-route counters and frozen source/library/model identities pass. Warm medians and changes follow:
+
+Qwen3-1.7B:TTFT 9.038423416→2.185877833s(-75.815718%);total 10.326378937→6.550354896s(-36.566778%);deriveddecode 26.352230462→7.818508484tok/s(-70.330752%).
+
+Qwen3.5-4B:TTFT 26.373249459→6.848220730s(-74.033459%);total 36.631016291→33.956521959s(-7.301174%);deriveddecode 8.937557729→3.420342617tok/s(-61.730679%).
+
+Native Skill wall median 47.077306688→40.599035000s(-13.760922%).
+
+REJECT:both decode rates violate the original2%preservation gate. No full confirmation,promotion or unchanged retry. Favorable TTFT/total/Skillwall/memory do not override this decision. Actual GPU decode spans and waits increased; CPU encode is much smaller. This does not identify a particular kernel or prove bandwidth/register/occupancy cause. Read posthoc-phase-audit.json for all warm phase medians and separate first-call costs. Packing adds native initialization work; first Skill wall captures demand setup, but packing time/transient peak alone were not isolated. No claim of cold hardware caches or a global optimum.
+
+Scope and reproduction
+This is a separate M5MacBook24GiB/4BWorldSense cohort; the original M4mini16GiB six-profile vLLM objective remains separate/unmet. Fixed video-derived frames through actual WorldSense current-Skill→Galaxy→Garnet,not live decoding,scheduling,event commits,retrieval or ranking. Full three-frame/search confirmation was not run after speed rejection. Both models retain original budgets; every VLM image/answer is fresh; the validated bounded exact text-prefix state cache is fixed on both sides. Deriveddecode=(generated-1)/(total-TTFT),including host/stop/post-loop costs and possible extraEOS work; GPU/wait overlap,do not add. Counter collection is included in model TTFT/outer total and Skill wall. First/warm records remain separate; one machine/small correlated workload does not establish generalization or causal OS compression effects.
+
+Freeze/source/model/library/SDK/runtime/request identities precede dispatch. The source overlay reconstructs the full frozen closure against its explicitly recorded compatible base,selected after experiment. Native GPU corpus selection references the separately committed WS36matrix-selection.json. Build/test scripts retain original paths; regenerate numeric fixtures when relocating. CSV exports cover every raw resource/speed call exactly once; no resource timing is eligible as speed evidence. Source and drivers were not mutated while consumed; the stage driver identity capture was added only after the resource worker terminated and before speed dispatch. Archive copying occurs after speed terminal0 and normal restoration.
+
+Normal WS10 production library restored,fourfile sources online,camera unmounted,valid benchmarkPOST404. Next investigate a distinct load-only vector reconstruction mechanism with unchanged FP32 accumulation,using these measured GPU-span regressions as motivation; no speed prediction or selection has been validated.

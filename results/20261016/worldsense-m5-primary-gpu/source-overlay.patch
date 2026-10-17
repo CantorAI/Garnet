@@ -1,0 +1,1413 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -7,6 +7,10 @@
+ find_library(GARNET_MPS_FRAMEWORK MetalPerformanceShaders REQUIRED)
+ find_library(GARNET_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+ add_library(garnet_metal STATIC src/backends/metal/metal_context.mm)
++option(GARNET_METAL_LAZY_RESIDENT_DEFAULTS "Defer singleton resident-unused layer defaults" OFF)
++if(GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LAZY_RESIDENT_DEFAULTS=1)
++endif()
+ option(GARNET_METAL_QWEN35_4B_WIDE_PREFILL "Validate 4B 64-token packed prefill" OFF)
+ if(GARNET_METAL_QWEN35_4B_WIDE_PREFILL)
+     if(GARNET_METAL_QWEN35_EXTENDED_PREFILL)
+@@ -266,6 +270,12 @@
+     "${GARNET_METAL_FRAMEWORK}" "${GARNET_MPS_FRAMEWORK}"
+     "${GARNET_FOUNDATION_FRAMEWORK}")
+ enable_testing()
++add_executable(garnet_inventory_test test2026/metal/inventory_test.cpp)
++target_link_libraries(garnet_inventory_test PRIVATE garnet_metal)
++add_test(NAME metal_inventory_reference COMMAND garnet_inventory_test)
++add_executable(garnet_memory_stats_test test2026/metal/memory_stats_test.mm)
++target_link_libraries(garnet_memory_stats_test PRIVATE garnet_metal)
++add_test(NAME metal_memory_stats_reference COMMAND garnet_memory_stats_test)
+ if(GARNET_METAL_DENSE_PREFIX_CACHE)
+     add_executable(garnet_prefix_copy_test test2026/metal/prefix_copy_test.cpp)
+     target_link_libraries(garnet_prefix_copy_test PRIVATE garnet_metal)
+@@ -362,3 +372,41 @@
+ if(GARNET_METAL_NATIVE_BFLOAT_BODY)
+     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_NATIVE_BFLOAT_BODY=1)
+ endif()
++
++option(GARNET_METAL_CACHED_MATRIX_METADATA "Immutable native matrix storage/layout metadata" OFF)
++if(GARNET_METAL_CACHED_MATRIX_METADATA)
++ if(NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++  message(FATAL_ERROR "Cached matrix metadata cohort requires lazy default storage")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_CACHED_MATRIX_METADATA=1)
++endif()
++add_executable(garnet_matrix_metadata_test test2026/metal/matrix_metadata_test.cpp)
++target_link_libraries(garnet_matrix_metadata_test PRIVATE garnet_metal)
++add_test(NAME metal_matrix_metadata_reference COMMAND garnet_matrix_metadata_test)
++
++option(GARNET_METAL_PRIMARY_BF16_BLOCKS "Sole-primary lossless BF16 compact/raw blocks" OFF)
++option(GARNET_METAL_PRIMARY_TEST_FAULTS "Correctness-only primary weight allocation failure" OFF)
++if(GARNET_METAL_PRIMARY_BF16_BLOCKS)
++ if(NOT GARNET_METAL_BODY_SHAPE)
++  message(FATAL_ERROR "Initial primary block profile requires body-shape support")
++ endif()
++ foreach(policy GARNET_METAL_EXACT_HALF_PREFILL GARNET_METAL_GLOBAL_HALF_ALPHA GARNET_METAL_NATIVE_BFLOAT_BODY GARNET_METAL_CONSTANT_BF16_HEAD GARNET_METAL_SINGLE_CODER_HEAD GARNET_METAL_INTERLEAVED_BF16_BODY GARNET_METAL_COALESCED_BF16_BODY GARNET_METAL_FUSED_HEAD_ARGMAX GARNET_METAL_SCREENED_HEAD GARNET_METAL_FLOAT_DENSE_KEY_PREFILL GARNET_METAL_JOINED_PREFILL GARNET_METAL_JOINED_GLOBAL_MLP GARNET_METAL_MLP_PREFILL_GRAPH)
++  if(${policy})
++   message(FATAL_ERROR "Primary block profile excludes raw-only auxiliary policy: ${policy}")
++  endif()
++ endforeach()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PRIMARY_BF16_BLOCKS=1)
++endif()
++if(GARNET_METAL_PRIMARY_TEST_FAULTS)
++ if(NOT GARNET_METAL_PRIMARY_BF16_BLOCKS)
++  message(FATAL_ERROR "Primary test faults require primary weights")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PRIMARY_TEST_FAULTS=1)
++endif()
++
++add_executable(garnet_primary_storage_test test2026/metal/primary_storage_test.cpp)
++target_link_libraries(garnet_primary_storage_test PRIVATE garnet_metal)
++add_test(NAME metal_primary_storage_reference COMMAND garnet_primary_storage_test)
++add_executable(garnet_primary_projection_test test2026/metal/primary_projection_test.cpp)
++target_link_libraries(garnet_primary_projection_test PRIVATE garnet_metal)
++add_test(NAME metal_primary_projection_reference COMMAND garnet_primary_projection_test ${CMAKE_BINARY_DIR}/primary_projection_words.bin)
+--- a/runtime/metal_serving.py
++++ b/runtime/metal_serving.py
+@@ -19,6 +19,8 @@
+ 
+ class Model:
+     def __init__(self, root, xmodel, cache, profile, name):
++        self.initialization_memory = dict(before=json.loads(garnet.memory_stats_json()), other_model_ids_at_start=list(_models))
++        self.collect_inventory = bool(profile.get("collectNativeInventory", False))
+         self.root, self.name = root, name
+         self.cache = cache or os.path.join(root, 'metal-cache')
+         os.makedirs(self.cache, exist_ok=True)
+@@ -79,6 +81,8 @@
+         elif eos is not None:
+             self.stops.append(eos)
+ 
++        self.initialization_memory['after_decoder_ready'] = json.loads(garnet.memory_stats_json())
++
+     def _prefill_with_prefix(self, hidden, positions, token_ids, stages):
+         stages['prefix_cache_hit'] = False
+         stages['prefix_cache_restored_tokens'] = 0
+@@ -134,7 +138,7 @@
+ 
+     def infer(self, prompt, image, limit):
+         start = time.monotonic()
+-        stages = {}
++        stages = dict(initialization_memory=self.initialization_memory, memory_before_request=json.loads(garnet.memory_stats_json()))
+         hidden, positions, token_ids = [], [], []
+         current = 0
+         self.decoder.reset()
+@@ -179,8 +183,10 @@
+         append_text(prompt + '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
+         if len(hidden) + limit > self.capacity:
+             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
++        stages['memory_after_input'] = json.loads(garnet.memory_stats_json())
+         prefill_start = time.monotonic()
+         prediction = self._prefill_with_prefix(hidden, positions, token_ids, stages)
++        stages['memory_after_prefill'] = json.loads(garnet.memory_stats_json())
+         first = time.monotonic()
+         stages['prefill_seconds'] = first - prefill_start
+         stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
+@@ -204,6 +210,36 @@
+             fused_head_dispatches += self.decoder.session.fused_head_argmax_dispatches
+             current += 1
+         stages['decode_seconds'] = time.monotonic() - first
++        stages['memory_after_decode'] = json.loads(garnet.memory_stats_json())
++        memory_graphs = [layer['graph'] for layer in self.decoder.layers] + list(self.decoder.prefill_graphs.values())
++        stages['lazy_default_retired_bytes'] = sum(graph.lazy_default_retired_bytes for graph in memory_graphs)
++        stages['lazy_default_rehydrated_bytes'] = sum(graph.lazy_default_rehydrated_bytes for graph in memory_graphs)
++        stages['lazy_default_planned_slots'] = sum(graph.lazy_default_planned_slots for graph in memory_graphs)
++        if self.collect_inventory:
++            descriptors = [dict(object=layer['graph'], tag='decode.layer.'+str(i)) for i,layer in enumerate(self.decoder.layers)]
++            descriptors.append(dict(object=self.decoder.head, tag='head'))
++            for key in sorted(self.decoder.prefill_graphs):
++                descriptors.append(dict(object=self.decoder.prefill_graphs[key], tag='prefill.'+key))
++            if self.vision is not None:
++                descriptors.append(dict(object=self.vision.graph, tag='vision'))
++            inventory_payload = garnet.memory_inventory_json(descriptors, self.decoder.session)
++            inventory = json.loads(inventory_payload)
++            inventory_bytes = inventory_payload.encode()
++            capture_root = '/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/captures'
++            os.makedirs(capture_root, exist_ok=True)
++            self._inventory_capture_counter = getattr(self, '_inventory_capture_counter', 0) + 1
++            capture_key = hashlib.sha256((self.name + str(time.time()) + str(self._inventory_capture_counter)).encode()).hexdigest()
++            capture_path = os.path.join(capture_root, capture_key + '.json')
++            if os.path.exists(capture_path):
++                raise ValueError('Diagnostic capture identity collision')
++            with open(capture_path + '.tmp', 'w') as stream:
++                stream.write(inventory_payload)
++            os.replace(capture_path + '.tmp', capture_path)
++            stages['memory_inventory'] = dict(path=capture_path, sha256=hashlib.sha256(inventory_bytes).hexdigest(),
++                bytes=len(inventory_bytes), model_id=self.name, unique_allocated_bytes=inventory['unique_allocated_bytes'],
++                buffer_count=len(inventory['buffers']), reference_count=len(inventory['references']),
++                device_snapshot=inventory['device_snapshot'], scope=inventory['scope'])
++    
+         stages['decode_profile'] = decode_profile
+         stages['decode_fused_head_dispatches'] = fused_head_dispatches
+         stages['prefix_cache_native_bytes'] = self.decoder.session.prefix_cache_bytes
+@@ -236,7 +272,18 @@
+         try:
+             if name not in _models:
+                 raise ValueError('Model is not loaded: ' + name)
+-            return json.dumps(_models[name].infer(prompt, image, int(limit)))
++            outer_started=time.monotonic()
++            before=json.loads(garnet.primary_storage_stats_json())
++            model_started=time.monotonic()
++            result=_models[name].infer(prompt,image,int(limit))
++            after=json.loads(garnet.primary_storage_stats_json())
++            if result.get('status')=='ok':
++                result['ttft_seconds'] += model_started-outer_started
++                result['timings']['primary_storage_before']=before
++                result['timings']['primary_storage_after']=after
++                result['timings']['primary_encoded_delta']={key:after[key]-before[key] for key in ['decode_encoded','prefill_encoded','head_encoded']}
++                result['total_seconds']=time.monotonic()-outer_started
++            return json.dumps(result)
+         except Exception as error:
+             return json.dumps(dict(status='error', error_message=str(error), model_id=name))
+ 
+--- a/src/backends/metal/compiled_graph.cpp
++++ b/src/backends/metal/compiled_graph.cpp
+@@ -193,6 +193,9 @@
+     return output;
+ }
+ void MetalCompiledGraph::Clear() {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    lazyDefaultPlanReady_=false;lazyDefaultSlots_.clear();lazyRetiredBytes_=lazyRehydratedBytes_=0;
++#endif
+     visionParallelDispatches_=0;
+     visionPrefetchDispatches_=0;visionVectorDispatches_=0;mlpGraphDispatches_=0;
+     resetKVPrefix_[0]=resetKVPrefix_[1]=false;
+@@ -775,8 +778,8 @@
+     const auto& source=slots_[inputs_[part]].matrix;
+     for(size_t i=writer+1;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]) {
+         const auto& op=ops_[i];
+-        if(source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
+-        for(auto id:op.arguments)if(source.SharesStorage(slots_[id].matrix))return false;
++        if(op.a==inputs_[part]||op.b==inputs_[part]||source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
++        for(auto id:op.arguments)if(id==inputs_[part]||source.SharesStorage(slots_[id].matrix))return false;
+     }
+     return true;
+ #else
+@@ -876,6 +879,7 @@
+     for(size_t i=0;i<inputs_.size();++i){
+         if(skip.count(i))continue;
+         X::Tensor tensor(inputs.Get(i));auto lease=tensor.Acquire();auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
++        MaterializeDefault(inputs_[i]);
+         gpu_->Update(slot.matrix,static_cast<const float*>(info.data),slot.rows*slot.columns);
+     }
+ }
+@@ -1060,6 +1064,7 @@
+     visionGlobalAlphaDispatches_=0;
+     auto start=std::chrono::steady_clock::now();
+     PrepareInputs(inputs);
++    MaterializeDefault(output_);
+     gpu_->Begin();
+     try {
+         Encode(*gpu_);
+@@ -1075,3 +1080,76 @@
+     return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,output.shape,result.data(),result.size()*4);
+ }
+ }
++
++namespace Garnet {
++std::vector<MetalResourceReference> MetalCompiledGraph::MemoryReferences() {
++    std::lock_guard<std::mutex> lock(mutex_);if(!ready_)throw std::logic_error("Inventory requires a ready graph");
++    std::vector<MetalResourceReference> result;std::vector<bool> active(slots_.size(),false),input(slots_.size(),false),output(slots_.size(),false);
++    auto mark=[&](size_t i){if(i<active.size())active[i]=true;};
++    std::vector<bool> anyWriter(slots_.size(),false),residentWriter(slots_.size(),false);
++    for(size_t i=0;i<ops_.size();++i){bool resident=residentOps_.size()!=ops_.size()||residentOps_[i];auto write=[&](size_t slot){if(slot<slots_.size()){anyWriter[slot]=true;if(resident)residentWriter[slot]=true;}};write(ops_[i].out);write(ops_[i].auxiliaryOutput);}
++
++    for(size_t i=0;i<ops_.size();++i)if(residentOps_.size()!=ops_.size()||residentOps_[i]) {
++        const auto& op=ops_[i];mark(op.a);mark(op.b);mark(op.out);mark(op.auxiliaryOutput);for(auto j:op.arguments)mark(j);
++    }
++    for(auto i:inputs_)if(i<input.size())input[i]=true;for(auto i:outputParts_)if(i<output.size())output[i]=true;
++    std::vector<std::string> names(slots_.size());std::vector<std::pair<std::string,size_t>> sorted(weights_.begin(),weights_.end());std::sort(sorted.begin(),sorted.end());
++    for(const auto& entry:sorted)if(entry.second<names.size()){if(!names[entry.second].empty())names[entry.second]+=";";names[entry.second]+=entry.first;}
++    auto append=[&](const Slot& slot,size_t i,const std::string& role,const std::string& name,bool weight,bool in,bool out,bool resident,bool legacy){
++        auto emit=[&](const MetalBufferInfo& info){if(!info.identity)return;MetalResourceReference r;r.buffer=info;r.slot=i;r.role=role;r.name=name;r.shape=slot.shape;r.weight=weight;r.input=in;r.outputPart=out;r.residentOperand=resident;r.anyWriter=i<anyWriter.size()&&anyWriter[i];r.residentWriter=i<residentWriter.size()&&residentWriter[i];r.legacyOutput=legacy;result.push_back(std::move(r));};
++        emit(MetalContext::MatrixBufferInfo(slot.matrix));for(const auto& info:MetalContext::WeightBufferInfo(slot.bf16))emit(info);
++    };
++    for(size_t i=0;i<slots_.size();++i)append(slots_[i],i,"slot",names[i],!names[i].empty(),input[i],output[i],active[i],i==output_);
++    auto held=[&](const auto& records,const char* role){std::vector<std::string> keys;for(const auto& entry:records)keys.push_back(entry.first);std::sort(keys.begin(),keys.end());for(const auto& key:keys)append(records.at(key).slot,SIZE_MAX,role,key,true,false,false,false,false);};
++    held(sharedWeights_,"shared_weight_record");held(weightRecords_,"weight_record");return result;
++}
++}
++
++namespace Garnet {
++void MetalCompiledGraph::RetireResidentDefaults() {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    if(!lazyDefaultPlanReady_) {
++        if(!ready_||outputParts_.size()!=3||inputs_.size()<3||residentOps_.size()!=ops_.size())return;
++        std::vector<MetalBufferInfo> infos;std::unordered_map<uintptr_t,size_t> counts;std::unordered_set<uintptr_t> protectedWeights;
++        for(const auto& slot:slots_){auto info=MetalContext::MatrixBufferInfo(slot.matrix);infos.push_back(info);if(info.identity)++counts[info.identity];for(const auto& b:MetalContext::WeightBufferInfo(slot.bf16))protectedWeights.insert(b.identity);}
++        for(const auto& record:weightRecords_){auto info=MetalContext::MatrixBufferInfo(record.second.slot.matrix);if(info.identity)protectedWeights.insert(info.identity);for(const auto& b:MetalContext::WeightBufferInfo(record.second.slot.bf16))protectedWeights.insert(b.identity);}
++        auto eligible=[&](size_t id){const auto& slot=slots_[id];const auto& info=infos[id];return info.identity&&counts[info.identity]==1&&!protectedWeights.count(info.identity)&&gpu_->IsDefaultLayout(slot.matrix,slot.rows,slot.columns);};
++        std::vector<size_t> plan;
++        for(size_t part=1;part<=2;++part){auto id=inputs_[part];if(inputShapes_[part].size()<3||std::find(outputParts_.begin(),outputParts_.end(),id)!=outputParts_.end())continue;if(eligible(id))plan.push_back(id);}
++        if(!ops_.empty()&&ops_.back().kind==Kind::Concat&&ops_.back().out==output_&&!residentOps_.back()&&std::find(inputs_.begin(),inputs_.end(),output_)==inputs_.end()&&std::find(outputParts_.begin(),outputParts_.end(),output_)==outputParts_.end()&&eligible(output_))plan.push_back(output_);
++        lazyDefaultSlots_=std::move(plan);lazyDefaultPlanReady_=true;
++    }
++    for(auto id:lazyDefaultSlots_)if(slots_[id].matrix.Valid()) {auto info=MetalContext::MatrixBufferInfo(slots_[id].matrix);lazyRetiredBytes_+=info.allocatedBytes;slots_[id].matrix=MetalMatrix();}
++#endif
++}
++void MetalCompiledGraph::MaterializeDefault(size_t id) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    if(slots_[id].matrix.Valid())return;
++    if(std::find(lazyDefaultSlots_.begin(),lazyDefaultSlots_.end(),id)==lazyDefaultSlots_.end())throw std::logic_error("Missing non-deferred graph storage");
++    auto matrix=gpu_->Allocate(slots_[id].rows,slots_[id].columns);auto info=MetalContext::MatrixBufferInfo(matrix);slots_[id].matrix=std::move(matrix);lazyRehydratedBytes_+=info.allocatedBytes;
++#else
++    (void)id;
++#endif
++}
++size_t MetalCompiledGraph::LazyRetiredBytes() const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    std::lock_guard<std::mutex> lock(mutex_);return lazyRetiredBytes_;
++#else
++    return 0;
++#endif
++}
++size_t MetalCompiledGraph::LazyRehydratedBytes() const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    std::lock_guard<std::mutex> lock(mutex_);return lazyRehydratedBytes_;
++#else
++    return 0;
++#endif
++}
++size_t MetalCompiledGraph::LazyPlannedSlots() const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    std::lock_guard<std::mutex> lock(mutex_);return lazyDefaultSlots_.size();
++#else
++    return 0;
++#endif
++}
++}
+--- a/src/backends/metal/compiled_graph.h
++++ b/src/backends/metal/compiled_graph.h
+@@ -37,12 +37,18 @@
+     size_t visionPrefetchDispatches_=0,visionVectorDispatches_=0,mlpGraphDispatches_=0;
+     bool resetKVPrefix_[2]={false,false};
+     bool ready_=false,bf16Projections_=false;
+-    std::mutex mutex_;
++    mutable std::mutex mutex_;
+     SafeTensorsIndex index_;
+     size_t Weight(const std::string&);
+     size_t BF16Weight(const std::string&,bool visionPrefill=false);
+     size_t Allocate(size_t,size_t);
+     size_t LowerVision(size_t input,const X::Value& attributes);
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    bool lazyDefaultPlanReady_=false;std::vector<size_t> lazyDefaultSlots_;
++    size_t lazyRetiredBytes_=0,lazyRehydratedBytes_=0;
++#endif
++    void RetireResidentDefaults();
++    void MaterializeDefault(size_t slot);
+     void Clear();
+     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
+     void Encode(MetalContext&,bool packedOutput=true,const MetalMatrix* greedyOutput=nullptr);
+@@ -58,6 +64,10 @@
+     bool BuildShared(X::Value graph,X::Value symbols,const std::string& checkpoint,X::Value source);
+     X::Value Run(X::Value inputs);
+     void Close();
++    std::vector<MetalResourceReference> MemoryReferences();
++    size_t LazyRetiredBytes() const;
++    size_t LazyRehydratedBytes() const;
++    size_t LazyPlannedSlots() const;
+     bool Ready() const {return ready_;}
+     double CompileMs() const {return compileMs_;}
+     double LastInferenceMs() const {return inferenceMs_;}
+@@ -73,6 +83,9 @@
+         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
+         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
+         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);
++        APISET().AddProp("lazy_default_retired_bytes",&MetalCompiledGraph::LazyRetiredBytes);
++        APISET().AddProp("lazy_default_rehydrated_bytes",&MetalCompiledGraph::LazyRehydratedBytes);
++        APISET().AddProp("lazy_default_planned_slots",&MetalCompiledGraph::LazyPlannedSlots);
+         APISET().AddProp("ready",&MetalCompiledGraph::Ready);
+         APISET().AddProp("compile_ms",&MetalCompiledGraph::CompileMs);
+         APISET().AddProp("last_inference_ms",&MetalCompiledGraph::LastInferenceMs);
+--- a/src/backends/metal/decoder_session.cpp
++++ b/src/backends/metal/decoder_session.cpp
+@@ -197,6 +197,7 @@
+         state.dirtyExtent[k]=std::max(state.dirtyExtent[k],writeExtent);
+     }
+ #endif
++    for(auto graph:layers)graph->RetireResidentDefaults();
+     if(hiddenShape_!=inputShape[0]) {
+         const auto& slot=layers[0]->slots_[layers[0]->inputs_[0]];
+         hidden_=gpu_->Allocate(slot.rows,slot.columns);
+@@ -400,3 +401,12 @@
+ #endif
+ }
+ }
++
++namespace Garnet {
++std::vector<MetalResourceReference> MetalDecoderSession::MemoryReferences() {
++    std::lock_guard<std::mutex> lock(mutex_);if(!gpu_)throw std::logic_error("Inventory requires an open session");std::vector<MetalResourceReference> result;
++    auto append=[&](const MetalMatrix& matrix,size_t slot,const std::string& role,const std::vector<int64_t>& shape){auto info=MetalContext::MatrixBufferInfo(matrix);if(!info.identity)return;MetalResourceReference r;r.buffer=info;r.slot=slot;r.role=role;r.shape=shape;r.residentOperand=true;result.push_back(std::move(r));};
++    for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k)append(states_[i].matrix[k],i,"private_state"+std::to_string(k+1),states_[i].shape[k]);
++    append(hidden_,SIZE_MAX,"hidden",hiddenShape_);append(prediction_,SIZE_MAX,"prediction",{});return result;
++}
++}
+--- a/src/backends/metal/decoder_session.h
++++ b/src/backends/metal/decoder_session.h
+@@ -72,6 +72,7 @@
+     size_t PrefixCacheEntries();
+     size_t PrefixRestoreBytes();
+     size_t PrefixCaptureBytes();
++    std::vector<MetalResourceReference> MemoryReferences();
+     X::Value Snapshot(int64_t layer);
+     X::Value Hidden();
+     void Close();
+--- a/src/backends/metal/metal_context.h
++++ b/src/backends/metal/metal_context.h
+@@ -25,6 +25,7 @@
+     friend class MetalContext;
+ public:
+     MetalMatrix() = default;
++    bool Valid() const {return bool(impl_);}
+     bool SharesStorage(const MetalMatrix&) const;
+     bool CompatibleLayout(const MetalMatrix&) const;
+ };
+@@ -36,6 +37,7 @@
+ public:
+     MetalBF16Weight()=default;
+     bool Valid() const {return bool(impl_);}
++    bool PrimaryReady() const;
+     bool ExactHalfReady() const;
+     bool GlobalHalfReady() const;
+     bool InterleavedBodyReady() const;
+@@ -49,6 +51,20 @@
+     std::vector<float> maskedLogits;
+     std::vector<uint32_t> kept;
+     std::vector<float> querySafe;
++};
++struct MetalBufferInfo {
++    uintptr_t identity=0;uint64_t allocatedBytes=0,lengthBytes=0;std::string representation;
++};
++struct MetalResourceReference {
++    MetalBufferInfo buffer;size_t slot=0;std::string role,name;
++    std::vector<int64_t> shape;bool residentOperand=false,anyWriter=false,residentWriter=false,input=false,outputPart=false,legacyOutput=false,weight=false;
++};
++struct MetalMemoryStats {
++    uint64_t allocated=0,recommended=0,registry=0,physical=0,resident=0,compressed=0,internal=0,virtualBytes=0;
++    int taskStatus=-1;
++};
++struct MetalPrimaryStats {
++ uint64_t activeWeights=0,originalBytes=0,payloadBytes=0,metadataBytes=0,allocatedBytes=0,uploads=0,decodeEncoded=0,prefillEncoded=0,headEncoded=0;
+ };
+ class MetalContext {
+     struct Impl;
+@@ -58,12 +74,23 @@
+     void EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>&,
+         const MetalMatrix&,const void* parameters,size_t parameterBytes,size_t threads,const MetalMatrix* secondOutput=nullptr);
+ public:
++    static MetalPrimaryStats PrimaryStats();
++    std::vector<uint32_t> PrimaryReadWords(const MetalBF16Weight&,size_t start,size_t count);
++#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
++    static void PrimaryTestFailAfter(int stage);
++#endif
+     MetalContext();
+     ~MetalContext();
+     MetalContext(const MetalContext&) = delete;
+     MetalContext& operator=(const MetalContext&) = delete;
+     std::string DeviceName() const;
+     static std::string AvailableDeviceName();
++    static MetalMemoryStats MemoryStats();
++    // Correctness diagnostic only; deliberately queries live MPS properties.
++    static bool MatrixMetadataMatchesLive(const MetalMatrix&);
++    static MetalBufferInfo MatrixBufferInfo(const MetalMatrix&);
++    bool IsDefaultLayout(const MetalMatrix&,size_t rows,size_t columns) const;
++    static std::vector<MetalBufferInfo> WeightBufferInfo(const MetalBF16Weight&);
+     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
+     MetalMatrix Allocate(size_t rows, size_t columns);
+     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -1,5 +1,10 @@
+ // SPDX-License-Identifier: Apache-2.0
+ #include "metal_context.h"
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++#include "primary_block_codec.h"
++#include "primary_block_shader.h"
++#include <atomic>
++#endif
+ #include "exact_half_codec.h"
+ #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+ #include "interleaved_bf16_body_shader.h"
+@@ -33,6 +38,7 @@
+ #include <chrono>
+ #endif
+ #include <cstring>
++#include <mach/mach.h>
+ #include <algorithm>
+ #include <cmath>
+ #include <cstdint>
+@@ -44,18 +50,62 @@
+ #include <unordered_map>
+ #include <mutex>
+ namespace Garnet {
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++namespace {
++struct PrimaryCounters {std::atomic<uint64_t> weights{0},original{0},payload{0},metadata{0},allocated{0},uploads{0},decode{0},prefill{0},head{0};};
++PrimaryCounters primaryCounters;
++#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
++std::atomic<int> primaryFailure{0};
++void PrimaryMaybeFail(int stage){int expected=stage;if(primaryFailure.compare_exchange_strong(expected,0))throw std::runtime_error("Injected primary weight allocation failure");}
++#endif
++}
++#endif
+ struct MetalMatrix::Impl {
+     MPSMatrix* matrix;
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    // The MPSMatrix and its storage layout are assigned only in Allocate.
++    // Numeric identities never outlive this owning Impl; no extra buffer owner.
++    uintptr_t bufferIdentity=0,deviceIdentity=0;
++    size_t rows=0,columns=0,rowBytes=0,offset=0;
++    uint64_t allocatedBytes=0,lengthBytes=0;
++#endif
+     bool ready=false;
+     bool pending=false;
+ };
+ bool MetalMatrix::SharesStorage(const MetalMatrix& other) const {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    return impl_&&other.impl_&&impl_->bufferIdentity==other.impl_->bufferIdentity;
++#else
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     return impl_&&other.impl_&&impl_->matrix.data==other.impl_->matrix.data;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
++
++#endif
+ }
+ bool MetalMatrix::CompatibleLayout(const MetalMatrix& other) const {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    return impl_&&other.impl_&&impl_->deviceIdentity==other.impl_->deviceIdentity&&
++        impl_->rows==other.impl_->rows&&impl_->columns==other.impl_->columns&&impl_->rowBytes==other.impl_->rowBytes;
++#else
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     return impl_&&other.impl_&&impl_->matrix.device==other.impl_->matrix.device&&
+         impl_->matrix.rows==other.impl_->matrix.rows&&impl_->matrix.columns==other.impl_->matrix.columns&&
+         impl_->matrix.rowBytes==other.impl_->matrix.rowBytes;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
++
++#endif
+ }
+ struct MetalBF16Weight::Impl {
+ #ifdef GARNET_METAL_SCREENED_HEAD
+@@ -64,6 +114,12 @@
+     id<MTLBuffer> screenIndex,screenMetadata;
+ #endif
+     id<MTLBuffer> buffer;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++    id<MTLBuffer> primaryPayload,primaryMetadata;
++    uint64_t primaryOriginalBytes=0,primaryPayloadBytes=0,primaryMetadataBytes=0,primaryAllocatedBytes=0;
++    bool primaryCharged=false;
++    ~Impl(){if(primaryCharged){primaryCounters.weights.fetch_sub(1);primaryCounters.original.fetch_sub(primaryOriginalBytes);primaryCounters.payload.fetch_sub(primaryPayloadBytes);primaryCounters.metadata.fetch_sub(primaryMetadataBytes);primaryCounters.allocated.fetch_sub(primaryAllocatedBytes);}}
++#endif
+ #ifdef GARNET_METAL_MLP_PREFILL_GRAPH
+     std::mutex graphMutex;id<MTLBuffer> graphFloat;
+ #endif
+@@ -82,6 +138,23 @@
+     size_t rows,columns;
+     bool floatPrefill=false;
+ };
++bool MetalBF16Weight::PrimaryReady() const {
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++ return impl_&&impl_->primaryCharged&&impl_->primaryPayload&&impl_->primaryMetadata&&!impl_->buffer;
++#else
++ return false;
++#endif
++}
++MetalPrimaryStats MetalContext::PrimaryStats() {
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++ return {primaryCounters.weights.load(),primaryCounters.original.load(),primaryCounters.payload.load(),primaryCounters.metadata.load(),primaryCounters.allocated.load(),primaryCounters.uploads.load(),primaryCounters.decode.load(),primaryCounters.prefill.load(),primaryCounters.head.load()};
++#else
++ return {};
++#endif
++}
++#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
++void MetalContext::PrimaryTestFailAfter(int stage){if(stage<0||stage>2)throw std::invalid_argument("Invalid primary failure stage");primaryFailure.store(stage);}
++#endif
+ bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
+ bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
+ bool MetalBF16Weight::CoalescedBlockReady() const {
+@@ -125,12 +198,18 @@
+ #ifdef GARNET_METAL_BODY_SHAPE
+     std::shared_mutex bodyShapeMutex;
+     std::map<std::array<size_t,5>,id<MTLComputePipelineState>> bodyShape;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++    std::map<std::array<size_t,5>,id<MTLComputePipelineState>> primaryBodyShape;
++#endif
+ #endif
+     id<MTLComputePipelineState> argmax;
+ #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+     id<MTLComputePipelineState> fusedHead,fusedHeadReduce;
+ #endif
+     id<MTLComputePipelineState> bf16Decode,bf16DecodeSmall,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++    id<MTLComputePipelineState> primaryDecode,primaryGemm,primaryGemm16Wide,primaryGemm32Wide,primaryExpand;
++#endif
+ #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+     id<MTLComputePipelineState> bf16BodyInterleaved;
+ #ifdef GARNET_METAL_COALESCED_BF16_BODY
+@@ -1324,6 +1403,9 @@
+ #ifdef GARNET_METAL_COALESCED_BF16_BODY
+         source=[source stringByAppendingString:[NSString stringWithUTF8String:kCoalescedBodyBlockShader]];
+ #endif
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        source=[source stringByAppendingString:[NSString stringWithUTF8String:kPrimaryBlockShader]];
++#endif
+         auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
+         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
+         impl_->kernels->library=library;
+@@ -1397,6 +1479,18 @@
+ #endif
+         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
+         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        impl_->kernels->primaryDecode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"primary_bf16_decode"] error:&error];
++        if(!impl_->kernels->primaryDecode)throw std::runtime_error("Cannot create primary bf16_decode pipeline");
++        impl_->kernels->primaryGemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"primary_bf16_gemm"] error:&error];
++        if(!impl_->kernels->primaryGemm)throw std::runtime_error("Cannot create primary bf16_gemm pipeline");
++        impl_->kernels->primaryGemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"primary_gemm_16_64_64"] error:&error];
++        if(!impl_->kernels->primaryGemm16Wide)throw std::runtime_error("Cannot create primary gemm_16_64_64 pipeline");
++        impl_->kernels->primaryGemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"primary_gemm_32_64_32"] error:&error];
++        if(!impl_->kernels->primaryGemm32Wide)throw std::runtime_error("Cannot create primary gemm_32_64_32 pipeline");
++        impl_->kernels->primaryExpand=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"primary_expand_words"] error:&error];
++        if(!impl_->kernels->primaryExpand)throw std::runtime_error("Cannot create primary expand_words pipeline");
++#endif
+         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+ #ifdef GARNET_METAL_PACKED_PREFILL_NORM
+         impl_->kernels->packedPrefillNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"packed_residual_norm"] error:&error];
+@@ -1488,6 +1582,14 @@
+         rowBytes:stride dataType:MPSDataTypeFloat32];
+     auto storage=std::make_shared<MetalMatrix::Impl>();
+     storage->matrix=[[MPSMatrix alloc] initWithBuffer:buffer descriptor:descriptor];
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    if(!storage->matrix)throw std::runtime_error("Metal matrix view allocation failed");
++    auto matrix=storage->matrix;
++    storage->bufferIdentity=reinterpret_cast<uintptr_t>((__bridge void*)matrix.data);
++    storage->deviceIdentity=reinterpret_cast<uintptr_t>((__bridge void*)matrix.device);
++    storage->rows=matrix.rows;storage->columns=matrix.columns;storage->rowBytes=matrix.rowBytes;storage->offset=matrix.offset;
++    storage->allocatedBytes=matrix.data.allocatedSize;storage->lengthBytes=matrix.data.length;
++#endif
+     return MetalMatrix(storage);
+     }
+ }
+@@ -1503,6 +1605,39 @@
+         for(size_t i=0;i<rows*columns;++i){uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*i,2);
+             if((bits&0x7f80)==0x7f80)throw std::invalid_argument("Nonfinite BF16 checkpoint weight");}
+         auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;value->floatPrefill=floatPrefill;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        static_assert(__BYTE_ORDER__==__ORDER_LITTLE_ENDIAN__,"Primary metadata uses little endian");
++        if(!floatPrefill&&!visionPrefill&&rows>256&&PrimaryBlocks::Eligible(rows,columns)) {
++            const size_t count=rows/4*(columns/128);
++            if(count>SIZE_MAX/8)throw std::overflow_error("Primary metadata count overflow");
++            std::vector<uint8_t> payload;payload.reserve(bytes);std::vector<uint64_t> metadata;metadata.reserve(count);
++            std::array<uint16_t,PrimaryBlocks::Words> words;auto source=static_cast<const uint8_t*>(data);
++            for(size_t group=0;group<rows/4;++group)for(size_t block=0;block<columns/128;++block) {
++                for(size_t k=0;k<128;++k)for(size_t j=0;j<4;++j){const size_t pos=((group*4+j)*columns+block*128+k)*2;words[k*4+j]=uint16_t(source[pos])|uint16_t(source[pos+1])<<8;}
++                const auto encoded=PrimaryBlocks::Encode(words,payload.size());metadata.push_back(encoded.metadata);
++                payload.insert(payload.end(),encoded.data.begin(),encoded.data.begin()+encoded.bytes);
++            }
++            if(metadata.size()!=count)throw std::logic_error("Primary block count mismatch");
++            const auto metaBytes=metadata.size()*sizeof(uint64_t);
++            if(payload.size()<bytes&&metaBytes<bytes-payload.size()) {
++                if(payload.size()>impl_->device.maxBufferLength||metaBytes>impl_->device.maxBufferLength)throw std::runtime_error("Primary buffer exceeds device limit");
++                value->primaryPayload=[impl_->device newBufferWithBytes:payload.data() length:payload.size() options:MTLResourceStorageModeShared];
++                if(!value->primaryPayload)throw std::runtime_error("Primary payload allocation failed");
++#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
++                PrimaryMaybeFail(1);
++#endif
++                value->primaryMetadata=[impl_->device newBufferWithBytes:metadata.data() length:metaBytes options:MTLResourceStorageModeShared];
++                if(!value->primaryMetadata)throw std::runtime_error("Primary metadata allocation failed");
++#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
++                PrimaryMaybeFail(2);
++#endif
++                value->primaryOriginalBytes=bytes;value->primaryPayloadBytes=payload.size();value->primaryMetadataBytes=metaBytes;
++                value->primaryAllocatedBytes=value->primaryPayload.allocatedSize+value->primaryMetadata.allocatedSize;
++                value->primaryCharged=true;primaryCounters.weights.fetch_add(1);primaryCounters.original.fetch_add(bytes);primaryCounters.payload.fetch_add(payload.size());primaryCounters.metadata.fetch_add(metaBytes);primaryCounters.allocated.fetch_add(value->primaryAllocatedBytes);primaryCounters.uploads.fetch_add(1);
++                return MetalBF16Weight(value);
++            }
++        }
++#endif
+         value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];
+         if(!value->buffer)throw std::runtime_error("BF16 weight allocation failed");
+ #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+@@ -1849,20 +1984,95 @@
+ size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
+ size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
+ size_t MetalContext::LastVisionVectorDispatches() const {return impl_->visionVectorDispatches;}
++bool MetalContext::IsDefaultLayout(const MetalMatrix& value,size_t rows,size_t columns) const {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    if(!value.impl_)return false;const auto& m=*value.impl_;
++    const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat32];
++    return m.deviceIdentity==reinterpret_cast<uintptr_t>((__bridge void*)impl_->device)&&m.rows==rows&&m.columns==columns&&
++        m.rowBytes==stride&&m.offset==0&&m.lengthBytes==rows*stride;
++#else
++
++    @autoreleasepool {
++        if(!value.impl_||!value.impl_->matrix)return false;auto matrix=value.impl_->matrix;
++        const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat32];
++        return matrix.device==impl_->device&&matrix.rows==rows&&matrix.columns==columns&&matrix.rowBytes==stride&&matrix.offset==0&&matrix.data.length==rows*stride;
++    }
++
++#endif
++}
++MetalBufferInfo MetalContext::MatrixBufferInfo(const MetalMatrix& value) {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    if(!value.impl_)return {};const auto& m=*value.impl_;
++    return {m.bufferIdentity,m.allocatedBytes,m.lengthBytes,"matrix_fp32"};
++#else
++
++    @autoreleasepool {
++        if(!value.impl_||!value.impl_->matrix)return {};
++        id<MTLBuffer> buffer=value.impl_->matrix.data;if(!buffer)return {};
++        return {reinterpret_cast<uintptr_t>((__bridge void*)buffer),uint64_t(buffer.allocatedSize),uint64_t(buffer.length),"matrix_fp32"};
++    }
++
++#endif
++}
++std::vector<MetalBufferInfo> MetalContext::WeightBufferInfo(const MetalBF16Weight& value) {
++    @autoreleasepool {
++        std::vector<MetalBufferInfo> result;if(!value.impl_)return result;auto w=value.impl_;
++        auto add=[&](id<MTLBuffer> buffer,const char* kind){if(buffer)result.push_back({reinterpret_cast<uintptr_t>((__bridge void*)buffer),uint64_t(buffer.allocatedSize),uint64_t(buffer.length),kind});};
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        add(w->primaryPayload,"primary_bf16_payload");add(w->primaryMetadata,"primary_bf16_metadata");
++#endif
++        add(w->buffer,"bf16");if(w->exactHalf)add(w->exactHalf.data,"exact_half");add(w->halfScales,"half_scales");
++#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
++        add(w->graphFloat,"graph_float");
++#endif
++#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
++        add(w->interleavedBody,"interleaved_body");
++#ifdef GARNET_METAL_COALESCED_BF16_BODY
++        add(w->coalescedPayload,"coalesced_body");add(w->coalescedMetadata,"coalesced_metadata");
++#endif
++#endif
++#ifdef GARNET_METAL_SCREENED_HEAD
++        add(w->screenIndex,"screen_index");add(w->screenMetadata,"screen_metadata");
++#endif
++        return result;
++    }
++}
++MetalMemoryStats MetalContext::MemoryStats() {
++    @autoreleasepool {
++        id<MTLDevice> device=MTLCreateSystemDefaultDevice();
++        if(!device)throw std::runtime_error("No Metal device for memory snapshot");
++        MetalMemoryStats stats;stats.allocated=device.currentAllocatedSize;
++        stats.recommended=device.recommendedMaxWorkingSetSize;stats.registry=device.registryID;
++        task_vm_info_data_t info{};mach_msg_type_number_t count=TASK_VM_INFO_COUNT;
++        stats.taskStatus=task_info(mach_task_self(),TASK_VM_INFO,reinterpret_cast<task_info_t>(&info),&count);
++        if(stats.taskStatus==KERN_SUCCESS){stats.physical=info.phys_footprint;stats.resident=info.resident_size;
++            stats.compressed=info.compressed;stats.internal=info.internal;stats.virtualBytes=info.virtual_size;}
++        return stats;
++    }
++}
+ bool MetalContext::PrepareBF16BodyShape(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
+ #ifdef GARNET_METAL_BODY_SHAPE
+     @autoreleasepool {
+         if(impl_->command)throw std::logic_error("Body shape preparation requires a closed command batch");
+         if(!input.impl_||!output.impl_||!weight.impl_)return false;
+         auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
+-        if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||a.rows>2||o.rows!=a.rows||
++        id<MTLBuffer> storage=w->buffer;bool primary=false;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        primary=w->primaryCharged;if(primary)storage=w->primaryPayload;
++#endif
++        if(a.device!=impl_->device||o.device!=impl_->device||storage.device!=impl_->device||a.rows>2||o.rows!=a.rows||
+             a.columns!=w->columns||o.columns!=w->rows||o.columns>=100000)return false;
+         const std::array<size_t,5> key{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
+         for(auto value:key)if(value>UINT32_MAX)return false;
+         std::unique_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);
+         auto& cache=impl_->kernels->bodyShape;
+-        auto found=cache.find(key);if(found!=cache.end())return found->second!=nil;
+-        if(cache.size()>=128)return false;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        auto& selectedCache=primary?impl_->kernels->primaryBodyShape:cache;
++#else
++        auto& selectedCache=cache;
++#endif
++        auto found=selectedCache.find(key);if(found!=selectedCache.end())return found->second!=nil;
++        if(selectedCache.size()>=128)return false;
+         bool small=false;
+ #ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
+         small=o.columns<=256;
+@@ -1873,11 +2083,15 @@
+         bool noTail=o.columns%(small?4:16)==0;
+         [constants setConstantValue:&noTail type:MTLDataTypeBool atIndex:5];
+         NSError* error=nil;
+-        auto function=[impl_->kernels->library newFunctionWithName:small?@"specialized_bf16_decode_small":@"specialized_bf16_decode" constantValues:constants error:&error];
++        NSString* functionName=small?@"specialized_bf16_decode_small":@"specialized_bf16_decode";
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        if(primary)functionName=@"primary_specialized_bf16_decode";
++#endif
++        auto function=[impl_->kernels->library newFunctionWithName:functionName constantValues:constants error:&error];
+         id<MTLComputePipelineState> pipeline=nil;
+         if(function)pipeline=[impl_->device newComputePipelineStateWithFunction:function error:&error];
+         if(pipeline&&(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<(small?64:128)))pipeline=nil;
+-        cache.emplace(key,pipeline);return pipeline!=nil;
++        selectedCache.emplace(key,pipeline);return pipeline!=nil;
+     }
+ #else
+     (void)input;(void)weight;(void)output;return false;
+@@ -1885,7 +2099,11 @@
+ }
+ size_t MetalContext::BodyShapePipelineCount() const {
+ #ifdef GARNET_METAL_BODY_SHAPE
+-    std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);return impl_->kernels->bodyShape.size();
++    std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);return impl_->kernels->bodyShape.size()
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        +impl_->kernels->primaryBodyShape.size()
++#endif
++        ;
+ #else
+     return 0;
+ #endif
+@@ -1896,11 +2114,15 @@
+     @autoreleasepool {
+         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
+         auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
++        id<MTLBuffer> storage=w->buffer;bool primary=false;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        primary=w->primaryCharged;if(primary)storage=w->primaryPayload;
++#endif
+         bool supportedDecoderRows=a.rows<=128;
+ #ifdef GARNET_METAL_QWEN35_WIDE_BATCH_PREFILL
+         supportedDecoderRows=supportedDecoderRows||a.rows==160;
+ #endif
+-        if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||
++        if(a.device!=impl_->device||o.device!=impl_->device||storage.device!=impl_->device||
+             a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||
+             (w->visionPrefill?a.rows>32768:!supportedDecoderRows)||o.data==a.data)
+             throw std::invalid_argument("BF16 projection shape/device mismatch or unsupported row count");
+@@ -1982,6 +2204,9 @@
+         if(a.rows>=16&&o.columns>=64&&widePipeline&&widePipeline.threadExecutionWidth==32&&
+             widePipeline.maxTotalThreadsPerThreadgroup>=256&&widePipeline.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength)wide=true;
+         auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:wide?widePipeline:impl_->kernels->bf16Gemm;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        if(primary){pipeline=a.rows<=2?impl_->kernels->primaryDecode:wide?(a.rows>16?impl_->kernels->primaryGemm32Wide:impl_->kernels->primaryGemm16Wide):impl_->kernels->primaryGemm;}
++#endif
+         size_t threads=wide?256:128,tileRows=wide&&a.rows>16?32:16,tileColumns=wide?64:32;
+         size_t decodeColumns=16;
+ #ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
+@@ -2006,8 +2231,14 @@
+         if(a.rows<=2&&o.columns<100000) {
+             const std::array<size_t,5> key{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
+             std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);
+-            auto found=impl_->kernels->bodyShape.find(key);
+-            if(found!=impl_->kernels->bodyShape.end()&&found->second) {
++            auto& cache=impl_->kernels->bodyShape;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++            auto& selectedCache=primary?impl_->kernels->primaryBodyShape:cache;
++#else
++            auto& selectedCache=cache;
++#endif
++            auto found=selectedCache.find(key);
++            if(found!=selectedCache.end()&&found->second) {
+                 pipeline=found->second;++impl_->bodyShapeDispatches;
+             } else ++impl_->bodyShapeMisses;
+         }
+@@ -2039,7 +2270,10 @@
+         if(coalesced){[encoder setBuffer:w->coalescedPayload offset:0 atIndex:4];[encoder setBuffer:w->coalescedMetadata offset:0 atIndex:5];}
+ #endif
+ #else
+-        [encoder setBuffer:w->buffer offset:0 atIndex:1];
++        [encoder setBuffer:storage offset:0 atIndex:1];
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        if(primary){[encoder setBuffer:w->primaryMetadata offset:0 atIndex:4];if(a.rows>2)primaryCounters.prefill.fetch_add(1);else if(o.columns>=100000)primaryCounters.head.fetch_add(1);else primaryCounters.decode.fetch_add(1);}
++#endif
+ #endif
+         [encoder setBuffer:o.data offset:0 atIndex:2];
+         [encoder setBytes:&p length:sizeof(p) atIndex:3];
+@@ -2063,6 +2297,9 @@
+     Update(matrix,values.data(),values.size());
+ }
+ void MetalContext::Update(const MetalMatrix& matrix,const float* values,size_t count) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Host update requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+         throw std::invalid_argument("Metal update matrix belongs to another device or is empty");
+@@ -2080,8 +2317,15 @@
+         std::memcpy(static_cast<char*>(native.data.contents)+i*native.rowBytes,
+             values+i*native.columns,native.columns*sizeof(float));
+     matrix.impl_->ready=true;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ void MetalContext::Zero(const MetalMatrix& matrix) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Host zero requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+         throw std::invalid_argument("Metal zero matrix belongs to another device or is empty");
+@@ -2097,8 +2341,15 @@
+         std::memset(static_cast<char*>(native.data.contents)+i*native.rowBytes,
+             0,native.columns*sizeof(float));
+     matrix.impl_->ready=true;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ std::vector<float> MetalContext::ReadPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Prefix read requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix read matrix/device");
+     if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix read requires completed initialized state");
+@@ -2111,8 +2362,15 @@
+         std::memcpy(result.data()+(row*groups+group)*tokens*width,
+             static_cast<const char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),tokens*width*sizeof(float));
+     return result;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ void MetalContext::WritePrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens,const std::vector<float>& values) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Prefix write requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix write matrix/device");
+     if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix write requires completed initialized state");
+@@ -2124,6 +2382,10 @@
+         std::memcpy(static_cast<char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),
+             values.data()+(row*groups+group)*tokens*width,tokens*width*sizeof(float));
+     matrix.impl_->ready=true;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t dirtyTokens) {
+     if(impl_->command)throw std::logic_error("Host prefix zero requires a closed command batch");
+@@ -2860,6 +3122,9 @@
+     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
+ }
+ std::vector<float> MetalContext::Download(const MetalMatrix& value) const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+ #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+     if(value.impl_&&impl_->zeroQueued.count(value.impl_.get())) {
+         auto matrix=value.impl_->matrix;
+@@ -2875,6 +3140,10 @@
+         std::memcpy(result.data()+i*matrix.columns,static_cast<char*>(matrix.data.contents)+i*matrix.rowBytes,
+             matrix.columns*sizeof(float));
+     return result;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ std::vector<float> MetalContext::MatMul(const std::vector<float>& left,
+     const std::vector<float>& right,size_t rows,size_t inner,size_t columns,bool transposeRight) {
+@@ -2887,3 +3156,38 @@
+     return Download(c);
+ }
+ }
++
++namespace Garnet {
++bool MetalContext::MatrixMetadataMatchesLive(const MetalMatrix& value) {
++    @autoreleasepool {
++        if(!value.impl_)return true;
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++        const auto& m=*value.impl_;auto native=m.matrix;id<MTLBuffer> buffer=native.data;
++        return native&&buffer&&m.bufferIdentity==reinterpret_cast<uintptr_t>((__bridge void*)buffer)&&
++            m.deviceIdentity==reinterpret_cast<uintptr_t>((__bridge void*)native.device)&&m.rows==native.rows&&m.columns==native.columns&&
++            m.rowBytes==native.rowBytes&&m.offset==native.offset&&m.allocatedBytes==buffer.allocatedSize&&m.lengthBytes==buffer.length;
++#else
++        return value.impl_->matrix&&value.impl_->matrix.data;
++#endif
++    }
++}
++}
++
++namespace Garnet {
++std::vector<uint32_t> MetalContext::PrimaryReadWords(const MetalBF16Weight& weight,size_t start,size_t count) {
++#ifndef GARNET_METAL_PRIMARY_BF16_BLOCKS
++ (void)weight;(void)start;(void)count;throw std::logic_error("Primary weight support disabled");
++#else
++ @autoreleasepool {
++  if(impl_->command||!weight.PrimaryReady()||!count||count>8*1024*1024)throw std::invalid_argument("Primary readback requires packed weight, closed batch and bounded count");
++  auto w=weight.impl_;if(w->primaryPayload.device!=impl_->device||w->primaryMetadata.device!=impl_->device||start>w->rows*w->columns||count>w->rows*w->columns-start)throw std::invalid_argument("Primary readback device/range mismatch");
++  id<MTLBuffer> output=[impl_->device newBufferWithLength:count*4 options:MTLResourceStorageModeShared];if(!output)throw std::runtime_error("Primary readback allocation failed");
++  auto command=[impl_->queue commandBuffer];auto encoder=[command computeCommandEncoder];if(!encoder)throw std::runtime_error("Primary readback encoder failed");
++  uint64_t inner=w->columns,offset=start,n=count;
++  [encoder setComputePipelineState:impl_->kernels->primaryExpand];[encoder setBuffer:w->primaryPayload offset:0 atIndex:0];[encoder setBuffer:w->primaryMetadata offset:0 atIndex:1];[encoder setBuffer:output offset:0 atIndex:2];[encoder setBytes:&inner length:8 atIndex:3];[encoder setBytes:&offset length:8 atIndex:4];[encoder setBytes:&n length:8 atIndex:5];
++  [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(256,1,1)];[encoder endEncoding];[command commit];[command waitUntilCompleted];if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error("Primary readback GPU failed");
++  std::vector<uint32_t> result(count);std::memcpy(result.data(),output.contents,count*4);return result;
++ }
++#endif
++}
++}
+--- /dev/null
++++ b/src/backends/metal/primary_block_codec.h
+@@ -0,0 +1,37 @@
++#pragma once
++#include <array>
++#include <cstdint>
++#include <cstddef>
++#include <limits>
++#include <stdexcept>
++namespace PrimaryBlocks {
++constexpr size_t Words=512,RawBytes=1024,CompactBytes=768;
++struct Block {std::array<uint8_t,RawBytes> data{};uint64_t metadata=0;size_t bytes=0;bool compact=false;};
++inline bool Eligible(uint64_t rows,uint64_t inner){return rows&&inner&&rows%4==0&&inner%128==0;}
++inline uint64_t Offset(uint64_t metadata){return (metadata>>9)*256;}
++inline Block Encode(const std::array<uint16_t,Words>& words,uint64_t offset){
++ if(offset%256||offset/256>(std::numeric_limits<uint64_t>::max()>>9))throw std::invalid_argument("Unrepresentable primary block offset");
++ uint16_t low=255,high=0;
++ for(auto bits:words){const auto e=uint16_t((bits>>7)&255);if(e==255)throw std::invalid_argument("Nonfinite BF16 block");if(e<low)low=e;if(e>high)high=e;}
++ Block block;block.compact=(high-low<=15);block.bytes=block.compact?CompactBytes:RawBytes;
++ block.metadata=((offset/256)<<9)|(block.compact?(uint64_t(low)|256):0);
++ if(block.compact){
++  for(size_t i=0;i<Words;++i){auto bits=words[i];block.data[i]=uint8_t((bits&127)|((bits>>8)&128));auto tag=uint8_t(((bits>>7)&255)-low);block.data[512+i/2]|=uint8_t(tag<<((i%2)*4));}
++ }else for(size_t i=0;i<Words;++i){block.data[i*2]=uint8_t(words[i]);block.data[i*2+1]=uint8_t(words[i]>>8);}
++ return block;
++}
++inline size_t Length(uint64_t metadata){if(metadata&256){if((metadata&255)>254)throw std::invalid_argument("Nonfinite compact base");return CompactBytes;}if(metadata&255)throw std::invalid_argument("Raw metadata has an exponent base");return RawBytes;}
++inline uint16_t DecodeLocal(uint64_t metadata,const uint8_t* bytes,size_t length,size_t word){
++ if(!bytes||word>=Words||length<Length(metadata))throw std::out_of_range("Primary block decode bounds");
++ uint16_t bits;
++ if(metadata&256){const uint8_t sm=bytes[word];const unsigned e=unsigned(metadata&255)+((bytes[512+word/2]>>((word%2)*4))&15);if(e>=255)throw std::invalid_argument("Nonfinite decoded exponent");bits=uint16_t((sm&127)|((sm&128)<<8)|(e<<7));}
++ else bits=uint16_t(bytes[word*2])|uint16_t(bytes[word*2+1])<<8;
++ if(((bits>>7)&255)==255)throw std::invalid_argument("Nonfinite raw block value");
++ return bits;
++}
++inline uint16_t Decode(uint64_t metadata,const uint8_t* payload,size_t length,size_t word){
++ const auto offset=Offset(metadata);const auto needed=Length(metadata);
++ if(offset>length||needed>length-offset)throw std::out_of_range("Primary matrix payload bounds");
++ return DecodeLocal(metadata,payload+offset,needed,word);
++}
++}
+--- /dev/null
++++ b/src/backends/metal/primary_block_shader.h
+@@ -0,0 +1,170 @@
++#pragma once
++namespace Garnet {inline constexpr const char* kPrimaryBlockShader=R"PRIMARY(
++inline ushort primary_word(device const uchar* payload,device const ulong* metadata,ulong row,ulong k,ulong inner) {
++    ulong block=(row/4)*(inner/128)+k/128,meta=metadata[block],at=(meta>>9)*256,index=(k%128)*4+row%4;
++    if(meta&256ul){uint sm=payload[at+index],tag=(payload[at+512+index/2]>>((index%2)*4))&15u;
++        return ushort((sm&127u)|((sm&128u)<<8)|(((uint(meta)&255u)+tag)<<7));}
++    return ushort(payload[at+index*2])|(ushort(payload[at+index*2+1])<<8);
++}
++inline ushort4 primary_row4(device const uchar* payload,device const ulong* metadata,ulong row,ulong k,ulong inner) {
++    return ushort4(primary_word(payload,metadata,row,k,inner),primary_word(payload,metadata,row,k+1,inner),primary_word(payload,metadata,row,k+2,inner),primary_word(payload,metadata,row,k+3,inner));
++}
++kernel void primary_expand_words(device const uchar* payload [[buffer(0)]],device const ulong* metadata [[buffer(1)]],
++ device uint* output [[buffer(2)]],constant ulong& inner [[buffer(3)]],constant ulong& start [[buffer(4)]],constant ulong& count [[buffer(5)]],uint id [[thread_position_in_grid]]) {
++ if(ulong(id)>=count)return;ulong i=start+id;output[id]=uint(primary_word(payload,metadata,i/inner,i%inner,inner))<<16;
++}
++kernel void primary_bf16_decode(device const float* a [[buffer(0)]],device const uchar* payload [[buffer(1)]],device const ulong* metadata [[buffer(4)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    ulong column=ulong(group)*16+simd*4;
++    if(column>=p.columns)return;
++    float4 sum0=0.0f,sum1=0.0f;
++    if(p.inner%4==0) {
++        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
++            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
++            ushort4 b0=primary_row4(payload,metadata,column,k,p.inner),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
++            if(column+1<p.columns)b1=primary_row4(payload,metadata,(column+1),k,p.inner);
++            if(column+2<p.columns)b2=primary_row4(payload,metadata,(column+2),k,p.inner);
++            if(column+3<p.columns)b3=primary_row4(payload,metadata,(column+3),k,p.inner);
++            for(uint j=0;j<4;++j) {
++                float4 w=as_type<float4>(uint4(b0[j],b1[j],b2[j],b3[j])<<16);
++                sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
++            }
++        }
++    } else {
++    for(ulong k=lane;k<p.inner;k+=32) {
++        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
++        float4 w=0.0f;
++        w.x=as_type<float>(uint(primary_word(payload,metadata,column,k,p.inner))<<16);
++        if(column+1<p.columns)w.y=as_type<float>(uint(primary_word(payload,metadata,(column+1),k,p.inner))<<16);
++        if(column+2<p.columns)w.z=as_type<float>(uint(primary_word(payload,metadata,(column+2),k,p.inner))<<16);
++        if(column+3<p.columns)w.w=as_type<float>(uint(primary_word(payload,metadata,(column+3),k,p.inner))<<16);
++        sum0+=x*w;if(p.rows==2)sum1+=y*w;
++    }
++    }
++    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
++    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
++    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
++}
++kernel void primary_bf16_gemm(device const float* a [[buffer(0)]],device const uchar* payload [[buffer(1)]],device const ulong* metadata [[buffer(4)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint2 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
++    threadgroup float left[16*32],right[32*32],result[16*32];
++    ulong rowBase=ulong(group.y)*16,colBase=ulong(group.x)*32;
++    simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
++    simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
++    for(ulong base=0;base<p.inner;base+=32) {
++        for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,k=base+i%32;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
++        for(uint i=tid;i<32*32;i+=128){ulong k=base+i/32,column=colBase+i%32;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(primary_word(payload,metadata,column,k,p.inner))<<16):0.0f;}
++        threadgroup_barrier(mem_flags::mem_threadgroup);
++        for(uint offset=0;offset<32;offset+=8) {
++            simdgroup_float8x8 l0,l1,r;
++            simdgroup_load(l0,left+offset,32);simdgroup_load(l1,left+8*32+offset,32);simdgroup_load(r,right+offset*32+simd*8,32);
++            simdgroup_multiply_accumulate(accum0,l0,r,accum0);simdgroup_multiply_accumulate(accum1,l1,r,accum1);
++        }
++        threadgroup_barrier(mem_flags::mem_threadgroup);
++    }
++    simdgroup_store(accum0,result+simd*8,32);simdgroup_store(accum1,result+8*32+simd*8,32);
++    threadgroup_barrier(mem_flags::mem_threadgroup);
++    for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,column=colBase+i%32;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
++}
++kernel void primary_gemm_16_64_64(device const float* a [[buffer(0)]],device const uchar* payload [[buffer(1)]],device const ulong* metadata [[buffer(4)]],
++device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++uint2 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
++threadgroup float left[1024],right[4096],result[1024];
++ulong rowBase=ulong(group.y)*16,colBase=ulong(group.x)*64;
++simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
++simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
++for(ulong base=0;base<p.inner;base+=64) {
++for(uint i=tid;i<1024;i+=256){ulong row=rowBase+i/64,k=base+i%64;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
++for(uint i=tid;i<4096;i+=256){ulong k=base+i/64,column=colBase+i%64;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(primary_word(payload,metadata,column,k,p.inner))<<16):0.0f;}
++threadgroup_barrier(mem_flags::mem_threadgroup);
++for(uint offset=0;offset<64;offset+=8) {
++simdgroup_float8x8 r;
++simdgroup_load(r,right+offset*64+simd*8,64);
++simdgroup_float8x8 l0;
++simdgroup_load(l0,left+0+offset,64);
++simdgroup_multiply_accumulate(accum0,l0,r,accum0);
++simdgroup_float8x8 l1;
++simdgroup_load(l1,left+512+offset,64);
++simdgroup_multiply_accumulate(accum1,l1,r,accum1);
++}
++threadgroup_barrier(mem_flags::mem_threadgroup);
++}
++simdgroup_store(accum0,result+0+simd*8,64);
++simdgroup_store(accum1,result+512+simd*8,64);
++threadgroup_barrier(mem_flags::mem_threadgroup);
++for(uint i=tid;i<1024;i+=256){ulong row=rowBase+i/64,column=colBase+i%64;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
++}
++kernel void primary_gemm_32_64_32(device const float* a [[buffer(0)]],device const uchar* payload [[buffer(1)]],device const ulong* metadata [[buffer(4)]],
++device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++uint2 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
++threadgroup float left[1024],right[2048],result[2048];
++ulong rowBase=ulong(group.y)*32,colBase=ulong(group.x)*64;
++simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
++simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
++simdgroup_float8x8 accum2=make_filled_simdgroup_matrix<float,8>(0.0f);
++simdgroup_float8x8 accum3=make_filled_simdgroup_matrix<float,8>(0.0f);
++for(ulong base=0;base<p.inner;base+=32) {
++for(uint i=tid;i<1024;i+=256){ulong row=rowBase+i/32,k=base+i%32;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
++for(uint i=tid;i<2048;i+=256){ulong k=base+i/64,column=colBase+i%64;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(primary_word(payload,metadata,column,k,p.inner))<<16):0.0f;}
++threadgroup_barrier(mem_flags::mem_threadgroup);
++for(uint offset=0;offset<32;offset+=8) {
++simdgroup_float8x8 r;
++simdgroup_load(r,right+offset*64+simd*8,64);
++simdgroup_float8x8 l0;
++simdgroup_load(l0,left+0+offset,32);
++simdgroup_multiply_accumulate(accum0,l0,r,accum0);
++simdgroup_float8x8 l1;
++simdgroup_load(l1,left+256+offset,32);
++simdgroup_multiply_accumulate(accum1,l1,r,accum1);
++simdgroup_float8x8 l2;
++simdgroup_load(l2,left+512+offset,32);
++simdgroup_multiply_accumulate(accum2,l2,r,accum2);
++simdgroup_float8x8 l3;
++simdgroup_load(l3,left+768+offset,32);
++simdgroup_multiply_accumulate(accum3,l3,r,accum3);
++}
++threadgroup_barrier(mem_flags::mem_threadgroup);
++}
++simdgroup_store(accum0,result+0+simd*8,64);
++simdgroup_store(accum1,result+512+simd*8,64);
++simdgroup_store(accum2,result+1024+simd*8,64);
++simdgroup_store(accum3,result+1536+simd*8,64);
++threadgroup_barrier(mem_flags::mem_threadgroup);
++for(uint i=tid;i<2048;i+=256){ulong row=rowBase+i/64,column=colBase+i%64;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
++}
++kernel void primary_specialized_bf16_decode(device const float* a [[buffer(0)]],device const uchar* payload [[buffer(1)]],device const ulong* metadata [[buffer(4)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    ulong column=ulong(group)*16+simd*4;
++    if(!fixed_no_tail&&column>=ulong(fixed_columns))return;
++    float4 sum0=0.0f,sum1=0.0f;
++    if(ulong(fixed_inner)%4==0) {
++        for(ulong k=ulong(lane)*4;k<ulong(fixed_inner);k+=128) {
++            float4 x=*(device const float4*)(a+k),y=ulong(fixed_rows)==2?*(device const float4*)(a+ulong(fixed_aStride)+k):float4(0.0f);
++            ushort4 b0=primary_row4(payload,metadata,column,k,ulong(fixed_inner)),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
++            if(fixed_no_tail||column+1<ulong(fixed_columns))b1=primary_row4(payload,metadata,(column+1),k,ulong(fixed_inner));
++            if(fixed_no_tail||column+2<ulong(fixed_columns))b2=primary_row4(payload,metadata,(column+2),k,ulong(fixed_inner));
++            if(fixed_no_tail||column+3<ulong(fixed_columns))b3=primary_row4(payload,metadata,(column+3),k,ulong(fixed_inner));
++            for(uint j=0;j<4;++j) {
++                float4 w=as_type<float4>(uint4(b0[j],b1[j],b2[j],b3[j])<<16);
++                sum0+=x[j]*w;if(ulong(fixed_rows)==2)sum1+=y[j]*w;
++            }
++        }
++    } else {
++    for(ulong k=lane;k<ulong(fixed_inner);k+=32) {
++        float x=a[k],y=ulong(fixed_rows)==2?a[ulong(fixed_aStride)+k]:0.0f;
++        float4 w=0.0f;
++        w.x=as_type<float>(uint(primary_word(payload,metadata,column,k,ulong(fixed_inner)))<<16);
++        if(fixed_no_tail||column+1<ulong(fixed_columns))w.y=as_type<float>(uint(primary_word(payload,metadata,(column+1),k,ulong(fixed_inner)))<<16);
++        if(fixed_no_tail||column+2<ulong(fixed_columns))w.z=as_type<float>(uint(primary_word(payload,metadata,(column+2),k,ulong(fixed_inner)))<<16);
++        if(fixed_no_tail||column+3<ulong(fixed_columns))w.w=as_type<float>(uint(primary_word(payload,metadata,(column+3),k,ulong(fixed_inner)))<<16);
++        sum0+=x*w;if(ulong(fixed_rows)==2)sum1+=y*w;
++    }
++    }
++    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
++    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
++    if(lane==0)for(uint j=0;j<4&&(fixed_no_tail||column+j<ulong(fixed_columns));++j){out[column+j]=sum0[j];if(ulong(fixed_rows)==2)out[ulong(fixed_oStride)+column+j]=sum1[j];}
++}
++)PRIMARY";}
+--- a/src/entry/metal_main.cpp
++++ b/src/entry/metal_main.cpp
+@@ -21,6 +21,31 @@
+         return X::Module(host, "metal_serving");
+     }
+ public:
++    std::string PrimaryStatsJson() {
++        const auto p=MetalContext::PrimaryStats();
++        return nlohmann::json{{"active_weights",p.activeWeights},{"original_bytes",p.originalBytes},{"payload_bytes",p.payloadBytes},{"metadata_bytes",p.metadataBytes},{"allocated_bytes",p.allocatedBytes},{"uploads",p.uploads},{"decode_encoded",p.decodeEncoded},{"prefill_encoded",p.prefillEncoded},{"head_encoded",p.headEncoded}}.dump();
++    }
++    std::string MemoryStatsJson() {
++        const auto m=MetalContext::MemoryStats();
++        return nlohmann::json{{"metal_allocated_bytes",m.allocated},{"metal_recommended_working_set_bytes",m.recommended},
++            {"metal_registry_id",m.registry},{"task_info_status",m.taskStatus},{"task_physical_footprint_bytes",m.physical},
++            {"task_resident_bytes",m.resident},{"task_compressed_bytes",m.compressed},{"task_internal_bytes",m.internal},
++            {"task_virtual_bytes",m.virtualBytes},{"scope","process Metal device resources and current task; snapshots, not peak or system free RAM"}}.dump();
++    }
++    std::string MemoryInventoryJson(X::Value graphs,X::Value session) {
++        if(!graphs.IsList())throw X::Error("Inventory graph descriptors must be a list");
++        nlohmann::json references=nlohmann::json::array(),buffers=nlohmann::json::array();std::unordered_map<uintptr_t,size_t> ids;
++        auto append=[&](const std::string& tag,const std::vector<MetalResourceReference>& refs){for(const auto& r:refs){
++            auto found=ids.find(r.buffer.identity);size_t id;
++            if(found==ids.end()){id=buffers.size();ids.emplace(r.buffer.identity,id);buffers.push_back({{"id",id},{"allocated_bytes",r.buffer.allocatedBytes},{"length_bytes",r.buffer.lengthBytes}});}
++            else {id=found->second;if(buffers[id]["allocated_bytes"]!=r.buffer.allocatedBytes||buffers[id]["length_bytes"]!=r.buffer.lengthBytes)throw X::Error("Inventory resource identity changed");}
++            references.push_back({{"buffer_id",id},{"tag",tag},{"slot",r.slot==SIZE_MAX?nlohmann::json(nullptr):nlohmann::json(r.slot)},{"role",r.role},{"name",r.name},{"shape",r.shape},{"representation",r.buffer.representation},{"resident_mask_operand",r.residentOperand},{"any_op_writer",r.anyWriter},{"resident_mask_writer",r.residentWriter},{"input",r.input},{"output_part",r.outputPart},{"legacy_output",r.legacyOutput},{"weight",r.weight}});
++        }};
++        for(uint64_t i=0;i<graphs.Size();++i){auto descriptor=graphs.Get(i);if(!descriptor.IsDict())throw X::Error("Invalid inventory graph descriptor");auto value=descriptor.Get("object");if(value.runtime()!=graphs.runtime())throw X::Error("Inventory runtime mismatch");auto graph=value.NativeData<MetalCompiledGraph>();if(!graph)throw X::Error("Inventory requires graph objects");append(descriptor.Get("tag").ToString(),graph->MemoryReferences());}
++        if(session.IsValid()&&!session.IsNone()){if(session.runtime()!=graphs.runtime())throw X::Error("Inventory session runtime mismatch");auto native=session.NativeData<MetalDecoderSession>();if(!native)throw X::Error("Inventory requires a native session");append("session",native->MemoryReferences());}
++        uint64_t bytes=0;for(const auto& b:buffers)bytes+=b["allocated_bytes"].get<uint64_t>();
++        return nlohmann::json{{"buffers",buffers},{"references",references},{"unique_allocated_bytes",bytes},{"device_snapshot",nlohmann::json::parse(MemoryStatsJson())},{"scope","Collection-local opaque ids, no addresses. Declared graph/held-weight/session owners only; context scratch/driver resources may be absent. Resident mask references are conservative, not a safe-free proof."}}.dump();
++    }
+     X::Value PrepareImage(X::Value path,X::Value options) {
+         auto params=nlohmann::json::parse(options.ToString());
+         Image::NativeImageConfig c;
+@@ -117,6 +142,15 @@
+ #ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
+         info+="; qwen35_4b_wide_prefill";
+ #endif
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    info += " cached_matrix_metadata";
++#endif
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++        info+="; primary_bf16_blocks";
++#endif
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++        info+="; lazy_resident_defaults";
++#endif
+ #ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+         info+="; dense_prefix_cache";
+ #endif
+@@ -183,6 +217,9 @@
+         APISET().AddClass<0,ModelTensorIO>("tensor_io");
+         APISET().AddClass<0,CPUTokenizer>("tokenizer");
+         APISET().AddFunc<2>("prepare_image",&GarnetMetalAPI::PrepareImage);
++        APISET().AddFunc<2>("memory_inventory_json",&GarnetMetalAPI::MemoryInventoryJson);
++        APISET().AddFunc<0>("primary_storage_stats_json",&GarnetMetalAPI::PrimaryStatsJson);
++        APISET().AddFunc<0>("memory_stats_json",&GarnetMetalAPI::MemoryStatsJson);
+         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
+         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
+         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
+--- /dev/null
++++ b/test2026/metal/inventory_test.cpp
+@@ -0,0 +1,9 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++static void need(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
++int main(){try{Garnet::MetalContext gpu;need(!Garnet::MetalContext::MatrixBufferInfo({}).identity,"Empty matrix has resource");need(Garnet::MetalContext::WeightBufferInfo({}).empty(),"Empty weight has resource");auto a=gpu.Allocate(1024,1024);gpu.Zero(a);auto alias=a;std::vector<uint16_t> bits(1024*1024,0);auto weight=gpu.UploadBF16(bits.data(),bits.size()*2,1024,1024),shared=weight;
++auto before=Garnet::MetalContext::MemoryStats();auto x=Garnet::MetalContext::MatrixBufferInfo(a),y=Garnet::MetalContext::MatrixBufferInfo(alias);need(x.identity&&x.identity==y.identity&&x.allocatedBytes==y.allocatedBytes&&x.lengthBytes==4*1024*1024&&x.allocatedBytes>=x.lengthBytes,"Alias/allocation identity mismatch");auto w=Garnet::MetalContext::WeightBufferInfo(weight),v=Garnet::MetalContext::WeightBufferInfo(shared);if(weight.PrimaryReady()){
++need(w.size()==2&&v.size()==2&&w[0].representation=="primary_bf16_payload"&&w[1].representation=="primary_bf16_metadata"&&w[0].identity==v[0].identity&&w[1].identity==v[1].identity&&w[0].identity!=w[1].identity&&w[0].identity!=x.identity&&w[1].identity!=x.identity,"Primary buffer ownership/dedup identity mismatch");
++need(w[0].lengthBytes==1024*1024/512*768&&w[1].lengthBytes==1024*1024/512*8&&w[0].allocatedBytes>=w[0].lengthBytes&&w[1].allocatedBytes>=w[1].lengthBytes,"Primary buffer dimensions/length mismatch");
++}else{need(w.size()==1&&v.size()==1&&w[0].identity==v[0].identity&&w[0].identity!=x.identity&&w[0].lengthBytes==2*1024*1024&&w[0].allocatedBytes>=w[0].lengthBytes,"BF16 ownership/identity mismatch");};a=Garnet::MetalMatrix();need(Garnet::MetalContext::MatrixBufferInfo(alias).identity==x.identity,"Live alias lost identity");auto values=gpu.Download(alias);for(float f:values)need(f==0,"Inventory changed tensor value");auto after=Garnet::MetalContext::MemoryStats();need(before.allocated==after.allocated,"Inventory allocated/freed GPU resources");uint64_t weightBytes=0;for(const auto& entry:w)weightBytes+=entry.allocatedBytes;need(x.allocatedBytes+weightBytes<=after.allocated,"Unique resource sum exceeds device total");std::cout<<"Native inventory alias/weight dedup identity, allocation lengths, empty/retained owners, read-only values and device accounting PASS\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/matrix_metadata_test.cpp
+@@ -0,0 +1,34 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++#include <utility>
++using namespace Garnet;
++static void need(bool ok,const char* message){if(!ok)throw std::runtime_error(message);}
++static void audit(const MetalMatrix& matrix){need(MetalContext::MatrixMetadataMatchesLive(matrix),"Cached metadata differs from live MPS properties");}
++int main(){try{
++    MetalContext gpu;MetalMatrix empty;
++    audit(empty);need(!empty.SharesStorage(empty)&&!empty.CompatibleLayout(empty),"Empty matrix comparison changed");
++    need(!gpu.IsDefaultLayout(empty,1,1)&&!MetalContext::MatrixBufferInfo(empty).identity,"Empty layout or identity changed");
++    for(auto shape:{std::pair<size_t,size_t>{1,1},{2,17},{3,257},{2,2048}}){
++        const auto rows=shape.first,cols=shape.second;
++        auto a=gpu.Allocate(rows,cols),b=gpu.Allocate(rows,cols),different=gpu.Allocate(rows,cols+1);
++        audit(a);audit(b);audit(different);
++        need(a.CompatibleLayout(b)&&!a.SharesStorage(b),"Independent same-layout matrices aliased");
++        need(!a.CompatibleLayout(different)&&!a.SharesStorage(different),"Different logical width accepted");
++        need(gpu.IsDefaultLayout(a,rows,cols)&&!gpu.IsDefaultLayout(a,rows+1,cols)&&!gpu.IsDefaultLayout(a,rows,cols+1),"Default layout descriptor mismatch");
++        auto alias=a;auto id=MetalContext::MatrixBufferInfo(a);need(id.identity&&id.allocatedBytes>=id.lengthBytes,"Invalid cached buffer lengths");
++        need(alias.SharesStorage(a)&&alias.CompatibleLayout(a),"Copy lost storage identity");
++        auto moved=std::move(alias);audit(moved);need(!alias.Valid()&&moved.SharesStorage(a),"Move lost immutable owner");
++        gpu.Update(a,std::vector<float>(rows*cols,3.25f));audit(a);
++        gpu.Begin();gpu.EncodeAdd(a,a,b);audit(a);audit(b);need(a.CompatibleLayout(b),"Pending output layout changed");gpu.SubmitAndWait();audit(b);
++        for(float value:gpu.Download(b))need(value==6.5f,"Metadata changed encoded output");
++        gpu.Begin();gpu.EncodeAdd(a,a,b);gpu.Abort();audit(b);gpu.Zero(b);audit(b);
++        for(float value:gpu.Download(b))need(value==0,"Abort/zero recovery changed");
++        a=MetalMatrix();audit(moved);need(MetalContext::MatrixBufferInfo(moved).identity==id.identity,"Live alias lost buffer");
++        moved=b;a=gpu.Allocate(rows,cols);audit(moved);audit(a);need(moved.SharesStorage(b)&&!moved.SharesStorage(a),"Reassignment retained stale identity");
++    }
++    MetalMatrix survivor;{MetalContext other;survivor=other.Upload(std::vector<float>(34,7),2,17);audit(survivor);}
++    audit(survivor);need(gpu.IsDefaultLayout(survivor,2,17),"Matrix did not survive original context");
++    for(float value:gpu.Download(survivor))need(value==7,"Surviving matrix data changed");
++    std::cout<<"Matrix metadata/live-MPS parity empty/copy/move/reassign/padding/pending/Submit/Abort/host-zero/context-lifetime PASS\n";return 0;
++}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/memory_stats_test.mm
+@@ -0,0 +1,8 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++int main(){try{Garnet::MetalContext gpu;auto before=Garnet::MetalContext::MemoryStats();if(!before.recommended||before.taskStatus||before.virtualBytes<before.resident)throw std::runtime_error("Memory metadata unavailable");
++uint64_t retained=0,afterScope=0;
++@autoreleasepool{{auto a=gpu.Allocate(1024,1024);gpu.Zero(a);auto alias=a;auto b=Garnet::MetalContext::MemoryStats();if(b.registry!=before.registry||b.allocated<before.allocated+4*1024*1024)throw std::runtime_error("Live allocation missing from snapshot");a=Garnet::MetalMatrix();auto c=Garnet::MetalContext::MemoryStats();if(c.allocated<b.allocated)throw std::runtime_error("Retained alias lost allocation");retained=c.allocated;}
++afterScope=Garnet::MetalContext::MemoryStats().allocated;}
++auto after=Garnet::MetalContext::MemoryStats();if(after.allocated>=retained)throw std::runtime_error("Explicit pool drain did not release allocation");std::cout<<"Device allocation/alias/release with explicit pool and task metadata PASS before="<<before.allocated<<" retained="<<retained<<" after_cpp_scope="<<afterScope<<" after_pool="<<after.allocated<<" recommended="<<before.recommended<<"\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/primary_projection_test.cpp
+@@ -0,0 +1,56 @@
++#include <algorithm>
++#include "metal_context.h"
++#include <cmath>
++#include <cstring>
++#include <cstdint>
++#include <fstream>
++#include <iostream>
++#include <limits>
++#include <stdexcept>
++using namespace Garnet;
++static uint64_t Encoded(){auto s=MetalContext::PrimaryStats();return s.decodeEncoded+s.headEncoded+s.prefillEncoded;}
++static void require(bool v,const char* text){if(!v)throw std::runtime_error(text);}
++static float fromBits(uint32_t bits){float f;std::memcpy(&f,&bits,4);return f;}
++int main(int argc,char** argv){try{
++ MetalContext gpu;std::ofstream binary;if(argc>1)binary.open(argv[1],std::ios::binary);size_t cases=0,passes=0,widePasses=0;double worstRatio=0;
++ auto run=[&](size_t rows,size_t inner,size_t columns){
++  std::vector<float> input(rows*inner),weights(columns*inner);std::vector<uint16_t> bits(weights.size());
++  for(size_t i=0;i<bits.size();++i){int exponent=int((i*13+i/inner)%8)-5;bits[i]=uint16_t(((i*7+i/inner)%2?0x8000:0)|((127+exponent)<<7)|((i*17+i/inner)%128));weights[i]=fromBits(uint32_t(bits[i])<<16);}
++  auto a=gpu.Allocate(rows,inner),out=gpu.Allocate(rows,columns);auto w=gpu.UploadBF16(bits.data(),bits.size()*2,columns,inner);bool prepared=gpu.PrepareBF16BodyShape(a,w,out);require(prepared==(rows<=2&&columns<100000),"Unexpected shape preparation admission");
++  bool eligible=false;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++  eligible=columns>256&&columns%4==0&&inner%128==0;
++#endif
++  require(w.PrimaryReady()==eligible,"Primary admission mismatch");
++  std::vector<float> saved;
++  for(size_t pass=0;pass<2;++pass){
++   for(size_t i=0;i<input.size();++i){int exponent=int((i*5+pass*3)%7)-3;uint32_t raw=uint32_t(((i*11+pass)%2?0x80000000u:0)|((127+exponent)<<23)|((i*2654435761u+pass*7919u)&0x7fffffu));input[i]=fromBits(raw);}
++   gpu.Update(a,input);gpu.Update(out,std::vector<float>(rows*columns,std::numeric_limits<float>::quiet_NaN()));auto before=Encoded();gpu.Begin();gpu.EncodeBF16MatVec(a,w,out);gpu.SubmitAndWait();auto actual=gpu.Download(out);
++   require(Encoded()-before==size_t(eligible),"Incorrect encoded wide route");widePasses+=eligible;require(gpu.Download(a)==input,"Input mutated");
++   for(size_t r=0;r<rows;++r)for(size_t c=0;c<columns;++c){double ref=0,l1=0;for(size_t k=0;k<inner;++k){double product=double(input[r*inner+k])*weights[c*inner+k];ref+=product;l1+=std::abs(product);}double bound=rows<=2?1e-4+2e-6*l1:5e-6+5e-5*std::abs(ref);double error=std::abs(double(actual[r*columns+c])-ref);if(!std::isfinite(actual[r*columns+c])||error>bound)std::cerr<<"failure rows="<<rows<<" inner="<<inner<<" columns="<<columns<<" pass="<<pass<<" outputRow="<<r<<" col="<<c<<" actual="<<actual[r*columns+c]<<" ref="<<ref<<" L1="<<l1<<" bound="<<bound<<" error="<<error<<std::endl;require(std::isfinite(actual[r*columns+c])&&error<=bound,"FP64 reference bound failed");worstRatio=std::max(worstRatio,error/bound);}
++   if(binary.is_open()){uint64_t shape[4]={rows,inner,columns,pass};binary.write(reinterpret_cast<char*>(shape),sizeof(shape));binary.write(reinterpret_cast<const char*>(actual.data()),actual.size()*4);}
++   saved=actual;++passes;
++  }
++  if(rows==1&&inner==2048&&columns==272){
++   auto badout=gpu.Allocate(rows,columns+1);require(!gpu.PrepareBF16BodyShape(a,w,badout),"Invalid output shape prepared");auto invalidBefore=Encoded();bool rejected=false;gpu.Begin();try{gpu.EncodeBF16MatVec(a,w,badout);}catch(...){rejected=true;}gpu.Abort();require(rejected&&Encoded()==invalidBefore,"Invalid encoding reached wide dispatch");
++   auto before=Encoded();gpu.Begin();gpu.EncodeBF16MatVec(a,w,out);gpu.EncodeBF16MatVec(a,w,out);w=MetalBF16Weight();gpu.SubmitAndWait();auto value=gpu.Download(out);require(std::memcmp(saved.data(),value.data(),saved.size()*4)==0,"Queued reuse/source release changed result");require(Encoded()-before==2*size_t(eligible),"Queued route count");
++  }
++  if(rows==1&&inner==6144&&columns==257){
++   gpu.Begin();gpu.EncodeBF16MatVec(a,w,out);gpu.Abort();bool rejected=false;try{gpu.Download(out);}catch(...){rejected=true;}require(rejected,"Aborted output readable");gpu.Begin();gpu.EncodeBF16MatVec(a,w,out);gpu.SubmitAndWait();auto value=gpu.Download(out);require(std::memcmp(saved.data(),value.data(),saved.size()*4)==0,"Abort recovery differs");
++   gpu.Begin();rejected=false;try{gpu.PrepareBF16BodyShape(a,w,out);}catch(...){rejected=true;}gpu.Abort();require(rejected,"Prepared pipeline during active encoding");
++  }
++  ++cases;
++ };
++ for(size_t rows:{1,2})for(size_t inner:{2048,6144,2560,9216,2049,128})for(size_t columns:{257,272,511,768,784,1024})run(rows,inner,columns);
++ for(size_t rows:{1,2})for(size_t columns:{16,256})run(rows,2048,columns);
++ run(1,128,151936);
++ for(size_t rows:{3,16,32,64})for(size_t inner:{2048,2560})for(size_t columns:{272,768})run(rows,inner,columns);
++ require(cases==93&&passes==186,"Case coverage mismatch");
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++ require(widePasses>0,"Primary route not executed");
++#else
++ require(widePasses==0,"Disabled policy routed primary");
++#endif
++ if(binary.is_open()){binary.flush();require(bool(binary),"Cannot write full bit results");}
++ std::cout<<"Primary numerical/reference/poison/input/tail272/fallback/small/vocab/queued owner/Abort recovery PASS cases="<<cases<<" passes="<<passes<<" wide="<<widePasses<<" worst_scaled_error="<<worstRatio<<'\n';return 0;
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/primary_storage_test.cpp
+@@ -0,0 +1,59 @@
++#include "metal_context.h"
++#include <vector>
++#include <cstring>
++#include <cstdint>
++#include <stdexcept>
++#include <iostream>
++using namespace Garnet;
++static void need(bool b,const char* s){if(!b)throw std::runtime_error(s);}
++int main(){try{
++ MetalContext gpu;auto initial=MetalContext::PrimaryStats();
++ {
++ std::vector<uint16_t> bits;for(uint32_t i=0;i<65536;++i)if(((i>>7)&255)!=255)bits.push_back(uint16_t(i));bits.resize(512*128,0x8000);
++ auto w=gpu.UploadBF16(bits.data(),bits.size()*2,512,128);auto shared=w;
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++ need(w.PrimaryReady(),"Finite-pattern matrix not packed");
++ auto now=MetalContext::PrimaryStats();need(now.activeWeights==initial.activeWeights+1&&now.originalBytes==initial.originalBytes+bits.size()*2,"Owner accounting mismatch");
++ auto info=MetalContext::WeightBufferInfo(w);need(info.size()==2&&info[0].representation=="primary_bf16_payload"&&info[1].representation=="primary_bf16_metadata","Packed weight retained a raw duplicate");
++ auto actual=gpu.PrimaryReadWords(w,0,bits.size());for(size_t i=0;i<bits.size();++i)need(actual[i]==uint32_t(bits[i])<<16,"Finite GPU bits mismatch");
++ w=MetalBF16Weight();need(MetalContext::PrimaryStats().activeWeights==now.activeWeights,"Shared owner was freed");
++ need(gpu.PrimaryReadWords(shared,7,100)[0]==uint32_t(bits[7])<<16,"Nonzero read offset mismatch");
++ bool rejected=false;try{gpu.PrimaryReadWords(shared,bits.size()-1,2);}catch(...){rejected=true;}need(rejected,"Invalid read range accepted");
++#else
++ need(!w.PrimaryReady(),"Disabled packed admission");
++#endif
++ }
++ need(MetalContext::PrimaryStats().activeWeights==initial.activeWeights&&MetalContext::PrimaryStats().allocatedBytes==initial.allocatedBytes,"Released owners still charged");
++ // Alternating wide-exponent/raw and compact blocks, plus unsupported dimensions.
++ std::vector<uint16_t> mix(260*256);
++ for(size_t r=0;r<260;++r)for(size_t k=0;k<256;++k){const size_t block=(r/4)*2+k/128;const unsigned e=block%4==0?(k%2?96:130):120+unsigned(k%4);mix[r*256+k]=uint16_t((e<<7)|((r*17+k*5)&127)|((k&1)<<15));}
++ {
++ auto w=gpu.UploadBF16(mix.data(),mix.size()*2,260,256);
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++ need(w.PrimaryReady(),"Mixed matrix not packed");auto actual=gpu.PrimaryReadWords(w,0,mix.size());for(size_t i=0;i<mix.size();++i)need(actual[i]==uint32_t(mix[i])<<16,"Mixed raw/compact GPU bits mismatch");
++#endif
++ }
++ for(size_t batch:{1,2}) {
++  const size_t k=2560,n=260;std::vector<uint16_t> bits(k*n);for(size_t i=0;i<bits.size();++i)bits[i]=uint16_t((120u+unsigned(i%4))<<7|unsigned(i%127)|unsigned((i&1)<<15));
++  auto packed=gpu.UploadBF16(bits.data(),bits.size()*2,n,k);auto rawControl=gpu.UploadBF16(bits.data(),bits.size()*2,n,k,true);
++  std::vector<float> values(batch*k);for(size_t i=0;i<values.size();++i)values[i]=float(int(i%29)-14)*.017f;
++  auto input=gpu.Upload(values,batch,k),out=gpu.Allocate(batch,n),reference=gpu.Allocate(batch,n);auto count=gpu.BodyShapePipelineCount();
++  need(gpu.PrepareBF16BodyShape(input,packed,out)&&gpu.PrepareBF16BodyShape(input,rawControl,reference),"Same-shape PSO preparation failed");
++#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
++  need(gpu.BodyShapePipelineCount()==count+2,"Raw/packed pipeline keys collided");
++#else
++  need(gpu.BodyShapePipelineCount()==count+1,"Raw duplicate pipeline entry");
++#endif
++  gpu.Begin();gpu.EncodeBF16MatVec(input,rawControl,reference);gpu.SubmitAndWait();auto wanted=gpu.Download(reference);
++  gpu.Begin();gpu.EncodeBF16MatVec(input,packed,out);bool rejected=false;try{gpu.Download(out);}catch(...){rejected=true;}need(rejected,"Pending packed output readable");
++  {MetalContext other;other.Begin();rejected=false;try{other.EncodeBF16MatVec(input,packed,out);}catch(...){rejected=true;}other.Abort();need(rejected,"Foreign pending writer accepted");}
++  gpu.Abort();rejected=false;try{gpu.Download(out);}catch(...){rejected=true;}need(rejected,"Aborted packed output readable");
++  gpu.Begin();gpu.EncodeBF16MatVec(input,packed,out);gpu.SubmitAndWait();auto actual=gpu.Download(out);need(actual.size()==wanted.size()&&!std::memcmp(actual.data(),wanted.data(),wanted.size()*4),"Packed tail260/Abort recovery differs from same-shape raw control");
++ }
++ std::vector<uint16_t> raw(257*129,0x3f80);auto fallback=gpu.UploadBF16(raw.data(),raw.size()*2,257,129);need(!fallback.PrimaryReady(),"Unsupported dimensions packed");
++#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
++ for(int stage:{1,2}){auto before=MetalContext::PrimaryStats();MetalContext::PrimaryTestFailAfter(stage);bool rejected=false;try{gpu.UploadBF16(mix.data(),mix.size()*2,260,256);}catch(...){rejected=true;}auto after=MetalContext::PrimaryStats();need(rejected&&after.activeWeights==before.activeWeights&&after.allocatedBytes==before.allocatedBytes,"Partial primary allocation failed cleanup");}
++ auto recovered=gpu.UploadBF16(mix.data(),mix.size()*2,260,256);need(recovered.PrimaryReady(),"Primary allocation did not recover");
++#endif
++ std::cout<<"Primary storage finite65536-filtered/mixed/address/owner/dedup/no-master/fallback/allocation-recovery PASS"<<std::endl;return 0;
++}catch(const std::exception&e){std::cerr<<e.what()<<std::endl;return 1;}}

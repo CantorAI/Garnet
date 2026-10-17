@@ -1,0 +1,7 @@
+{
+  "controller": 95131,
+  "exit": 1,
+  "observed": "ON primary storage/GPUfinitebits and primary projection/FP64 tests passed; old inventory test assumed one raw BF16 buffer. OFF all7passed.",
+  "update": "Representation-aware cardinality exact: raw keeps1original buffer; packed requires2separate payload/meta identities, shared dedup, exact expected sizes and no raw master. Device-byte sum now includes both. Numerical/source kernel policy unchanged.",
+  "additional_guard": "Tail260 raw/packed same-shape/Abort comparison upgraded from numeric equality to full FP32 memcmp including signedzero."
+}

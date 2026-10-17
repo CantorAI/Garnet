@@ -1,0 +1,68 @@
+{
+  "observed_utc": "2026-10-17T11:39:28.525906+00:00",
+  "warm_decode_medians": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "prepare_ms": 11.371204500000003,
+        "encode_ms": 89.26166900000001,
+        "gpu_ms": 10141.689229189069,
+        "wait_ms": 10299.709046,
+        "decode_seconds": 10.406597707995388
+      },
+      "Qwen3-1.7B": {
+        "prepare_ms": 3.3604785,
+        "encode_ms": 12.738187500000002,
+        "gpu_ms": 1235.918083366414,
+        "wait_ms": 1268.8868305,
+        "decode_seconds": 1.288045688001148
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "prepare_ms": 7.1067065000000005,
+        "encode_ms": 50.258601999999996,
+        "gpu_ms": 27020.495583281445,
+        "wait_ms": 27092.614254999993,
+        "decode_seconds": 27.189081229000294
+      },
+      "Qwen3-1.7B": {
+        "prepare_ms": 4.479959000000001,
+        "encode_ms": 17.045521,
+        "gpu_ms": 4306.031333333522,
+        "wait_ms": 4321.2040195,
+        "decode_seconds": 4.351242937504139
+      }
+    }
+  },
+  "first_request_separate": {
+    "control-1": {
+      "first_native_skill_wall_seconds": 78.36347100000421,
+      "http_wall_seconds": 267.12976991599135,
+      "Qwen3.5-4B": {
+        "ttft_seconds": 38.199387208005646,
+        "total_seconds": 47.41209358398919,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 15.22166399899288,
+        "total_seconds": 16.489621458007605,
+        "generated_tokens": 35
+      }
+    },
+    "candidate-1": {
+      "first_native_skill_wall_seconds": 73.93225866700232,
+      "http_wall_seconds": 229.45467845900566,
+      "Qwen3.5-4B": {
+        "ttft_seconds": 15.428402499019285,
+        "total_seconds": 42.76633020800364,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 3.249798583012307,
+        "total_seconds": 7.335942208010238,
+        "generated_tokens": 35
+      }
+    }
+  },
+  "interpretation": "GPU spans and wait dominate the decode increase; CPU encode does not explain it. No per-kernel, bandwidth, occupancy or causal attribution is established. GPU/wait overlap and must not be added. No excluded samples or changed gate. First Skill wall includes demand setup plus execution; native packing cost is not separately isolated."
+}

@@ -1,0 +1,8 @@
+{
+  "raw_calls": 28,
+  "calls_csv_rows": 28,
+  "route_csv_rows": 28,
+  "scope": "All first/warm returned model calls exactly once. Resource-root timings ineligible for speed. Calls remain grouped by worker/pair; CSV is not an independent result.",
+  "decode_metric": "(generated_tokens-1)/(total-TTFT); includes host/stop/post-loop overhead and possibly extra EOS work, not pure GPU decode.",
+  "storage_counters": "Native owner accounting, not driver physical liveness. Encoded deltas count dispatch encoding, not completed GPU operations. Snapshots are not peaks."
+}

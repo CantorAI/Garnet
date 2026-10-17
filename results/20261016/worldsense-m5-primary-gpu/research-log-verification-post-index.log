@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/shawn/CantorAI/Garnet/docs/research/verify_metal_research_log.py", line 607, in <module>
+    main()
+  File "/Users/shawn/CantorAI/Garnet/docs/research/verify_metal_research_log.py", line 23, in main
+    assert expected == {r['report_path'] for r in index['reports']}
+AssertionError

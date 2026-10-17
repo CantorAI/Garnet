@@ -1,0 +1,32 @@
+{
+  "experiment": "WS-M5-37",
+  "status": "rejected_speed_preservation",
+  "correctness_passed": true,
+  "resource_passed": true,
+  "speed_passed": false,
+  "full_confirmation_dispatched": false,
+  "promoted": false,
+  "returned_model_calls": 28,
+  "resource_controller_exit": 0,
+  "speed_controller_exit": 0,
+  "reason": "Both model decode rates regress beyond unchanged2%gate. No unchanged retry. Exact outputs and favorable TTFT/total/memory do not override decode preservation.",
+  "production": "Restored WS10;fourfilesonline;no camera;benchmark404",
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.7581571771675153,
+      "total_change": -0.3656677780612836,
+      "decode_gain": -0.703307524765489
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.7403345863480316,
+      "total_change": -0.07301174258361853,
+      "decode_gain": -0.6173067944057895
+    }
+  ],
+  "sampled_resource_reduction": {
+    "metal_allocated_bytes": 0.1262921916467945,
+    "task_physical_footprint_bytes": 0.1314516229306122
+  }
+}

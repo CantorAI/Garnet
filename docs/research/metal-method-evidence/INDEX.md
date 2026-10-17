@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T10:43:29.965010+00:00
+Generated UTC: 2026-10-17T11:42:54.861543+00:00
 
-Base HEAD at generation: `5db092a9c5003d3f8cf5fab2a37d754f5b0e24c3`. Reports indexed: **226**.
+Base HEAD at generation: `88f40eb77ca9ae90847f3296b6202c86314ef388`. Reports indexed: **227**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -208,6 +208,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-physical-memory](../../../results/20261016/worldsense-m5-physical-memory/README.md) | WS-M5-35: global ownership and OS graphics accounting — diagnostic |
 | [results/20261016/worldsense-m5-prefix-cache](../../../results/20261016/worldsense-m5-prefix-cache/README.md) | WS-M5-10 native bounded text prefix cache and wider VLM prefill |
 | [results/20261016/worldsense-m5-primary-blocks](../../../results/20261016/worldsense-m5-primary-blocks/README.md) | WS-M5-36: sole-primary lossless BF16 blocks — CPU feasibility |
+| [results/20261016/worldsense-m5-primary-gpu](../../../results/20261016/worldsense-m5-primary-gpu/README.md) | WS-M5-37 lossless primary weights: resource pass, decode regression |
 | [results/20261016/worldsense-m5-private-execution](../../../results/20261016/worldsense-m5-private-execution/README.md) | WS-M5-25 actual private execution: rejected companion decode regression |
 | [results/20261016/worldsense-m5-private-resident-defaults](../../../results/20261016/worldsense-m5-private-resident-defaults/README.md) | WS-M5-30: private resident deferred defaults — rejected |
 | [results/20261016/worldsense-m5-private-resident-dense512](../../../results/20261016/worldsense-m5-private-resident-dense512/README.md) | WS-M5-31: private resident defaults plus512 grouping — rejected |

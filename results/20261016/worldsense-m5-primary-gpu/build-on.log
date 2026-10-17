@@ -1,0 +1,18 @@
+loading initial cache file /Users/shawn/CantorAI/Garnet/cmake/MetalWorldSense4BPrefix.cmake
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-gpu-on
+[  7%] Built target garnet_native_image
+[ 14%] Built target garnet_metal
+[ 25%] Building CXX object CMakeFiles/garnet_inventory_test.dir/test2026/metal/inventory_test.cpp.o
+[ 25%] Built target garnet_memory_stats_test
+[ 33%] Built target garnet_prefix_copy_test
+[ 40%] Built target garnet_metal_matmul_test
+[ 74%] Built target garnet
+[ 81%] Built target garnet_matrix_metadata_test
+[ 85%] Building CXX object CMakeFiles/garnet_primary_storage_test.dir/test2026/metal/primary_storage_test.cpp.o
+[ 88%] Linking CXX executable garnet_inventory_test
+[ 92%] Linking CXX executable garnet_primary_storage_test
+[ 92%] Built target garnet_inventory_test
+[ 92%] Built target garnet_primary_storage_test
+[100%] Built target garnet_primary_projection_test

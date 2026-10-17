@@ -17,9 +17,16 @@ OUT = DOCS / 'metal-method-evidence'
 
 def main():
     index = json.loads((OUT / 'index.json').read_text(encoding='utf-8'))
-    expected = {p.relative_to(ROOT).as_posix() for base in
-                (ROOT / 'results', ROOT / 'test2026/metal/results')
-                for p in base.rglob('README.md')}
+    all_reports = {p.relative_to(ROOT).as_posix() for base in
+                   (ROOT / 'results', ROOT / 'test2026/metal/results')
+                   for p in base.rglob('README.md')}
+    # Match the builder's explicit scope: copied model/source documentation is
+    # evidence inside a snapshot, not an additional experiment report.
+    excluded = {p for p in all_reports if any(part in
+                ('source', 'source-snapshot', 'xModel')
+                for part in Path(p).parts[:-1])}
+    assert excluded == set(index['excluded_source_readmes'])
+    expected = all_reports - excluded
     assert expected == {r['report_path'] for r in index['reports']}
     verified = 0
     paths = [DOCS / 'metal_optimization_research_log.md', OUT / 'INDEX.md']
