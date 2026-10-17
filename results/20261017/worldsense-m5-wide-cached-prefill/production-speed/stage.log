@@ -1,0 +1,38 @@
+START control-1 2026-10-17T20:42:28Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-17T20:46:44Z
+FINISH candidate-1 exit 0
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+Build/SDK/host dependency identity unchanged 1871 production-speed
+{
+  "status": "rejected",
+  "passed": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.6682317581417456,
+      "total_change": -0.5358034132214917,
+      "decode_gain": -0.14974626884113762
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.7189436239115583,
+      "total_change": -0.5256056217826675,
+      "decode_gain": 0.2007904904690334
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": null,
+    "candidate-1": 16870899712
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-1": 40.707014625004376,
+    "candidate-1": 19.089722270990023
+  },
+  "native_skill_wall_gain": 0.5310458787792285,
+  "scope": "Additional predeclared actualWS10screen, same correctness/budget/2%latency/decode/Skillwall gates. Oldcontrol memory API unavailable/null. Separate instrumented matched resource and confirmation memory gates remain required. First/warm separate; no promotion from this screen."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 72619
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

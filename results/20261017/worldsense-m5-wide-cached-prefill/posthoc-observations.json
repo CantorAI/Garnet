@@ -1,0 +1,102 @@
+{
+  "descriptive_only": true,
+  "models": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "first_after_init": {
+          "ttft_seconds": 14.762672791985096,
+          "total_seconds": 16.41401366700302,
+          "generated_tokens": 35
+        },
+        "warm_phase_medians_seconds": {
+          "prefill_seconds": 7.06438593751227,
+          "decode_seconds": 1.2290044369874522,
+          "host_input_seconds": 0.011602271013543941
+        },
+        "sampled_memory_max_bytes": null
+      },
+      "Qwen3.5-4B": {
+        "first_after_init": {
+          "ttft_seconds": 27.58814816598897,
+          "total_seconds": 38.86656454100739,
+          "generated_tokens": 94
+        },
+        "warm_phase_medians_seconds": {
+          "prefill_seconds": 12.019547687494196,
+          "decode_seconds": 11.37092924999888,
+          "vision_seconds": 8.850309228990227,
+          "host_input_seconds": 0.005444625538075343
+        },
+        "sampled_memory_max_bytes": null
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "first_after_init": {
+          "ttft_seconds": 4.19617529201787,
+          "total_seconds": 6.077397082990501,
+          "generated_tokens": 35
+        },
+        "warm_phase_medians_seconds": {
+          "prefill_seconds": 2.2560965000011493,
+          "decode_seconds": 1.463412437500665,
+          "host_input_seconds": 0.002192062500398606
+        },
+        "sampled_memory_max_bytes": {
+          "metal_allocated_bytes": 16870899712,
+          "task_physical_footprint_bytes": 16085383040,
+          "task_resident_bytes": 642105344
+        }
+      },
+      "Qwen3.5-4B": {
+        "first_after_init": {
+          "ttft_seconds": 10.515622833976522,
+          "total_seconds": 20.528842791973148,
+          "generated_tokens": 94
+        },
+        "warm_phase_medians_seconds": {
+          "prefill_seconds": 4.773897167004179,
+          "decode_seconds": 9.469473832999938,
+          "vision_seconds": 0.8854623959923629,
+          "host_input_seconds": 0.007970020495122299
+        },
+        "sampled_memory_max_bytes": {
+          "metal_allocated_bytes": 16870899712,
+          "task_physical_footprint_bytes": 16085596032,
+          "task_resident_bytes": 548716544
+        }
+      }
+    }
+  },
+  "power": [
+    {
+      "label": "control-1",
+      "client_exit": 0,
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": null,
+      "thermal_after": null
+    },
+    {
+      "label": "candidate-1",
+      "client_exit": 0,
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": null,
+      "thermal_after": null
+    }
+  ],
+  "limits": "Single deployed-WS10 screen, not repeated confirmation/isolated causality. Old memory telemetry unavailable/null; phases nonadditive. OSthermal fields unavailable in this stage; AC100% is not GPU clock or throttling evidence. No verified exclusion or unchanged retry."
+}

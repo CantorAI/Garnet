@@ -1,0 +1,27 @@
+{
+  "source_files": 1717,
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_vector_prefill_shader.h",
+    "src/backends/metal/wide_checkpoint_policy.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "seed_files_changed": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/wide_checkpoint_policy.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "protected_shader_codec_wrapper_projection_CUDA_unchanged": true,
+  "merge": "Sixwide46files applied directly; entry marker andtestinsertions manuallymerged fromsameimmutable46delta. Initial check failed onlyoverlapping52additions; no partialapply/native/build/performance occurred before reviewedmerge.",
+  "scope": "Wideclassifier/admission plus boundedHOSTrawstorage reader; no53numeric/performance evidence yet."
+}

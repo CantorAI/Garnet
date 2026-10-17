@@ -1,0 +1,24 @@
+from pathlib import Path
+import json,hashlib
+w=Path(__file__).resolve().parent;s=Path('/Users/shawn/CantorAI/out/research/worldsense-wide-cached-prefill/source');old=w.parent/'worldsense-duo-prefill';before=Path('/Users/shawn/CantorAI/out/research/worldsense-duo-prefill/source')
+seed=json.loads((w/'ws49-seed-source-manifest.json').read_text());assert hashlib.sha256((before/'src/backends/metal/compiled_graph.cpp').read_bytes()).hexdigest()==seed['src/backends/metal/compiled_graph.cpp']
+original=(before/'src/backends/metal/compiled_graph.cpp').read_text();current=(s/'src/backends/metal/compiled_graph.cpp').read_text();a=original.index('    std::vector<float> data(rows*columns);');b=original.index('    if(modified!=',a);original_block=original[a:b];body=original_block[:original_block.index('    const auto id=')]
+assert current.count(body)==1,'Original F32/BF16 vector fallback body changed'
+x=current.index('    auto materialize=[&]() -> MetalMatrix {');y=current.index('    if(modified!=',x);assert current.count(body)==1,'Original F32 fallback changed' # Scope additions separately inverse-audited.
+assert (s/'src/backends/metal/wide_checkpoint_policy.h').read_bytes()==Path('/Users/shawn/CantorAI/out/research/worldsense-wide-primary-lazy/source/src/backends/metal/wide_checkpoint_policy.h').read_bytes()
+program=json.loads((w/'actual-program-proof.json').read_text());prior=json.loads((old/'actual-program-proof.json').read_text());assert program['programs']==prior['programs'],'Actual shader programs differ from49'
+for mode in ['on','fault']:
+ p=Path('/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-wide-cached-prefill-'+mode)/'Testing/Temporary/LastTest.log';assert 'Direct float upload all65536patterns/unaligned/padded/alias/source-lifetime/invalid/openbatch/Abort PASS'in p.read_text()
+prior52=json.loads((w.parent/'worldsense-primary-cached-lazy/actual-program-proof.json').read_text());assert program['programs']==prior52['programs']
+prior50=json.loads((w.parent/'worldsense-direct-float-upload/actual-program-proof.json').read_text());assert program['programs']==prior50['programs']
+mm=(s/'src/backends/metal/metal_context.mm').read_text();needle='#if defined(GARNET_METAL_PRIMARY_VECTOR_PREFILL) && !defined(GARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY)';assert mm.count(needle)==1
+assert 'primaryGemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"primary_gemm_16_64_64"]'in mm
+assert json.loads((w/'cpu-loop-proof.json').read_text())['rowBytes_call_outside_all_backward_branch_intervals']
+report={'entire_loader_inverse_proof':False,'wide_admission_scope_requires_separate_source_audit':True,'original_F32_fallback_body_byte_exact':True,'actual_four_build_programs_byte_exact_WS49':True,'actual_four_build_programs_byte_exact_WS50':True,'host_K32_ONLY_selects_original_K64':True,'CPU_getter_outside_conversion_loops':True,'direct_native_all65536_patterns_and_bounds_lifetime_pass':True,'scope':'Source/actual program/native correctness; no memory/performance gain claim.'}
+scope=json.loads((w/'wide-scope-proof.json').read_text());assert scope['entire_compiled_loader_exact_reconstructed_merge'];report['entire_WS53_loader_reconstructed_from_52_plus46_wide_delta']=True;report['actual_four_build_programs_byte_exact_WS52']=True
+if(w/'direct-upload-corpus.json').exists():
+ selection=json.loads((w/'direct-upload-selection.json').read_text());result=json.loads((w/'direct-upload-corpus.json').read_text());expected={(x['model'],x['tensor']):x for x in selection['weights']};actual={(x['model'],x['tensor']):x for x in result['weights']};assert len(expected)==len(actual)==546 and expected.keys()==actual.keys()
+ for key,x in expected.items():
+  y=actual[key];assert all(x[k]==y[k]for k in ['shape','rows','columns']);assert y['FP32_words_checked']==x['rows']*x['columns'] and len(y['BF16_sha256'])==64 and y['storage']=='matrix_fp32'
+ assert result['totals']=={'weights':546,'FP32_words_checked':334609152};report['all546_learned_vision_norm_depthwise_patch_candidates_FP32_words_exact']=True;report['direct_learned_words']=334609152
+(w/'independent-direct-upload-proof.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
