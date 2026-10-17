@@ -1,0 +1,17 @@
+{
+  "seed": "/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/source",
+  "changes": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/storage_scope_test.mm"
+  ],
+  "cuda_sources_unchanged": true,
+  "model_runtime_preprocessing_unchanged": true,
+  "scope": "Exact file-byte comparison; generated pycache excluded"
+}

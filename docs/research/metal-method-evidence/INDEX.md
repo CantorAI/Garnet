@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T01:50:13.196268+00:00
+Generated UTC: 2026-10-17T02:08:30.739099+00:00
 
-Base HEAD at generation: `c4974e61e6b5d0bbd43e399bbc014f51e1a3a6cb`. Reports indexed: **205**.
+Base HEAD at generation: `868cfe628f5d21c089457f894e9e9f3cd67f56b6`. Reports indexed: **206**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -201,6 +201,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-request-pool](../../../results/20261016/worldsense-m5-request-pool/README.md) | WS-M5-13 native request pool memory gate failed |
 | [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |
 | [results/20261016/worldsense-m5-small-prefill](../../../results/20261016/worldsense-m5-small-prefill/README.md) | WS-M5-06: existing smaller BF16 prefill tile — rejected |
+| [results/20261016/worldsense-m5-storage-scopes](../../../results/20261016/worldsense-m5-storage-scopes/README.md) | WS-M5-16: graph/session storage lifetime pools (rejected screen) |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |

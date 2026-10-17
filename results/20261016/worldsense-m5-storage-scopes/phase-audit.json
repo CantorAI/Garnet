@@ -1,0 +1,76 @@
+{
+  "control-1": {
+    "Qwen3.5-4B": {
+      "vision_seconds": 8.0402280624985,
+      "reset_seconds": 0.08827233350166352,
+      "host_input_seconds": 0.007350042011239566,
+      "prefill_seconds": 10.618761375000759,
+      "decode_seconds": 10.907021479499235,
+      "decode_profile.prepare_ms": 10.083171,
+      "decode_profile.encode_ms": 77.47714449999998,
+      "decode_profile.gpu_ms": 10612.158749980154,
+      "decode_profile.wait_ms": 10802.470126999999,
+      "prefill_profile.prepare_ms": 5.5910005,
+      "prefill_profile.encode_ms": 5.783229499999999,
+      "prefill_profile.gpu_ms": 9734.028458333341,
+      "prefill_profile.wait_ms": 10602.229062499999,
+      "task_compressed_bytes": 14605975552.0,
+      "task_physical_footprint_bytes": 18057091952.0,
+      "task_resident_bytes": 123830272.0
+    },
+    "Qwen3-1.7B": {
+      "reset_seconds": 0.24366808350168867,
+      "host_input_seconds": 0.008352999495400582,
+      "prefill_seconds": 7.4654301460032,
+      "decode_seconds": 1.409451645493391,
+      "decode_profile.prepare_ms": 3.7754580000000004,
+      "decode_profile.encode_ms": 14.472356999999999,
+      "decode_profile.gpu_ms": 1333.4657916493597,
+      "decode_profile.wait_ms": 1387.3097679999996,
+      "prefill_profile.prepare_ms": 2.1025009999999997,
+      "prefill_profile.encode_ms": 5.6381875,
+      "prefill_profile.gpu_ms": 6600.546812536777,
+      "prefill_profile.wait_ms": 7436.3644994999995,
+      "task_compressed_bytes": 14261313536.0,
+      "task_physical_footprint_bytes": 18053094808.0,
+      "task_resident_bytes": 461414400.0
+    }
+  },
+  "candidate-1": {
+    "Qwen3.5-4B": {
+      "vision_seconds": 8.858684479004296,
+      "reset_seconds": 0.05656616650230717,
+      "host_input_seconds": 0.006856395993963815,
+      "prefill_seconds": 10.931087687997206,
+      "decode_seconds": 11.133873208003934,
+      "decode_profile.prepare_ms": 9.589355499999996,
+      "decode_profile.encode_ms": 66.8416865,
+      "decode_profile.gpu_ms": 10891.687520837877,
+      "decode_profile.wait_ms": 11035.376875999998,
+      "prefill_profile.prepare_ms": 9.944061000000001,
+      "prefill_profile.encode_ms": 6.0066679999999995,
+      "prefill_profile.gpu_ms": 9543.662875010341,
+      "prefill_profile.wait_ms": 10909.587707,
+      "task_compressed_bytes": 14631067648.0,
+      "task_physical_footprint_bytes": 18056174880.0,
+      "task_resident_bytes": 95232000.0
+    },
+    "Qwen3-1.7B": {
+      "reset_seconds": 0.27560875000199303,
+      "host_input_seconds": 0.007219187500595581,
+      "prefill_seconds": 6.353861249997863,
+      "decode_seconds": 1.4172942295044777,
+      "decode_profile.prepare_ms": 4.2433965,
+      "decode_profile.encode_ms": 16.1899795,
+      "decode_profile.gpu_ms": 1330.470000000787,
+      "decode_profile.wait_ms": 1392.0817055,
+      "prefill_profile.prepare_ms": 2.275625,
+      "prefill_profile.encode_ms": 6.453001,
+      "prefill_profile.gpu_ms": 5262.843979166064,
+      "prefill_profile.wait_ms": 6330.4415845,
+      "task_compressed_bytes": 14180982784.0,
+      "task_physical_footprint_bytes": 18050055456.0,
+      "task_resident_bytes": 541851648.0
+    }
+  }
+}
