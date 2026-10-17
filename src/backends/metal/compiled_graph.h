@@ -37,12 +37,18 @@ class MetalCompiledGraph {
     size_t visionPrefetchDispatches_=0,visionVectorDispatches_=0,mlpGraphDispatches_=0;
     bool resetKVPrefix_[2]={false,false};
     bool ready_=false,bf16Projections_=false;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     SafeTensorsIndex index_;
     size_t Weight(const std::string&);
     size_t BF16Weight(const std::string&,bool visionPrefill=false);
     size_t Allocate(size_t,size_t);
     size_t LowerVision(size_t input,const X::Value& attributes);
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    bool lazyDefaultPlanReady_=false;std::vector<size_t> lazyDefaultSlots_;
+    size_t lazyRetiredBytes_=0,lazyRehydratedBytes_=0;
+#endif
+    void RetireResidentDefaults();
+    void MaterializeDefault(size_t slot);
     void Clear();
     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
     void Encode(MetalContext&,bool packedOutput=true,const MetalMatrix* greedyOutput=nullptr);
@@ -58,6 +64,10 @@ public:
     bool BuildShared(X::Value graph,X::Value symbols,const std::string& checkpoint,X::Value source);
     X::Value Run(X::Value inputs);
     void Close();
+    std::vector<MetalResourceReference> MemoryReferences();
+    size_t LazyRetiredBytes() const;
+    size_t LazyRehydratedBytes() const;
+    size_t LazyPlannedSlots() const;
     bool Ready() const {return ready_;}
     double CompileMs() const {return compileMs_;}
     double LastInferenceMs() const {return inferenceMs_;}
@@ -73,6 +83,9 @@ public:
         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);
+        APISET().AddProp("lazy_default_retired_bytes",&MetalCompiledGraph::LazyRetiredBytes);
+        APISET().AddProp("lazy_default_rehydrated_bytes",&MetalCompiledGraph::LazyRehydratedBytes);
+        APISET().AddProp("lazy_default_planned_slots",&MetalCompiledGraph::LazyPlannedSlots);
         APISET().AddProp("ready",&MetalCompiledGraph::Ready);
         APISET().AddProp("compile_ms",&MetalCompiledGraph::CompileMs);
         APISET().AddProp("last_inference_ms",&MetalCompiledGraph::LastInferenceMs);

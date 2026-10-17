@@ -1,0 +1,57 @@
+{
+  "scope": "Read-only historical-source resolution; no verifier source modification/execution or performance claim. Current failed global checker remains failed.",
+  "integration_record": "results/20261016/vector-vision-native/branch-source-integration.json",
+  "integration_record_sha256": "d54f339f3c9eea21091b60ada3be8ddba466673871aead8761c32afc888b184e",
+  "record_introducing_commit": "14cdbc33f256b1b4bcefa5e542031af1ce4c0ac7",
+  "all8immutable_historical_source_hashes_match": true,
+  "records": [
+    {
+      "path": "src/backends/metal/metal_context.mm",
+      "expected_sha256": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41",
+      "historical_sha256": "d9a9571a7b46a5824d87cb618be9b6c19d669359db90d098aaafcbdc9a6def41",
+      "matches": true
+    },
+    {
+      "path": "src/backends/metal/metal_context.h",
+      "expected_sha256": "426a4795b1d109b4bd7ef9faf5c5b77363213668b8349b7e903a5f486ad9f159",
+      "historical_sha256": "426a4795b1d109b4bd7ef9faf5c5b77363213668b8349b7e903a5f486ad9f159",
+      "matches": true
+    },
+    {
+      "path": "src/backends/metal/compiled_graph.cpp",
+      "expected_sha256": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd",
+      "historical_sha256": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd",
+      "matches": true
+    },
+    {
+      "path": "src/backends/metal/compiled_graph.h",
+      "expected_sha256": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+      "historical_sha256": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+      "matches": true
+    },
+    {
+      "path": "src/entry/metal_main.cpp",
+      "expected_sha256": "4dc7d6f716c77e0b0c35085a62c63bd22d8f7f96ad734ec899ba68d4528dfab8",
+      "historical_sha256": "4dc7d6f716c77e0b0c35085a62c63bd22d8f7f96ad734ec899ba68d4528dfab8",
+      "matches": true
+    },
+    {
+      "path": "test2026/metal/frame_worker_garnet.py",
+      "expected_sha256": "f8db7fb265d2ccfb87313a438dfe94851619c5ecade26b19d97b83ef09551c3e",
+      "historical_sha256": "f8db7fb265d2ccfb87313a438dfe94851619c5ecade26b19d97b83ef09551c3e",
+      "matches": true
+    },
+    {
+      "path": "test2026/metal/run_matched_garnet.py",
+      "expected_sha256": "9d8d7afda20b192d4a7423be459623b630358aa8bc3c732e350df3ea00ccdc31",
+      "historical_sha256": "9d8d7afda20b192d4a7423be459623b630358aa8bc3c732e350df3ea00ccdc31",
+      "matches": true
+    },
+    {
+      "path": "src/backends/metal/serial_vision_prefetch_shader.h",
+      "expected_sha256": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea",
+      "historical_sha256": "b4128ea187d83fde818dddca8e74e895cc4f0540f189ffa4b07f996a3a303cea",
+      "matches": true
+    }
+  ]
+}

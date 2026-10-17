@@ -197,6 +197,7 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         state.dirtyExtent[k]=std::max(state.dirtyExtent[k],writeExtent);
     }
 #endif
+    for(auto graph:layers)graph->RetireResidentDefaults();
     if(hiddenShape_!=inputShape[0]) {
         const auto& slot=layers[0]->slots_[layers[0]->inputs_[0]];
         hidden_=gpu_->Allocate(slot.rows,slot.columns);
@@ -398,5 +399,14 @@ size_t MetalDecoderSession::PrefixCaptureBytes(){std::lock_guard<std::mutex> loc
 #else
     return 0;
 #endif
+}
+}
+
+namespace Garnet {
+std::vector<MetalResourceReference> MetalDecoderSession::MemoryReferences() {
+    std::lock_guard<std::mutex> lock(mutex_);if(!gpu_)throw std::logic_error("Inventory requires an open session");std::vector<MetalResourceReference> result;
+    auto append=[&](const MetalMatrix& matrix,size_t slot,const std::string& role,const std::vector<int64_t>& shape){auto info=MetalContext::MatrixBufferInfo(matrix);if(!info.identity)return;MetalResourceReference r;r.buffer=info;r.slot=slot;r.role=role;r.shape=shape;r.residentOperand=true;result.push_back(std::move(r));};
+    for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k)append(states_[i].matrix[k],i,"private_state"+std::to_string(k+1),states_[i].shape[k]);
+    append(hidden_,SIZE_MAX,"hidden",hiddenShape_);append(prediction_,SIZE_MAX,"prediction",{});return result;
 }
 }

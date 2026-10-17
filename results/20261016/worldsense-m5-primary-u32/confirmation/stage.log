@@ -1,0 +1,71 @@
+START control-full-1 2026-10-17T13:10:25Z
+FINISH control-full-1 exit 0
+START candidate-full-1 2026-10-17T13:14:52Z
+FINISH candidate-full-1 exit 0
+START candidate-full-2 2026-10-17T13:17:46Z
+FINISH candidate-full-2 exit 0
+START control-full-2 2026-10-17T13:20:40Z
+FINISH control-full-2 exit 0
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+Build/SDK/host dependency identity unchanged 1864 confirmation
+{
+  "status": "passed_individual_confirmation_pair",
+  "passed": true,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.4635972474005817,
+      "total_change": -0.35066672326446935,
+      "decode_gain": 0.048294420396565396
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.15192722403446457,
+      "total_change": -0.24787675428249445,
+      "decode_gain": 0.20913898726852342
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-full-1": 21914517504,
+    "candidate-full-1": 19102498816
+  },
+  "sampled_metal_reduction": 0.1283176181034663,
+  "native_skill_wall_p50": {
+    "control-full-1": 35.12170745799085,
+    "candidate-full-1": 19.455589832999976
+  },
+  "native_skill_wall_gain": 0.4460522781738089,
+  "scope": "Fresh three-frame and query-plan confirmation pair. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}
+{
+  "status": "passed_individual_confirmation_pair",
+  "passed": true,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.41450693404850736,
+      "total_change": -0.33528008563914935,
+      "decode_gain": 0.16037840581662421
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.10462218291965952,
+      "total_change": -0.1765027471106747,
+      "decode_gain": 0.18106722384219887
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-full-2": 21914517504,
+    "candidate-full-2": 19102498816
+  },
+  "sampled_metal_reduction": 0.1283176181034663,
+  "native_skill_wall_p50": {
+    "control-full-2": 30.075429084012285,
+    "candidate-full-2": 18.95121912501054
+  },
+  "native_skill_wall_gain": 0.3698770158167165,
+  "scope": "Fresh three-frame and query-plan confirmation pair. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 99679
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

@@ -1,0 +1,9 @@
+{
+  "experiment": "WS-M5-40",
+  "declared_utc": "2026-10-17T12:49:43.204665+00:00",
+  "seed": "Frozen WS39 plus checked uint32 metadata/addressing; all398 target matrices preserved. Larger valid tensors use original raw fallback.",
+  "hypothesis": "Narrower checked integer arithmetic and halved metadata may reduce decode overhead; no speed prediction.",
+  "gates": "Original native/fault/dualGPUcorpus/full32VLM28text gates; NEW8resource10%Metal5%footprint; NEW20speedbothmodels2%TTFTtotaldecodeSkillwall preservation; NEW48fulltwoindependentpairs beforeintegration.",
+  "fixed": "Payload bytes,FP32math,Korder,128threads,ownership,profiles,budgets,Model/wrapper/counters andCUDA.",
+  "accounting": "Native C++/Metal/XLang3 inference/images. All first/warm/failures,source/build/model/SDK/host/input identities. No competingGPU/build/archivecopyduringtiming;restoreWS10normalfourfiles/noCam/404."
+}

@@ -19,6 +19,8 @@ _lock = threading.RLock()
 
 class Model:
     def __init__(self, root, xmodel, cache, profile, name):
+        self.initialization_memory = dict(before=json.loads(garnet.memory_stats_json()), other_model_ids_at_start=list(_models))
+        self.collect_inventory = bool(profile.get("collectNativeInventory", False))
         self.root, self.name = root, name
         self.cache = cache or os.path.join(root, 'metal-cache')
         os.makedirs(self.cache, exist_ok=True)
@@ -79,6 +81,8 @@ class Model:
         elif eos is not None:
             self.stops.append(eos)
 
+        self.initialization_memory['after_decoder_ready'] = json.loads(garnet.memory_stats_json())
+
     def _prefill_with_prefix(self, hidden, positions, token_ids, stages):
         stages['prefix_cache_hit'] = False
         stages['prefix_cache_restored_tokens'] = 0
@@ -134,7 +138,7 @@ class Model:
 
     def infer(self, prompt, image, limit):
         start = time.monotonic()
-        stages = {}
+        stages = dict(initialization_memory=self.initialization_memory, memory_before_request=json.loads(garnet.memory_stats_json()))
         hidden, positions, token_ids = [], [], []
         current = 0
         self.decoder.reset()
@@ -179,8 +183,10 @@ class Model:
         append_text(prompt + '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
         if len(hidden) + limit > self.capacity:
             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
+        stages['memory_after_input'] = json.loads(garnet.memory_stats_json())
         prefill_start = time.monotonic()
         prediction = self._prefill_with_prefix(hidden, positions, token_ids, stages)
+        stages['memory_after_prefill'] = json.loads(garnet.memory_stats_json())
         first = time.monotonic()
         stages['prefill_seconds'] = first - prefill_start
         stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
@@ -204,6 +210,36 @@ class Model:
             fused_head_dispatches += self.decoder.session.fused_head_argmax_dispatches
             current += 1
         stages['decode_seconds'] = time.monotonic() - first
+        stages['memory_after_decode'] = json.loads(garnet.memory_stats_json())
+        memory_graphs = [layer['graph'] for layer in self.decoder.layers] + list(self.decoder.prefill_graphs.values())
+        stages['lazy_default_retired_bytes'] = sum(graph.lazy_default_retired_bytes for graph in memory_graphs)
+        stages['lazy_default_rehydrated_bytes'] = sum(graph.lazy_default_rehydrated_bytes for graph in memory_graphs)
+        stages['lazy_default_planned_slots'] = sum(graph.lazy_default_planned_slots for graph in memory_graphs)
+        if self.collect_inventory:
+            descriptors = [dict(object=layer['graph'], tag='decode.layer.'+str(i)) for i,layer in enumerate(self.decoder.layers)]
+            descriptors.append(dict(object=self.decoder.head, tag='head'))
+            for key in sorted(self.decoder.prefill_graphs):
+                descriptors.append(dict(object=self.decoder.prefill_graphs[key], tag='prefill.'+key))
+            if self.vision is not None:
+                descriptors.append(dict(object=self.vision.graph, tag='vision'))
+            inventory_payload = garnet.memory_inventory_json(descriptors, self.decoder.session)
+            inventory = json.loads(inventory_payload)
+            inventory_bytes = inventory_payload.encode()
+            capture_root = os.path.join(self.cache, 'native-inventory')
+            os.makedirs(capture_root, exist_ok=True)
+            self._inventory_capture_counter = getattr(self, '_inventory_capture_counter', 0) + 1
+            capture_key = hashlib.sha256((self.name + str(time.time()) + str(self._inventory_capture_counter)).encode()).hexdigest()
+            capture_path = os.path.join(capture_root, capture_key + '.json')
+            if os.path.exists(capture_path):
+                raise ValueError('Diagnostic capture identity collision')
+            with open(capture_path + '.tmp', 'w') as stream:
+                stream.write(inventory_payload)
+            os.replace(capture_path + '.tmp', capture_path)
+            stages['memory_inventory'] = dict(path=capture_path, sha256=hashlib.sha256(inventory_bytes).hexdigest(),
+                bytes=len(inventory_bytes), model_id=self.name, unique_allocated_bytes=inventory['unique_allocated_bytes'],
+                buffer_count=len(inventory['buffers']), reference_count=len(inventory['references']),
+                device_snapshot=inventory['device_snapshot'], scope=inventory['scope'])
+
         stages['decode_profile'] = decode_profile
         stages['decode_fused_head_dispatches'] = fused_head_dispatches
         stages['prefix_cache_native_bytes'] = self.decoder.session.prefix_cache_bytes
@@ -236,7 +272,18 @@ def infer_json(prompt, image, limit, name):
         try:
             if name not in _models:
                 raise ValueError('Model is not loaded: ' + name)
-            return json.dumps(_models[name].infer(prompt, image, int(limit)))
+            outer_started=time.monotonic()
+            before=json.loads(garnet.primary_storage_stats_json())
+            model_started=time.monotonic()
+            result=_models[name].infer(prompt,image,int(limit))
+            after=json.loads(garnet.primary_storage_stats_json())
+            if result.get('status')=='ok':
+                result['ttft_seconds'] += model_started-outer_started
+                result['timings']['primary_storage_before']=before
+                result['timings']['primary_storage_after']=after
+                result['timings']['primary_encoded_delta']={key:after[key]-before[key] for key in ['decode_encoded','prefill_encoded','head_encoded','vector_decode_encoded','vector_head_encoded']}
+                result['total_seconds']=time.monotonic()-outer_started
+            return json.dumps(result)
         except Exception as error:
             return json.dumps(dict(status='error', error_message=str(error), model_id=name))
 

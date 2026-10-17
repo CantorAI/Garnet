@@ -1,0 +1,31 @@
+{
+  "substitutions": [
+    {
+      "old": "device const ulong* metadata",
+      "new": "device const uint* metadata",
+      "count": 10
+    },
+    {
+      "old": "ulong row,ulong k,ulong inner",
+      "new": "uint row,uint k,uint inner",
+      "count": 3
+    },
+    {
+      "old": "ulong block=(row/4)",
+      "new": "uint block=(row/4)",
+      "count": 1
+    },
+    {
+      "old": "ulong meta=metadata[",
+      "new": "uint meta=metadata[",
+      "count": 1
+    },
+    {
+      "old": "meta&256ul",
+      "new": "meta&256u",
+      "count": 2
+    }
+  ],
+  "inverse_recovers_entire_WS39_primary_shader_exactly": true,
+  "scope": "Only checked metadata pointer and helper integer widths. All kernel FP32 arithmetic/dispatch/control bodies unchanged."
+}

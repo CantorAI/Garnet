@@ -21,6 +21,31 @@ class GarnetMetalAPI {
         return X::Module(host, "metal_serving");
     }
 public:
+    std::string PrimaryStatsJson() {
+        const auto p=MetalContext::PrimaryStats();
+        return nlohmann::json{{"active_weights",p.activeWeights},{"original_bytes",p.originalBytes},{"payload_bytes",p.payloadBytes},{"metadata_bytes",p.metadataBytes},{"allocated_bytes",p.allocatedBytes},{"uploads",p.uploads},{"decode_encoded",p.decodeEncoded},{"prefill_encoded",p.prefillEncoded},{"head_encoded",p.headEncoded},{"vector_decode_encoded",p.vectorDecodeEncoded},{"vector_head_encoded",p.vectorHeadEncoded}}.dump();
+    }
+    std::string MemoryStatsJson() {
+        const auto m=MetalContext::MemoryStats();
+        return nlohmann::json{{"metal_allocated_bytes",m.allocated},{"metal_recommended_working_set_bytes",m.recommended},
+            {"metal_registry_id",m.registry},{"task_info_status",m.taskStatus},{"task_physical_footprint_bytes",m.physical},
+            {"task_resident_bytes",m.resident},{"task_compressed_bytes",m.compressed},{"task_internal_bytes",m.internal},
+            {"task_virtual_bytes",m.virtualBytes},{"scope","process Metal device resources and current task; snapshots, not peak or system free RAM"}}.dump();
+    }
+    std::string MemoryInventoryJson(X::Value graphs,X::Value session) {
+        if(!graphs.IsList())throw X::Error("Inventory graph descriptors must be a list");
+        nlohmann::json references=nlohmann::json::array(),buffers=nlohmann::json::array();std::unordered_map<uintptr_t,size_t> ids;
+        auto append=[&](const std::string& tag,const std::vector<MetalResourceReference>& refs){for(const auto& r:refs){
+            auto found=ids.find(r.buffer.identity);size_t id;
+            if(found==ids.end()){id=buffers.size();ids.emplace(r.buffer.identity,id);buffers.push_back({{"id",id},{"allocated_bytes",r.buffer.allocatedBytes},{"length_bytes",r.buffer.lengthBytes}});}
+            else {id=found->second;if(buffers[id]["allocated_bytes"]!=r.buffer.allocatedBytes||buffers[id]["length_bytes"]!=r.buffer.lengthBytes)throw X::Error("Inventory resource identity changed");}
+            references.push_back({{"buffer_id",id},{"tag",tag},{"slot",r.slot==SIZE_MAX?nlohmann::json(nullptr):nlohmann::json(r.slot)},{"role",r.role},{"name",r.name},{"shape",r.shape},{"representation",r.buffer.representation},{"resident_mask_operand",r.residentOperand},{"any_op_writer",r.anyWriter},{"resident_mask_writer",r.residentWriter},{"input",r.input},{"output_part",r.outputPart},{"legacy_output",r.legacyOutput},{"weight",r.weight}});
+        }};
+        for(uint64_t i=0;i<graphs.Size();++i){auto descriptor=graphs.Get(i);if(!descriptor.IsDict())throw X::Error("Invalid inventory graph descriptor");auto value=descriptor.Get("object");if(value.runtime()!=graphs.runtime())throw X::Error("Inventory runtime mismatch");auto graph=value.NativeData<MetalCompiledGraph>();if(!graph)throw X::Error("Inventory requires graph objects");append(descriptor.Get("tag").ToString(),graph->MemoryReferences());}
+        if(session.IsValid()&&!session.IsNone()){if(session.runtime()!=graphs.runtime())throw X::Error("Inventory session runtime mismatch");auto native=session.NativeData<MetalDecoderSession>();if(!native)throw X::Error("Inventory requires a native session");append("session",native->MemoryReferences());}
+        uint64_t bytes=0;for(const auto& b:buffers)bytes+=b["allocated_bytes"].get<uint64_t>();
+        return nlohmann::json{{"buffers",buffers},{"references",references},{"unique_allocated_bytes",bytes},{"device_snapshot",nlohmann::json::parse(MemoryStatsJson())},{"scope","Collection-local opaque ids, no addresses. Declared graph/held-weight/session owners only; context scratch/driver resources may be absent. Resident mask references are conservative, not a safe-free proof."}}.dump();
+    }
     X::Value PrepareImage(X::Value path,X::Value options) {
         auto params=nlohmann::json::parse(options.ToString());
         Image::NativeImageConfig c;
@@ -117,6 +142,15 @@ public:
 #ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
         info+="; qwen35_4b_wide_prefill";
 #endif
+#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
+    info += " cached_matrix_metadata";
+#endif
+#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS
+        info+="; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata";
+#endif
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+        info+="; lazy_resident_defaults";
+#endif
 #ifdef GARNET_METAL_DENSE_PREFIX_CACHE
         info+="; dense_prefix_cache";
 #endif
@@ -183,6 +217,9 @@ public:
         APISET().AddClass<0,ModelTensorIO>("tensor_io");
         APISET().AddClass<0,CPUTokenizer>("tokenizer");
         APISET().AddFunc<2>("prepare_image",&GarnetMetalAPI::PrepareImage);
+        APISET().AddFunc<2>("memory_inventory_json",&GarnetMetalAPI::MemoryInventoryJson);
+        APISET().AddFunc<0>("primary_storage_stats_json",&GarnetMetalAPI::PrimaryStatsJson);
+        APISET().AddFunc<0>("memory_stats_json",&GarnetMetalAPI::MemoryStatsJson);
         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);

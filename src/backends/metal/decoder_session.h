@@ -72,6 +72,7 @@ public:
     size_t PrefixCacheEntries();
     size_t PrefixRestoreBytes();
     size_t PrefixCaptureBytes();
+    std::vector<MetalResourceReference> MemoryReferences();
     X::Value Snapshot(int64_t layer);
     X::Value Hidden();
     void Close();

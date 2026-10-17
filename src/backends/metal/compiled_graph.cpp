@@ -193,6 +193,9 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    lazyDefaultPlanReady_=false;lazyDefaultSlots_.clear();lazyRetiredBytes_=lazyRehydratedBytes_=0;
+#endif
     visionParallelDispatches_=0;
     visionPrefetchDispatches_=0;visionVectorDispatches_=0;mlpGraphDispatches_=0;
     resetKVPrefix_[0]=resetKVPrefix_[1]=false;
@@ -775,8 +778,8 @@ bool MetalCompiledGraph::CanUpdateKVInPlace(size_t part) const {
     const auto& source=slots_[inputs_[part]].matrix;
     for(size_t i=writer+1;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]) {
         const auto& op=ops_[i];
-        if(source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
-        for(auto id:op.arguments)if(source.SharesStorage(slots_[id].matrix))return false;
+        if(op.a==inputs_[part]||op.b==inputs_[part]||source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
+        for(auto id:op.arguments)if(id==inputs_[part]||source.SharesStorage(slots_[id].matrix))return false;
     }
     return true;
 #else
@@ -876,6 +879,7 @@ void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<
     for(size_t i=0;i<inputs_.size();++i){
         if(skip.count(i))continue;
         X::Tensor tensor(inputs.Get(i));auto lease=tensor.Acquire();auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
+        MaterializeDefault(inputs_[i]);
         gpu_->Update(slot.matrix,static_cast<const float*>(info.data),slot.rows*slot.columns);
     }
 }
@@ -1060,6 +1064,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
     visionGlobalAlphaDispatches_=0;
     auto start=std::chrono::steady_clock::now();
     PrepareInputs(inputs);
+    MaterializeDefault(output_);
     gpu_->Begin();
     try {
         Encode(*gpu_);
@@ -1073,5 +1078,78 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
     auto result=gpu_->Download(slots_[output_].matrix);auto& output=slots_[output_];
     inferenceMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
     return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,output.shape,result.data(),result.size()*4);
+}
+}
+
+namespace Garnet {
+std::vector<MetalResourceReference> MetalCompiledGraph::MemoryReferences() {
+    std::lock_guard<std::mutex> lock(mutex_);if(!ready_)throw std::logic_error("Inventory requires a ready graph");
+    std::vector<MetalResourceReference> result;std::vector<bool> active(slots_.size(),false),input(slots_.size(),false),output(slots_.size(),false);
+    auto mark=[&](size_t i){if(i<active.size())active[i]=true;};
+    std::vector<bool> anyWriter(slots_.size(),false),residentWriter(slots_.size(),false);
+    for(size_t i=0;i<ops_.size();++i){bool resident=residentOps_.size()!=ops_.size()||residentOps_[i];auto write=[&](size_t slot){if(slot<slots_.size()){anyWriter[slot]=true;if(resident)residentWriter[slot]=true;}};write(ops_[i].out);write(ops_[i].auxiliaryOutput);}
+
+    for(size_t i=0;i<ops_.size();++i)if(residentOps_.size()!=ops_.size()||residentOps_[i]) {
+        const auto& op=ops_[i];mark(op.a);mark(op.b);mark(op.out);mark(op.auxiliaryOutput);for(auto j:op.arguments)mark(j);
+    }
+    for(auto i:inputs_)if(i<input.size())input[i]=true;for(auto i:outputParts_)if(i<output.size())output[i]=true;
+    std::vector<std::string> names(slots_.size());std::vector<std::pair<std::string,size_t>> sorted(weights_.begin(),weights_.end());std::sort(sorted.begin(),sorted.end());
+    for(const auto& entry:sorted)if(entry.second<names.size()){if(!names[entry.second].empty())names[entry.second]+=";";names[entry.second]+=entry.first;}
+    auto append=[&](const Slot& slot,size_t i,const std::string& role,const std::string& name,bool weight,bool in,bool out,bool resident,bool legacy){
+        auto emit=[&](const MetalBufferInfo& info){if(!info.identity)return;MetalResourceReference r;r.buffer=info;r.slot=i;r.role=role;r.name=name;r.shape=slot.shape;r.weight=weight;r.input=in;r.outputPart=out;r.residentOperand=resident;r.anyWriter=i<anyWriter.size()&&anyWriter[i];r.residentWriter=i<residentWriter.size()&&residentWriter[i];r.legacyOutput=legacy;result.push_back(std::move(r));};
+        emit(MetalContext::MatrixBufferInfo(slot.matrix));for(const auto& info:MetalContext::WeightBufferInfo(slot.bf16))emit(info);
+    };
+    for(size_t i=0;i<slots_.size();++i)append(slots_[i],i,"slot",names[i],!names[i].empty(),input[i],output[i],active[i],i==output_);
+    auto held=[&](const auto& records,const char* role){std::vector<std::string> keys;for(const auto& entry:records)keys.push_back(entry.first);std::sort(keys.begin(),keys.end());for(const auto& key:keys)append(records.at(key).slot,SIZE_MAX,role,key,true,false,false,false,false);};
+    held(sharedWeights_,"shared_weight_record");held(weightRecords_,"weight_record");return result;
+}
+}
+
+namespace Garnet {
+void MetalCompiledGraph::RetireResidentDefaults() {
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    if(!lazyDefaultPlanReady_) {
+        if(!ready_||outputParts_.size()!=3||inputs_.size()<3||residentOps_.size()!=ops_.size())return;
+        std::vector<MetalBufferInfo> infos;std::unordered_map<uintptr_t,size_t> counts;std::unordered_set<uintptr_t> protectedWeights;
+        for(const auto& slot:slots_){auto info=MetalContext::MatrixBufferInfo(slot.matrix);infos.push_back(info);if(info.identity)++counts[info.identity];for(const auto& b:MetalContext::WeightBufferInfo(slot.bf16))protectedWeights.insert(b.identity);}
+        for(const auto& record:weightRecords_){auto info=MetalContext::MatrixBufferInfo(record.second.slot.matrix);if(info.identity)protectedWeights.insert(info.identity);for(const auto& b:MetalContext::WeightBufferInfo(record.second.slot.bf16))protectedWeights.insert(b.identity);}
+        auto eligible=[&](size_t id){const auto& slot=slots_[id];const auto& info=infos[id];return info.identity&&counts[info.identity]==1&&!protectedWeights.count(info.identity)&&gpu_->IsDefaultLayout(slot.matrix,slot.rows,slot.columns);};
+        std::vector<size_t> plan;
+        for(size_t part=1;part<=2;++part){auto id=inputs_[part];if(inputShapes_[part].size()<3||std::find(outputParts_.begin(),outputParts_.end(),id)!=outputParts_.end())continue;if(eligible(id))plan.push_back(id);}
+        if(!ops_.empty()&&ops_.back().kind==Kind::Concat&&ops_.back().out==output_&&!residentOps_.back()&&std::find(inputs_.begin(),inputs_.end(),output_)==inputs_.end()&&std::find(outputParts_.begin(),outputParts_.end(),output_)==outputParts_.end()&&eligible(output_))plan.push_back(output_);
+        lazyDefaultSlots_=std::move(plan);lazyDefaultPlanReady_=true;
+    }
+    for(auto id:lazyDefaultSlots_)if(slots_[id].matrix.Valid()) {auto info=MetalContext::MatrixBufferInfo(slots_[id].matrix);lazyRetiredBytes_+=info.allocatedBytes;slots_[id].matrix=MetalMatrix();}
+#endif
+}
+void MetalCompiledGraph::MaterializeDefault(size_t id) {
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    if(slots_[id].matrix.Valid())return;
+    if(std::find(lazyDefaultSlots_.begin(),lazyDefaultSlots_.end(),id)==lazyDefaultSlots_.end())throw std::logic_error("Missing non-deferred graph storage");
+    auto matrix=gpu_->Allocate(slots_[id].rows,slots_[id].columns);auto info=MetalContext::MatrixBufferInfo(matrix);slots_[id].matrix=std::move(matrix);lazyRehydratedBytes_+=info.allocatedBytes;
+#else
+    (void)id;
+#endif
+}
+size_t MetalCompiledGraph::LazyRetiredBytes() const {
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    std::lock_guard<std::mutex> lock(mutex_);return lazyRetiredBytes_;
+#else
+    return 0;
+#endif
+}
+size_t MetalCompiledGraph::LazyRehydratedBytes() const {
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    std::lock_guard<std::mutex> lock(mutex_);return lazyRehydratedBytes_;
+#else
+    return 0;
+#endif
+}
+size_t MetalCompiledGraph::LazyPlannedSlots() const {
+#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+    std::lock_guard<std::mutex> lock(mutex_);return lazyDefaultSlots_.size();
+#else
+    return 0;
+#endif
 }
 }

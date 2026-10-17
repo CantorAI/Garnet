@@ -25,6 +25,7 @@ class MetalMatrix {
     friend class MetalContext;
 public:
     MetalMatrix() = default;
+    bool Valid() const {return bool(impl_);}
     bool SharesStorage(const MetalMatrix&) const;
     bool CompatibleLayout(const MetalMatrix&) const;
 };
@@ -36,6 +37,7 @@ class MetalBF16Weight {
 public:
     MetalBF16Weight()=default;
     bool Valid() const {return bool(impl_);}
+    bool PrimaryReady() const;
     bool ExactHalfReady() const;
     bool GlobalHalfReady() const;
     bool InterleavedBodyReady() const;
@@ -50,6 +52,20 @@ struct MetalScreenedDiagnostics {
     std::vector<uint32_t> kept;
     std::vector<float> querySafe;
 };
+struct MetalBufferInfo {
+    uintptr_t identity=0;uint64_t allocatedBytes=0,lengthBytes=0;std::string representation;
+};
+struct MetalResourceReference {
+    MetalBufferInfo buffer;size_t slot=0;std::string role,name;
+    std::vector<int64_t> shape;bool residentOperand=false,anyWriter=false,residentWriter=false,input=false,outputPart=false,legacyOutput=false,weight=false;
+};
+struct MetalMemoryStats {
+    uint64_t allocated=0,recommended=0,registry=0,physical=0,resident=0,compressed=0,internal=0,virtualBytes=0;
+    int taskStatus=-1;
+};
+struct MetalPrimaryStats {
+ uint64_t activeWeights=0,originalBytes=0,payloadBytes=0,metadataBytes=0,allocatedBytes=0,uploads=0,decodeEncoded=0,prefillEncoded=0,headEncoded=0,vectorDecodeEncoded=0,vectorHeadEncoded=0;
+};
 class MetalContext {
     struct Impl;
     std::unique_ptr<Impl> impl_;
@@ -57,13 +73,26 @@ class MetalContext {
         unsigned operation, float epsilon, float offset);
     void EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>&,
         const MetalMatrix&,const void* parameters,size_t parameterBytes,size_t threads,const MetalMatrix* secondOutput=nullptr);
+    std::vector<uint32_t> PrimaryReadWordsInternal(const MetalBF16Weight&,size_t start,size_t count,bool vector);
 public:
+    static MetalPrimaryStats PrimaryStats();
+    std::vector<uint32_t> PrimaryReadWords(const MetalBF16Weight&,size_t start,size_t count);
+    std::vector<uint32_t> PrimaryReadVectorWords(const MetalBF16Weight&,size_t start,size_t count);
+#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS
+    static void PrimaryTestFailAfter(int stage);
+#endif
     MetalContext();
     ~MetalContext();
     MetalContext(const MetalContext&) = delete;
     MetalContext& operator=(const MetalContext&) = delete;
     std::string DeviceName() const;
     static std::string AvailableDeviceName();
+    static MetalMemoryStats MemoryStats();
+    // Correctness diagnostic only; deliberately queries live MPS properties.
+    static bool MatrixMetadataMatchesLive(const MetalMatrix&);
+    static MetalBufferInfo MatrixBufferInfo(const MetalMatrix&);
+    bool IsDefaultLayout(const MetalMatrix&,size_t rows,size_t columns) const;
+    static std::vector<MetalBufferInfo> WeightBufferInfo(const MetalBF16Weight&);
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
