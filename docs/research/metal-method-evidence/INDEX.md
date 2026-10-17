@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T08:20:05.640670+00:00
+Generated UTC: 2026-10-17T08:41:30.749727+00:00
 
-Base HEAD at generation: `6c56f15ceffc9471b2a780a0b4de783571a90dc9`. Reports indexed: **220**.
+Base HEAD at generation: `4823dafa4a3a0bc5490a847a351db6b4b3781d74`. Reports indexed: **221**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -207,6 +207,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-prefix-cache](../../../results/20261016/worldsense-m5-prefix-cache/README.md) | WS-M5-10 native bounded text prefix cache and wider VLM prefill |
 | [results/20261016/worldsense-m5-private-execution](../../../results/20261016/worldsense-m5-private-execution/README.md) | WS-M5-25 actual private execution: rejected companion decode regression |
 | [results/20261016/worldsense-m5-private-resident-defaults](../../../results/20261016/worldsense-m5-private-resident-defaults/README.md) | WS-M5-30: private resident deferred defaults — rejected |
+| [results/20261016/worldsense-m5-private-resident-dense512](../../../results/20261016/worldsense-m5-private-resident-dense512/README.md) | WS-M5-31: private resident defaults plus512 grouping — rejected |
 | [results/20261016/worldsense-m5-request-pool](../../../results/20261016/worldsense-m5-request-pool/README.md) | WS-M5-13 native request pool memory gate failed |
 | [results/20261016/worldsense-m5-resident-admission](../../../results/20261016/worldsense-m5-resident-admission/README.md) | WS-M5-17: explicit resident build admission (rejected physical-memory feasibility) |
 | [results/20261016/worldsense-m5-resident-workspace](../../../results/20261016/worldsense-m5-resident-workspace/README.md) | WS-M5-18: active resident scratch pools (rejected physical-memory gate) |

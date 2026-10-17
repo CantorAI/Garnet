@@ -1,0 +1,50 @@
+{
+  "records": [
+    {
+      "model": "Qwen3.5-4B",
+      "avoided_descriptor_bytes": 369426432,
+      "planned_slots": 192,
+      "rehydrated_bytes": 0,
+      "dense256": 0,
+      "dense512": 0,
+      "dense1024": 0
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "avoided_descriptor_bytes": 369426432,
+      "planned_slots": 192,
+      "rehydrated_bytes": 0,
+      "dense256": 0,
+      "dense512": 0,
+      "dense1024": 0
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "avoided_descriptor_bytes": 238780416,
+      "planned_slots": 168,
+      "rehydrated_bytes": 0,
+      "dense256": 0,
+      "dense512": 1372,
+      "dense1024": 0
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "avoided_descriptor_bytes": 238780416,
+      "planned_slots": 168,
+      "rehydrated_bytes": 0,
+      "dense256": 0,
+      "dense512": 2744,
+      "dense1024": 0
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "avoided_descriptor_bytes": 238780416,
+      "planned_slots": 168,
+      "rehydrated_bytes": 0,
+      "dense256": 0,
+      "dense512": 4116,
+      "dense1024": 0
+    }
+  ],
+  "scope": "Correctnesscapacitydescriptorsandcumulativeencodedroute,notWorldSensememorysavingorperrequestGPUcounts."
+}
