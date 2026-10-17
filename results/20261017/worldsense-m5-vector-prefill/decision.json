@@ -1,0 +1,64 @@
+{
+  "experiment": "WS-M5-47",
+  "observed_utc": "2026-10-17T17:46:16.940072+00:00",
+  "terminal_session": 95851,
+  "terminal_exit_code": 0,
+  "stage_outcomes": {
+    "resource": true,
+    "primary-speed": false
+  },
+  "prototype_confirmed": false,
+  "promote": false,
+  "decision": "reject",
+  "reason": "Matched prior-primary/vector screen: VLM TTFT +22.197323%, text decode -33.164478%, VLM decode -37.677034%; unchanged prospective5%TTFT/2%preservation gates failed.",
+  "no_unchanged_retry": true,
+  "later_stages_dispatched": false,
+  "normal_restored": {
+    "validated_WS10_binary_restored": true,
+    "four_file_sources_online": true,
+    "camera_unmounted": true,
+    "benchmark_valid_request_http404": true,
+    "mounted": {
+      "/Users/shawn/CantorAI/out/test-media/car.avi": {
+        "deviceId": "34020000001320009003",
+        "channelId": "34020000001320009003",
+        "name": "Low Resolution Car Test",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/car.avi",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      },
+      "/Users/shawn/CantorAI/out/test-media/bunny.mp4": {
+        "deviceId": "34020000001320009002",
+        "channelId": "34020000001320009002",
+        "name": "Animated Rabbit Test",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/bunny.mp4",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      },
+      "/Users/shawn/CantorAI/out/test-media/car-second-view.avi": {
+        "deviceId": "34020000001320009004",
+        "channelId": "34020000001320009004",
+        "name": "Car Second Camera Control",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/car-second-view.avi",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      },
+      "/Users/shawn/CantorAI/out/test-media/pedestrians.mp4": {
+        "deviceId": "34020000001320009001",
+        "channelId": "34020000001320009001",
+        "name": "Pedestrians Test Video",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/pedestrians.mp4",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      }
+    }
+  }
+}

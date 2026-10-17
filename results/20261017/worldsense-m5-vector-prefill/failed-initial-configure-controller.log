@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-vector-prefill/build.py", line 12, in <module>
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2)as pool:list(pool.map(build,sys.argv[1:]or['off','on','primary','fault']))
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/_base.py", line 608, in result_iterator
+    yield fs.pop().result()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/_base.py", line 445, in result
+    return self.__get_result()
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/_base.py", line 390, in __get_result
+    raise self._exception
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/thread.py", line 52, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-vector-prefill/build.py", line 9, in build
+    subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/opt/homebrew/bin/cmake', '-S', '/Users/shawn/CantorAI/out/research/worldsense-vector-prefill/source', '-B', '/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-vector-prefill-off', '-C', '/Users/shawn/CantorAI/out/research/worldsense-vector-prefill/source/cmake/MetalWorldSense4BPrefix.cmake', '-DGARNET_METAL=ON', '-DGARNET_METAL_XMODEL=ON', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_OBJCXX_COMPILER=/usr/bin/c++', '-DGARNET_METAL_PRIMARY_BF16_BLOCKS=OFF', '-DGARNET_METAL_PRIMARY_VECTOR_PREFILL=OFF', '-DGARNET_METAL_PRIMARY_TEST_FAULTS=OFF', '-DGARNET_METAL_LAZY_RESIDENT_DEFAULTS=OFF', '-DGARNET_METAL_CACHED_MATRIX_METADATA=OFF', '-DXLANG3_SDK_ROOT=/Users/shawn/CantorAI/xlang3/sdk', '-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib']' returned non-zero exit status 1.

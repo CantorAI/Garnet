@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T17:02:40.802439+00:00
+Generated UTC: 2026-10-17T17:46:30.897938+00:00
 
-Base HEAD at generation: `040b46c1bc21a012187a966d31b818b9560e1bb5`. Reports indexed: **237**.
+Base HEAD at generation: `5357b28c66a1410d46b7bff37a8c246bbc88b461`. Reports indexed: **238**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -231,6 +231,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-primary-narrow-vocab](../../../results/20261017/worldsense-m5-primary-narrow-vocab/README.md) | WS-M5-41 semantic raw narrow vocabulary: rejected |
 | [results/20261017/worldsense-m5-primary-u32-integration](../../../results/20261017/worldsense-m5-primary-u32-integration/README.md) | WS-M5-40 canonical integration: production acceptance rejected |
 | [results/20261017/worldsense-m5-primary-value16](../../../results/20261017/worldsense-m5-primary-value16/README.md) | WS-M5-43 value16 sign/mantissa fold: rejected |
+| [results/20261017/worldsense-m5-vector-prefill](../../../results/20261017/worldsense-m5-vector-prefill/README.md) | WS-M5-47 — Exact vector prefill loading rejected by matched timing |
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |
 | [results/20261017/worldsense-m5-wide-storage](../../../results/20261017/worldsense-m5-wide-storage/README.md) | WS-M5-44 — Wide-checkpoint storage rejected by text decoding |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
