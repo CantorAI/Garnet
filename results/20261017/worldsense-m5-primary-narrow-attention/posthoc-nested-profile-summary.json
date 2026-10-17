@@ -1,0 +1,189 @@
+{
+  "scope": "Posthoc paired descriptive profile slices from existingWS42data, no new inference/timing cohort. GPUspan includes body/head/argmax and inter-command gaps. Hostwait overlaps GPU; never add them. No isolated attention/MLP/vocabulary,ALU/bandwidth/occupancy cause proven.",
+  "rows": [
+    {
+      "worker": "control-1",
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "calls": 1,
+      "artifact": "speed/control-1.json",
+      "artifact_sha256": "63404015597c42b686ab1684379585d759c58acad17063e69775774017dc9619",
+      "decode_seconds_median": 1.2510573340114206,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 11.988834,
+          "gpu_ms": 1204.721583169885,
+          "prepare_ms": 4.5447479999999985,
+          "wait_ms": 1230.2492510000002
+        },
+        "prefill_profile": {
+          "encode_ms": 7.071707,
+          "gpu_ms": 11815.144250023877,
+          "prepare_ms": 1.520958,
+          "wait_ms": 13906.561835
+        }
+      }
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "calls": 4,
+      "artifact": "speed/control-1.json",
+      "artifact_sha256": "63404015597c42b686ab1684379585d759c58acad17063e69775774017dc9619",
+      "decode_seconds_median": 1.242625645492808,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 12.017000999999997,
+          "gpu_ms": 1193.51354164246,
+          "prepare_ms": 3.1435595,
+          "wait_ms": 1225.4394774999998
+        },
+        "prefill_profile": {
+          "encode_ms": 5.789562500000001,
+          "gpu_ms": 7481.341958366102,
+          "prepare_ms": 1.9722295000000003,
+          "wait_ms": 8310.6555825
+        }
+      }
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "calls": 1,
+      "artifact": "speed/control-1.json",
+      "artifact_sha256": "63404015597c42b686ab1684379585d759c58acad17063e69775774017dc9619",
+      "decode_seconds_median": 9.728530541004147,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 73.55632900000002,
+          "gpu_ms": 9586.9336668693,
+          "prepare_ms": 10.983414,
+          "wait_ms": 9625.027711
+        },
+        "prefill_profile": {
+          "encode_ms": 6.329541,
+          "gpu_ms": 21036.296541657066,
+          "prepare_ms": 2.222501,
+          "wait_ms": 24126.008084
+        }
+      }
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "calls": 4,
+      "artifact": "speed/control-1.json",
+      "artifact_sha256": "63404015597c42b686ab1684379585d759c58acad17063e69775774017dc9619",
+      "decode_seconds_median": 11.94865383299475,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 76.75960450000001,
+          "gpu_ms": 11703.929541705293,
+          "prepare_ms": 11.198121000000002,
+          "wait_ms": 11837.718539000001
+        },
+        "prefill_profile": {
+          "encode_ms": 6.973520499999999,
+          "gpu_ms": 14596.591166657163,
+          "prepare_ms": 6.943104999999999,
+          "wait_ms": 16114.303166000002
+        }
+      }
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "calls": 1,
+      "artifact": "speed/candidate-1.json",
+      "artifact_sha256": "fb79826890085fba72217f6e761cbab35f46abb2d4afb1d83ef81f522d600bf8",
+      "decode_seconds_median": 1.5182656660035718,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 40.52770699999999,
+          "gpu_ms": 1433.2297500222921,
+          "prepare_ms": 9.373001000000004,
+          "wait_ms": 1458.656126
+        },
+        "prefill_profile": {
+          "encode_ms": 15.609706,
+          "gpu_ms": 2357.532750000246,
+          "prepare_ms": 2.873333,
+          "wait_ms": 2593.659208
+        }
+      }
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "calls": 4,
+      "artifact": "speed/candidate-1.json",
+      "artifact_sha256": "fb79826890085fba72217f6e761cbab35f46abb2d4afb1d83ef81f522d600bf8",
+      "decode_seconds_median": 1.531199603501591,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 21.487229,
+          "gpu_ms": 1484.7460000310093,
+          "prepare_ms": 5.762936499999999,
+          "wait_ms": 1499.3868945000002
+        },
+        "prefill_profile": {
+          "encode_ms": 6.328354000000001,
+          "gpu_ms": 1544.3910833710106,
+          "prepare_ms": 1.579896,
+          "wait_ms": 1899.7359784999999
+        }
+      }
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "calls": 1,
+      "artifact": "speed/candidate-1.json",
+      "artifact_sha256": "fb79826890085fba72217f6e761cbab35f46abb2d4afb1d83ef81f522d600bf8",
+      "decode_seconds_median": 9.24331916598021,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 67.31728999999999,
+          "gpu_ms": 9104.982666787691,
+          "prepare_ms": 9.874624000000003,
+          "wait_ms": 9148.065132000002
+        },
+        "prefill_profile": {
+          "encode_ms": 7.159542,
+          "gpu_ms": 5936.575125000672,
+          "prepare_ms": 2.237,
+          "wait_ms": 6326.443541
+        }
+      }
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "calls": 4,
+      "artifact": "speed/candidate-1.json",
+      "artifact_sha256": "fb79826890085fba72217f6e761cbab35f46abb2d4afb1d83ef81f522d600bf8",
+      "decode_seconds_median": 9.299149395999848,
+      "profiles": {
+        "decode_profile": {
+          "encode_ms": 64.00248149999999,
+          "gpu_ms": 9175.381374996505,
+          "prepare_ms": 9.2427055,
+          "wait_ms": 9214.9622075
+        },
+        "prefill_profile": {
+          "encode_ms": 4.8426875,
+          "gpu_ms": 5444.922979178955,
+          "prepare_ms": 1.8006245,
+          "wait_ms": 5671.4261455000005
+        }
+      }
+    }
+  ]
+}

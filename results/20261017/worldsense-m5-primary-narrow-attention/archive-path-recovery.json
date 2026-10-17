@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-17T14:51:10.377742+00:00",
+  "scope": "Packaging error only; no benchmark rerun or data/source mutation. First archiver incorrectly reused worldsense-m5-primary-narrow-vocab destination. Corrected before any WS42 commit.",
+  "restored_WS41_commit": "7c605abe1",
+  "restored_WS41_all268_SHA_files_exact": true,
+  "removed_only_two_new_helper_files": [
+    "work/verify_primary_narrow_attention.py",
+    "work/archive_primary_narrow_attention.py"
+  ],
+  "restored_manifest_sha256": "ab707d73930d151ef64a1672c4d18c37978d1b5f6d8f4d6b2a933ad91fe67def",
+  "destination_now_derived_and_asserted_from_work_directory": true,
+  "protocol_and_report_title_guards_added": true,
+  "first_invalid_verifier_output": "invalid-wrong-destination-verification.log"
+}

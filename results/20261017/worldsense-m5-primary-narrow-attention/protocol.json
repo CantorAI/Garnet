@@ -1,0 +1,61 @@
+{
+  "experiment": "WS-M5-42",
+  "declared_before_any_native_test_utc": "2026-10-17T14:25:27.281424+00:00",
+  "design_sha256": "f36512be9a615123d971575a1845a848ece75c130091becc5cde6f559a294685",
+  "hypothesis": "Semantic narrow attention and vocabulary use original rawBF16; narrowMLP and4B remain primary. No causal/prospective speed assertion.",
+  "gates": [
+    {
+      "stage": "correctness",
+      "native_tests_per_build": 7,
+      "builds": [
+        "off",
+        "on",
+        "fault"
+      ],
+      "original_projection_records": 186,
+      "packed_corpus_matrices": 285,
+      "raw_fallback_matrices": 161,
+      "dual_reader_FP32_words_each": 5257822208,
+      "full_VLM_layers": 32,
+      "full_text_layers": 28,
+      "original_numerical_bounds_unchanged": true,
+      "raw_attention_owners": 112,
+      "raw_vocabulary_owners": 1
+    },
+    {
+      "stage": "new_matched_resource",
+      "model_calls": 8,
+      "minimum_Metal_reduction": 0.1,
+      "minimum_sampled_process_footprint_reduction": 0.05
+    },
+    {
+      "stage": "new_instrumented_raw_control_speed",
+      "model_calls": 20,
+      "maximum_each_model_TTFT_total_Skillwall_regression": 0.02,
+      "minimum_derived_decode_gain": -0.02
+    },
+    {
+      "stage": "new_actual_WS10_speed_extra_screen",
+      "model_calls": 20,
+      "maximum_each_model_TTFT_total_Skillwall_regression": 0.02,
+      "minimum_derived_decode_gain": -0.02
+    },
+    {
+      "stage": "new_instrumented_raw_control_confirmation",
+      "model_calls": 48,
+      "mirrored_workers": 4,
+      "both_pairs_independently_pass_original_gates": true
+    },
+    {
+      "stage": "canonical_integration_and_actualproduction",
+      "repeat_complete_correctness": true,
+      "fresh_actual_WS10_model_calls": 48,
+      "both_pairs_independently_pass": true
+    }
+  ],
+  "no_unchanged_retry_after_valid_failure": true,
+  "normal_selection": "Only after every gate, normal app smoke, fourfile sources/noCam/benchmark404; rollbackWS10otherwise.",
+  "source_frozen_sha256": "f4ba2f9c3edccd65ee2cfd3eacce502707999cf23868af063b458cbb497725dc",
+  "normal_service_control": "WS10; unchanged while CPU builds run",
+  "prior_failed_actualproduction": "WS40 actualproduction rejection; WS41 resourcePASS/speedREJECT, no later stage"
+}

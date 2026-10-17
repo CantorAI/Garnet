@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T14:21:22.745087+00:00
+Generated UTC: 2026-10-17T14:56:55.332364+00:00
 
-Base HEAD at generation: `50260dee398cdf367c145849f54dafdb39eb4536`. Reports indexed: **232**.
+Base HEAD at generation: `7c605abe1b4b5fc6aaf019d654a0789bed0aa632`. Reports indexed: **233**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -226,6 +226,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-vision-workspace](../../../results/20261016/worldsense-m5-vision-workspace/README.md) | WS-M5-21 scalar vision workspace: rejected companion decode preservation |
 | [results/20261016/worldsense-m5-vlm-workspace](../../../results/20261016/worldsense-m5-vlm-workspace/README.md) | WS-M5-20 private dense buffers with VLM reuse: rejected resource gate |
 | [results/20261016/worldsense-m5-weight-residency](../../../results/20261016/worldsense-m5-weight-residency/README.md) | WS-M5-32: bounded BF16 weight residency preparation — rejected |
+| [results/20261017/worldsense-m5-primary-narrow-attention](../../../results/20261017/worldsense-m5-primary-narrow-attention/README.md) | WS-M5-42 raw narrow attention with packed MLP: rejected |
 | [results/20261017/worldsense-m5-primary-narrow-vocab](../../../results/20261017/worldsense-m5-primary-narrow-vocab/README.md) | WS-M5-41 semantic raw narrow vocabulary: rejected |
 | [results/20261017/worldsense-m5-primary-u32-integration](../../../results/20261017/worldsense-m5-primary-u32-integration/README.md) | WS-M5-40 canonical integration: production acceptance rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |

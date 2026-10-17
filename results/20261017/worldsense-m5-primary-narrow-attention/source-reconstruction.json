@@ -1,0 +1,15 @@
+{
+  "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "base_scope": "Compatible immutable canonicalWS40base for reconstruction; actualWS42seed is the separately frozen terminalWS41 source. Seven-file finaloverlay reconstructs all consumed bytes.",
+  "overlay_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_storage_policy.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "source_manifest": "starting-source-manifest.json",
+  "full_closure_files": 1716
+}

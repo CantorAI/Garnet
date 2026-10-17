@@ -1,0 +1,495 @@
+{
+  "scope": "Posthoc first/warm description of all28existing benchmarkcalls; no new inference. Resource times ineligible for speed. GPU/wait spans overlap; no vocabulary/attention/MLP attribution. Parent Skill wall once per frame, not modelphase; init/packing/transient peaks not isolated.",
+  "workers": {
+    "resource/control-1": {
+      "source_artifact": "control-1.json",
+      "first_parent_Skill_wall_seconds": [
+        82.88388775000931
+      ],
+      "warm_parent_Skill_wall_seconds": [
+        43.00778704098775
+      ],
+      "models": {
+        "Qwen3-1.7B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 14.208265751018189,
+            "total_seconds_median": 15.44997808302287,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 1.23424133300432,
+              "executed_prefill_tokens": 200,
+              "host_input_seconds": 0.05364870899938978,
+              "input_tokens": 200,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 41.061164000000005,
+              "prefill_seconds": 13.988665625016438,
+              "prefix_cache_capture_seconds": 0.005471583979669958,
+              "prefix_cache_captured_tokens": 64,
+              "prefix_cache_native_bytes": 14680064,
+              "prefix_cache_native_entries": 1,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 14680064,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.16593662498053163
+            }
+          },
+          "warm": {
+            "calls": 1,
+            "TTFT_seconds_median": 7.907780292007374,
+            "total_seconds_median": 9.116053625009954,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 1.207496249990072,
+              "executed_prefill_tokens": 136,
+              "host_input_seconds": 0.012238708004588261,
+              "input_tokens": 200,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 0,
+              "prefill_seconds": 7.603584833996138,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 14680064,
+              "prefix_cache_native_entries": 1,
+              "prefix_cache_restore_seconds": 0.049086500017438084,
+              "prefix_cache_restored_tokens": 64,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 14680064,
+              "reset_seconds": 0.29194266701233573
+            }
+          }
+        },
+        "Qwen3.5-4B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 36.53200620901771,
+            "total_seconds_median": 44.89684820800903,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 8.339279000007082,
+              "executed_prefill_tokens": 393,
+              "host_input_seconds": 0.01004670702968724,
+              "input_tokens": 393,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 112.44233599999998,
+              "prefill_seconds": 33.766545541991945,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 0,
+              "prefix_cache_native_entries": 0,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.027485708997119218,
+              "vision_seconds": 2.7265400839969516
+            }
+          },
+          "warm": {
+            "calls": 1,
+            "TTFT_seconds_median": 23.762899749999633,
+            "total_seconds_median": 33.887252874992555,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 10.122268083010567,
+              "executed_prefill_tokens": 393,
+              "host_input_seconds": 0.041978626017225906,
+              "input_tokens": 393,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 0,
+              "prefill_seconds": 15.234217666991754,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 0,
+              "prefix_cache_native_entries": 0,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.03946025000186637,
+              "vision_seconds": 8.444873583008302
+            }
+          }
+        }
+      }
+    },
+    "resource/candidate-1": {
+      "source_artifact": "candidate-1.json",
+      "first_parent_Skill_wall_seconds": [
+        45.66848212498007
+      ],
+      "warm_parent_Skill_wall_seconds": [
+        21.369893915980356
+      ],
+      "models": {
+        "Qwen3-1.7B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 2.7142007499642204,
+            "total_seconds_median": 4.430603916000109,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 1.714518708002288,
+              "executed_prefill_tokens": 200,
+              "host_input_seconds": 0.02210795899736695,
+              "input_tokens": 200,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 50.221788,
+              "prefill_seconds": 2.5024549999798182,
+              "prefix_cache_capture_seconds": 0.0038675410032738,
+              "prefix_cache_captured_tokens": 64,
+              "prefix_cache_native_bytes": 14680064,
+              "prefix_cache_native_entries": 1,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 14680064,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.18962250000913627
+            }
+          },
+          "warm": {
+            "calls": 1,
+            "TTFT_seconds_median": 2.576906416012207,
+            "total_seconds_median": 4.411405332997674,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 1.8333074999973178,
+              "executed_prefill_tokens": 136,
+              "host_input_seconds": 0.00221554099698551,
+              "input_tokens": 200,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 0,
+              "prefill_seconds": 2.105845375015633,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 14680064,
+              "prefix_cache_native_entries": 1,
+              "prefix_cache_restore_seconds": 0.004506083991145715,
+              "prefix_cache_restored_tokens": 64,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 14680064,
+              "reset_seconds": 0.4688325419847388
+            }
+          }
+        },
+        "Qwen3.5-4B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 8.62219933301094,
+            "total_seconds_median": 18.491733041009866,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 9.86211016602465,
+              "executed_prefill_tokens": 393,
+              "host_input_seconds": 0.02881029201671481,
+              "input_tokens": 393,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 160.607459,
+              "prefill_seconds": 6.816947333980352,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 0,
+              "prefix_cache_native_entries": 0,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.0283200410194695,
+              "vision_seconds": 1.7467732499935664
+            }
+          },
+          "warm": {
+            "calls": 1,
+            "TTFT_seconds_median": 7.125735001027351,
+            "total_seconds_median": 16.950693584018154,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 9.823871500004316,
+              "executed_prefill_tokens": 393,
+              "host_input_seconds": 0.010675708967028186,
+              "input_tokens": 393,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 0,
+              "prefill_seconds": 6.0729940840101335,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 0,
+              "prefix_cache_native_entries": 0,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.14138595800613984,
+              "vision_seconds": 0.8947134159971029
+            }
+          }
+        }
+      }
+    },
+    "speed/control-1": {
+      "source_artifact": "speed/control-1.json",
+      "first_parent_Skill_wall_seconds": [
+        68.59053116600262
+      ],
+      "warm_parent_Skill_wall_seconds": [
+        68.34093050000956,
+        44.173959458014,
+        50.30224420901504,
+        32.27434883400565
+      ],
+      "models": {
+        "Qwen3-1.7B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 14.329368582984898,
+            "total_seconds_median": 15.587061958009144,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 1.2510573340114206,
+              "executed_prefill_tokens": 200,
+              "host_input_seconds": 0.11174454100546427,
+              "input_tokens": 200,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 80.09966700000001,
+              "prefill_seconds": 14.030191874975571,
+              "prefix_cache_capture_seconds": 0.003475457982858643,
+              "prefix_cache_captured_tokens": 64,
+              "prefix_cache_native_bytes": 14680064,
+              "prefix_cache_native_entries": 1,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 14680064,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.18741941699408926
+            }
+          },
+          "warm": {
+            "calls": 4,
+            "TTFT_seconds_median": 8.723618375021033,
+            "total_seconds_median": 9.965900416005752,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0.0,
+              "decode_seconds": 1.242625645492808,
+              "executed_prefill_tokens": 136.0,
+              "host_input_seconds": 0.010648645999026485,
+              "input_tokens": 200.0,
+              "lazy_default_planned_slots": 0.0,
+              "lazy_default_rehydrated_bytes": 0.0,
+              "lazy_default_retired_bytes": 0.0,
+              "prefill_compile_ms": 0.0,
+              "prefill_seconds": 8.35996114599402,
+              "prefix_cache_capture_seconds": 0.0,
+              "prefix_cache_captured_tokens": 0.0,
+              "prefix_cache_native_bytes": 14680064.0,
+              "prefix_cache_native_entries": 1.0,
+              "prefix_cache_restore_seconds": 0.007418958499329165,
+              "prefix_cache_restored_tokens": 64.0,
+              "prefix_capture_native_bytes": 0.0,
+              "prefix_restore_native_bytes": 14680064.0,
+              "reset_seconds": 0.3432964790117694
+            }
+          }
+        },
+        "Qwen3.5-4B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 26.30264433400589,
+            "total_seconds_median": 36.049809249991085,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 9.728530541004147,
+              "executed_prefill_tokens": 393,
+              "host_input_seconds": 0.009934707981301472,
+              "input_tokens": 393,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 109.83541799999996,
+              "prefill_seconds": 24.2682579170214,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 0,
+              "prefix_cache_native_entries": 0,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.025369209004566073,
+              "vision_seconds": 1.9967218750098255
+            }
+          },
+          "warm": {
+            "calls": 4,
+            "TTFT_seconds_median": 25.313395958481124,
+            "total_seconds_median": 37.26663833299244,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0.0,
+              "decode_seconds": 11.94865383299475,
+              "executed_prefill_tokens": 393.0,
+              "host_input_seconds": 0.005499415987287648,
+              "input_tokens": 393.0,
+              "lazy_default_planned_slots": 0.0,
+              "lazy_default_rehydrated_bytes": 0.0,
+              "lazy_default_retired_bytes": 0.0,
+              "prefill_compile_ms": 0.0,
+              "prefill_seconds": 16.132514729499235,
+              "prefix_cache_capture_seconds": 0.0,
+              "prefix_cache_captured_tokens": 0.0,
+              "prefix_cache_native_bytes": 0.0,
+              "prefix_cache_native_entries": 0.0,
+              "prefix_cache_restore_seconds": 0.0,
+              "prefix_cache_restored_tokens": 0.0,
+              "prefix_capture_native_bytes": 0.0,
+              "prefix_restore_native_bytes": 0.0,
+              "reset_seconds": 0.039462854503653944,
+              "vision_seconds": 9.036481979506789
+            }
+          }
+        }
+      }
+    },
+    "speed/candidate-1": {
+      "source_artifact": "speed/candidate-1.json",
+      "first_parent_Skill_wall_seconds": [
+        44.83816912499606
+      ],
+      "warm_parent_Skill_wall_seconds": [
+        19.151156791020185,
+        19.44933004199993,
+        19.887822707998566,
+        19.568303083011415
+      ],
+      "models": {
+        "Qwen3-1.7B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 2.8189314999908675,
+            "total_seconds_median": 4.33850004101987,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 1.5182656660035718,
+              "executed_prefill_tokens": 200,
+              "host_input_seconds": 0.007775541016599163,
+              "input_tokens": 200,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 38.871246,
+              "prefill_seconds": 2.6663884589797817,
+              "prefix_cache_capture_seconds": 0.0034314579970669,
+              "prefix_cache_captured_tokens": 64,
+              "prefix_cache_native_bytes": 14680064,
+              "prefix_cache_native_entries": 1,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 14680064,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.14474758398137055
+            }
+          },
+          "warm": {
+            "calls": 4,
+            "TTFT_seconds_median": 2.151038645519293,
+            "total_seconds_median": 3.6822792909952113,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0.0,
+              "decode_seconds": 1.531199603501591,
+              "executed_prefill_tokens": 136.0,
+              "host_input_seconds": 0.002775916480459273,
+              "input_tokens": 200.0,
+              "lazy_default_planned_slots": 0.0,
+              "lazy_default_rehydrated_bytes": 0.0,
+              "lazy_default_retired_bytes": 0.0,
+              "prefill_compile_ms": 0.0,
+              "prefill_seconds": 1.9164349170023343,
+              "prefix_cache_capture_seconds": 0.0,
+              "prefix_cache_captured_tokens": 0.0,
+              "prefix_cache_native_bytes": 14680064.0,
+              "prefix_cache_native_entries": 1.0,
+              "prefix_cache_restore_seconds": 0.0026889579894486815,
+              "prefix_cache_restored_tokens": 64.0,
+              "prefix_capture_native_bytes": 0.0,
+              "prefix_restore_native_bytes": 14680064.0,
+              "reset_seconds": 0.21999664550821763
+            }
+          }
+        },
+        "Qwen3.5-4B": {
+          "first": {
+            "calls": 1,
+            "TTFT_seconds_median": 8.487687792017823,
+            "total_seconds_median": 17.7373994999798,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0,
+              "decode_seconds": 9.24331916598021,
+              "executed_prefill_tokens": 393,
+              "host_input_seconds": 0.01922616598312743,
+              "input_tokens": 393,
+              "lazy_default_planned_slots": 0,
+              "lazy_default_rehydrated_bytes": 0,
+              "lazy_default_retired_bytes": 0,
+              "prefill_compile_ms": 167.683956,
+              "prefill_seconds": 6.527459459000966,
+              "prefix_cache_capture_seconds": 0,
+              "prefix_cache_captured_tokens": 0,
+              "prefix_cache_native_bytes": 0,
+              "prefix_cache_native_entries": 0,
+              "prefix_cache_restore_seconds": 0,
+              "prefix_cache_restored_tokens": 0,
+              "prefix_capture_native_bytes": 0,
+              "prefix_restore_native_bytes": 0,
+              "reset_seconds": 0.027921667002374306,
+              "vision_seconds": 1.9116861250076909
+            }
+          },
+          "warm": {
+            "calls": 4,
+            "TTFT_seconds_median": 6.501306499980274,
+            "total_seconds_median": 15.749717812985182,
+            "numeric_timings_medians": {
+              "decode_fused_head_dispatches": 0.0,
+              "decode_seconds": 9.299149395999848,
+              "executed_prefill_tokens": 393.0,
+              "host_input_seconds": 0.006983603976550512,
+              "input_tokens": 393.0,
+              "lazy_default_planned_slots": 0.0,
+              "lazy_default_rehydrated_bytes": 0.0,
+              "lazy_default_retired_bytes": 0.0,
+              "prefill_compile_ms": 0.0,
+              "prefill_seconds": 5.681120707988157,
+              "prefix_cache_capture_seconds": 0.0,
+              "prefix_cache_captured_tokens": 0.0,
+              "prefix_cache_native_bytes": 0.0,
+              "prefix_cache_native_entries": 0.0,
+              "prefix_cache_restore_seconds": 0.0,
+              "prefix_cache_restored_tokens": 0.0,
+              "prefix_capture_native_bytes": 0.0,
+              "prefix_restore_native_bytes": 0.0,
+              "reset_seconds": 0.03063554150867276,
+              "vision_seconds": 0.7684563750080997
+            }
+          }
+        }
+      }
+    }
+  }
+}
