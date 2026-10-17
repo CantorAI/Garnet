@@ -1,0 +1,32 @@
+{
+  "experiment": "WS-M5-18",
+  "state": "prototype_correctness_and_faults_passed_worldsense_resource_check_running",
+  "created_utc": "2026-10-17T02:33:43.186877+00:00",
+  "motivation": "WS17 WorldSense8calls: Metal-13.86%/2.828GiB but task footprint-0.0292%/~5.03MiB, physical gate fails. Target buffers actually written/read during inference. WS14 other_graph_storage4B~2.303GiB/text~0.537GiB are investigation inventory categories, not all proven reusable.",
+  "mechanism": "Session-private scratch pool shared across sequential layer graphs, with conservative exact-layout liveness interval coloring. Build graphs normally then bind eligible temporary slots before first GPU use, release unused default owners, keep matrices strongly alive in session pool through GPU completion. Full context/math unchanged.",
+  "eligibility": [
+    "Audit entire native Encode switch first: every actual matrix operand must be represented in op.a/b/arguments/out/auxiliaryOutput; check dimensions for any hidden slot ids. Conservative extra reads are safe; missed reads are not.",
+    "Only singleton owned standard-layout FP32 buffers. Exclude BF16/weight records, constants/no-writer slots, every input, every output part and output-storage alias group, legacy packed root and all shared/view aliases. Preserve private state/hidden/output handoff owners.",
+    "First native graph writer must precede all reads, with exactly one writer initially. Admit only operations proven to fully overwrite every logical output element on every admitted/inactive/tail path; exclude uncertain partial-write Conv/Delta/cache/other operations until source proof. Padding is not semantic tensor data.",
+    "Compute first-write/last-read intervals over resident mask operations; group exact rows/columns/stride/layout. Reuse colors only when previous last-read < next first-write (strict, no same-op alias). Treat a/b/arguments as conservative reads and out/aux as writes.",
+    "Store per-graph plan keyed naturally by graph lifetime/generation; reset on Clear/build. No raw-pointer-only external plan cache that can survive address reuse. Session pool layout/color groups allocate maximum counts needed across selected graphs, grow before any graph binding/private hidden mutation/GPU batch.",
+    "Native Session.Run already serializes selected graph owners until SubmitAndWait. Confirm this remains true, use same queue ordering/hazard tracking, retain each pooled matrix in session until close. Keep separate pools for separate sessions to avoid cross-queue state/data races.",
+    "Generic graph.Run must materialize missing managed scratch slots after host validation and before Begin, alongside deferred states/root. After resident calls, scratch graph defaults may remain registered empty; generic/resident alternation may lose never-used allocation advantage but must remain exact.",
+    "Scoped binding restoration on success/error must clear graph arena bindings before unlock, retain session buffers through abort/completion, preserve outputs/hidden/state and multi-session isolation. Allocation failures happen before private mutation; staged partial pool growth recoverable.",
+    "MPS ready/pending ownership and output tracking must support reuse within a command batch; prove from context code and native tests, do not assume matrix-value equivalence from shapes.",
+    "Instrument requested/actual unique workspace bytes, eligible/rebound slot counts and reuse plans, optionally inventory session workspace owners without addresses. No lower-capacity/precision/image/token shortcuts."
+  ],
+  "validation": [
+    "OFF/ON native synthetic liveness/layout/read-write/alias/partial-write exclusions, GPU exact reference including inactive/tails, pending/abort, two sessions and generic fallback.",
+    "Separate fault-only arena allocation/materialization tests with zero private/caller mutation and recovery; ordinary graphs unchanged and unsupported layouts fall back conservatively.",
+    "Actual32VLM/28text state/token/prefix/capacity guards againstWS10, including4-input linear/6-input attention/prefill and shared-owner close/rebuild.",
+    "Prospective physical-resource feasibility through real WorldSense before speed claims; source/build/model/input frozen, freshworkers, allcold/warm/failures retained, two full independent confirmations before promotion. Protocol/gates not yet declared; implement/prove native design first."
+  ],
+  "risks": [
+    "Active inventory category includes protected/live/partial outputs; eligible saving may be smaller than category total.",
+    "GPU command order, hidden handoff and partial writes are correctness-critical.",
+    "Per-session scratch can increase memory for many simultaneous private sessions; measure/document rather than sharing unsafe global buffers.",
+    "Allocation snapshots are not peaks/free system RAM; infer no physical headroom from descriptor savings alone."
+  ],
+  "implemented": true
+}

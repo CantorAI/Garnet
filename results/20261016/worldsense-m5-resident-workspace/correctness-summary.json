@@ -1,0 +1,13 @@
+{
+  "native_tests_per_mode": 7,
+  "full32VLM28text_exact_states_tokens_prefix_capacity_recovery": true,
+  "trained_4_6_input_actual_workspace_route_and_private_adversarial_isolation": true,
+  "interval_protected_slot_audit": true,
+  "tracked_gpu_resources": true,
+  "partial_grow_after_nonzero_state_isolated": true,
+  "generic_scratch_failure_recovery": true,
+  "layer1_abort_graph_unbinding_and_reset_recovery": true,
+  "separate_fault_binaries": true,
+  "multioperation_fusion_rejected": true,
+  "performance_samples_taken": false
+}

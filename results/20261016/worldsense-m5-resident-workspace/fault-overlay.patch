@@ -1,0 +1,167 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -396,3 +396,19 @@
+ target_include_directories(garnet_workspace_plan_test PRIVATE src/backends/metal)
+ target_link_libraries(garnet_workspace_plan_test PRIVATE garnet_metal)
+ add_test(NAME metal_workspace_plan_reference COMMAND garnet_workspace_plan_test)
++
++option(GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS "Correctness-only deferred allocation fault injection" OFF)
++if(GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS)
++ if(NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++  message(FATAL_ERROR "Test faults require lazy resident defaults")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS=1)
++endif()
++
++option(GARNET_METAL_WORKSPACE_TEST_FAULTS "Correctness-only workspace failure hooks" OFF)
++if(GARNET_METAL_WORKSPACE_TEST_FAULTS)
++ if(NOT GARNET_METAL_RESIDENT_WORKSPACE)
++  message(FATAL_ERROR "Workspace failure hooks require resident workspace")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_WORKSPACE_TEST_FAULTS=1)
++endif()
+--- a/src/backends/metal/compiled_graph.cpp
++++ b/src/backends/metal/compiled_graph.cpp
+@@ -197,6 +197,9 @@
+     workspacePlanReady_=false;workspacePlan_.clear();
+     residentAvoidedStorageBytes_=0;
+ #ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    lazyTestFailAfter_=-1;
++#endif
+     lazyDefaultPlanReady_=false;lazyDefaultSlots_.clear();lazyRetiredBytes_=lazyRehydratedBytes_=0;
+ #endif
+     visionParallelDispatches_=0;
+@@ -1153,6 +1156,10 @@
+ #ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+     if(slots_[id].matrix.Valid())return;
+     if(std::find(lazyDefaultSlots_.begin(),lazyDefaultSlots_.end(),id)==lazyDefaultSlots_.end()&&std::none_of(workspacePlan_.begin(),workspacePlan_.end(),[&](const auto& entry){return entry.slot==id;}))throw std::logic_error("Missing non-deferred graph storage");
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    if(lazyTestFailAfter_==0){lazyTestFailAfter_=-1;throw std::runtime_error("Injected deferred storage allocation failure");}
++    if(lazyTestFailAfter_>0)--lazyTestFailAfter_;
++#endif
+     auto matrix=gpu_->Allocate(slots_[id].rows,slots_[id].columns);auto info=MetalContext::MatrixBufferInfo(matrix);slots_[id].matrix=std::move(matrix);lazyRehydratedBytes_+=info.allocatedBytes;
+ #else
+     (void)id;
+@@ -1249,3 +1256,7 @@
+ #endif
+ out<<",\"generation\":"<<generation_<<",\"bindings\":[";bool first=true;for(const auto&e:workspacePlan_){if(!first)out<<",";first=false;out<<"{\"slot\":"<<e.slot<<",\"rows\":"<<e.rows<<",\"columns\":"<<e.columns<<",\"color\":"<<e.color<<",\"first\":"<<e.first<<",\"last\":"<<e.last<<"}";}out<<"],\"protected_slots\":[";std::unordered_set<size_t> ids(inputs_.begin(),inputs_.end());ids.insert(outputParts_.begin(),outputParts_.end());ids.insert(output_);for(const auto&g:outputStorageGroups_)ids.insert(g.begin(),g.end());for(const auto&w:weights_)ids.insert(w.second);std::vector<size_t> sorted(ids.begin(),ids.end());std::sort(sorted.begin(),sorted.end());first=true;for(auto id:sorted){if(!first)out<<",";first=false;out<<id;}out<<"]}";return out.str();}
+ }
++
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++namespace Garnet {void MetalCompiledGraph::TestLazyFailAfter(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(n<0||n>4096)throw std::invalid_argument("Invalid fault countdown");lazyTestFailAfter_=n;}}
++#endif
+--- a/src/backends/metal/compiled_graph.h
++++ b/src/backends/metal/compiled_graph.h
+@@ -52,6 +52,9 @@
+     bool workspacePlanReady_=false;
+     std::vector<WorkspaceBinding> workspacePlan_;
+     void BuildWorkspacePlan();
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    int64_t lazyTestFailAfter_=-1;
++#endif
+     void RetireResidentDefaults();
+     void MaterializeDefault(size_t slot);
+     void Clear();
+@@ -80,6 +83,9 @@
+     size_t LazyRetiredBytes() const;
+     size_t LazyRehydratedBytes() const;
+     size_t LazyPlannedSlots() const;
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    void TestLazyFailAfter(int64_t n);
++#endif
+     bool Ready() const {return ready_;}
+     double CompileMs() const {return compileMs_;}
+     double LastInferenceMs() const {return inferenceMs_;}
+@@ -99,6 +105,9 @@
+         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
+         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
+         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++        APISET().AddFunc<1>("_test_lazy_fail_after",&MetalCompiledGraph::TestLazyFailAfter);
++#endif
+         APISET().AddProp("lazy_default_retired_bytes",&MetalCompiledGraph::LazyRetiredBytes);
+         APISET().AddProp("lazy_default_rehydrated_bytes",&MetalCompiledGraph::LazyRehydratedBytes);
+         APISET().AddProp("lazy_default_planned_slots",&MetalCompiledGraph::LazyPlannedSlots);
+--- a/src/backends/metal/decoder_session.cpp
++++ b/src/backends/metal/decoder_session.cpp
+@@ -21,6 +21,9 @@
+ }
+ }
+ void MetalDecoderSession::Clear() {
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++    workspaceTestFailAfter_=workspaceTestEncodeLayer_=-1;
++#endif
+     workspacePool_.clear();workspaceBoundSlots_=0;
+ #ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+     prefixCache_.clear();prefixBytes_=prefixRestoreBytes_=prefixCaptureBytes_=0;prefixClock_=0;prefixFreshReset_=false;
+@@ -243,7 +246,11 @@
+                 for(auto& entry:savedOutputs)graph->slots_[entry.first].matrix=entry.second;
+                 for(const auto& entry:scratch)graph->slots_[entry.first].matrix=MetalMatrix();
+             };
+-            try {graph->Encode(*gpu_,false);}
++            try {
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++            if(workspaceTestEncodeLayer_==int64_t(i)){workspaceTestEncodeLayer_=-1;throw std::runtime_error("Injected workspace encoder failure");}
++#endif
++            graph->Encode(*gpu_,false);}
+             catch(...){restore();throw;}
+             restore();
+             kvInplaceUpdates_+=size_t(inplace[0])+size_t(inplace[1]);
+@@ -438,10 +445,21 @@
+ #ifdef GARNET_METAL_RESIDENT_WORKSPACE
+     std::map<std::pair<size_t,size_t>,size_t> required;
+     for(auto graph:graphs){graph->BuildWorkspacePlan();workspaceBoundSlots_+=graph->workspacePlan_.size();for(const auto& entry:graph->workspacePlan_)required[{entry.rows,entry.columns}]=std::max(required[{entry.rows,entry.columns}],entry.color+1);}
+-    for(const auto& entry:required){auto& buffers=workspacePool_[entry.first];while(buffers.size()<entry.second){auto matrix=gpu_->Allocate(entry.first.first,entry.first.second);if(!gpu_->HazardTracked(matrix))throw std::runtime_error("Workspace requires tracked Metal resources");buffers.push_back(std::move(matrix));}}
++    for(const auto& entry:required){auto& buffers=workspacePool_[entry.first];while(buffers.size()<entry.second){
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++if(workspaceTestFailAfter_==0){workspaceTestFailAfter_=-1;throw std::runtime_error("Injected workspace allocation failure");}if(workspaceTestFailAfter_>0)--workspaceTestFailAfter_;
++#endif
++auto matrix=gpu_->Allocate(entry.first.first,entry.first.second);if(!gpu_->HazardTracked(matrix))throw std::runtime_error("Workspace requires tracked Metal resources");buffers.push_back(std::move(matrix));}}
+ #endif
+ }
+ size_t MetalDecoderSession::WorkspaceAllocatedBytes() const {std::lock_guard<std::mutex> lock(mutex_);size_t bytes=0;for(const auto& entry:workspacePool_)for(const auto& matrix:entry.second)bytes+=MetalContext::MatrixBufferInfo(matrix).allocatedBytes;return bytes;}
+ size_t MetalDecoderSession::WorkspaceBufferCount() const {std::lock_guard<std::mutex> lock(mutex_);size_t count=0;for(const auto& entry:workspacePool_)count+=entry.second.size();return count;}
+ size_t MetalDecoderSession::WorkspaceBoundSlots() const {std::lock_guard<std::mutex> lock(mutex_);return workspaceBoundSlots_;}
+ }
++
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++namespace Garnet {
++void MetalDecoderSession::TestWorkspaceFailAfter(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(!gpu_||poisoned_||n<0||n>4096)throw std::invalid_argument("Invalid workspace fault state/countdown");workspacePool_.clear();workspaceTestFailAfter_=n;}
++void MetalDecoderSession::TestWorkspaceEncodeLayer(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(!gpu_||poisoned_||n<0||uint64_t(n)>=states_.size())throw std::invalid_argument("Invalid workspace encoder fault layer");workspaceTestEncodeLayer_=n;}
++}
++#endif
+--- a/src/backends/metal/decoder_session.h
++++ b/src/backends/metal/decoder_session.h
+@@ -51,6 +51,9 @@
+     X::Value RunUnscoped(X::Value,X::Value,X::Value,X::Value,X::Value,int64_t);
+     std::map<std::pair<size_t,size_t>,std::vector<MetalMatrix>> workspacePool_;
+     size_t workspaceBoundSlots_=0;
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++    int64_t workspaceTestFailAfter_=-1,workspaceTestEncodeLayer_=-1;
++#endif
+     void EnsureWorkspaces(const std::vector<MetalCompiledGraph*>&);
+     bool poisoned_=false;
+     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
+@@ -65,6 +68,10 @@
+     void Clear();
+     void ResetUnlocked();
+ public:
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++    void TestWorkspaceFailAfter(int64_t);
++    void TestWorkspaceEncodeLayer(int64_t);
++#endif
+     size_t WorkspaceAllocatedBytes() const;
+     size_t WorkspaceBufferCount() const;
+     size_t WorkspaceBoundSlots() const;
+@@ -119,6 +126,10 @@
+     BEGIN_PACKAGE(MetalDecoderSession)
+         APISET().AddFunc<2>("build",&MetalDecoderSession::Build);
+         APISET().AddFunc<6>("run",&MetalDecoderSession::Run);
++#ifdef GARNET_METAL_WORKSPACE_TEST_FAULTS
++        APISET().AddFunc<1>("_test_workspace_fail_after",&MetalDecoderSession::TestWorkspaceFailAfter);
++        APISET().AddFunc<1>("_test_workspace_encode_layer",&MetalDecoderSession::TestWorkspaceEncodeLayer);
++#endif
+         APISET().AddProp("workspace_allocated_bytes",&MetalDecoderSession::WorkspaceAllocatedBytes);
+         APISET().AddProp("workspace_buffer_count",&MetalDecoderSession::WorkspaceBufferCount);
+         APISET().AddProp("workspace_bound_slots",&MetalDecoderSession::WorkspaceBoundSlots);
