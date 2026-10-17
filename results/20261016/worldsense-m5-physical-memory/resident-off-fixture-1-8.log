@@ -1,0 +1,10 @@
+Global inventory old-API parity/duplicate graph and session dedup/two-private-session union/invalid types/read-only states PASS
+private_kv_step {"index": 0, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 1, "capacity": 8, "layer": 0, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}

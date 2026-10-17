@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T10:02:02.295540+00:00
+Generated UTC: 2026-10-17T10:22:33.668095+00:00
 
-Base HEAD at generation: `2564b17d2eb71f8580dd95ffb83f7600cb179199`. Reports indexed: **224**.
+Base HEAD at generation: `929971b4d7d94a6ead48a8c6b56f4fadf1642b81`. Reports indexed: **225**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -205,6 +205,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-lazy-defaults](../../../results/20261016/worldsense-m5-lazy-defaults/README.md) | WS-M5-15: lazy resident default storage (rejected screen) |
 | [results/20261016/worldsense-m5-memory](../../../results/20261016/worldsense-m5-memory/README.md) | WS-M5-12 native WorldSense memory and lifetime diagnostic |
 | [results/20261016/worldsense-m5-mixed-chunk](../../../results/20261016/worldsense-m5-mixed-chunk/README.md) | WS-M5-09: VLM64 / reasoner32 — rejected |
+| [results/20261016/worldsense-m5-physical-memory](../../../results/20261016/worldsense-m5-physical-memory/README.md) | WS-M5-35: global ownership and OS graphics accounting — diagnostic |
 | [results/20261016/worldsense-m5-prefix-cache](../../../results/20261016/worldsense-m5-prefix-cache/README.md) | WS-M5-10 native bounded text prefix cache and wider VLM prefill |
 | [results/20261016/worldsense-m5-private-execution](../../../results/20261016/worldsense-m5-private-execution/README.md) | WS-M5-25 actual private execution: rejected companion decode regression |
 | [results/20261016/worldsense-m5-private-resident-defaults](../../../results/20261016/worldsense-m5-private-resident-defaults/README.md) | WS-M5-30: private resident deferred defaults — rejected |

@@ -1,0 +1,41 @@
+==========================================================================================
+Cantor [58769]: 64-bit    Footprint: 18093193640 B (16384 bytes per page)
+==========================================================================================
+
+      Dirty     (Swapped)         Clean   Reclaimable       (Wired)    Regions    Category
+        ---           ---           ---           ---           ---        ---    ---
+17829150720 B  9154117632 B           0 B      884736 B           0 B       4505    IOAccelerator (graphics)
+209469440 B   120012800 B           0 B     2146304 B           0 B         80    MALLOC_SMALL
+ 27049984 B     9879552 B           0 B           0 B           0 B          9    MALLOC_LARGE
+ 10107304 B           0 B           0 B           0 B           0 B          1    page table
+  3359736 B     2196472 B       65536 B           0 B           0 B        563    __DATA_CONST
+  2768896 B      573440 B           0 B           0 B           0 B        216    stack
+  2621440 B           0 B           0 B           0 B           0 B        160    IOKit
+  2326528 B     2195456 B           0 B           0 B           0 B         16    untagged (VM_ALLOCATE)
+  1687552 B      573440 B           0 B       65536 B           0 B         12    MALLOC metadata
+  1434107 B      759173 B           0 B           0 B           0 B        524    __DATA
+  1294336 B           0 B           0 B           0 B           0 B         27    IOAccelerator
+   729303 B      333716 B           0 B           0 B           0 B        440    __DATA_DIRTY
+   311296 B      131072 B           0 B           0 B           0 B          1    MALLOC_TINY
+   299518 B      216871 B           0 B           0 B           0 B       1385    unused dyld shared cache area
+   131016 B       81864 B           0 B           0 B           0 B          2    __TPRO_CONST
+   114688 B       81920 B           0 B           0 B           0 B        521    __AUTH_CONST
+    98304 B           0 B           0 B           0 B           0 B          3    MALLOC_NANO
+    81920 B       81920 B           0 B           0 B           0 B          2    dyld private memory
+    65536 B       16384 B           0 B           0 B           0 B          1    tag 22
+    42864 B       16384 B           0 B           0 B           0 B        268    __AUTH
+    32768 B           0 B           0 B           0 B           0 B          1    Activity Tracing
+    16384 B           0 B           0 B           0 B           0 B          1    os_alloc_once
+        0 B           0 B           0 B    20971520 B           0 B         10    Owned physical footprint (unmapped) (graphics)
+        0 B           0 B    23724032 B           0 B           0 B        580    __TEXT
+        0 B           0 B     7323648 B           0 B           0 B         11    mapped file
+        0 B           0 B           0 B           0 B           0 B          1    __CTF
+        0 B           0 B           0 B           0 B           0 B          1    __FONT_DATA
+        0 B           0 B           0 B           0 B           0 B         44    __LINKEDIT
+        ---           ---           ---           ---           ---        ---    ---
+18093193640 B  9291268096 B    31113216 B    24068096 B           0 B       9387    TOTAL
+
+Auxiliary data:
+    phys_footprint: 18093226408 B
+    phys_footprint_peak: 18134579624 B
+

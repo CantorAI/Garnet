@@ -1,0 +1,2432 @@
+{
+  "status": "valid_diagnostic_not_a_performance_comparison",
+  "calls": [
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "capture_id": "f92a8d4c06c3c4b5b32ab7da24699d942818c85641ed47ec1b19287c17bca64a",
+      "exact": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "capture_id": "8721e6f17f28541bdc98eb7fd6e5815a20500ad68fc903fd2e1b406f6aad89be",
+      "exact": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "capture_id": "47c3e502eb5c438eb6fc044d0852da2b8f1e0aeab6b752665afe3cc7a9a3e4ff",
+      "exact": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "capture_id": "fe8447d328b12dd8ed96f098dbee092bec104278193a1a35739014381333fffe",
+      "exact": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "capture_id": "01b996ca1e44eeeb512c94b360f74cc14279c89e57921e80955601754981693a",
+      "exact": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "capture_id": "b75ae03ed2ee56d1419930303e62b95778960b932e7e678016089fa63834a8e7",
+      "exact": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "capture_id": "ef1391e0a3aa0c94e973e5902199001bc1386e8d46107f17d742433bbafec124",
+      "exact": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "capture_id": "4b66ac845ca7a24290d6db0a30fabdf1043a3e138affd302a2af0729c53d7c5c",
+      "exact": true
+    }
+  ],
+  "observations": [
+    {
+      "worker": "control-1",
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "capture_id": "f92a8d4c06c3c4b5b32ab7da24699d942818c85641ed47ec1b19287c17bca64a",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 19676736096,
+      "logical_native_categories": {
+        "graph_default_inputs": 1061589952,
+        "other_graph_session_allocations": 2646720160,
+        "weights": 13188880384,
+        "graph_output_parts": 1059618816,
+        "graph_legacy_packed_outputs": 1062469632,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 19677511680,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 13970112512,
+        "task_info_status": 0,
+        "task_internal_bytes": 110936064,
+        "task_physical_footprint_bytes": 17052267936,
+        "task_resident_bytes": 155041792,
+        "task_virtual_bytes": 474527367168
+      },
+      "os_category_total": {
+        "dirty_bytes": 17023694240,
+        "swapped_subset_bytes": 8222343168,
+        "clean_bytes": 31670272,
+        "reclaimable_bytes": 29179904,
+        "wired_subset_bytes": 0,
+        "regions": 8921,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 17023727008,
+      "os_categories": [
+        {
+          "dirty_bytes": 16779804672,
+          "swapped_subset_bytes": 8104837120,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 884736,
+          "wired_subset_bytes": 0,
+          "regions": 4065,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 194412544,
+          "swapped_subset_bytes": 100466688,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 3096576,
+          "wired_subset_bytes": 0,
+          "regions": 82,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 22200320,
+          "swapped_subset_bytes": 9879552,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 8,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 9401760,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2196472,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2801664,
+          "swapped_subset_bytes": 491520,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 218,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2719744,
+          "swapped_subset_bytes": 688128,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 32768,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2211840,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 2162688,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 132,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1146880,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 24,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 333716,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216815,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 65536,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 25165824,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 26509312,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 5095424,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "capture_id": "8721e6f17f28541bdc98eb7fd6e5815a20500ad68fc903fd2e1b406f6aad89be",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 21902639456,
+      "logical_native_categories": {
+        "graph_default_inputs": 1535030976,
+        "other_graph_session_allocations": 3452318368,
+        "weights": 13188880384,
+        "graph_output_parts": 1533050880,
+        "graph_legacy_packed_outputs": 1535901696,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 13678854144,
+        "task_info_status": 0,
+        "task_internal_bytes": 407863296,
+        "task_physical_footprint_bytes": 18107742008,
+        "task_resident_bytes": 482033664,
+        "task_virtual_bytes": 476764733440
+      },
+      "os_category_total": {
+        "dirty_bytes": 18080020280,
+        "swapped_subset_bytes": 13080264704,
+        "clean_bytes": 34455552,
+        "reclaimable_bytes": 35946496,
+        "wired_subset_bytes": 0,
+        "regions": 9855,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 18080053048,
+      "os_categories": [
+        {
+          "dirty_bytes": 17829150720,
+          "swapped_subset_bytes": 12968148992,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 540672,
+          "wired_subset_bytes": 0,
+          "regions": 4961,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 196034560,
+          "swapped_subset_bytes": 95404032,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 28360704,
+          "wired_subset_bytes": 0,
+          "regions": 86,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 27623424,
+          "swapped_subset_bytes": 9519104,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 9,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 9680696,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2311160,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2768896,
+          "swapped_subset_bytes": 491520,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 218,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 160,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2211840,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 1753088,
+          "swapped_subset_bytes": 622592,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 753664,
+          "wired_subset_bytes": 0,
+          "regions": 13,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1343488,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 28,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 300964,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 49152,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216855,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 49096,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 6291456,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 26624000,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 7766016,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "capture_id": "47c3e502eb5c438eb6fc044d0852da2b8f1e0aeab6b752665afe3cc7a9a3e4ff",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 21902639456,
+      "logical_native_categories": {
+        "graph_default_inputs": 1535030976,
+        "other_graph_session_allocations": 3452318368,
+        "weights": 13188880384,
+        "graph_output_parts": 1533050880,
+        "graph_legacy_packed_outputs": 1535901696,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 14139080704,
+        "task_info_status": 0,
+        "task_internal_bytes": 170442752,
+        "task_physical_footprint_bytes": 18143492568,
+        "task_resident_bytes": 212484096,
+        "task_virtual_bytes": 476764160000
+      },
+      "os_category_total": {
+        "dirty_bytes": 18113886680,
+        "swapped_subset_bytes": 9292562432,
+        "clean_bytes": 34045952,
+        "reclaimable_bytes": 21905408,
+        "wired_subset_bytes": 0,
+        "regions": 9851,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 18113919448,
+      "os_categories": [
+        {
+          "dirty_bytes": 17829150720,
+          "swapped_subset_bytes": 9154592768,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 884736,
+          "wired_subset_bytes": 0,
+          "regions": 4961,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 229376000,
+          "swapped_subset_bytes": 120864768,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 86,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 27639808,
+          "swapped_subset_bytes": 9863168,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 9,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 10140120,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2196472,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2736128,
+          "swapped_subset_bytes": 540672,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 216,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 160,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2195456,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 1835008,
+          "swapped_subset_bytes": 671744,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 49152,
+          "wired_subset_bytes": 0,
+          "regions": 13,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1343488,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 28,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 333716,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 49152,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216871,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 81864,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 20971520,
+          "wired_subset_bytes": 0,
+          "regions": 10,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 26640384,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 7340032,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "capture_id": "fe8447d328b12dd8ed96f098dbee092bec104278193a1a35739014381333fffe",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 21902639456,
+      "logical_native_categories": {
+        "graph_default_inputs": 1535030976,
+        "other_graph_session_allocations": 3452318368,
+        "weights": 13188880384,
+        "graph_output_parts": 1533050880,
+        "graph_legacy_packed_outputs": 1535901696,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 14362411008,
+        "task_info_status": 0,
+        "task_internal_bytes": 352632832,
+        "task_physical_footprint_bytes": 18079677992,
+        "task_resident_bytes": 455376896,
+        "task_virtual_bytes": 476764160000
+      },
+      "os_category_total": {
+        "dirty_bytes": 18050039336,
+        "swapped_subset_bytes": 13573128192,
+        "clean_bytes": 34062336,
+        "reclaimable_bytes": 86441984,
+        "wired_subset_bytes": 0,
+        "regions": 9853,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 18050072104,
+      "os_categories": [
+        {
+          "dirty_bytes": 17829150720,
+          "swapped_subset_bytes": 13469876224,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 540672,
+          "wired_subset_bytes": 0,
+          "regions": 4961,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 164790272,
+          "swapped_subset_bytes": 86491136,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 60653568,
+          "wired_subset_bytes": 0,
+          "regions": 86,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 27639808,
+          "swapped_subset_bytes": 9519104,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 9,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 10894888,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2311160,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2736128,
+          "swapped_subset_bytes": 458752,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 216,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 160,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2195456,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 1818624,
+          "swapped_subset_bytes": 655360,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 81920,
+          "wired_subset_bytes": 0,
+          "regions": 13,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1343488,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 28,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 317332,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 49152,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216871,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 98248,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 25165824,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 26656768,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 7340032,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "capture_id": "01b996ca1e44eeeb512c94b360f74cc14279c89e57921e80955601754981693a",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 18523826784,
+      "logical_native_categories": {
+        "graph_default_inputs": 498504640,
+        "other_graph_session_allocations": 2646720160,
+        "weights": 13188880384,
+        "graph_output_parts": 1059618816,
+        "graph_legacy_packed_outputs": 472645632,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 18524602368,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 13970243584,
+        "task_info_status": 0,
+        "task_internal_bytes": 102088704,
+        "task_physical_footprint_bytes": 17043485992,
+        "task_resident_bytes": 140476416,
+        "task_virtual_bytes": 473373966336
+      },
+      "os_category_total": {
+        "dirty_bytes": 16978441512,
+        "swapped_subset_bytes": 14449672192,
+        "clean_bytes": 28016640,
+        "reclaimable_bytes": 26689536,
+        "wired_subset_bytes": 0,
+        "regions": 8624,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 16978474280,
+      "os_categories": [
+        {
+          "dirty_bytes": 16779886592,
+          "swapped_subset_bytes": 14314979328,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 344064,
+          "wired_subset_bytes": 0,
+          "regions": 3777,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 152600576,
+          "swapped_subset_bytes": 115507200,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 26312704,
+          "wired_subset_bytes": 0,
+          "regions": 78,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 18890752,
+          "swapped_subset_bytes": 11927552,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 7,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 9319720,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2229240,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2768896,
+          "swapped_subset_bytes": 458752,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 218,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 557056,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 32768,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2228224,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 2162688,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 132,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 808325,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1146880,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 24,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 356876,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 226479,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 98248,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 98304,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 24788992,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 3162112,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 8,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "capture_id": "b75ae03ed2ee56d1419930303e62b95778960b932e7e678016089fa63834a8e7",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 18866553184,
+      "logical_native_categories": {
+        "graph_default_inputs": 32421568,
+        "other_graph_session_allocations": 3452318368,
+        "weights": 13188880384,
+        "graph_output_parts": 1533050880,
+        "graph_legacy_packed_outputs": 2424832,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 18867290112,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 13739982848,
+        "task_info_status": 0,
+        "task_internal_bytes": 356220928,
+        "task_physical_footprint_bytes": 18117015136,
+        "task_resident_bytes": 398983168,
+        "task_virtual_bytes": 473727746048
+      },
+      "os_category_total": {
+        "dirty_bytes": 18088146528,
+        "swapped_subset_bytes": 13061128192,
+        "clean_bytes": 30965760,
+        "reclaimable_bytes": 4866048,
+        "wired_subset_bytes": 0,
+        "regions": 9391,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 18088179296,
+      "os_categories": [
+        {
+          "dirty_bytes": 17829150720,
+          "swapped_subset_bytes": 12931399680,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 540672,
+          "wired_subset_bytes": 0,
+          "regions": 4505,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 204980224,
+          "swapped_subset_bytes": 112721920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 4292608,
+          "wired_subset_bytes": 0,
+          "regions": 80,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 27033600,
+          "swapped_subset_bytes": 9879552,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 9,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 9533024,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2196472,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2768896,
+          "swapped_subset_bytes": 491520,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 218,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 160,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2211840,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 1720320,
+          "swapped_subset_bytes": 540672,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 32768,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1294336,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 27,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 317332,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 114688,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216871,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 81864,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 25067520,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 5832704,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "capture_id": "ef1391e0a3aa0c94e973e5902199001bc1386e8d46107f17d742433bbafec124",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 18866553184,
+      "logical_native_categories": {
+        "graph_default_inputs": 32421568,
+        "other_graph_session_allocations": 3452318368,
+        "weights": 13188880384,
+        "graph_output_parts": 1533050880,
+        "graph_legacy_packed_outputs": 2424832,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 18867290112,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 14135492608,
+        "task_info_status": 0,
+        "task_internal_bytes": 153796608,
+        "task_physical_footprint_bytes": 18123143592,
+        "task_resident_bytes": 196509696,
+        "task_virtual_bytes": 473727746048
+      },
+      "os_category_total": {
+        "dirty_bytes": 18093193640,
+        "swapped_subset_bytes": 9291268096,
+        "clean_bytes": 31113216,
+        "reclaimable_bytes": 24068096,
+        "wired_subset_bytes": 0,
+        "regions": 9387,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 18093226408,
+      "os_categories": [
+        {
+          "dirty_bytes": 17829150720,
+          "swapped_subset_bytes": 9154117632,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 884736,
+          "wired_subset_bytes": 0,
+          "regions": 4505,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 209469440,
+          "swapped_subset_bytes": 120012800,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 2146304,
+          "wired_subset_bytes": 0,
+          "regions": 80,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 27049984,
+          "swapped_subset_bytes": 9879552,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 9,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 10107304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2196472,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2768896,
+          "swapped_subset_bytes": 573440,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 216,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 160,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2195456,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 1687552,
+          "swapped_subset_bytes": 573440,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 65536,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1294336,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 27,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 333716,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 131072,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216871,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 81864,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 20971520,
+          "wired_subset_bytes": 0,
+          "regions": 10,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 23724032,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 7323648,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "capture_id": "4b66ac845ca7a24290d6db0a30fabdf1043a3e138affd302a2af0729c53d7c5c",
+      "loaded_model_ids": [
+        "Qwen3-1.7B",
+        "Qwen3.5-4B"
+      ],
+      "logical_native_unique_bytes": 18866553184,
+      "logical_native_categories": {
+        "graph_default_inputs": 32421568,
+        "other_graph_session_allocations": 3452318368,
+        "weights": 13188880384,
+        "graph_output_parts": 1533050880,
+        "graph_legacy_packed_outputs": 2424832,
+        "session_private_states": 657457152
+      },
+      "native_task_before": {
+        "metal_allocated_bytes": 18867290112,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 14360346624,
+        "task_info_status": 0,
+        "task_internal_bytes": 393936896,
+        "task_physical_footprint_bytes": 18118884712,
+        "task_resident_bytes": 436011008,
+        "task_virtual_bytes": 473728319488
+      },
+      "os_category_total": {
+        "dirty_bytes": 18087476584,
+        "swapped_subset_bytes": 13295943680,
+        "clean_bytes": 31113216,
+        "reclaimable_bytes": 3866624,
+        "wired_subset_bytes": 0,
+        "regions": 9389,
+        "category": "TOTAL"
+      },
+      "os_physical_footprint_bytes": 18087509352,
+      "os_categories": [
+        {
+          "dirty_bytes": 17829150720,
+          "swapped_subset_bytes": 13160841216,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 540672,
+          "wired_subset_bytes": 0,
+          "regions": 4505,
+          "category": "IOAccelerator (graphics)"
+        },
+        {
+          "dirty_bytes": 203079680,
+          "swapped_subset_bytes": 117948416,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 3276800,
+          "wired_subset_bytes": 0,
+          "regions": 80,
+          "category": "MALLOC_SMALL"
+        },
+        {
+          "dirty_bytes": 27049984,
+          "swapped_subset_bytes": 9879552,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 9,
+          "category": "MALLOC_LARGE"
+        },
+        {
+          "dirty_bytes": 10763624,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "page table"
+        },
+        {
+          "dirty_bytes": 3359736,
+          "swapped_subset_bytes": 2196472,
+          "clean_bytes": 65536,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 563,
+          "category": "__DATA_CONST"
+        },
+        {
+          "dirty_bytes": 2768896,
+          "swapped_subset_bytes": 573440,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 218,
+          "category": "stack"
+        },
+        {
+          "dirty_bytes": 2621440,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 160,
+          "category": "IOKit"
+        },
+        {
+          "dirty_bytes": 2326528,
+          "swapped_subset_bytes": 2195456,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 16,
+          "category": "untagged (VM_ALLOCATE)"
+        },
+        {
+          "dirty_bytes": 1703936,
+          "swapped_subset_bytes": 589824,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 49152,
+          "wired_subset_bytes": 0,
+          "regions": 12,
+          "category": "MALLOC metadata"
+        },
+        {
+          "dirty_bytes": 1434107,
+          "swapped_subset_bytes": 759173,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 524,
+          "category": "__DATA"
+        },
+        {
+          "dirty_bytes": 1294336,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 27,
+          "category": "IOAccelerator"
+        },
+        {
+          "dirty_bytes": 729303,
+          "swapped_subset_bytes": 333716,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 440,
+          "category": "__DATA_DIRTY"
+        },
+        {
+          "dirty_bytes": 311296,
+          "swapped_subset_bytes": 131072,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "MALLOC_TINY"
+        },
+        {
+          "dirty_bytes": 299518,
+          "swapped_subset_bytes": 216871,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1385,
+          "category": "unused dyld shared cache area"
+        },
+        {
+          "dirty_bytes": 131016,
+          "swapped_subset_bytes": 81864,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "__TPRO_CONST"
+        },
+        {
+          "dirty_bytes": 114688,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 521,
+          "category": "__AUTH_CONST"
+        },
+        {
+          "dirty_bytes": 98304,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 3,
+          "category": "MALLOC_NANO"
+        },
+        {
+          "dirty_bytes": 81920,
+          "swapped_subset_bytes": 81920,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 2,
+          "category": "dyld private memory"
+        },
+        {
+          "dirty_bytes": 65536,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "tag 22"
+        },
+        {
+          "dirty_bytes": 42864,
+          "swapped_subset_bytes": 16384,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 268,
+          "category": "__AUTH"
+        },
+        {
+          "dirty_bytes": 32768,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "Activity Tracing"
+        },
+        {
+          "dirty_bytes": 16384,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "os_alloc_once"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 23724032,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 580,
+          "category": "__TEXT"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 7323648,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 11,
+          "category": "mapped file"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__CTF"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 1,
+          "category": "__FONT_DATA"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 10,
+          "category": "Owned physical footprint (unmapped) (graphics)"
+        },
+        {
+          "dirty_bytes": 0,
+          "swapped_subset_bytes": 0,
+          "clean_bytes": 0,
+          "reclaimable_bytes": 0,
+          "wired_subset_bytes": 0,
+          "regions": 44,
+          "category": "__LINKEDIT"
+        }
+      ],
+      "scope": "OS Dirty includes Swapped subset; never add them. Native logical buffers and OS categories overlap, not additive. Diagnostic pauses and allocations prohibit speed or memory-improvement claims."
+    }
+  ],
+  "scope": "All8realWorldSense calls exact/golden/native/identity valid. Global graph/session union in one native collection; no exact per-buffer physical attribution or causal inference."
+}

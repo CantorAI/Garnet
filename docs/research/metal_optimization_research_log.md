@@ -3053,3 +3053,25 @@ Final correctness: OFF/ON/fault native tests all 5/5 passed. Trained four-input 
 Terminal resource decision: REJECTED. All 8 real WorldSense/Galaxy model calls passed exact outputs, full generated IDs, Skill semantics, input/prompt/config identities, native capability/retirement checks and zero default rehydration. Sampled maximum byte counts and reduction fractions: {"reduction": {"metal_allocated_bytes": 0.1386127060400516, "task_physical_footprint_bytes": -0.0002549932086517437}, "sampled_maximum_bytes": {"candidate-1": {"metal_allocated_bytes": 18867290112, "task_physical_footprint_bytes": 18059327816}, "control-1": {"metal_allocated_bytes": 21903376384, "task_physical_footprint_bytes": 18054723984}}}. Metal allocations fell 13.861270604%; sampled process physical footprint rose 0.025499321%, failing the predeclared minimum5% footprint reduction. These are snapshots, not peaks or proof of physical GPU residency. No fresh speed screen, full confirmation, promotion or favorable unchanged retry. Raw first/followup timings are retained but do not establish speed. Both workers, controller and wrapper exited0. Original WS10 library restored, four video files online, camera unmounted and valid benchmark POST404 verified. Small read-only audits/script preparation occurred during timing; no competing GPU test, build or archive copy.
 
 Archive: results/20261016/worldsense-m5-cached-matrix-metadata.
+
+
+## WS-M5-35 — Global ownership and OS graphics accounting (diagnostic)
+
+WS-M5-35: WorldSense global native ownership and paused OS memory categories.
+Status: valid diagnostic; no performance or optimization promotion claim.
+
+Purpose and method
+WS34 removed logical Metal allocations but failed the process-footprint gate. This diagnostic distinguishes native owner accounting from OS categories billed to Cantor. Frozen WS34 OFF/ON sources retain the same two policy differences; identical three-file instrumentation adds a many-session inventory API, native request-boundary acknowledgement, and a CPython observer running only vmmap/footprint metadata tools against the verified launchd Cantor PID/birth identity. CPython performs no inference or image preparation. Native execution files, shaders, CUDA and image preparation match WS34. The collection deduplicates graphs and every loaded session together, exposing opaque ordinal buffer IDs and logical allocation sizes/roles without tensor contents. Context/driver scratch may remain outside the collection.
+
+Correctness and identity
+Both builds pass all5native reference tests. Trained fixtures verify existing single-session API parity, duplicate graph/session deduplication, two private sessions remaining distinct, invalid object rejection, unchanged host/private states and ordinary/resident lifecycle behavior. Correctness controller93990 exited0. Source, library, models, runtime, SDK, tools, driver and request identities were frozen before dispatch. Eight real WorldSense/Galaxy calls matched WS10 golden full token IDs, text, prompts/configuration, image/Skill identities and interpreted semantics; native retirement/capability checks and zero rehydration passed. Both fresh workers produced4OS captures and exited0; original diagnostic controller96233 exited0. PID/birth checked before every observation. No inference retry or gate change.
+
+Accounting
+The installed footprint manual defines Swapped as a subset of Dirty; they must not be added. vmmap separately reports Dirty and Swapped and uses a different view. Native buffer totals overlap OS categories and must not be added to them. Manual/tool identities retained without republishing manuals. Raw OS summaries and native inventories archived for all8boundaries. Pauses, OS inspection and inventory/observer allocations invalidate every timing as speed evidence. Snapshots do not prove exact physical residency of individual buffers or assign a causal performance effect.
+
+Result and next direction
+The logical allocation difference after both models ran is exactly3,036,086,272bytes, confined to default-input and legacy packed-output groups. Graphics Dirty accounting is identically17,829,150,720bytes in both workers at each post-companion/warm boundary. Thus this method did not reduce that billed graphics category. Malloc categories are only a few hundred MB, while graphics dominate approximately18GBprocess footprint. Large retained host arrays are not supported as the principal explanation here. Graphics compressed/swapped fractions change across model boundaries and are already included in Dirty; no clock, thermal or compression-caused latency claim.
+
+Next investigate buffers used by live GPU computation, especially scratch/output lifetimes and weights, rather than unused reservations or host malloc trimming. Per-buffer physical/page attribution remains unproven. Existing failed workspace/residency methods remain rejected; no favorable unchanged retry or relaxed gate. No optimization promoted. WS10 normal library, four video files online, camera unmounted and valid benchmarkPOST404 restored and verified.
+
+Archive: results/20261016/worldsense-m5-physical-memory.

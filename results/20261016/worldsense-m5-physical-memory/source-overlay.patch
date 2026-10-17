@@ -1,0 +1,759 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -7,6 +7,10 @@
+ find_library(GARNET_MPS_FRAMEWORK MetalPerformanceShaders REQUIRED)
+ find_library(GARNET_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+ add_library(garnet_metal STATIC src/backends/metal/metal_context.mm)
++option(GARNET_METAL_LAZY_RESIDENT_DEFAULTS "Defer singleton resident-unused layer defaults" OFF)
++if(GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LAZY_RESIDENT_DEFAULTS=1)
++endif()
+ option(GARNET_METAL_QWEN35_4B_WIDE_PREFILL "Validate 4B 64-token packed prefill" OFF)
+ if(GARNET_METAL_QWEN35_4B_WIDE_PREFILL)
+     if(GARNET_METAL_QWEN35_EXTENDED_PREFILL)
+@@ -266,6 +270,12 @@
+     "${GARNET_METAL_FRAMEWORK}" "${GARNET_MPS_FRAMEWORK}"
+     "${GARNET_FOUNDATION_FRAMEWORK}")
+ enable_testing()
++add_executable(garnet_inventory_test test2026/metal/inventory_test.cpp)
++target_link_libraries(garnet_inventory_test PRIVATE garnet_metal)
++add_test(NAME metal_inventory_reference COMMAND garnet_inventory_test)
++add_executable(garnet_memory_stats_test test2026/metal/memory_stats_test.mm)
++target_link_libraries(garnet_memory_stats_test PRIVATE garnet_metal)
++add_test(NAME metal_memory_stats_reference COMMAND garnet_memory_stats_test)
+ if(GARNET_METAL_DENSE_PREFIX_CACHE)
+     add_executable(garnet_prefix_copy_test test2026/metal/prefix_copy_test.cpp)
+     target_link_libraries(garnet_prefix_copy_test PRIVATE garnet_metal)
+@@ -362,3 +372,19 @@
+ if(GARNET_METAL_NATIVE_BFLOAT_BODY)
+     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_NATIVE_BFLOAT_BODY=1)
+ endif()
++
++option(GARNET_METAL_CACHED_MATRIX_METADATA "Immutable native matrix storage/layout metadata" OFF)
++if(GARNET_METAL_CACHED_MATRIX_METADATA)
++ if(NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++  message(FATAL_ERROR "Cached matrix metadata cohort requires lazy default storage")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_CACHED_MATRIX_METADATA=1)
++endif()
++add_executable(garnet_matrix_metadata_test test2026/metal/matrix_metadata_test.cpp)
++target_link_libraries(garnet_matrix_metadata_test PRIVATE garnet_metal)
++add_test(NAME metal_matrix_metadata_reference COMMAND garnet_matrix_metadata_test)
++
++option(GARNET_METAL_MULTI_INVENTORY "Correctness/diagnostic global graph/session inventory" OFF)
++if(GARNET_METAL_MULTI_INVENTORY)
++ target_compile_definitions(garnet PRIVATE GARNET_METAL_MULTI_INVENTORY=1)
++endif()
+--- a/runtime/metal_serving.py
++++ b/runtime/metal_serving.py
+@@ -19,6 +19,8 @@
+ 
+ class Model:
+     def __init__(self, root, xmodel, cache, profile, name):
++        self.initialization_memory = dict(before=json.loads(garnet.memory_stats_json()), other_model_ids_at_start=list(_models))
++        self.collect_inventory = True  # Diagnostic-only frozen source; never promoted.
+         self.root, self.name = root, name
+         self.cache = cache or os.path.join(root, 'metal-cache')
+         os.makedirs(self.cache, exist_ok=True)
+@@ -79,6 +81,8 @@
+         elif eos is not None:
+             self.stops.append(eos)
+ 
++        self.initialization_memory['after_decoder_ready'] = json.loads(garnet.memory_stats_json())
++
+     def _prefill_with_prefix(self, hidden, positions, token_ids, stages):
+         stages['prefix_cache_hit'] = False
+         stages['prefix_cache_restored_tokens'] = 0
+@@ -134,7 +138,7 @@
+ 
+     def infer(self, prompt, image, limit):
+         start = time.monotonic()
+-        stages = {}
++        stages = dict(initialization_memory=self.initialization_memory, memory_before_request=json.loads(garnet.memory_stats_json()))
+         hidden, positions, token_ids = [], [], []
+         current = 0
+         self.decoder.reset()
+@@ -179,8 +183,10 @@
+         append_text(prompt + '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
+         if len(hidden) + limit > self.capacity:
+             raise ValueError('Prompt and requested output exceed the admitted Metal capacity')
++        stages['memory_after_input'] = json.loads(garnet.memory_stats_json())
+         prefill_start = time.monotonic()
+         prediction = self._prefill_with_prefix(hidden, positions, token_ids, stages)
++        stages['memory_after_prefill'] = json.loads(garnet.memory_stats_json())
+         first = time.monotonic()
+         stages['prefill_seconds'] = first - prefill_start
+         stages['prefill_compile_ms'] = self.decoder.prefill_compile_ms
+@@ -204,6 +210,53 @@
+             fused_head_dispatches += self.decoder.session.fused_head_argmax_dispatches
+             current += 1
+         stages['decode_seconds'] = time.monotonic() - first
++        stages['memory_after_decode'] = json.loads(garnet.memory_stats_json())
++        memory_graphs = [layer['graph'] for layer in self.decoder.layers] + list(self.decoder.prefill_graphs.values())
++        stages['lazy_default_retired_bytes'] = sum(graph.lazy_default_retired_bytes for graph in memory_graphs)
++        stages['lazy_default_rehydrated_bytes'] = sum(graph.lazy_default_rehydrated_bytes for graph in memory_graphs)
++        stages['lazy_default_planned_slots'] = sum(graph.lazy_default_planned_slots for graph in memory_graphs)
++        if self.collect_inventory:
++            descriptors=[];sessions=[]
++            for model_name in sorted(_models):
++                model=_models[model_name]
++                descriptors += [dict(object=layer['graph'],tag=model_name+'.decode.layer.'+str(i)) for i,layer in enumerate(model.decoder.layers)]
++                descriptors.append(dict(object=model.decoder.head,tag=model_name+'.head'))
++                for key in sorted(model.decoder.prefill_graphs):
++                    descriptors.append(dict(object=model.decoder.prefill_graphs[key],tag=model_name+'.prefill.'+key))
++                if model.vision is not None:descriptors.append(dict(object=model.vision.graph,tag=model_name+'.vision'))
++                if model.decoder.session is not None:sessions.append(dict(object=model.decoder.session,tag=model_name+'.session'))
++            inventory_payload = garnet.memory_inventory_many_json(descriptors,sessions)
++            inventory = json.loads(inventory_payload)
++            inventory_bytes = inventory_payload.encode()
++            capture_root = '/Users/shawn/CantorAI/out/research/worldsense-physical-memory/captures'
++            os.makedirs(capture_root, exist_ok=True)
++            self._inventory_capture_counter = getattr(self, '_inventory_capture_counter', 0) + 1
++            capture_key = hashlib.sha256((self.name + str(time.time()) + str(self._inventory_capture_counter)).encode()).hexdigest()
++            capture_path = os.path.join(capture_root, capture_key + '.json')
++            if os.path.exists(capture_path):
++                raise ValueError('Diagnostic capture identity collision')
++            with open(capture_path + '.tmp', 'w') as stream:
++                stream.write(inventory_payload)
++            os.replace(capture_path + '.tmp', capture_path)
++            stages['memory_inventory'] = dict(path=capture_path, sha256=hashlib.sha256(inventory_bytes).hexdigest(),
++                bytes=len(inventory_bytes), model_id=self.name, unique_allocated_bytes=inventory['unique_allocated_bytes'],
++                buffer_count=len(inventory['buffers']), reference_count=len(inventory['references']),
++                device_snapshot=inventory['device_snapshot'], scope=inventory['scope'])
++            barrier_root='/Users/shawn/CantorAI/out/research/worldsense-physical-memory/barriers'
++            os.makedirs(barrier_root,exist_ok=True)
++            pending=os.path.join(barrier_root,capture_key+'.pending.json');ack=os.path.join(barrier_root,capture_key+'.ack.json')
++            observation=dict(capture_id=capture_key,pid=os.getpid(),model_id=self.name,inventory=stages['memory_inventory'],native_before=json.loads(garnet.memory_stats_json()),loaded_model_ids=sorted(_models))
++            with open(pending+'.tmp','w')as stream:stream.write(json.dumps(observation))
++            os.replace(pending+'.tmp',pending)
++            barrier_started=time.monotonic()
++            while not os.path.exists(ack):
++                if time.monotonic()-barrier_started>90:raise ValueError('Memory observer acknowledgement timed out')
++                time.sleep(.01)
++            with open(ack)as stream:observed=json.loads(stream.read())
++            if not observed.get('ok') or observed.get('capture_id')!=capture_key:raise ValueError('Memory observer failed: '+str(observed.get('error','identity mismatch')))
++            stages['os_memory_observation']=dict(capture_id=capture_key,barrier_wait_seconds=time.monotonic()-barrier_started,memory_after_observation=json.loads(garnet.memory_stats_json()),scope='Diagnostic only: OS observation pauses invalidate performance metrics')
++            os.replace(pending,os.path.join(barrier_root,capture_key+'.complete.json'))
++    
+         stages['decode_profile'] = decode_profile
+         stages['decode_fused_head_dispatches'] = fused_head_dispatches
+         stages['prefix_cache_native_bytes'] = self.decoder.session.prefix_cache_bytes
+--- a/src/backends/metal/compiled_graph.cpp
++++ b/src/backends/metal/compiled_graph.cpp
+@@ -193,6 +193,9 @@
+     return output;
+ }
+ void MetalCompiledGraph::Clear() {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    lazyDefaultPlanReady_=false;lazyDefaultSlots_.clear();lazyRetiredBytes_=lazyRehydratedBytes_=0;
++#endif
+     visionParallelDispatches_=0;
+     visionPrefetchDispatches_=0;visionVectorDispatches_=0;mlpGraphDispatches_=0;
+     resetKVPrefix_[0]=resetKVPrefix_[1]=false;
+@@ -775,8 +778,8 @@
+     const auto& source=slots_[inputs_[part]].matrix;
+     for(size_t i=writer+1;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]) {
+         const auto& op=ops_[i];
+-        if(source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
+-        for(auto id:op.arguments)if(source.SharesStorage(slots_[id].matrix))return false;
++        if(op.a==inputs_[part]||op.b==inputs_[part]||source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
++        for(auto id:op.arguments)if(id==inputs_[part]||source.SharesStorage(slots_[id].matrix))return false;
+     }
+     return true;
+ #else
+@@ -876,6 +879,7 @@
+     for(size_t i=0;i<inputs_.size();++i){
+         if(skip.count(i))continue;
+         X::Tensor tensor(inputs.Get(i));auto lease=tensor.Acquire();auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
++        MaterializeDefault(inputs_[i]);
+         gpu_->Update(slot.matrix,static_cast<const float*>(info.data),slot.rows*slot.columns);
+     }
+ }
+@@ -1060,6 +1064,7 @@
+     visionGlobalAlphaDispatches_=0;
+     auto start=std::chrono::steady_clock::now();
+     PrepareInputs(inputs);
++    MaterializeDefault(output_);
+     gpu_->Begin();
+     try {
+         Encode(*gpu_);
+@@ -1075,3 +1080,76 @@
+     return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,output.shape,result.data(),result.size()*4);
+ }
+ }
++
++namespace Garnet {
++std::vector<MetalResourceReference> MetalCompiledGraph::MemoryReferences() {
++    std::lock_guard<std::mutex> lock(mutex_);if(!ready_)throw std::logic_error("Inventory requires a ready graph");
++    std::vector<MetalResourceReference> result;std::vector<bool> active(slots_.size(),false),input(slots_.size(),false),output(slots_.size(),false);
++    auto mark=[&](size_t i){if(i<active.size())active[i]=true;};
++    std::vector<bool> anyWriter(slots_.size(),false),residentWriter(slots_.size(),false);
++    for(size_t i=0;i<ops_.size();++i){bool resident=residentOps_.size()!=ops_.size()||residentOps_[i];auto write=[&](size_t slot){if(slot<slots_.size()){anyWriter[slot]=true;if(resident)residentWriter[slot]=true;}};write(ops_[i].out);write(ops_[i].auxiliaryOutput);}
++
++    for(size_t i=0;i<ops_.size();++i)if(residentOps_.size()!=ops_.size()||residentOps_[i]) {
++        const auto& op=ops_[i];mark(op.a);mark(op.b);mark(op.out);mark(op.auxiliaryOutput);for(auto j:op.arguments)mark(j);
++    }
++    for(auto i:inputs_)if(i<input.size())input[i]=true;for(auto i:outputParts_)if(i<output.size())output[i]=true;
++    std::vector<std::string> names(slots_.size());std::vector<std::pair<std::string,size_t>> sorted(weights_.begin(),weights_.end());std::sort(sorted.begin(),sorted.end());
++    for(const auto& entry:sorted)if(entry.second<names.size()){if(!names[entry.second].empty())names[entry.second]+=";";names[entry.second]+=entry.first;}
++    auto append=[&](const Slot& slot,size_t i,const std::string& role,const std::string& name,bool weight,bool in,bool out,bool resident,bool legacy){
++        auto emit=[&](const MetalBufferInfo& info){if(!info.identity)return;MetalResourceReference r;r.buffer=info;r.slot=i;r.role=role;r.name=name;r.shape=slot.shape;r.weight=weight;r.input=in;r.outputPart=out;r.residentOperand=resident;r.anyWriter=i<anyWriter.size()&&anyWriter[i];r.residentWriter=i<residentWriter.size()&&residentWriter[i];r.legacyOutput=legacy;result.push_back(std::move(r));};
++        emit(MetalContext::MatrixBufferInfo(slot.matrix));for(const auto& info:MetalContext::WeightBufferInfo(slot.bf16))emit(info);
++    };
++    for(size_t i=0;i<slots_.size();++i)append(slots_[i],i,"slot",names[i],!names[i].empty(),input[i],output[i],active[i],i==output_);
++    auto held=[&](const auto& records,const char* role){std::vector<std::string> keys;for(const auto& entry:records)keys.push_back(entry.first);std::sort(keys.begin(),keys.end());for(const auto& key:keys)append(records.at(key).slot,SIZE_MAX,role,key,true,false,false,false,false);};
++    held(sharedWeights_,"shared_weight_record");held(weightRecords_,"weight_record");return result;
++}
++}
++
++namespace Garnet {
++void MetalCompiledGraph::RetireResidentDefaults() {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    if(!lazyDefaultPlanReady_) {
++        if(!ready_||outputParts_.size()!=3||inputs_.size()<3||residentOps_.size()!=ops_.size())return;
++        std::vector<MetalBufferInfo> infos;std::unordered_map<uintptr_t,size_t> counts;std::unordered_set<uintptr_t> protectedWeights;
++        for(const auto& slot:slots_){auto info=MetalContext::MatrixBufferInfo(slot.matrix);infos.push_back(info);if(info.identity)++counts[info.identity];for(const auto& b:MetalContext::WeightBufferInfo(slot.bf16))protectedWeights.insert(b.identity);}
++        for(const auto& record:weightRecords_){auto info=MetalContext::MatrixBufferInfo(record.second.slot.matrix);if(info.identity)protectedWeights.insert(info.identity);for(const auto& b:MetalContext::WeightBufferInfo(record.second.slot.bf16))protectedWeights.insert(b.identity);}
++        auto eligible=[&](size_t id){const auto& slot=slots_[id];const auto& info=infos[id];return info.identity&&counts[info.identity]==1&&!protectedWeights.count(info.identity)&&gpu_->IsDefaultLayout(slot.matrix,slot.rows,slot.columns);};
++        std::vector<size_t> plan;
++        for(size_t part=1;part<=2;++part){auto id=inputs_[part];if(inputShapes_[part].size()<3||std::find(outputParts_.begin(),outputParts_.end(),id)!=outputParts_.end())continue;if(eligible(id))plan.push_back(id);}
++        if(!ops_.empty()&&ops_.back().kind==Kind::Concat&&ops_.back().out==output_&&!residentOps_.back()&&std::find(inputs_.begin(),inputs_.end(),output_)==inputs_.end()&&std::find(outputParts_.begin(),outputParts_.end(),output_)==outputParts_.end()&&eligible(output_))plan.push_back(output_);
++        lazyDefaultSlots_=std::move(plan);lazyDefaultPlanReady_=true;
++    }
++    for(auto id:lazyDefaultSlots_)if(slots_[id].matrix.Valid()) {auto info=MetalContext::MatrixBufferInfo(slots_[id].matrix);lazyRetiredBytes_+=info.allocatedBytes;slots_[id].matrix=MetalMatrix();}
++#endif
++}
++void MetalCompiledGraph::MaterializeDefault(size_t id) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    if(slots_[id].matrix.Valid())return;
++    if(std::find(lazyDefaultSlots_.begin(),lazyDefaultSlots_.end(),id)==lazyDefaultSlots_.end())throw std::logic_error("Missing non-deferred graph storage");
++    auto matrix=gpu_->Allocate(slots_[id].rows,slots_[id].columns);auto info=MetalContext::MatrixBufferInfo(matrix);slots_[id].matrix=std::move(matrix);lazyRehydratedBytes_+=info.allocatedBytes;
++#else
++    (void)id;
++#endif
++}
++size_t MetalCompiledGraph::LazyRetiredBytes() const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    std::lock_guard<std::mutex> lock(mutex_);return lazyRetiredBytes_;
++#else
++    return 0;
++#endif
++}
++size_t MetalCompiledGraph::LazyRehydratedBytes() const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    std::lock_guard<std::mutex> lock(mutex_);return lazyRehydratedBytes_;
++#else
++    return 0;
++#endif
++}
++size_t MetalCompiledGraph::LazyPlannedSlots() const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    std::lock_guard<std::mutex> lock(mutex_);return lazyDefaultSlots_.size();
++#else
++    return 0;
++#endif
++}
++}
+--- a/src/backends/metal/compiled_graph.h
++++ b/src/backends/metal/compiled_graph.h
+@@ -37,12 +37,18 @@
+     size_t visionPrefetchDispatches_=0,visionVectorDispatches_=0,mlpGraphDispatches_=0;
+     bool resetKVPrefix_[2]={false,false};
+     bool ready_=false,bf16Projections_=false;
+-    std::mutex mutex_;
++    mutable std::mutex mutex_;
+     SafeTensorsIndex index_;
+     size_t Weight(const std::string&);
+     size_t BF16Weight(const std::string&,bool visionPrefill=false);
+     size_t Allocate(size_t,size_t);
+     size_t LowerVision(size_t input,const X::Value& attributes);
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    bool lazyDefaultPlanReady_=false;std::vector<size_t> lazyDefaultSlots_;
++    size_t lazyRetiredBytes_=0,lazyRehydratedBytes_=0;
++#endif
++    void RetireResidentDefaults();
++    void MaterializeDefault(size_t slot);
+     void Clear();
+     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
+     void Encode(MetalContext&,bool packedOutput=true,const MetalMatrix* greedyOutput=nullptr);
+@@ -58,6 +64,10 @@
+     bool BuildShared(X::Value graph,X::Value symbols,const std::string& checkpoint,X::Value source);
+     X::Value Run(X::Value inputs);
+     void Close();
++    std::vector<MetalResourceReference> MemoryReferences();
++    size_t LazyRetiredBytes() const;
++    size_t LazyRehydratedBytes() const;
++    size_t LazyPlannedSlots() const;
+     bool Ready() const {return ready_;}
+     double CompileMs() const {return compileMs_;}
+     double LastInferenceMs() const {return inferenceMs_;}
+@@ -73,6 +83,9 @@
+         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
+         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
+         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);
++        APISET().AddProp("lazy_default_retired_bytes",&MetalCompiledGraph::LazyRetiredBytes);
++        APISET().AddProp("lazy_default_rehydrated_bytes",&MetalCompiledGraph::LazyRehydratedBytes);
++        APISET().AddProp("lazy_default_planned_slots",&MetalCompiledGraph::LazyPlannedSlots);
+         APISET().AddProp("ready",&MetalCompiledGraph::Ready);
+         APISET().AddProp("compile_ms",&MetalCompiledGraph::CompileMs);
+         APISET().AddProp("last_inference_ms",&MetalCompiledGraph::LastInferenceMs);
+--- a/src/backends/metal/decoder_session.cpp
++++ b/src/backends/metal/decoder_session.cpp
+@@ -197,6 +197,7 @@
+         state.dirtyExtent[k]=std::max(state.dirtyExtent[k],writeExtent);
+     }
+ #endif
++    for(auto graph:layers)graph->RetireResidentDefaults();
+     if(hiddenShape_!=inputShape[0]) {
+         const auto& slot=layers[0]->slots_[layers[0]->inputs_[0]];
+         hidden_=gpu_->Allocate(slot.rows,slot.columns);
+@@ -400,3 +401,12 @@
+ #endif
+ }
+ }
++
++namespace Garnet {
++std::vector<MetalResourceReference> MetalDecoderSession::MemoryReferences() {
++    std::lock_guard<std::mutex> lock(mutex_);if(!gpu_)throw std::logic_error("Inventory requires an open session");std::vector<MetalResourceReference> result;
++    auto append=[&](const MetalMatrix& matrix,size_t slot,const std::string& role,const std::vector<int64_t>& shape){auto info=MetalContext::MatrixBufferInfo(matrix);if(!info.identity)return;MetalResourceReference r;r.buffer=info;r.slot=slot;r.role=role;r.shape=shape;r.residentOperand=true;result.push_back(std::move(r));};
++    for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k)append(states_[i].matrix[k],i,"private_state"+std::to_string(k+1),states_[i].shape[k]);
++    append(hidden_,SIZE_MAX,"hidden",hiddenShape_);append(prediction_,SIZE_MAX,"prediction",{});return result;
++}
++}
+--- a/src/backends/metal/decoder_session.h
++++ b/src/backends/metal/decoder_session.h
+@@ -72,6 +72,7 @@
+     size_t PrefixCacheEntries();
+     size_t PrefixRestoreBytes();
+     size_t PrefixCaptureBytes();
++    std::vector<MetalResourceReference> MemoryReferences();
+     X::Value Snapshot(int64_t layer);
+     X::Value Hidden();
+     void Close();
+--- a/src/backends/metal/metal_context.h
++++ b/src/backends/metal/metal_context.h
+@@ -25,6 +25,7 @@
+     friend class MetalContext;
+ public:
+     MetalMatrix() = default;
++    bool Valid() const {return bool(impl_);}
+     bool SharesStorage(const MetalMatrix&) const;
+     bool CompatibleLayout(const MetalMatrix&) const;
+ };
+@@ -50,6 +51,17 @@
+     std::vector<uint32_t> kept;
+     std::vector<float> querySafe;
+ };
++struct MetalBufferInfo {
++    uintptr_t identity=0;uint64_t allocatedBytes=0,lengthBytes=0;std::string representation;
++};
++struct MetalResourceReference {
++    MetalBufferInfo buffer;size_t slot=0;std::string role,name;
++    std::vector<int64_t> shape;bool residentOperand=false,anyWriter=false,residentWriter=false,input=false,outputPart=false,legacyOutput=false,weight=false;
++};
++struct MetalMemoryStats {
++    uint64_t allocated=0,recommended=0,registry=0,physical=0,resident=0,compressed=0,internal=0,virtualBytes=0;
++    int taskStatus=-1;
++};
+ class MetalContext {
+     struct Impl;
+     std::unique_ptr<Impl> impl_;
+@@ -64,6 +76,12 @@
+     MetalContext& operator=(const MetalContext&) = delete;
+     std::string DeviceName() const;
+     static std::string AvailableDeviceName();
++    static MetalMemoryStats MemoryStats();
++    // Correctness diagnostic only; deliberately queries live MPS properties.
++    static bool MatrixMetadataMatchesLive(const MetalMatrix&);
++    static MetalBufferInfo MatrixBufferInfo(const MetalMatrix&);
++    bool IsDefaultLayout(const MetalMatrix&,size_t rows,size_t columns) const;
++    static std::vector<MetalBufferInfo> WeightBufferInfo(const MetalBF16Weight&);
+     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
+     MetalMatrix Allocate(size_t rows, size_t columns);
+     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -33,6 +33,7 @@
+ #include <chrono>
+ #endif
+ #include <cstring>
++#include <mach/mach.h>
+ #include <algorithm>
+ #include <cmath>
+ #include <cstdint>
+@@ -46,16 +47,50 @@
+ namespace Garnet {
+ struct MetalMatrix::Impl {
+     MPSMatrix* matrix;
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    // The MPSMatrix and its storage layout are assigned only in Allocate.
++    // Numeric identities never outlive this owning Impl; no extra buffer owner.
++    uintptr_t bufferIdentity=0,deviceIdentity=0;
++    size_t rows=0,columns=0,rowBytes=0,offset=0;
++    uint64_t allocatedBytes=0,lengthBytes=0;
++#endif
+     bool ready=false;
+     bool pending=false;
+ };
+ bool MetalMatrix::SharesStorage(const MetalMatrix& other) const {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    return impl_&&other.impl_&&impl_->bufferIdentity==other.impl_->bufferIdentity;
++#else
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     return impl_&&other.impl_&&impl_->matrix.data==other.impl_->matrix.data;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
++
++#endif
+ }
+ bool MetalMatrix::CompatibleLayout(const MetalMatrix& other) const {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    return impl_&&other.impl_&&impl_->deviceIdentity==other.impl_->deviceIdentity&&
++        impl_->rows==other.impl_->rows&&impl_->columns==other.impl_->columns&&impl_->rowBytes==other.impl_->rowBytes;
++#else
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     return impl_&&other.impl_&&impl_->matrix.device==other.impl_->matrix.device&&
+         impl_->matrix.rows==other.impl_->matrix.rows&&impl_->matrix.columns==other.impl_->matrix.columns&&
+         impl_->matrix.rowBytes==other.impl_->matrix.rowBytes;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
++
++#endif
+ }
+ struct MetalBF16Weight::Impl {
+ #ifdef GARNET_METAL_SCREENED_HEAD
+@@ -1488,6 +1523,14 @@
+         rowBytes:stride dataType:MPSDataTypeFloat32];
+     auto storage=std::make_shared<MetalMatrix::Impl>();
+     storage->matrix=[[MPSMatrix alloc] initWithBuffer:buffer descriptor:descriptor];
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    if(!storage->matrix)throw std::runtime_error("Metal matrix view allocation failed");
++    auto matrix=storage->matrix;
++    storage->bufferIdentity=reinterpret_cast<uintptr_t>((__bridge void*)matrix.data);
++    storage->deviceIdentity=reinterpret_cast<uintptr_t>((__bridge void*)matrix.device);
++    storage->rows=matrix.rows;storage->columns=matrix.columns;storage->rowBytes=matrix.rowBytes;storage->offset=matrix.offset;
++    storage->allocatedBytes=matrix.data.allocatedSize;storage->lengthBytes=matrix.data.length;
++#endif
+     return MetalMatrix(storage);
+     }
+ }
+@@ -1849,6 +1892,69 @@
+ size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
+ size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
+ size_t MetalContext::LastVisionVectorDispatches() const {return impl_->visionVectorDispatches;}
++bool MetalContext::IsDefaultLayout(const MetalMatrix& value,size_t rows,size_t columns) const {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    if(!value.impl_)return false;const auto& m=*value.impl_;
++    const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat32];
++    return m.deviceIdentity==reinterpret_cast<uintptr_t>((__bridge void*)impl_->device)&&m.rows==rows&&m.columns==columns&&
++        m.rowBytes==stride&&m.offset==0&&m.lengthBytes==rows*stride;
++#else
++
++    @autoreleasepool {
++        if(!value.impl_||!value.impl_->matrix)return false;auto matrix=value.impl_->matrix;
++        const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat32];
++        return matrix.device==impl_->device&&matrix.rows==rows&&matrix.columns==columns&&matrix.rowBytes==stride&&matrix.offset==0&&matrix.data.length==rows*stride;
++    }
++
++#endif
++}
++MetalBufferInfo MetalContext::MatrixBufferInfo(const MetalMatrix& value) {
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    if(!value.impl_)return {};const auto& m=*value.impl_;
++    return {m.bufferIdentity,m.allocatedBytes,m.lengthBytes,"matrix_fp32"};
++#else
++
++    @autoreleasepool {
++        if(!value.impl_||!value.impl_->matrix)return {};
++        id<MTLBuffer> buffer=value.impl_->matrix.data;if(!buffer)return {};
++        return {reinterpret_cast<uintptr_t>((__bridge void*)buffer),uint64_t(buffer.allocatedSize),uint64_t(buffer.length),"matrix_fp32"};
++    }
++
++#endif
++}
++std::vector<MetalBufferInfo> MetalContext::WeightBufferInfo(const MetalBF16Weight& value) {
++    @autoreleasepool {
++        std::vector<MetalBufferInfo> result;if(!value.impl_)return result;auto w=value.impl_;
++        auto add=[&](id<MTLBuffer> buffer,const char* kind){if(buffer)result.push_back({reinterpret_cast<uintptr_t>((__bridge void*)buffer),uint64_t(buffer.allocatedSize),uint64_t(buffer.length),kind});};
++        add(w->buffer,"bf16");if(w->exactHalf)add(w->exactHalf.data,"exact_half");add(w->halfScales,"half_scales");
++#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
++        add(w->graphFloat,"graph_float");
++#endif
++#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
++        add(w->interleavedBody,"interleaved_body");
++#ifdef GARNET_METAL_COALESCED_BF16_BODY
++        add(w->coalescedPayload,"coalesced_body");add(w->coalescedMetadata,"coalesced_metadata");
++#endif
++#endif
++#ifdef GARNET_METAL_SCREENED_HEAD
++        add(w->screenIndex,"screen_index");add(w->screenMetadata,"screen_metadata");
++#endif
++        return result;
++    }
++}
++MetalMemoryStats MetalContext::MemoryStats() {
++    @autoreleasepool {
++        id<MTLDevice> device=MTLCreateSystemDefaultDevice();
++        if(!device)throw std::runtime_error("No Metal device for memory snapshot");
++        MetalMemoryStats stats;stats.allocated=device.currentAllocatedSize;
++        stats.recommended=device.recommendedMaxWorkingSetSize;stats.registry=device.registryID;
++        task_vm_info_data_t info{};mach_msg_type_number_t count=TASK_VM_INFO_COUNT;
++        stats.taskStatus=task_info(mach_task_self(),TASK_VM_INFO,reinterpret_cast<task_info_t>(&info),&count);
++        if(stats.taskStatus==KERN_SUCCESS){stats.physical=info.phys_footprint;stats.resident=info.resident_size;
++            stats.compressed=info.compressed;stats.internal=info.internal;stats.virtualBytes=info.virtual_size;}
++        return stats;
++    }
++}
+ bool MetalContext::PrepareBF16BodyShape(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
+ #ifdef GARNET_METAL_BODY_SHAPE
+     @autoreleasepool {
+@@ -2063,6 +2169,9 @@
+     Update(matrix,values.data(),values.size());
+ }
+ void MetalContext::Update(const MetalMatrix& matrix,const float* values,size_t count) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Host update requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+         throw std::invalid_argument("Metal update matrix belongs to another device or is empty");
+@@ -2080,8 +2189,15 @@
+         std::memcpy(static_cast<char*>(native.data.contents)+i*native.rowBytes,
+             values+i*native.columns,native.columns*sizeof(float));
+     matrix.impl_->ready=true;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ void MetalContext::Zero(const MetalMatrix& matrix) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Host zero requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+         throw std::invalid_argument("Metal zero matrix belongs to another device or is empty");
+@@ -2097,8 +2213,15 @@
+         std::memset(static_cast<char*>(native.data.contents)+i*native.rowBytes,
+             0,native.columns*sizeof(float));
+     matrix.impl_->ready=true;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ std::vector<float> MetalContext::ReadPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Prefix read requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix read matrix/device");
+     if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix read requires completed initialized state");
+@@ -2111,8 +2234,15 @@
+         std::memcpy(result.data()+(row*groups+group)*tokens*width,
+             static_cast<const char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),tokens*width*sizeof(float));
+     return result;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ void MetalContext::WritePrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t tokens,const std::vector<float>& values) {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+     if(impl_->command)throw std::logic_error("Prefix write requires a closed command batch");
+     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid prefix write matrix/device");
+     if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix write requires completed initialized state");
+@@ -2124,6 +2254,10 @@
+         std::memcpy(static_cast<char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),
+             values.data()+(row*groups+group)*tokens*width,tokens*width*sizeof(float));
+     matrix.impl_->ready=true;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t dirtyTokens) {
+     if(impl_->command)throw std::logic_error("Host prefix zero requires a closed command batch");
+@@ -2860,6 +2994,9 @@
+     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
+ }
+ std::vector<float> MetalContext::Download(const MetalMatrix& value) const {
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    @autoreleasepool {
++#endif
+ #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+     if(value.impl_&&impl_->zeroQueued.count(value.impl_.get())) {
+         auto matrix=value.impl_->matrix;
+@@ -2875,6 +3012,10 @@
+         std::memcpy(result.data()+i*matrix.columns,static_cast<char*>(matrix.data.contents)+i*matrix.rowBytes,
+             matrix.columns*sizeof(float));
+     return result;
++
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++    }
++#endif
+ }
+ std::vector<float> MetalContext::MatMul(const std::vector<float>& left,
+     const std::vector<float>& right,size_t rows,size_t inner,size_t columns,bool transposeRight) {
+@@ -2887,3 +3028,19 @@
+     return Download(c);
+ }
+ }
++
++namespace Garnet {
++bool MetalContext::MatrixMetadataMatchesLive(const MetalMatrix& value) {
++    @autoreleasepool {
++        if(!value.impl_)return true;
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++        const auto& m=*value.impl_;auto native=m.matrix;id<MTLBuffer> buffer=native.data;
++        return native&&buffer&&m.bufferIdentity==reinterpret_cast<uintptr_t>((__bridge void*)buffer)&&
++            m.deviceIdentity==reinterpret_cast<uintptr_t>((__bridge void*)native.device)&&m.rows==native.rows&&m.columns==native.columns&&
++            m.rowBytes==native.rowBytes&&m.offset==native.offset&&m.allocatedBytes==buffer.allocatedSize&&m.lengthBytes==buffer.length;
++#else
++        return value.impl_->matrix&&value.impl_->matrix.data;
++#endif
++    }
++}
++}
+--- a/src/entry/metal_main.cpp
++++ b/src/entry/metal_main.cpp
+@@ -21,6 +21,45 @@
+         return X::Module(host, "metal_serving");
+     }
+ public:
++    std::string MemoryStatsJson() {
++        const auto m=MetalContext::MemoryStats();
++        return nlohmann::json{{"metal_allocated_bytes",m.allocated},{"metal_recommended_working_set_bytes",m.recommended},
++            {"metal_registry_id",m.registry},{"task_info_status",m.taskStatus},{"task_physical_footprint_bytes",m.physical},
++            {"task_resident_bytes",m.resident},{"task_compressed_bytes",m.compressed},{"task_internal_bytes",m.internal},
++            {"task_virtual_bytes",m.virtualBytes},{"scope","process Metal device resources and current task; snapshots, not peak or system free RAM"}}.dump();
++    }
++    std::string MemoryInventoryJson(X::Value graphs,X::Value session) {
++        if(!graphs.IsList())throw X::Error("Inventory graph descriptors must be a list");
++        nlohmann::json references=nlohmann::json::array(),buffers=nlohmann::json::array();std::unordered_map<uintptr_t,size_t> ids;
++        auto append=[&](const std::string& tag,const std::vector<MetalResourceReference>& refs){for(const auto& r:refs){
++            auto found=ids.find(r.buffer.identity);size_t id;
++            if(found==ids.end()){id=buffers.size();ids.emplace(r.buffer.identity,id);buffers.push_back({{"id",id},{"allocated_bytes",r.buffer.allocatedBytes},{"length_bytes",r.buffer.lengthBytes}});}
++            else {id=found->second;if(buffers[id]["allocated_bytes"]!=r.buffer.allocatedBytes||buffers[id]["length_bytes"]!=r.buffer.lengthBytes)throw X::Error("Inventory resource identity changed");}
++            references.push_back({{"buffer_id",id},{"tag",tag},{"slot",r.slot==SIZE_MAX?nlohmann::json(nullptr):nlohmann::json(r.slot)},{"role",r.role},{"name",r.name},{"shape",r.shape},{"representation",r.buffer.representation},{"resident_mask_operand",r.residentOperand},{"any_op_writer",r.anyWriter},{"resident_mask_writer",r.residentWriter},{"input",r.input},{"output_part",r.outputPart},{"legacy_output",r.legacyOutput},{"weight",r.weight}});
++        }};
++        for(uint64_t i=0;i<graphs.Size();++i){auto descriptor=graphs.Get(i);if(!descriptor.IsDict())throw X::Error("Invalid inventory graph descriptor");auto value=descriptor.Get("object");if(value.runtime()!=graphs.runtime())throw X::Error("Inventory runtime mismatch");auto graph=value.NativeData<MetalCompiledGraph>();if(!graph)throw X::Error("Inventory requires graph objects");append(descriptor.Get("tag").ToString(),graph->MemoryReferences());}
++        if(session.IsValid()&&!session.IsNone()){if(session.runtime()!=graphs.runtime())throw X::Error("Inventory session runtime mismatch");auto native=session.NativeData<MetalDecoderSession>();if(!native)throw X::Error("Inventory requires a native session");append("session",native->MemoryReferences());}
++        uint64_t bytes=0;for(const auto& b:buffers)bytes+=b["allocated_bytes"].get<uint64_t>();
++        return nlohmann::json{{"buffers",buffers},{"references",references},{"unique_allocated_bytes",bytes},{"device_snapshot",nlohmann::json::parse(MemoryStatsJson())},{"scope","Collection-local opaque ids, no addresses. Declared graph/held-weight/session owners only; context scratch/driver resources may be absent. Resident mask references are conservative, not a safe-free proof."}}.dump();
++    }
++#ifdef GARNET_METAL_MULTI_INVENTORY
++    std::string MemoryInventoryManyJson(X::Value graphs,X::Value sessions) {
++        if(!graphs.IsList())throw X::Error("Inventory graph descriptors must be a list");
++        if(!sessions.IsList()||sessions.runtime()!=graphs.runtime())throw X::Error("Inventory sessions must be a same-runtime list");
++        nlohmann::json references=nlohmann::json::array(),buffers=nlohmann::json::array();std::unordered_map<uintptr_t,size_t> ids;
++        auto append=[&](const std::string& tag,const std::vector<MetalResourceReference>& refs){for(const auto& r:refs){
++            auto found=ids.find(r.buffer.identity);size_t id;
++            if(found==ids.end()){id=buffers.size();ids.emplace(r.buffer.identity,id);buffers.push_back({{"id",id},{"allocated_bytes",r.buffer.allocatedBytes},{"length_bytes",r.buffer.lengthBytes}});}
++            else {id=found->second;if(buffers[id]["allocated_bytes"]!=r.buffer.allocatedBytes||buffers[id]["length_bytes"]!=r.buffer.lengthBytes)throw X::Error("Inventory resource identity changed");}
++            references.push_back({{"buffer_id",id},{"tag",tag},{"slot",r.slot==SIZE_MAX?nlohmann::json(nullptr):nlohmann::json(r.slot)},{"role",r.role},{"name",r.name},{"shape",r.shape},{"representation",r.buffer.representation},{"resident_mask_operand",r.residentOperand},{"any_op_writer",r.anyWriter},{"resident_mask_writer",r.residentWriter},{"input",r.input},{"output_part",r.outputPart},{"legacy_output",r.legacyOutput},{"weight",r.weight}});
++        }};
++        for(uint64_t i=0;i<graphs.Size();++i){auto descriptor=graphs.Get(i);if(!descriptor.IsDict())throw X::Error("Invalid inventory graph descriptor");auto value=descriptor.Get("object");if(value.runtime()!=graphs.runtime())throw X::Error("Inventory runtime mismatch");auto graph=value.NativeData<MetalCompiledGraph>();if(!graph)throw X::Error("Inventory requires graph objects");append(descriptor.Get("tag").ToString(),graph->MemoryReferences());}
++        for(uint64_t i=0;i<sessions.Size();++i){auto descriptor=sessions.Get(i);if(!descriptor.IsDict())throw X::Error("Invalid inventory session descriptor");auto value=descriptor.Get("object");if(value.runtime()!=graphs.runtime())throw X::Error("Inventory runtime mismatch");auto native=value.NativeData<MetalDecoderSession>();if(!native)throw X::Error("Inventory requires native session objects");append(descriptor.Get("tag").ToString(),native->MemoryReferences());}
++
++        uint64_t bytes=0;for(const auto& b:buffers)bytes+=b["allocated_bytes"].get<uint64_t>();
++        return nlohmann::json{{"buffers",buffers},{"references",references},{"unique_allocated_bytes",bytes},{"device_snapshot",nlohmann::json::parse(MemoryStatsJson())},{"scope","Single global collection of supplied graphs and sessions, opaque ids, no addresses. Declared graph/held-weight/session owners only; context scratch/driver resources may be absent. Resident mask references are conservative, not a safe-free proof."}}.dump();
++    }
++#endif
+     X::Value PrepareImage(X::Value path,X::Value options) {
+         auto params=nlohmann::json::parse(options.ToString());
+         Image::NativeImageConfig c;
+@@ -117,6 +156,12 @@
+ #ifdef GARNET_METAL_QWEN35_4B_WIDE_PREFILL
+         info+="; qwen35_4b_wide_prefill";
+ #endif
++#ifdef GARNET_METAL_CACHED_MATRIX_METADATA
++    info += " cached_matrix_metadata";
++#endif
++#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++        info+="; lazy_resident_defaults";
++#endif
+ #ifdef GARNET_METAL_DENSE_PREFIX_CACHE
+         info+="; dense_prefix_cache";
+ #endif
+@@ -183,6 +228,11 @@
+         APISET().AddClass<0,ModelTensorIO>("tensor_io");
+         APISET().AddClass<0,CPUTokenizer>("tokenizer");
+         APISET().AddFunc<2>("prepare_image",&GarnetMetalAPI::PrepareImage);
++        APISET().AddFunc<2>("memory_inventory_json",&GarnetMetalAPI::MemoryInventoryJson);
++#ifdef GARNET_METAL_MULTI_INVENTORY
++        APISET().AddFunc<2>("memory_inventory_many_json",&GarnetMetalAPI::MemoryInventoryManyJson);
++#endif
++        APISET().AddFunc<0>("memory_stats_json",&GarnetMetalAPI::MemoryStatsJson);
+         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
+         APISET().AddFunc<5>("serve_model",&GarnetMetalAPI::ServeModel);
+         APISET().AddFunc<1>("serve_status_json",&GarnetMetalAPI::ServeStatus);
+--- /dev/null
++++ b/test2026/metal/inventory_test.cpp
+@@ -0,0 +1,6 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++static void need(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
++int main(){try{Garnet::MetalContext gpu;need(!Garnet::MetalContext::MatrixBufferInfo({}).identity,"Empty matrix has resource");need(Garnet::MetalContext::WeightBufferInfo({}).empty(),"Empty weight has resource");auto a=gpu.Allocate(1024,1024);gpu.Zero(a);auto alias=a;std::vector<uint16_t> bits(1024*1024,0);auto weight=gpu.UploadBF16(bits.data(),bits.size()*2,1024,1024),shared=weight;
++auto before=Garnet::MetalContext::MemoryStats();auto x=Garnet::MetalContext::MatrixBufferInfo(a),y=Garnet::MetalContext::MatrixBufferInfo(alias);need(x.identity&&x.identity==y.identity&&x.allocatedBytes==y.allocatedBytes&&x.lengthBytes==4*1024*1024&&x.allocatedBytes>=x.lengthBytes,"Alias/allocation identity mismatch");auto w=Garnet::MetalContext::WeightBufferInfo(weight),v=Garnet::MetalContext::WeightBufferInfo(shared);need(w.size()==1&&v.size()==1&&w[0].identity==v[0].identity&&w[0].identity!=x.identity&&w[0].lengthBytes==2*1024*1024&&w[0].allocatedBytes>=w[0].lengthBytes,"BF16 ownership/identity mismatch");a=Garnet::MetalMatrix();need(Garnet::MetalContext::MatrixBufferInfo(alias).identity==x.identity,"Live alias lost identity");auto values=gpu.Download(alias);for(float f:values)need(f==0,"Inventory changed tensor value");auto after=Garnet::MetalContext::MemoryStats();need(before.allocated==after.allocated,"Inventory allocated/freed GPU resources");need(x.allocatedBytes+w[0].allocatedBytes<=after.allocated,"Unique resource sum exceeds device total");std::cout<<"Native inventory alias/weight dedup identity, allocation lengths, empty/retained owners, read-only values and device accounting PASS\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/matrix_metadata_test.cpp
+@@ -0,0 +1,34 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++#include <utility>
++using namespace Garnet;
++static void need(bool ok,const char* message){if(!ok)throw std::runtime_error(message);}
++static void audit(const MetalMatrix& matrix){need(MetalContext::MatrixMetadataMatchesLive(matrix),"Cached metadata differs from live MPS properties");}
++int main(){try{
++    MetalContext gpu;MetalMatrix empty;
++    audit(empty);need(!empty.SharesStorage(empty)&&!empty.CompatibleLayout(empty),"Empty matrix comparison changed");
++    need(!gpu.IsDefaultLayout(empty,1,1)&&!MetalContext::MatrixBufferInfo(empty).identity,"Empty layout or identity changed");
++    for(auto shape:{std::pair<size_t,size_t>{1,1},{2,17},{3,257},{2,2048}}){
++        const auto rows=shape.first,cols=shape.second;
++        auto a=gpu.Allocate(rows,cols),b=gpu.Allocate(rows,cols),different=gpu.Allocate(rows,cols+1);
++        audit(a);audit(b);audit(different);
++        need(a.CompatibleLayout(b)&&!a.SharesStorage(b),"Independent same-layout matrices aliased");
++        need(!a.CompatibleLayout(different)&&!a.SharesStorage(different),"Different logical width accepted");
++        need(gpu.IsDefaultLayout(a,rows,cols)&&!gpu.IsDefaultLayout(a,rows+1,cols)&&!gpu.IsDefaultLayout(a,rows,cols+1),"Default layout descriptor mismatch");
++        auto alias=a;auto id=MetalContext::MatrixBufferInfo(a);need(id.identity&&id.allocatedBytes>=id.lengthBytes,"Invalid cached buffer lengths");
++        need(alias.SharesStorage(a)&&alias.CompatibleLayout(a),"Copy lost storage identity");
++        auto moved=std::move(alias);audit(moved);need(!alias.Valid()&&moved.SharesStorage(a),"Move lost immutable owner");
++        gpu.Update(a,std::vector<float>(rows*cols,3.25f));audit(a);
++        gpu.Begin();gpu.EncodeAdd(a,a,b);audit(a);audit(b);need(a.CompatibleLayout(b),"Pending output layout changed");gpu.SubmitAndWait();audit(b);
++        for(float value:gpu.Download(b))need(value==6.5f,"Metadata changed encoded output");
++        gpu.Begin();gpu.EncodeAdd(a,a,b);gpu.Abort();audit(b);gpu.Zero(b);audit(b);
++        for(float value:gpu.Download(b))need(value==0,"Abort/zero recovery changed");
++        a=MetalMatrix();audit(moved);need(MetalContext::MatrixBufferInfo(moved).identity==id.identity,"Live alias lost buffer");
++        moved=b;a=gpu.Allocate(rows,cols);audit(moved);audit(a);need(moved.SharesStorage(b)&&!moved.SharesStorage(a),"Reassignment retained stale identity");
++    }
++    MetalMatrix survivor;{MetalContext other;survivor=other.Upload(std::vector<float>(34,7),2,17);audit(survivor);}
++    audit(survivor);need(gpu.IsDefaultLayout(survivor,2,17),"Matrix did not survive original context");
++    for(float value:gpu.Download(survivor))need(value==7,"Surviving matrix data changed");
++    std::cout<<"Matrix metadata/live-MPS parity empty/copy/move/reassign/padding/pending/Submit/Abort/host-zero/context-lifetime PASS\n";return 0;
++}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/test2026/metal/memory_stats_test.mm
+@@ -0,0 +1,8 @@
++#include "metal_context.h"
++#include <iostream>
++#include <stdexcept>
++int main(){try{Garnet::MetalContext gpu;auto before=Garnet::MetalContext::MemoryStats();if(!before.recommended||before.taskStatus||before.virtualBytes<before.resident)throw std::runtime_error("Memory metadata unavailable");
++uint64_t retained=0,afterScope=0;
++@autoreleasepool{{auto a=gpu.Allocate(1024,1024);gpu.Zero(a);auto alias=a;auto b=Garnet::MetalContext::MemoryStats();if(b.registry!=before.registry||b.allocated<before.allocated+4*1024*1024)throw std::runtime_error("Live allocation missing from snapshot");a=Garnet::MetalMatrix();auto c=Garnet::MetalContext::MemoryStats();if(c.allocated<b.allocated)throw std::runtime_error("Retained alias lost allocation");retained=c.allocated;}
++afterScope=Garnet::MetalContext::MemoryStats().allocated;}
++auto after=Garnet::MetalContext::MemoryStats();if(after.allocated>=retained)throw std::runtime_error("Explicit pool drain did not release allocation");std::cout<<"Device allocation/alias/release with explicit pool and task metadata PASS before="<<before.allocated<<" retained="<<retained<<" after_cpp_scope="<<afterScope<<" after_pool="<<after.allocated<<" recommended="<<before.recommended<<"\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

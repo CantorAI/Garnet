@@ -1,0 +1,80 @@
+{
+  "capture_id": "8721e6f17f28541bdc98eb7fd6e5815a20500ad68fc903fd2e1b406f6aad89be",
+  "worker": "control-1",
+  "pid_identity": {
+    "pid": 58423,
+    "birth_and_executable": "Sat Oct 17 03:12:02 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/Cantor"
+  },
+  "native_boundary": {
+    "capture_id": "8721e6f17f28541bdc98eb7fd6e5815a20500ad68fc903fd2e1b406f6aad89be",
+    "inventory": {
+      "buffer_count": 6706,
+      "bytes": 3569872,
+      "device_snapshot": {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 13679869952,
+        "task_info_status": 0,
+        "task_internal_bytes": 373080064,
+        "task_physical_footprint_bytes": 18073925360,
+        "task_resident_bytes": 447774720,
+        "task_virtual_bytes": 476741599232
+      },
+      "model_id": "Qwen3-1.7B",
+      "path": "/Users/shawn/CantorAI/out/research/worldsense-physical-memory/captures/8721e6f17f28541bdc98eb7fd6e5815a20500ad68fc903fd2e1b406f6aad89be.json",
+      "reference_count": 10387,
+      "scope": "Single global collection of supplied graphs and sessions, opaque ids, no addresses. Declared graph/held-weight/session owners only; context scratch/driver resources may be absent. Resident mask references are conservative, not a safe-free proof.",
+      "sha256": "f87a2efaa3566cd1907b648620cf28e16b0127659da03dfb32864d86a6a6e7ff",
+      "unique_allocated_bytes": 21902639456
+    },
+    "loaded_model_ids": [
+      "Qwen3-1.7B",
+      "Qwen3.5-4B"
+    ],
+    "model_id": "Qwen3-1.7B",
+    "native_before": {
+      "metal_allocated_bytes": 21903376384,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 13678854144,
+      "task_info_status": 0,
+      "task_internal_bytes": 407863296,
+      "task_physical_footprint_bytes": 18107742008,
+      "task_resident_bytes": 482033664,
+      "task_virtual_bytes": 476764733440
+    },
+    "pid": 58423
+  },
+  "tools": {
+    "vmmap": {
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "58423"
+      ],
+      "returncode": 0,
+      "observer_seconds": 1.592598916,
+      "stdout_sha256": "b8886dc9675c3ff20290b5b7aecf45b02a0b88b42e7cfa7dc6f32c086dda478e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "footprint": {
+      "command": [
+        "/usr/bin/footprint",
+        "-p",
+        "58423",
+        "-f",
+        "bytes",
+        "--swapped",
+        "--wired"
+      ],
+      "returncode": 0,
+      "observer_seconds": 0.06190187500000377,
+      "stdout_sha256": "2bc7200eb9cf8843f606861f270db23e7c04b4eb6c897f91f79915184d941c59",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "scope": "Paused request boundary diagnostic. OS tools may suspend target; all timings excluded from performance claims."
+}

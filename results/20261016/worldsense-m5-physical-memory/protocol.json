@@ -1,0 +1,11 @@
+{
+  "experiment": "WS-M5-35 diagnostic",
+  "declared_utc": "2026-10-17T10:07:38.457727+00:00",
+  "purpose": "Distinguish logical Metal allocation reduction from process footprint accounting after WS34 failed the footprint gate. No optimization promotion or performance decision.",
+  "source": "Frozen WS34 seed. OFF vs ON retains only lazy-retirement/cached-metadata policy differences. New diagnostic API/runtime instrumentation identical in both.",
+  "method": "At each of8realWorldSense model-call boundaries collect globally deduplicated native graph+all-session buffer identities/roles, native device/task snapshots, and OS vmmap-summary/footprint-byte-category outputs while the native request waits for an observer acknowledgement. Original video frame/Skill/prompts/config/weights remain. Native inference/image path unchanged.",
+  "observation": "Separate CPython controller thread runs only OS tools and stores metadata; no Python inference or image preparation. Validate launchd target PID and process birth identity before every capture; bounded tool timeouts, native ack timeout and explicit failure retention. No arbitrary process inspection or memory contents.",
+  "validation": "New API duplicate graph/session dedup, old-single-session parity, invalid object rejection, unchanged host/private values and actual trained layer fixtures; existing native references. Real WorldSense all8tokens/text/prompt/config/image/Skill and interpreted semantics match WS10 golden.",
+  "limits": "OS categories and global logical owner totals do not map exact physical pages to individual buffers. Native graph/session inventory omits driver/context scratch. OS suspension, inventory allocations and barrier waits invalidate all timing/performance claims. Memory categories are observations, not a causal effect estimate. Fresh workers; no inference retries for favorable memory.",
+  "restoration": "Restore WS10 normal service/four video files/no camera/benchmarkPOST404 after observation. Preserve all raw outputs, failures, source/build/runtime/model/request identities and decision."
+}

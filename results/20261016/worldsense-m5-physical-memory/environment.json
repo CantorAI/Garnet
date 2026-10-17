@@ -1,0 +1,37 @@
+{
+  "time": "2026-10-17T10:11:56.862227+00:00",
+  "libraries": {
+    "off": "3cad134244f9ec7474a057306ec691834bd0681ef2fbbccefc2ab74382544d54",
+    "on": "91a32734621f5e1480439cd33361dd9b61c5f42a0d950b2a2e54086bf9d777a2"
+  },
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6\nBuildVersion:\t\t25G72\n",
+  "source": "Frozen common diagnostic source, only two old policy flags differ. All observed timings excluded.",
+  "tools_and_drivers": {
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/build.py": "dee03ed2320f9d50ee97bb41c4fc33cd36e182b35502c2381ee17f3c63f2d771",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/prepare_run.py": "8bd1aaafd5dc26dd8db7b6b4f7998cf1d709e42fc17ced9c4413e8d0e22cbeb8",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/controller.py": "4253dc5800dead586d890b713ccaae20211ad3a52fde583510f0009911c2deda",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/correctness.py": "7fb937942457170e9e060a87fbd167558124380153d04d308b7cd45317051353",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/prepare_validation.py": "c3d71b89f70bb8cde71409e250942977849b0a3a97676a7448444d7b5e44b8c8",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/resident_controller.py": "739284ec9c2772c5bbb84c32d9b023ec38468a86c44fc6d344a34eb9ded9e497",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/restore_normal.py": "37dae01fa7897f50dba19c6a5612998ebef05ac23b7cc578b171f185f037d1be",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/setup.py": "979e77c6745161e4d246da6a47eea746cfc3a935a018c3b1a6aa8d2c75a1757e",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/wait_cantor.py": "a8ed78dfdf4c222d2956586ceeddb0cd721038a573dbb5298027c0dd67a80588",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/memory_observer.py": "0500028d96135d0604f6ff3d862ff93b3189da68752a8871a10a431d810a2234",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/resident_guard.py": "332a1713a1c4b45a400f0a259201685f2505ae62a5bfa3975c2fbee007dd0ba4",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/run_diagnostic.py": "6abd5d24dc468ac995b21030dbf17e5e82876755c1befee3259efd5c1a70ac37",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-physical-memory/analyze.py": "a0b86dfe29b940223a68257bc630021d808f433942194eefe03a4cf7fc17fcd7",
+    "/usr/bin/vmmap": "30cf438e8ebe40f176e3dc57a6af280c947d7144cbdf984087087cd5826c78d3",
+    "/usr/bin/footprint": "219b42b32ff45a1cd75e5b01316f4ef85c88885c5d78bea0f9c5950432f1c2ee",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3": "176fc13fa357cf68c6c3d233401b044bced0c77e73c80b7afc646f4e3f3d0048",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib": "915788e16ee1f11caac38e6f48c367ebfc9284c1ad53f053fce207d6832b656b",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libgalaxy_garnetfilter.dylib": "b14bd27d3a083de1f9479ca0f39118c242845b01d4889dcd3a22628114897348",
+    "/Users/shawn/CantorAI/WorldSense/tools/benchmark_recorded.py": "1d0a1dc532d343463411257fce6568973bc0a99d8f62824dd5e8f0c2bd82816f"
+  },
+  "request_sha256": "6e7b628c64b32122411b5f24fba3f79a0c6a3218dafbe426481013932b3e4045",
+  "git": {
+    "Garnet": "929971b4d7d94a6ead48a8c6b56f4fadf1642b81",
+    "Galaxy": "6abf9dbc1bf2a462024579cd1b78d6c408bc9da6",
+    "WorldSense": "53107aecb2697f64ee662b00479018d9da0811f6",
+    "xlang3": "990a745fca977e035c82eda9b72484f71c9dee4d"
+  }
+}

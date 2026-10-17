@@ -1,0 +1,14 @@
+{
+  "manual_identities": {
+    "footprint": {
+      "path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/share/man/man1/footprint.1",
+      "sha256": "a005d38196ff949b150764eaa245633d9cd44eb998c87701cc78d6b0d9cd473d"
+    },
+    "vmmap": {
+      "path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/share/man/man1/vmmap.1",
+      "sha256": "cdd8195c81895d2dd261717aa73056e94546969ee4f887aed37888be3baaa18a"
+    }
+  },
+  "interpretation": "footprint Dirty includes compressed/swapped memory, whose column is a subset. vmmap Dirty excludes its separate Swapped column. These two tools expose different views and should not be added together or added to native logical allocations. No unpublished physical-page attribution to individual buffers.",
+  "tools_preflight": "Both tools successfully inspected only the current user-owned launchd Cantor PID55076 before diagnostic setup. No memory contents or all-process collection."
+}
