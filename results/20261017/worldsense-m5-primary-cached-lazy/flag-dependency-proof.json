@@ -1,0 +1,46 @@
+{
+  "k32": {
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-S",
+      "/Users/shawn/CantorAI/out/research/worldsense-primary-cached-lazy/source",
+      "-C",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-cached-lazy/build-profile/MetalWorldSense4BPrefix.cmake",
+      "-DGARNET_METAL=ON",
+      "-DGARNET_METAL_XMODEL=ON",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OBJCXX_COMPILER=/usr/bin/c++",
+      "-DGARNET_METAL_PRIMARY_BF16_BLOCKS=ON",
+      "-DXLANG3_SDK_ROOT=/Users/shawn/CantorAI/xlang3/sdk",
+      "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-cached-lazy/invalid-k32-config",
+      "-DGARNET_METAL_PRIMARY_VECTOR_PREFILL=OFF",
+      "-DGARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY=ON"
+    ],
+    "returncode": 1,
+    "expected_rejection": true
+  },
+  "cached": {
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-S",
+      "/Users/shawn/CantorAI/out/research/worldsense-primary-cached-lazy/source",
+      "-C",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-cached-lazy/build-profile/MetalWorldSense4BPrefix.cmake",
+      "-DGARNET_METAL=ON",
+      "-DGARNET_METAL_XMODEL=ON",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OBJCXX_COMPILER=/usr/bin/c++",
+      "-DGARNET_METAL_PRIMARY_BF16_BLOCKS=ON",
+      "-DXLANG3_SDK_ROOT=/Users/shawn/CantorAI/xlang3/sdk",
+      "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-cached-lazy/invalid-cached-config",
+      "-DGARNET_METAL_LAZY_RESIDENT_DEFAULTS=OFF",
+      "-DGARNET_METAL_CACHED_MATRIX_METADATA=ON"
+    ],
+    "returncode": 1,
+    "expected_rejection": true
+  }
+}

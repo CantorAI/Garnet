@@ -1,0 +1,40 @@
+{
+  "experiment": "WS-M5-52",
+  "declared_utc": "2026-10-17T19:44:24.462348+00:00",
+  "design_sha256": "7061af5fbfedd020d1ab601e5061316c4591f454fdcfea4ed401c47d237df02b",
+  "canonical_base": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "seed": "FrozenWS51source1716/sevenoverlay, zeroSourceDelta; verifyeveryhash beforecopy",
+  "hypothesis": "Interaction of losslessprimary/K32duo/directupload with lazyretirement+cachedmatrixmetadata",
+  "new_flag": null,
+  "matched_contrast_flags": [
+    "GARNET_METAL_PRIMARY_VECTOR_PREFILL",
+    "GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY",
+    "GARNET_METAL_DIRECT_FLOAT_WEIGHT_UPLOAD",
+    "GARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY",
+    "GARNET_METAL_LAZY_RESIDENT_DEFAULTS",
+    "GARNET_METAL_CACHED_MATRIX_METADATA"
+  ],
+  "gates": {
+    "resource_calls": 8,
+    "minimum_Metal_reduction": 0.1,
+    "minimum_sampled_process_footprint_reduction": 0.05,
+    "matched_primary_speed_calls": 20,
+    "matched_primary_minimum_VLM_TTFT_reduction": 0.05,
+    "matched_primary_maximum_memory_increase": 0.02,
+    "raw_control_speed_calls": 20,
+    "actual_WS10_speed_calls": 20,
+    "maximum_each_model_TTFT_total_Skillwall_regression": 0.02,
+    "minimum_derived_decode_gain": -0.02,
+    "full_confirmation_calls": 48,
+    "both_pairs_independently_pass": true,
+    "canonical_repeat_complete_correctness": true,
+    "actual_production_calls": 48,
+    "normal_app_smoke_required": true
+  },
+  "no_unchanged_retry_after_valid_failure": true,
+  "matched_scope": "Primary-STORAGE control; lifetime/metadata/prefill/directupload policies differ, not eager/eager. Gates unchanged.",
+  "pre_setup_factual_erratum": {
+    "utc": "2026-10-17T19:48:14.046379+00:00",
+    "reason": "WS45 actual serving_configuration shows fullAPI VLMcapacity512,text256; prior128label was wrong. Byte/slot references unchanged; no model/budget/gate alteration."
+  }
+}

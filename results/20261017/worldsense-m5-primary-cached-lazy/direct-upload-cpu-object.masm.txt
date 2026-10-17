@@ -1,0 +1,367 @@
+0000000000005c8c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)>:
+    5c8c:      	stp	x28, x27, [sp, #-0x60]!
+    5c90:      	stp	x26, x25, [sp, #0x10]
+    5c94:      	stp	x24, x23, [sp, #0x20]
+    5c98:      	stp	x22, x21, [sp, #0x30]
+    5c9c:      	stp	x20, x19, [sp, #0x40]
+    5ca0:      	stp	x29, x30, [sp, #0x50]
+    5ca4:      	add	x29, sp, #0x50
+    5ca8:      	mov	x23, x8
+    5cac:      	ldr	x8, [x0]
+    5cb0:      	ldr	x8, [x8, #0x38]
+    5cb4:      	cbnz	x8, 0x614c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4c0>
+    5cb8:      	mov	x20, x3
+    5cbc:      	cbz	x3, 0x60f8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x46c>
+    5cc0:      	mov	x22, x4
+    5cc4:      	cbz	x4, 0x60f8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x46c>
+    5cc8:      	umulh	x8, x22, x20
+    5ccc:      	cmp	xzr, x8
+    5cd0:      	b.ne	0x60f8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x46c>
+    5cd4:      	mul	x8, x22, x20
+    5cd8:      	lsr	x9, x8, #62
+    5cdc:      	cbnz	x9, 0x60f8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x46c>
+    5ce0:      	mov	x21, x1
+    5ce4:      	cbz	x1, 0x616c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4e0>
+    5ce8:      	lsl	x28, x8, #1
+    5cec:      	cmp	x2, x28
+    5cf0:      	b.ne	0x616c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4e0>
+    5cf4:      	mov	x8, x23
+    5cf8:      	mov	x1, x20
+    5cfc:      	mov	x2, x22
+    5d00:      	bl	0x5d00 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x74>
+    5d04:      	ldr	x27, [x23]
+    5d08:      	ldr	x0, [x27]
+    5d0c:      	bl	0x5d0c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x80>
+    5d10:      	mov	x19, x0
+    5d14:      	cbz	x0, 0x6118 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x48c>
+    5d18:      	mov	x0, x19
+    5d1c:      	bl	0x5d1c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x90>
+    5d20:      	bl	0x5d20 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x94>
+    5d24:      	mov	x24, x0
+    5d28:      	bl	0x5d28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x9c>
+    5d2c:      	bl	0x5d2c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xa0>
+    5d30:      	mov	x25, x0
+    5d34:      	mov	x0, x24
+    5d38:      	bl	0x5d38 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xac>
+    5d3c:      	cbz	x25, 0x6118 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x48c>
+    5d40:      	mov	x0, x19
+    5d44:      	bl	0x5d44 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xb8>
+    5d48:      	bl	0x5d48 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xbc>
+    5d4c:      	mov	x26, x0
+    5d50:      	bl	0x5d50 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xc4>
+    5d54:      	bl	0x5d54 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xc8>
+    5d58:      	mov	x24, x0
+    5d5c:      	mov	x0, x19
+    5d60:      	bl	0x5d60 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xd4>
+    5d64:      	mov	x25, x0
+    5d68:      	mov	x0, x26
+    5d6c:      	bl	0x5d6c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xe0>
+    5d70:      	mov	x0, x19
+    5d74:      	bl	0x5d74 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0xe8>
+    5d78:      	lsl	x8, x22, #1
+    5d7c:      	cmp	x22, #0x3
+    5d80:      	b.hi	0x5ddc <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x150>
+    5d84:      	add	x9, x25, x24
+    5d88:      	add	x9, x9, #0x8
+    5d8c:      	add	x10, x21, #0x2
+    5d90:      	b	0x5da4 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x118>
+    5d94:      	add	x9, x9, x0
+    5d98:      	add	x10, x10, x8
+    5d9c:      	subs	x20, x20, #0x1
+    5da0:      	b.eq	0x5ef8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x26c>
+    5da4:      	ldurh	w11, [x10, #-0x2]
+    5da8:      	lsl	w11, w11, #16
+    5dac:      	stur	w11, [x9, #-0x8]
+    5db0:      	cmp	x22, #0x1
+    5db4:      	b.eq	0x5d94 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x108>
+    5db8:      	ldrh	w11, [x10]
+    5dbc:      	lsl	w11, w11, #16
+    5dc0:      	stur	w11, [x9, #-0x4]
+    5dc4:      	cmp	x22, #0x2
+    5dc8:      	b.eq	0x5d94 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x108>
+    5dcc:      	ldrh	w11, [x10, #0x2]
+    5dd0:      	lsl	w11, w11, #16
+    5dd4:      	str	w11, [x9]
+    5dd8:      	b	0x5d94 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x108>
+    5ddc:      	add	x10, x24, x25
+    5de0:      	add	x9, x21, x28
+    5de4:      	sub	x11, x20, #0x1
+    5de8:      	madd	x11, x0, x11, x10
+    5dec:      	add	x11, x11, x22, lsl #2
+    5df0:      	cmp	x21, x11
+    5df4:      	ccmp	x10, x9, #0x2, lo
+    5df8:      	b.lo	0x5ec0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x234>
+    5dfc:      	orr	x9, x8, x0
+    5e00:      	tbnz	x9, #0x3f, 0x5ec0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x234>
+    5e04:      	and	x9, x22, #0xfffffffffffffffc
+    5e08:      	cmp	x22, #0x20
+    5e0c:      	b.hs	0x5f20 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x294>
+    5e10:      	subs	x11, x22, x9
+    5e14:      	b.ne	0x6020 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x394>
+    5e18:      	add	x10, x25, x24
+    5e1c:      	add	x10, x10, #0x30
+    5e20:      	add	x11, x21, #0x18
+    5e24:      	b	0x5e38 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x1ac>
+    5e28:      	add	x10, x10, x0
+    5e2c:      	add	x11, x11, x8
+    5e30:      	subs	x20, x20, #0x1
+    5e34:      	b.eq	0x5ef8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x26c>
+    5e38:      	ldur	d0, [x11, #-0x18]
+    5e3c:      	shll.4s	v0, v0, #16
+    5e40:      	stur	q0, [x10, #-0x30]
+    5e44:      	cmp	x9, #0x4
+    5e48:      	b.eq	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5e4c:      	ldur	d0, [x11, #-0x10]
+    5e50:      	shll.4s	v0, v0, #16
+    5e54:      	stur	q0, [x10, #-0x20]
+    5e58:      	cmp	x9, #0x8
+    5e5c:      	b.eq	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5e60:      	ldur	d0, [x11, #-0x8]
+    5e64:      	shll.4s	v0, v0, #16
+    5e68:      	stur	q0, [x10, #-0x10]
+    5e6c:      	cmp	x9, #0xc
+    5e70:      	b.eq	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5e74:      	ldr	d0, [x11]
+    5e78:      	shll.4s	v0, v0, #16
+    5e7c:      	str	q0, [x10]
+    5e80:      	cmp	x9, #0x10
+    5e84:      	b.eq	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5e88:      	ldr	d0, [x11, #0x8]
+    5e8c:      	shll.4s	v0, v0, #16
+    5e90:      	str	q0, [x10, #0x10]
+    5e94:      	cmp	x9, #0x14
+    5e98:      	b.eq	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5e9c:      	ldr	d0, [x11, #0x10]
+    5ea0:      	shll.4s	v0, v0, #16
+    5ea4:      	str	q0, [x10, #0x20]
+    5ea8:      	cmp	x9, #0x18
+    5eac:      	b.eq	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5eb0:      	ldr	d0, [x11, #0x18]
+    5eb4:      	shll.4s	v0, v0, #16
+    5eb8:      	str	q0, [x10, #0x30]
+    5ebc:      	b	0x5e28 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x19c>
+    5ec0:      	mov	x9, #0x0                ; =0
+    5ec4:      	mov	x11, x21
+    5ec8:      	mov	x12, x10
+    5ecc:      	mov	x13, x22
+    5ed0:      	ldrh	w14, [x11], #0x2
+    5ed4:      	lsl	w14, w14, #16
+    5ed8:      	str	w14, [x12], #0x4
+    5edc:      	subs	x13, x13, #0x1
+    5ee0:      	b.ne	0x5ed0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x244>
+    5ee4:      	add	x9, x9, #0x1
+    5ee8:      	add	x10, x10, x0
+    5eec:      	add	x21, x21, x8
+    5ef0:      	cmp	x9, x20
+    5ef4:      	b.ne	0x5ec4 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x238>
+    5ef8:      	mov	w8, #0x1                ; =1
+    5efc:      	strb	w8, [x27, #0x48]
+    5f00:      	mov	x0, x19
+    5f04:      	ldp	x29, x30, [sp, #0x50]
+    5f08:      	ldp	x20, x19, [sp, #0x40]
+    5f0c:      	ldp	x22, x21, [sp, #0x30]
+    5f10:      	ldp	x24, x23, [sp, #0x20]
+    5f14:      	ldp	x26, x25, [sp, #0x10]
+    5f18:      	ldp	x28, x27, [sp], #0x60
+    5f1c:      	b	0x5f1c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x290>
+    5f20:      	mov	x11, #0x0               ; =0
+    5f24:      	and	x12, x22, #0xffffffffffffffe0
+    5f28:      	and	x13, x22, #0x1c
+    5f2c:      	add	x14, x21, #0x20
+    5f30:      	lsr	x1, x22, #5
+    5f34:      	add	x17, x25, x24
+    5f38:      	add	x15, x17, #0x40
+    5f3c:      	sub	x16, x9, x12
+    5f40:      	add	x17, x17, x1, lsl #7
+    5f44:      	add	x1, x21, x1, lsl #6
+    5f48:      	b	0x5f70 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x2e4>
+    5f4c:      	add	x11, x11, #0x1
+    5f50:      	add	x14, x14, x8
+    5f54:      	add	x15, x15, x0
+    5f58:      	add	x17, x17, x0
+    5f5c:      	add	x1, x1, x8
+    5f60:      	add	x21, x21, x8
+    5f64:      	add	x10, x10, x0
+    5f68:      	cmp	x11, x20
+    5f6c:      	b.eq	0x5ef8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x26c>
+    5f70:      	mov	x2, x15
+    5f74:      	mov	x3, x14
+    5f78:      	mov	x4, x12
+    5f7c:      	ldp	q0, q1, [x3, #-0x20]
+    5f80:      	ldp	q2, q3, [x3], #0x40
+    5f84:      	shll.4s	v4, v0, #16
+    5f88:      	shll2.4s	v0, v0, #16
+    5f8c:      	shll.4s	v5, v1, #16
+    5f90:      	shll2.4s	v1, v1, #16
+    5f94:      	shll.4s	v6, v2, #16
+    5f98:      	shll2.4s	v2, v2, #16
+    5f9c:      	shll.4s	v7, v3, #16
+    5fa0:      	shll2.4s	v3, v3, #16
+    5fa4:      	stp	q4, q0, [x2, #-0x40]
+    5fa8:      	stp	q5, q1, [x2, #-0x20]
+    5fac:      	stp	q6, q2, [x2]
+    5fb0:      	stp	q7, q3, [x2, #0x20]
+    5fb4:      	add	x2, x2, #0x80
+    5fb8:      	subs	x4, x4, #0x20
+    5fbc:      	b.ne	0x5f7c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x2f0>
+    5fc0:      	cmp	x22, x12
+    5fc4:      	b.eq	0x5f4c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x2c0>
+    5fc8:      	mov	x4, x12
+    5fcc:      	cbz	x13, 0x5ffc <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x370>
+    5fd0:      	mov	x2, x1
+    5fd4:      	mov	x3, x17
+    5fd8:      	mov	x4, x16
+    5fdc:      	ldr	d0, [x2], #0x8
+    5fe0:      	shll.4s	v0, v0, #16
+    5fe4:      	str	q0, [x3], #0x10
+    5fe8:      	subs	x4, x4, #0x4
+    5fec:      	b.ne	0x5fdc <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x350>
+    5ff0:      	mov	x4, x9
+    5ff4:      	cmp	x22, x9
+    5ff8:      	b.eq	0x5f4c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x2c0>
+    5ffc:      	sub	x2, x22, x4
+    6000:      	add	x3, x21, x4, lsl #1
+    6004:      	add	x4, x10, x4, lsl #2
+    6008:      	ldrh	w5, [x3], #0x2
+    600c:      	lsl	w5, w5, #16
+    6010:      	str	w5, [x4], #0x4
+    6014:      	subs	x2, x2, #0x1
+    6018:      	b.ne	0x6008 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x37c>
+    601c:      	b	0x5f4c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x2c0>
+    6020:      	mov	x12, #0x0               ; =0
+    6024:      	lsr	x14, x22, #2
+    6028:      	add	x13, x25, x14, lsl #4
+    602c:      	add	x13, x24, x13
+    6030:      	add	x14, x21, x14, lsl #3
+    6034:      	madd	x15, x12, x0, x10
+    6038:      	madd	x16, x8, x12, x21
+    603c:      	ldr	d0, [x16]
+    6040:      	shll.4s	v0, v0, #16
+    6044:      	str	q0, [x15]
+    6048:      	cmp	x9, #0x4
+    604c:      	b.eq	0x60c0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x434>
+    6050:      	ldr	d0, [x16, #0x8]
+    6054:      	shll.4s	v0, v0, #16
+    6058:      	str	q0, [x15, #0x10]
+    605c:      	cmp	x9, #0x8
+    6060:      	b.eq	0x60c0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x434>
+    6064:      	ldr	d0, [x16, #0x10]
+    6068:      	shll.4s	v0, v0, #16
+    606c:      	str	q0, [x15, #0x20]
+    6070:      	cmp	x9, #0xc
+    6074:      	b.eq	0x60c0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x434>
+    6078:      	ldr	d0, [x16, #0x18]
+    607c:      	shll.4s	v0, v0, #16
+    6080:      	str	q0, [x15, #0x30]
+    6084:      	cmp	x9, #0x10
+    6088:      	b.eq	0x60c0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x434>
+    608c:      	ldr	d0, [x16, #0x20]
+    6090:      	shll.4s	v0, v0, #16
+    6094:      	str	q0, [x15, #0x40]
+    6098:      	cmp	x9, #0x14
+    609c:      	b.eq	0x60c0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x434>
+    60a0:      	ldr	d0, [x16, #0x28]
+    60a4:      	shll.4s	v0, v0, #16
+    60a8:      	str	q0, [x15, #0x50]
+    60ac:      	cmp	x9, #0x18
+    60b0:      	b.eq	0x60c0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x434>
+    60b4:      	ldr	d0, [x16, #0x30]
+    60b8:      	shll.4s	v0, v0, #16
+    60bc:      	str	q0, [x15, #0x60]
+    60c0:      	mov	x15, x14
+    60c4:      	mov	x16, x13
+    60c8:      	mov	x17, x11
+    60cc:      	ldrh	w1, [x15], #0x2
+    60d0:      	lsl	w1, w1, #16
+    60d4:      	str	w1, [x16], #0x4
+    60d8:      	subs	x17, x17, #0x1
+    60dc:      	b.ne	0x60cc <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x440>
+    60e0:      	add	x12, x12, #0x1
+    60e4:      	add	x13, x13, x0
+    60e8:      	add	x14, x14, x8
+    60ec:      	cmp	x12, x20
+    60f0:      	b.ne	0x6034 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x3a8>
+    60f4:      	b	0x5ef8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x26c>
+    60f8:      	mov	w0, #0x10               ; =16
+    60fc:      	bl	0x60fc <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x470>
+    6100:      	mov	x19, x0
+    6104:      	adrp	x1, 0x6000 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x374>
+    6108:      	add	x1, x1, #0x0
+    610c:      	bl	0x610c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x480>
+    6110:      	mov	x0, x19
+    6114:      	bl	0x6114 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x488>
+    6118:      	mov	w0, #0x10               ; =16
+    611c:      	bl	0x611c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x490>
+    6120:      	mov	x21, x0
+    6124:      	adrp	x1, 0x6000 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x374>
+    6128:      	add	x1, x1, #0x0
+    612c:      	bl	0x612c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4a0>
+    6130:      	adrp	x1, 0x6000 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x374>
+    6134:      	ldr	x1, [x1]
+    6138:      	adrp	x2, 0x6000 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x374>
+    613c:      	ldr	x2, [x2]
+    6140:      	mov	x0, x21
+    6144:      	bl	0x6144 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4b8>
+    6148:      	brk	#0x1
+    614c:      	mov	w0, #0x10               ; =16
+    6150:      	bl	0x6150 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4c4>
+    6154:      	mov	x19, x0
+    6158:      	adrp	x1, 0x6000 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x374>
+    615c:      	add	x1, x1, #0x0
+    6160:      	bl	0x6160 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4d4>
+    6164:      	mov	x0, x19
+    6168:      	bl	0x6168 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4dc>
+    616c:      	mov	w0, #0x10               ; =16
+    6170:      	bl	0x6170 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4e4>
+    6174:      	mov	x19, x0
+    6178:      	adrp	x1, 0x6000 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x374>
+    617c:      	add	x1, x1, #0x0
+    6180:      	bl	0x6180 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4f4>
+    6184:      	mov	x0, x19
+    6188:      	bl	0x6188 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x4fc>
+    618c:      	mov	x20, x0
+    6190:      	mov	x0, x19
+    6194:      	bl	0x6194 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x508>
+    6198:      	mov	x0, x20
+    619c:      	bl	0x619c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x510>
+    61a0:      	mov	x20, x0
+    61a4:      	mov	x0, x19
+    61a8:      	bl	0x61a8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x51c>
+    61ac:      	mov	x0, x20
+    61b0:      	bl	0x61b0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x524>
+    61b4:      	b	0x6224 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x598>
+    61b8:      	b	0x6224 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x598>
+    61bc:      	mov	x20, x0
+    61c0:      	mov	x0, x24
+    61c4:      	b	0x6208 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x57c>
+    61c8:      	mov	x20, x0
+    61cc:      	mov	x0, x21
+    61d0:      	bl	0x61d0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x544>
+    61d4:      	mov	x0, x19
+    61d8:      	bl	0x61d8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x54c>
+    61dc:      	mov	x0, x23
+    61e0:      	bl	0x61e0 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x554>
+    61e4:      	mov	x0, x20
+    61e8:      	bl	0x61e8 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x55c>
+    61ec:      	mov	x20, x0
+    61f0:      	mov	x0, x19
+    61f4:      	bl	0x61f4 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x568>
+    61f8:      	mov	x0, x20
+    61fc:      	bl	0x61fc <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x570>
+    6200:      	mov	x20, x0
+    6204:      	mov	x0, x26
+    6208:      	bl	0x6208 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x57c>
+    620c:      	mov	x0, x19
+    6210:      	bl	0x6210 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x584>
+    6214:      	mov	x0, x23
+    6218:      	bl	0x6218 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x58c>
+    621c:      	mov	x0, x20
+    6220:      	bl	0x6220 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x594>
+    6224:      	mov	x20, x0
+    6228:      	mov	x0, x19
+    622c:      	bl	0x622c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x5a0>
+    6230:      	mov	x0, x23
+    6234:      	bl	0x6234 <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x5a8>
+    6238:      	mov	x0, x20
+    623c:      	bl	0x623c <Garnet::MetalContext::UploadBF16AsFloat(void const*, unsigned long, unsigned long, unsigned long)+0x5b0>
+
