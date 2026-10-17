@@ -1,0 +1,39 @@
+{
+  "base_commit": "6c56f15ceffc9471b2a780a0b4de783571a90dc9",
+  "base_choice": "Current committed tree selected after experiment; compatible reconstruction base, not source checkout identity at build time",
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/dense_decode1024_shader.h",
+    "src/backends/metal/dense_decode256_shader.h",
+    "src/backends/metal/dense_decode512_shader.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/resident_workspace_plan.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/dense_decode1024_test.cpp",
+    "test2026/metal/dense_decode256_test.cpp",
+    "test2026/metal/dense_decode512_test.cpp",
+    "test2026/metal/inventory_test.cpp",
+    "test2026/metal/memory_stats_test.mm",
+    "test2026/metal/storage_layout_test.cpp",
+    "test2026/metal/storage_scope_test.mm",
+    "test2026/metal/vision_weight_stream_test.cpp",
+    "test2026/metal/vision_workspace_test.cpp",
+    "test2026/metal/workspace_plan_test.cpp",
+    "xModel/qwen/metal_dense/decoder.py",
+    "xModel/qwen35/vl_0_8b/metal_decoder.py"
+  ],
+  "full_closure_sha256_file": "starting-source-manifest.json",
+  "overlay_apply_check": true,
+  "fault_overlay_changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h"
+  ],
+  "scope": "Overlay covers every frozen source file different from base. Archives omit unchanged base files. Test fixtures contain original absolute paths; regenerate numeric fixtures with make_resident_fixtures.py when relocating."
+}

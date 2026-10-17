@@ -1,0 +1,53 @@
+{
+  "scope": "Post-test identity snapshot; predispatch freeze recordedseparately.",
+  "files": {
+    "off": {
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/libgarnet.dylib": "0e1b2720f8d32fe217d068c3890d9149fe41b072a711f7a6bda2a345f83da5d7",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/CMakeCache.txt": "f9b4e2b189aadcb33a6783649275e466fd8142f83e57d30e916ff0fcf64f1b12",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_dense_decode1024_test": "f43553bde5284fb0cb56f45910389e213b6ebd1480e269f2f1ef9cc3082cb89b",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_dense_decode256_test": "6db5e7cd9af5f28c816326cd69bedb21f17b42409e7bf9568512474c6c649de1",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_dense_decode512_test": "3760d6e3c05d9cb4e9cb88a703ebc6baa660e63a7c02df3da296d24c320f6005",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_inventory_test": "35bc08ad5957d3f10c8c1cb5267a2eb00233038c191f950895a8f8e40aded29e",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_memory_stats_test": "824e65c0ef5fd0740fd6e7a79dbf9ec3a910a3e9067132e963b0616a9238de0b",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_metal_matmul_test": "218e2df257878cb0127acdedd44ef78ff9384c8286e258cb225f54dd2e8c98a6",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_prefix_copy_test": "e5f81d1a6a9141f3c6a545554f57fbd5216a54dad576777d6c17edebb9517892",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_storage_layout_test": "d32484f81a87db77b42faae98870c06394b92efb501a0e34c8d625b3eb476bde",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_storage_scope_test": "21d2bb124029634ba00352d0fba7053ce921dfd4342048068128586766f4df7e",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_vision_weight_stream_test": "525df5e4bdbdb2eac76872925a9cfb8e7636aa1b0ef22f889ede6f1f9df8ceba",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_vision_workspace_test": "1e3aae18a1e4c0d1a1620674a1b6d912d8aea6506100a5d53996b02df7d4d371",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-off/garnet_workspace_plan_test": "b8d10e32ffc2f21b6617d7a985f6ab7cdf1e38e1bdc6685b93826e2594ff2162"
+    },
+    "on": {
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/libgarnet.dylib": "5878105794335da104ca43c6376b7332a768d14e2ade1a9b9a1d814ff5d11613",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/CMakeCache.txt": "066901747e4c1e4c35ac2df7bc42c7bf813b0b6778402c5517de67ec327a0806",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_dense_decode1024_test": "ff800b5b3729d09747a075e34d6ecda02a96d1db5ee10723008b90de86b34be9",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_dense_decode256_test": "be50c4eb169d2bc4ba50b734b32d9db9d805dd96e1e00b3c2be9a558285859e5",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_dense_decode512_test": "b8985df116aadd79eb692f6d14991a58d24b74adbfd72f0989ce7bca62443106",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_inventory_test": "37bea49a0ccd7b3c3638159a8a0280d90cd8f80b7b54495c9dd0b14f15338fb2",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_memory_stats_test": "f33c1c45750eae858b7299ed72a249645f08643e601202ce7c2a6e017c5eaef0",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_metal_matmul_test": "8c23d5fb0a17e81ae9635a81cecbb5ccd38e59f947ce3d1242064b3f2c4b4e6c",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_prefix_copy_test": "9fdca54596e32791a0a8c6efa558db46ac0fc3bae7b5533c19d03dcf2b57b4ac",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_storage_layout_test": "67780c5f77f31b4da0ce6b964b54f7992d8e38dd9233e5f510fec015a2554370",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_storage_scope_test": "4798a8034edc5271dd91eb31f5d1219fbf17cb0ff24e0eea3ac22e387eab73c0",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_vision_weight_stream_test": "ca54e2cef52263ac025d3692ea93bffd3dab8ea5cc2be18bd15282f26035992b",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_vision_workspace_test": "bcb8ab13716cb9220a6bfbc7fa3ba9a59025fdbc58ccb5bb9869bc48940154cd",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-on/garnet_workspace_plan_test": "c40faf85644350bc907c337e685928a0ebb77e2792387b2a710f4726b735d8d8"
+    },
+    "fault": {
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/libgarnet.dylib": "22eacaf6674e2afe72383b35aa48996ebf17dfaa1ef2b85033d75d747f3e1788",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/CMakeCache.txt": "41b7d40a6882d823ca44c4e59e48200b4ff5767f1a996555e8a5ab14f067698b",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_dense_decode1024_test": "ff800b5b3729d09747a075e34d6ecda02a96d1db5ee10723008b90de86b34be9",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_dense_decode256_test": "be50c4eb169d2bc4ba50b734b32d9db9d805dd96e1e00b3c2be9a558285859e5",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_dense_decode512_test": "b8985df116aadd79eb692f6d14991a58d24b74adbfd72f0989ce7bca62443106",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_inventory_test": "37bea49a0ccd7b3c3638159a8a0280d90cd8f80b7b54495c9dd0b14f15338fb2",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_memory_stats_test": "f33c1c45750eae858b7299ed72a249645f08643e601202ce7c2a6e017c5eaef0",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_metal_matmul_test": "8c23d5fb0a17e81ae9635a81cecbb5ccd38e59f947ce3d1242064b3f2c4b4e6c",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_prefix_copy_test": "9fdca54596e32791a0a8c6efa558db46ac0fc3bae7b5533c19d03dcf2b57b4ac",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_storage_layout_test": "67780c5f77f31b4da0ce6b964b54f7992d8e38dd9233e5f510fec015a2554370",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_storage_scope_test": "4798a8034edc5271dd91eb31f5d1219fbf17cb0ff24e0eea3ac22e387eab73c0",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_vision_weight_stream_test": "ca54e2cef52263ac025d3692ea93bffd3dab8ea5cc2be18bd15282f26035992b",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_vision_workspace_test": "bcb8ab13716cb9220a6bfbc7fa3ba9a59025fdbc58ccb5bb9869bc48940154cd",
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-resident-defaults-fault/garnet_workspace_plan_test": "c40faf85644350bc907c337e685928a0ebb77e2792387b2a710f4726b735d8d8"
+    }
+  }
+}
