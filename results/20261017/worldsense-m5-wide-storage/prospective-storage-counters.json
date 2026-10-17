@@ -1,0 +1,35 @@
+{
+  "scope": "Prospective structural byte arithmetic. RetiredVLM observation from older samecapacity/prefill profile; not new actual allocation/footprint/speed or causal cross-cohort comparison.",
+  "historical_retired_artifact": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-lazy-defaults/candidate-1.json",
+  "historical_artifact_sha256": "4ee7d98175c39ad8eb84dffbe813aca70f20e1be231607d0331d7a8e67ae3cf2",
+  "historical_VLM_config": {
+    "capacity": 2048,
+    "image_pixels": 65536,
+    "prefill_chunk": 64,
+    "requested_output_limit": 512,
+    "share_vision_weights": true,
+    "text_prefix_cache": false
+  },
+  "historical_VLM_retired_bytes": 1152909312,
+  "VLM_primary_saved_bytes": 1999551488,
+  "minimum_extra_retirement_needed_for_10percent_Metal": 190786151,
+  "projected_metal_bytes": 18750915584,
+  "projected_metal_reduction": 0.14392579229487257,
+  "weight_primary_plus_raw_bytes": 9850930176,
+  "packed_matrices": 201,
+  "raw_matrices": 245,
+  "packed_original_FP32_words_each_reader": 4200857600,
+  "native_owner_tuples": {
+    "0": [
+      0,
+      0,
+      0
+    ],
+    "201": [
+      8401715200,
+      6402163712,
+      32819200
+    ]
+  },
+  "API_smaller_capacity_retired_VLM_observation": 369623040
+}

@@ -1,0 +1,38 @@
+START control-1 2026-10-17T16:05:32Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-17T16:08:54Z
+FINISH candidate-1 exit 0
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+Build/SDK/host dependency identity unchanged 1865 speed
+{
+  "status": "rejected",
+  "passed": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.237505518157748,
+      "total_change": -0.08402733027070586,
+      "decode_gain": -0.1402194886023307
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.48502417902883443,
+      "total_change": -0.30840068030973755,
+      "decode_gain": 0.024029640174514588
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": 21903376384,
+    "candidate-1": 18754076672
+  },
+  "sampled_metal_reduction": 0.1437814726272294,
+  "native_skill_wall_p50": {
+    "control-1": 25.13310495800397,
+    "candidate-1": 18.521131333502126
+  },
+  "native_skill_wall_gain": 0.2630782641281324,
+  "scope": "Fresh single-car screen. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 32510
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

@@ -1,0 +1,16 @@
+{
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_storage_test.cpp",
+    "src/backends/metal/wide_checkpoint_policy.h"
+  ],
+  "source_files": 1716,
+  "CUDA_unchanged_files": 21,
+  "whole_primary_shader_CPUcodec_FP32_and_retirement_plan_algorithm_unchanged": true,
+  "scope": "Eligibility scope changes; native/full correctness and resource/speed not executed"
+}
