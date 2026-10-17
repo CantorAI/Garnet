@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T22:47:56.599655+00:00
+Generated UTC: 2026-10-17T23:22:41.137802+00:00
 
-Base HEAD at generation: `5a687e206ceb02f4ffd3b4e8843a3e4d288255fb`. Reports indexed: **247**.
+Base HEAD at generation: `290f5742ba51c41197f24179cfee4876e96e789a`. Reports indexed: **248**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -231,6 +231,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-isolated-primary](../../../results/20261017/worldsense-m5-isolated-primary/README.md) | WS-M5-54 — Full packed-kernel library isolation rejected on text decoding |
 | [results/20261017/worldsense-m5-isolated-vector-prefill](../../../results/20261017/worldsense-m5-isolated-vector-prefill/README.md) | WS-M5-48 — Isolated vector prefill library rejected by matched timing |
 | [results/20261017/worldsense-m5-k32-prefill](../../../results/20261017/worldsense-m5-k32-prefill/README.md) | WS-M5-51 — Hoisted upload and K32-only prefill rejected on text preservation |
+| [results/20261017/worldsense-m5-packed-only-defaults](../../../results/20261017/worldsense-m5-packed-only-defaults/README.md) | WS-M5-57 — Packed-graph-only default retirement rejected at production-speed |
 | [results/20261017/worldsense-m5-primary-cached-lazy](../../../results/20261017/worldsense-m5-primary-cached-lazy/README.md) | WS-M5-52 — Primary, lazy defaults and cached metadata rejected on text preservation |
 | [results/20261017/worldsense-m5-primary-lazy](../../../results/20261017/worldsense-m5-primary-lazy/README.md) | WS-M5-45 — Joint primary weights and resident-default retirement rejected |
 | [results/20261017/worldsense-m5-primary-narrow-attention](../../../results/20261017/worldsense-m5-primary-narrow-attention/README.md) | WS-M5-42 raw narrow attention with packed MLP: rejected |

@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-only-defaults/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-only-defaults/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-only-defaults/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-only-defaults/direct_float_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-only-defaults/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-only-defaults-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-only-defaults-on/direct_float_corpus_test"
+  ],
+  "source_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+  "library_sha256": "7f38e87d0212067eda0e3ba00a7f716fa2007013bace5ad8b200c71cefed2115",
+  "executable_sha256": "eb0733caf09734ae5d07d0633bf48e4ca6160e0329345637d33532eadefeb11e"
+}

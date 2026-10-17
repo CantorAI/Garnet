@@ -1,0 +1,146 @@
+{
+  "descriptive_only": true,
+  "models": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "decode_seconds": 12.0923426040099,
+        "prefill_seconds": 16.841959229001077,
+        "reset_seconds": 0.06020397899555974,
+        "post_decode_residual_seconds": 0.0012364169961074367,
+        "decode_profile": {
+          "prepare_ms": 11.645882,
+          "encode_ms": 77.53024799999999,
+          "gpu_ms": 11680.565875023603,
+          "wait_ms": 11919.4097525
+        }
+      },
+      "Qwen3-1.7B": {
+        "decode_seconds": 1.323649979007314,
+        "prefill_seconds": 8.32408829148335,
+        "reset_seconds": 0.25487677098135464,
+        "post_decode_residual_seconds": 0.0012594794970937073,
+        "decode_profile": {
+          "prepare_ms": 3.596207999999999,
+          "encode_ms": 13.0360855,
+          "gpu_ms": 1247.0866874064086,
+          "wait_ms": 1300.1217889999998
+        }
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "decode_seconds": 9.6021834580024,
+        "prefill_seconds": 4.460396166497958,
+        "reset_seconds": 0.04790112549380865,
+        "post_decode_residual_seconds": 0.0011967499885940924,
+        "decode_profile": {
+          "prepare_ms": 10.733128499999996,
+          "encode_ms": 81.831895,
+          "gpu_ms": 9257.434854196617,
+          "wait_ms": 9502.773916999999
+        }
+      },
+      "Qwen3-1.7B": {
+        "decode_seconds": 1.8556323545053601,
+        "prefill_seconds": 2.009673520515207,
+        "reset_seconds": 0.3190629790042294,
+        "post_decode_residual_seconds": 0.0012699374929070473,
+        "decode_profile": {
+          "prepare_ms": 5.111127000000001,
+          "encode_ms": 19.401249999999997,
+          "gpu_ms": 1803.2060624827864,
+          "wait_ms": 1820.6804185
+        }
+      }
+    }
+  },
+  "first_after_initialization": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "ttft_seconds": 35.97422225002083,
+        "total_seconds": 46.229241083026864,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 15.731875500001479,
+        "total_seconds": 16.97973625001032,
+        "generated_tokens": 35
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "ttft_seconds": 14.969182208005805,
+        "total_seconds": 24.574671665992355,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 2.5779921670036856,
+        "total_seconds": 4.224981083010789,
+        "generated_tokens": 35
+      }
+    }
+  },
+  "system_observations": {
+    "control-1": {
+      "page_size_bytes": 16384,
+      "global_counter_deltas": {
+        "Swapins": 2784987,
+        "Swapouts": 3039088,
+        "Pageouts": 3489,
+        "Compressions": 11005235,
+        "Decompressions": 9750452
+      },
+      "global_swapin_counter_bytes": 45629227008,
+      "global_swapout_counter_bytes": 49792417792,
+      "swap_before": "vm.swapusage: total = 6144.00M  used = 4681.00M  free = 1463.00M  (encrypted)\n",
+      "swap_after": "vm.swapusage: total = 9216.00M  used = 8425.81M  free = 790.19M  (encrypted)\n",
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      },
+      "thermal_after": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      }
+    },
+    "candidate-1": {
+      "page_size_bytes": 16384,
+      "global_counter_deltas": {
+        "Swapins": 370298,
+        "Swapouts": 360086,
+        "Pageouts": 2546,
+        "Compressions": 5471409,
+        "Decompressions": 4740337
+      },
+      "global_swapin_counter_bytes": 6066962432,
+      "global_swapout_counter_bytes": 5899649024,
+      "swap_before": "vm.swapusage: total = 9216.00M  used = 5614.25M  free = 3601.75M  (encrypted)\n",
+      "swap_after": "vm.swapusage: total = 7168.00M  used = 5476.12M  free = 1691.88M  (encrypted)\n",
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      },
+      "thermal_after": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      }
+    }
+  },
+  "limits": "No excluded samples or causal attribution. Per-call residuals before aggregation; component medians nonadditive. GPU spans include gaps and wait overlaps. VM counters system-wide/compressor page equivalents, not process attribution or direct disk I/O; API residency requests are not proof of physical residency."
+}
