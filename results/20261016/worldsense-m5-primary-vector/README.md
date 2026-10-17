@@ -1,0 +1,33 @@
+# WS-M5-38 vector primary weights: companion decode regression
+
+WS-M5-38 — Vector primary BF16 decode: full correctness/resource pass, companion decode reject
+
+Hypothesis and exact change
+A six-file delta over immutable WS37 changes packed decode loads from repeated scalar reconstruction to a four-output-row/four-K vector helper. One64bit metadata lookup,16sign/mantissa bytes and8exponent-tag bytes reconstruct a compact tile; raw blocks load32original bytes. The helper restores the same four ushort4row vectors before the original FP32 conversion,FMA K order,SIMD reduction,128thread geometry and writes. Codec/admission/payload/meta/ownership,scalar prefill,original embedded shaders,body specialization,Model class and CUDA are unchanged. No decoded weight cache or duplicate full master. Same defaultOFF primary flag controls OFF/ON; vector capability and actual encoded body/head counters are separate and agree with packed decode counters. Extra counters/collection are included in timings. No CPython image/inference;native C++/Metal and XLang3 only.
+
+Before performance
+Design/identity predates implementation. OFF/ONbuild75338,fault52535,corpus17276allterminal0. Fullcorrectness60712terminal0:all7native tests eachOFF/ON/fault;186complete FP32projection output records byte-identical and original FP64decode/prefill bounds unchanged;all65,280finiteBF16patterns,mixed compact/raw,partial offsets/block crossings/bounds/open-batch rejection,tail260/raw-packed PSO separation,pending/Abort/recovery,shared owners,partial-allocation stage1/2accounting/retry pass. No initial source/test failures in this candidate. Existing prior failures remain in WS37archive.
+
+BOTHscalar and vector GPUreaders check all398actualpacked checkpoint matrices:5,921,308,672original FP32bitwords each;48smallraw fallbacks unchanged. Retained payload+metadata+smallraw9,079,938,304B. Full32VLM/28text finite states/tokens,prefix/capacity recovery,vision grids,trained layer/session isolation exact. No inference performance claim from native correctness timings. Owner accounting is not driver-physical liveness/leak proof. Legacy guard success text and JSON field still use old lazy names; guard-scope-note.json explains that actual lazy policies are OFFboth and old lazy-fault branch is disabled. Primary allocation faults execute in C++fault build. Raw artifacts are retained without relabeling.
+
+Analyzer preflight preserves metric/golden/source AST exactly versus WS37;all10real native APIcalls pass the route checker. Wrong primary/vector capabilities,rehydration and altered vector body/head counts are rejected. Full1713file source manifest identical beforecorrectness and beforeresource;models/libraries/SDK/runtime/driver/request identities frozen. Source/drivers not mutated while consumed. Archive copying occurs after all timing controllers terminal0 and normal restoration.
+
+WorldSense result
+NEW8call resource82944terminal0 PASS:allcalls exact/golden/native/source;sampled Metal21,903,376,384→19,137,150,976B(-12.629219%);sampled process footprint18,056,804,680→15,306,684,000B(-15.230384%). Snapshots are post-decode maxima,not peaks,freeRAM or perbuffer physical residency.
+
+NEW20call speed85838terminal0;allcalls exact/golden/native/source,4warm calls/model/worker and all first calls retained. Warm medians:
+
+Qwen3-1.7B:TTFT7.608499188→2.408092688s(-68.349965%);total8.969285166→3.954848834s(-55.906756%);deriveddecode25.563772828→22.194410632tok/s(-13.180223%).
+
+Qwen3.5-4B:TTFT20.796418854→7.358766583s(-64.615222%);total32.535690688→17.394161916s(-46.538212%);deriveddecode8.021240823→9.245196110tok/s(+15.258927%).
+
+Native Skill wall median40.131475396→21.343114751s(-46.817019%).
+
+REJECT:companion text decode violates the unchanged2%preservation gate.4Bimprovements and favorable memory/latency do not override it. No full confirmation,promotion or unchanged retry. These are fresh paired WS38results,not a division of WS38candidate timings by WS37timings. No causal speed claim from changes in OS compression or compiler/source load counts. posthoc-phase-audit.json retains separate first/setup-inclusive wall and allwarm GPU/wait/CPU encode medians. GPU/wait overlap;do not add. Packing time/transient peak not separately isolated.
+
+Scope and next
+Fixed video-derived frames through real WorldSense current-Skill→Galaxy→Garnet;no live decoding/scheduling,event commits,retrieval/ranking included. Three-frame/search full confirmation was not run after valid rejection. All28resource/speed model calls match validated complete token IDs/text,prompt/config/image/Skill identities and interpreted semantics. Original context/image/output budgets and bounded exact text-prefix policy fixed both sides;every VLMimage and answer inferred fresh. Deriveddecode=(generated-1)/(total-TTFT),including host/stop/post-loop work and possibly extraEOS,not pureGPU. OneM5MacBook24GiB/smallcorrelatedworkload,separate from original M4mini16GiB/sixprofile vLLM objective,which remains unmet.
+
+Native owner counters are not physical residency,encoded counters not completedGPUcounts. Source overlay reconstructs full frozen closure against recorded compatible postexperiment base. CPU selection/checkpoint identities are in committed WS36archive;WS37seed manifest reverified. AllnewGPUproofs/correctnesscode/final source/SDK identities/native FP32words/raw calls/CSVcoverage and failures retained. Broader historical documentation verifier still has an older source-hash assertion failure recorded in WS37;do not claim it passes from this archive.
+
+Validated WS10 library restored,four files online,no camera,benchmark404. Goal remains active. A read-only handover decoder review found earlier code consumes K-major vectors directly,uses32bit fixed-slot metadata and retains extra full copies with different64thread geometry. A possible next distinct load-only candidate can test directK-major reconstruction while keeping current variable primary format,geometry and FP32order. No direct reuse of extra masters,oldM4component timings or old favorable cohorts. New design must precede implementation and allfreshgates remain mandatory.

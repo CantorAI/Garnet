@@ -1,0 +1,32 @@
+{
+  "experiment": "WS-M5-38",
+  "status": "rejected_companion_decode_preservation",
+  "correctness_passed": true,
+  "resource_passed": true,
+  "speed_passed": false,
+  "full_confirmation_dispatched": false,
+  "promoted": false,
+  "resource_controller_exit": 0,
+  "speed_controller_exit": 0,
+  "returned_model_calls": 28,
+  "reason": "Companion text decode-13.1802% exceeds unchanged2%gate despite4Bdecode+15.2589% and favorable latency/memory. No unchanged retry or promotion.",
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.6834996457707327,
+      "total_change": -0.5590675555417413,
+      "decode_gain": -0.13180222725887236
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.6461522229058956,
+      "total_change": -0.4653821219576113,
+      "decode_gain": 0.1525892706745724
+    }
+  ],
+  "sampled_resource_reduction": {
+    "metal_allocated_bytes": 0.1262921916467945,
+    "task_physical_footprint_bytes": 0.15230383939668335
+  },
+  "production": "WS10fourfiles/noCam/404 restored"
+}

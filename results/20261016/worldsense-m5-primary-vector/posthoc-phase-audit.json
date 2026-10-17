@@ -1,0 +1,68 @@
+{
+  "observed_utc": "2026-10-17T12:04:47.862152+00:00",
+  "warm_decode_medians": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "prepare_ms": 31.461204,
+        "encode_ms": 152.98062949999996,
+        "gpu_ms": 10934.720541634306,
+        "wait_ms": 11284.4788305,
+        "decode_seconds": 11.593141145996924
+      },
+      "Qwen3-1.7B": {
+        "prepare_ms": 3.2508320000000004,
+        "encode_ms": 12.29175,
+        "gpu_ms": 1256.8253749705036,
+        "wait_ms": 1309.1543525,
+        "decode_seconds": 1.32933664599841
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "prepare_ms": 9.261668500000003,
+        "encode_ms": 107.441753,
+        "gpu_ms": 9838.12793756806,
+        "wait_ms": 9876.393106000001,
+        "decode_seconds": 10.058705582996481
+      },
+      "Qwen3-1.7B": {
+        "prepare_ms": 4.919999000000001,
+        "encode_ms": 17.111061500000005,
+        "gpu_ms": 1460.4048124674591,
+        "wait_ms": 1503.83848,
+        "decode_seconds": 1.5310685629956424
+      }
+    }
+  },
+  "first_request_separate": {
+    "control-1": {
+      "first_native_skill_wall_seconds": 68.40299933399365,
+      "http_wall_seconds": 235.046890624988,
+      "Qwen3.5-4B": {
+        "ttft_seconds": 28.561249292004504,
+        "total_seconds": 38.9238296669937,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 13.033941541987588,
+        "total_seconds": 14.412122708992683,
+        "generated_tokens": 35
+      }
+    },
+    "candidate-1": {
+      "first_native_skill_wall_seconds": 51.88828787500097,
+      "http_wall_seconds": 138.75703420799982,
+      "Qwen3.5-4B": {
+        "ttft_seconds": 10.579445582989138,
+        "total_seconds": 20.570758250003564,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 2.967049708997365,
+        "total_seconds": 4.4165015000035055,
+        "generated_tokens": 35
+      }
+    }
+  },
+  "interpretation": "GPU/wait spans dominate text decode, with CPU encode much smaller. Overlapping GPU/wait must not be added. This does not identify a particular kernel/ALU/bandwidth/occupancy cause. No filtering or gate change. First wall captures demand setup plus execution; native packing time/transient peak not isolated."
+}

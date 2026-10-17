@@ -1,0 +1,15 @@
+{
+  "changed_files_from_WS37": [
+    "test2026/metal/primary_storage_test.cpp",
+    "runtime/metal_serving.py",
+    "src/entry/metal_main.cpp",
+    "src/backends/metal/primary_block_shader.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/metal_context.h"
+  ],
+  "entire_Model_class_AST_unchanged": true,
+  "CUDA_codec_original_body_shader_unchanged": true,
+  "prefill_scalar_reader_kernels_identical": true,
+  "decode_inverse_load_substitution_exact": true,
+  "scope": "Static invariants only, not runtime correctness or speed."
+}
