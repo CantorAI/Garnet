@@ -1,0 +1,234 @@
+[
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 398,
+      "allocated_bytes": 9030598656,
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "metadata_bytes": 46260224,
+      "original_bytes": 11842617344,
+      "payload_bytes": 8979553536,
+      "prefill_encoded": 1400,
+      "uploads": 398,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "prefill_encoded": 1400,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "retired_bytes": 1152909312,
+    "planned_slots": 288,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 398,
+      "allocated_bytes": 9030598656,
+      "decode_encoded": 25660,
+      "head_encoded": 131,
+      "metadata_bytes": 46260224,
+      "original_bytes": 11842617344,
+      "payload_bytes": 8979553536,
+      "prefill_encoded": 3948,
+      "uploads": 398,
+      "vector_decode_encoded": 25660,
+      "vector_head_encoded": 131
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 6860,
+      "head_encoded": 36,
+      "prefill_encoded": 2548,
+      "vector_decode_encoded": 6860,
+      "vector_head_encoded": 36
+    },
+    "retired_bytes": 1883176960,
+    "planned_slots": 168,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 398,
+      "allocated_bytes": 9030598656,
+      "decode_encoded": 44460,
+      "head_encoded": 226,
+      "metadata_bytes": 46260224,
+      "original_bytes": 11842617344,
+      "payload_bytes": 8979553536,
+      "prefill_encoded": 5348,
+      "uploads": 398,
+      "vector_decode_encoded": 44460,
+      "vector_head_encoded": 226
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "prefill_encoded": 1400,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "retired_bytes": 1152909312,
+    "planned_slots": 288,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 398,
+      "allocated_bytes": 9030598656,
+      "decode_encoded": 51320,
+      "head_encoded": 262,
+      "metadata_bytes": 46260224,
+      "original_bytes": 11842617344,
+      "payload_bytes": 8979553536,
+      "prefill_encoded": 7112,
+      "uploads": 398,
+      "vector_decode_encoded": 51320,
+      "vector_head_encoded": 262
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 6860,
+      "head_encoded": 36,
+      "prefill_encoded": 1764,
+      "vector_decode_encoded": 6860,
+      "vector_head_encoded": 36
+    },
+    "retired_bytes": 1883176960,
+    "planned_slots": 168,
+    "rehydrated_bytes": 0
+  }
+]

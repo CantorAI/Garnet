@@ -1,0 +1,27 @@
+{
+  "experiment": "WS-M5-45",
+  "declared_utc": "2026-10-17T16:16:03.510673+00:00",
+  "design_sha256": "c8e0538ca28005db2e7b48f380fac3ce2a49136b7c514bd6dc06a997f750e503",
+  "seed_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "source_change": false,
+  "new_joint_flags": [
+    "GARNET_METAL_PRIMARY_BF16_BLOCKS",
+    "GARNET_METAL_LAZY_RESIDENT_DEFAULTS"
+  ],
+  "prior_valid_failure": "WS44 companion decode -14.02194886023307%",
+  "no_unchanged_retry": true,
+  "gates": {
+    "resource_calls": 8,
+    "Metal_reduction_min": 0.1,
+    "physical_snapshot_reduction_min": 0.05,
+    "raw_control_speed_calls": 20,
+    "actual_WS10_speed_calls": 20,
+    "maximum_model_TTFT_total_Skillwall_regression": 0.02,
+    "minimum_decode_gain": -0.02,
+    "full_confirmation_calls": 48,
+    "both_pairs_pass_independently": true,
+    "canonical_repeat_full_correctness": true,
+    "actual_production_calls": 48,
+    "normal_app_smoke_required": true
+  }
+}
