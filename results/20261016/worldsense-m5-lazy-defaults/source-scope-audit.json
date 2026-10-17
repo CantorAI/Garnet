@@ -1,0 +1,15 @@
+{
+  "seed": "/Users/shawn/CantorAI/out/research/worldsense-inventory/source",
+  "changes": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp"
+  ],
+  "cuda_sources_unchanged": true,
+  "scope": "Byte comparison with WS14 seed, excluding generated pycache"
+}

@@ -1,0 +1,2283 @@
+{
+  "loads": [
+    {
+      "ready": true,
+      "state": "ready",
+      "model_id": "Qwen3.5-4B"
+    },
+    {
+      "ready": true,
+      "state": "ready",
+      "model_id": "Qwen3-1.7B"
+    }
+  ],
+  "records": [
+    {
+      "model_id": "Qwen3.5-4B",
+      "call": {
+        "input_prompt_sha256": "f3d39e358ab7906129ad13e8c0459c4498ef29e62e53314ab0268181b81862cd",
+        "serving_configuration": {
+          "text_prefix_cache": false,
+          "capacity": 512,
+          "image_pixels": 65536,
+          "prefill_chunk": 64,
+          "requested_output_limit": 16,
+          "share_vision_weights": true
+        },
+        "image_preprocess_backend": "native-cpp",
+        "image_preprocess_seconds": 0.0016577089991187677,
+        "status": "ok",
+        "text": " A black-and-white image shows the front view of a white car with a license",
+        "model_id": "Qwen3.5-4B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_tokens": 16,
+        "timings": {
+          "initialization_memory": {
+            "before": {
+              "metal_allocated_bytes": 65536,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 24838144,
+              "task_physical_footprint_bytes": 25330240,
+              "task_resident_bytes": 44728320,
+              "task_virtual_bytes": 445953949696
+            },
+            "other_model_ids_at_start": [],
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 8781053952,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 8030175232,
+              "task_info_status": 0,
+              "task_internal_bytes": 700973056,
+              "task_physical_footprint_bytes": 8736856952,
+              "task_resident_bytes": 720371712,
+              "task_virtual_bytes": 460117278720
+            }
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 8781053952,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 8025702400,
+            "task_info_status": 0,
+            "task_internal_bytes": 705495040,
+            "task_physical_footprint_bytes": 8736906104,
+            "task_resident_bytes": 725041152,
+            "task_virtual_bytes": 460117278720
+          },
+          "reset_seconds": 0.006123624989413656,
+          "vision_seconds": 3.05643491599767,
+          "image_grid": [
+            22,
+            14
+          ],
+          "memory_after_input": {
+            "metal_allocated_bytes": 11185586176,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 9857089536,
+            "task_info_status": 0,
+            "task_internal_bytes": 305266688,
+            "task_physical_footprint_bytes": 11269595872,
+            "task_resident_bytes": 326909952,
+            "task_virtual_bytes": 462613561344
+          },
+          "prefix_cache_hit": false,
+          "prefix_cache_restored_tokens": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_restore_seconds": 0,
+          "prefix_cache_capture_seconds": 0,
+          "executed_prefill_tokens": 99,
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 12446498816,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 9949495296,
+            "task_info_status": 0,
+            "task_internal_bytes": 224018432,
+            "task_physical_footprint_bytes": 12287746952,
+            "task_resident_bytes": 245334016,
+            "task_virtual_bytes": 463880355840
+          },
+          "prefill_seconds": 1.5841659159923438,
+          "prefill_compile_ms": 67.729417,
+          "prefill_profile": {
+            "prepare_ms": 0.342041,
+            "encode_ms": 2.5837510000000004,
+            "gpu_ms": 1295.0803749845363,
+            "wait_ms": 1495.163832
+          },
+          "input_tokens": 99,
+          "prefill_chunk_plan": [
+            64,
+            64
+          ],
+          "host_input_seconds": 0.004090459013241343,
+          "decode_seconds": 1.2262344589980785,
+          "memory_after_decode": {
+            "metal_allocated_bytes": 12445843456,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 9951150080,
+            "task_info_status": 0,
+            "task_internal_bytes": 222396416,
+            "task_physical_footprint_bytes": 12355019680,
+            "task_resident_bytes": 243974144,
+            "task_virtual_bytes": 463879700480
+          },
+          "lazy_default_retired_bytes": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_planned_slots": 0,
+          "decode_profile": {
+            "prepare_ms": 3.461164,
+            "encode_ms": 25.570252999999997,
+            "gpu_ms": 1162.4055416905321,
+            "wait_ms": 1192.281375
+          },
+          "decode_fused_head_dispatches": 0,
+          "prefix_cache_native_bytes": 0,
+          "prefix_cache_native_entries": 0,
+          "prefix_restore_native_bytes": 0,
+          "prefix_capture_native_bytes": 0,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/source/runtime/metal_serving.py"
+        },
+        "generated_token_ids": [
+          357,
+          3565,
+          9485,
+          15392,
+          2099,
+          4774,
+          279,
+          3929,
+          1593,
+          314,
+          264,
+          4022,
+          1740,
+          440,
+          264,
+          5545
+        ],
+        "ttft_seconds": 4.652472624991788,
+        "total_seconds": 5.881585499999346
+      },
+      "states": [
+        [
+          {
+            "values": 32768,
+            "sha256": "bde111d76e78777143de950d25593150e0ffbe73b988bdb77124ebb31986913e"
+          },
+          {
+            "values": 524288,
+            "sha256": "ac6fe85eb29642cd73accfced018a066971ae30ae985b83a78a66fa86fea05cd"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "8de1dd60fe953e1ab57dcdfc5071e8acc8724ee488264f0783329e64fa658757"
+          },
+          {
+            "values": 524288,
+            "sha256": "9ca249b06d1e342ee9749a9982b2b7c2b51071444a6da88d371f61e7bd26a96d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "fbb70279dd0b16eb69e765bb9b320ff2f790d25e16828d71384f145656cb7c1a"
+          },
+          {
+            "values": 524288,
+            "sha256": "092c89de2621d8e6cfafef951c0a24deca1024d6406190046ae996a99a004562"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "f793120a9ac931d11fa98e91e57a067e8e7a29d4622a37e747674b99505b5ae1"
+          },
+          {
+            "values": 524288,
+            "sha256": "a48b55c912ca781307336b7d8e4959676c6dfae8dea07cfed3ac2fc7d170f29c"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "bcac9572a5bf0a10663a6ac76d6054052f668e46fb7d3e2244483e37f6dd3b03"
+          },
+          {
+            "values": 524288,
+            "sha256": "d94f6541be858c83c373676f03987964463f61f02c117843e0c51553546f961b"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "d732d0135535386c2db7d0c340ee3c6b3052efa0ce8082a55b1b7f80d6140892"
+          },
+          {
+            "values": 524288,
+            "sha256": "ac6d2af3a2f1962ea728b6066278d724ba43956cf4eff0817bfd6b29304a4080"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "a304c2825514848e8a82bf704c12af9e3f2564ce46f2a4ebcd4c0686a5a781b5"
+          },
+          {
+            "values": 524288,
+            "sha256": "41d9249643f8be97c4b60a63568c8b14e75b9675f65feb02b0f36b65e67133b5"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "60c1d54b5ce96754ee92bcfed929ccd02c4895498a0d0539ed679e8001c21db7"
+          },
+          {
+            "values": 524288,
+            "sha256": "fd5175d826d8cd5100cf51031f71c2cbe5091328f38490cb8f857cba7a5bfa6b"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "7983548e85ed3e0db2c1db1ed95ad1d3827784fcaf948e1b0067198a4650fc08"
+          },
+          {
+            "values": 524288,
+            "sha256": "817112dff2cdbab294d3883b658487568f833cdc4090389c596c4cd8ebacf06a"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "f4ed1f5f97570bba7049445f0ad44b34c4adf732ea3444d93b906d77f5c15058"
+          },
+          {
+            "values": 524288,
+            "sha256": "8d5df8fc86f89b6f310a498c12b95ed23f5c448d7a9968f5b4f2f5871bc3202d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "b1f562991798cee3a5cc2242386ac1748b43f42db4c16610532384ff48eb9697"
+          },
+          {
+            "values": 524288,
+            "sha256": "5b698cafdeca8e3991e4342c6dcbc56946967f4cb0f88c16c828f0f99f78f03f"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "5a55570e454aad8bfc1e3a2b58472aff916998b0a4157642f4af33d5825529b3"
+          },
+          {
+            "values": 524288,
+            "sha256": "cd825252e0465ceaf2973397a99e97446d8dd0dfa68b14684ca6d90145895f10"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "f96edc5a33fc265332331f9f54e32514a87f3a912988d6ce168c858ef2adbfa6"
+          },
+          {
+            "values": 524288,
+            "sha256": "89e9e14ae96b400962203ff3b506a25ff27478c92d90223d2b9e28855944a34d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "d8d4f418e5144665ca860fa9beca51a6b34508d5afdd3de0f3473ab085f9e169"
+          },
+          {
+            "values": 524288,
+            "sha256": "f36585fc46604ea25713523badea34e42a1fca29686124869f7d500ebcbfc5ee"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "682353096e4de82fb9357ed3abe65db4d1001cfd7d541f0a2d92348da3b5b4ff"
+          },
+          {
+            "values": 524288,
+            "sha256": "95b5393d627845be62922a36d011207ca984ad96e18770bade616ea389d39cd9"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "8a93e59041e1f1dda1af0fa28bc0266d7eb160482ce9b94e884223b0ab7f752c"
+          },
+          {
+            "values": 524288,
+            "sha256": "3554d395678c5b759e0837c7dd61dee257a3cbbb39aa09fe61cd5ce2cf087fc5"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "33adf634ec73ab8e16a583a62f4563a57ad7a598112c95990292f7ac911de4c0"
+          },
+          {
+            "values": 524288,
+            "sha256": "b04dec1e14b0ab4c3b78dbbaf102d152e0f922689b0828143b9ee20d4e32db1f"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "b7e154c89f56c9072fdfce8e2bc2581fcc0bd1e3b0497a3f909d141315f456e0"
+          },
+          {
+            "values": 524288,
+            "sha256": "648eb11f82a09f7d88ba4b3259bd7ec2e6be5a8fb0923e71d9712203dce05596"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "bfe58193cf06ce910ac564a9a250da8502ff14e58087bbcac8da2584178b3e5e"
+          },
+          {
+            "values": 524288,
+            "sha256": "6fbdef0ce85e0f13f6473e5965a496c858c2baacc76e086019099b50a8c3999f"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "af0c92cfd37afd725de0ff981f8845f6fc92e4ad534e96396b5574a6beca96b5"
+          },
+          {
+            "values": 524288,
+            "sha256": "84bb058f49e93f5cdbf588a43b81df5f4a69bdcb9d4208997b4bc4daba5f539f"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "aff73d62f14d6a0587821997a0bd390f2cb5f358844c2696bd1ea8c8367365f4"
+          },
+          {
+            "values": 524288,
+            "sha256": "aa6da5d49b0c705c537817ca04f149375cf4de067e9a8abb59d33c628dba5c2b"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "fca69b7c6d4d267a90c1a75fd80e52871d4bfa92340807ccdcbd110de7eb78c2"
+          },
+          {
+            "values": 524288,
+            "sha256": "003e801e2b5794782880042566b56f9f3dc47e65fb3f99eecac3d5e94b10643d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "37d676c862cc51ff905e335deba9c86d0a8ce3bb58c691c6974c51a9dc9c1875"
+          },
+          {
+            "values": 524288,
+            "sha256": "86460d4e18c329329d53999ce240e6fc2e13e6567b02f6d51c45219de95f6896"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "afad842d25608e346ad8258719a1d0471f046278368b2152c80b159dbfc598c4"
+          },
+          {
+            "values": 524288,
+            "sha256": "d70c3cc6b97773072f33419c5325c48d81807d6cf7610872e0c042148910eba2"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "71ebd112f3d8033b98ebc875d9d0a7d0408fde54b44d793e82a5a65b0099c034"
+          },
+          {
+            "values": 524288,
+            "sha256": "8c2c493cfdc7b2df929a1fdf2b04c882207b6efe8be2480968394bf3110d2813"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "a610f3ae3b74ce5412ea0bf3f2052cba28335f88dc6676607c9f0c4b9ef08fc8"
+          },
+          {
+            "values": 524288,
+            "sha256": "dcf4b5dd1cc2c66eed7f44f26ff591f638a8ded5d9dc2afbe50e3084c7cef4ef"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "f944baa983396914cc8d7ed38ee38fa7e47af66c37160f7bd38bd9f32386f15b"
+          },
+          {
+            "values": 524288,
+            "sha256": "d0193c454ac5bc2872e92cad68793c7cca5700647060ca2fe59503d678ed3e7e"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "a8bfe0f15cf9ed7fa5f79a5a2cc35490996570ca0449673044997c3a5bdb60bd"
+          },
+          {
+            "values": 524288,
+            "sha256": "de0267cb49d9fc54b944eb1fbe9b53d994cb5bac18360cc4b05b9b7eee70a79c"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "c311e4e1087bdbeacc92adcc0ddf76b645d0730422c38df002ee57ba0738bd6d"
+          },
+          {
+            "values": 524288,
+            "sha256": "08d535ec00e7b0b870393d46746a281921397be8e3255a3052da7064005af578"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "5d1ebe88215302eccf2935704108a020ae8da7b2935273f5206a3b8e880472ef"
+          },
+          {
+            "values": 524288,
+            "sha256": "9f43eb3e77c313159fa67a3820a12c7d24ddcbef91cd3c0bcac4e3deb3217657"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "2b34e03692d73a71bc38e975946cf857eb61935cdf63afb195df02147a7867be"
+          },
+          {
+            "values": 524288,
+            "sha256": "8c16657f84f062fb83d8ecbb540b9ae87836b8f89ecacf179fc87f990214e0b7"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "dd6d4abac683b5c614e850d8ee5d4b9996048ff70e633cc73ead3900f06bf634"
+          },
+          {
+            "values": 524288,
+            "sha256": "61c5a9ceaaa28b4f87204967fd7675e8a0a3bb265b1c1d4da60ea03ce69c90d4"
+          }
+        ]
+      ]
+    },
+    {
+      "model_id": "Qwen3.5-4B",
+      "call": {
+        "input_prompt_sha256": "f3d39e358ab7906129ad13e8c0459c4498ef29e62e53314ab0268181b81862cd",
+        "serving_configuration": {
+          "text_prefix_cache": false,
+          "capacity": 512,
+          "image_pixels": 65536,
+          "prefill_chunk": 64,
+          "requested_output_limit": 16,
+          "share_vision_weights": true
+        },
+        "image_preprocess_backend": "native-cpp",
+        "image_preprocess_seconds": 0.0014063749986235052,
+        "status": "ok",
+        "text": " A black-and-white image shows the front view of a white car with a license",
+        "model_id": "Qwen3.5-4B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_tokens": 16,
+        "timings": {
+          "initialization_memory": {
+            "before": {
+              "metal_allocated_bytes": 65536,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 24838144,
+              "task_physical_footprint_bytes": 25330240,
+              "task_resident_bytes": 44728320,
+              "task_virtual_bytes": 445953949696
+            },
+            "other_model_ids_at_start": [],
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 8781053952,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 8030175232,
+              "task_info_status": 0,
+              "task_internal_bytes": 700973056,
+              "task_physical_footprint_bytes": 8736856952,
+              "task_resident_bytes": 720371712,
+              "task_virtual_bytes": 460117278720
+            }
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 12445843456,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 10033250304,
+            "task_info_status": 0,
+            "task_internal_bytes": 256294912,
+            "task_physical_footprint_bytes": 12385199080,
+            "task_resident_bytes": 278085632,
+            "task_virtual_bytes": 463888089088
+          },
+          "reset_seconds": 0.0030601659964304417,
+          "vision_seconds": 0.4104777920001652,
+          "image_grid": [
+            22,
+            14
+          ],
+          "memory_after_input": {
+            "metal_allocated_bytes": 12445843456,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 10041851904,
+            "task_info_status": 0,
+            "task_internal_bytes": 247676928,
+            "task_physical_footprint_bytes": 12417246184,
+            "task_resident_bytes": 269467648,
+            "task_virtual_bytes": 463887515648
+          },
+          "prefix_cache_hit": false,
+          "prefix_cache_restored_tokens": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_restore_seconds": 0,
+          "prefix_cache_capture_seconds": 0,
+          "executed_prefill_tokens": 99,
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 12446498816,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 10094116864,
+            "task_info_status": 0,
+            "task_internal_bytes": 195428352,
+            "task_physical_footprint_bytes": 12418229224,
+            "task_resident_bytes": 217202688,
+            "task_virtual_bytes": 463888171008
+          },
+          "prefill_seconds": 0.7838144160050433,
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "prepare_ms": 0.417125,
+            "encode_ms": 1.088667,
+            "gpu_ms": 655.3102500038221,
+            "wait_ms": 780.746125
+          },
+          "input_tokens": 99,
+          "prefill_chunk_plan": [
+            64,
+            64
+          ],
+          "host_input_seconds": 0.0005135419924044982,
+          "decode_seconds": 1.1500689999957103,
+          "memory_after_decode": {
+            "metal_allocated_bytes": 12445843456,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 10093969408,
+            "task_info_status": 0,
+            "task_internal_bytes": 195592192,
+            "task_physical_footprint_bytes": 12417557480,
+            "task_resident_bytes": 217366528,
+            "task_virtual_bytes": 463887515648
+          },
+          "lazy_default_retired_bytes": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_planned_slots": 0,
+          "decode_profile": {
+            "prepare_ms": 1.0345399999999998,
+            "encode_ms": 6.372669000000001,
+            "gpu_ms": 1135.6697083538165,
+            "wait_ms": 1140.855667
+          },
+          "decode_fused_head_dispatches": 0,
+          "prefix_cache_native_bytes": 0,
+          "prefix_cache_native_entries": 0,
+          "prefix_restore_native_bytes": 0,
+          "prefix_capture_native_bytes": 0,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/source/runtime/metal_serving.py"
+        },
+        "generated_token_ids": [
+          357,
+          3565,
+          9485,
+          15392,
+          2099,
+          4774,
+          279,
+          3929,
+          1593,
+          314,
+          264,
+          4022,
+          1740,
+          440,
+          264,
+          5545
+        ],
+        "ttft_seconds": 1.199272290992667,
+        "total_seconds": 2.3497746659995755
+      },
+      "states": [
+        [
+          {
+            "values": 32768,
+            "sha256": "bde111d76e78777143de950d25593150e0ffbe73b988bdb77124ebb31986913e"
+          },
+          {
+            "values": 524288,
+            "sha256": "ac6fe85eb29642cd73accfced018a066971ae30ae985b83a78a66fa86fea05cd"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "8de1dd60fe953e1ab57dcdfc5071e8acc8724ee488264f0783329e64fa658757"
+          },
+          {
+            "values": 524288,
+            "sha256": "9ca249b06d1e342ee9749a9982b2b7c2b51071444a6da88d371f61e7bd26a96d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "fbb70279dd0b16eb69e765bb9b320ff2f790d25e16828d71384f145656cb7c1a"
+          },
+          {
+            "values": 524288,
+            "sha256": "092c89de2621d8e6cfafef951c0a24deca1024d6406190046ae996a99a004562"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "f793120a9ac931d11fa98e91e57a067e8e7a29d4622a37e747674b99505b5ae1"
+          },
+          {
+            "values": 524288,
+            "sha256": "a48b55c912ca781307336b7d8e4959676c6dfae8dea07cfed3ac2fc7d170f29c"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "bcac9572a5bf0a10663a6ac76d6054052f668e46fb7d3e2244483e37f6dd3b03"
+          },
+          {
+            "values": 524288,
+            "sha256": "d94f6541be858c83c373676f03987964463f61f02c117843e0c51553546f961b"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "d732d0135535386c2db7d0c340ee3c6b3052efa0ce8082a55b1b7f80d6140892"
+          },
+          {
+            "values": 524288,
+            "sha256": "ac6d2af3a2f1962ea728b6066278d724ba43956cf4eff0817bfd6b29304a4080"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "a304c2825514848e8a82bf704c12af9e3f2564ce46f2a4ebcd4c0686a5a781b5"
+          },
+          {
+            "values": 524288,
+            "sha256": "41d9249643f8be97c4b60a63568c8b14e75b9675f65feb02b0f36b65e67133b5"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "60c1d54b5ce96754ee92bcfed929ccd02c4895498a0d0539ed679e8001c21db7"
+          },
+          {
+            "values": 524288,
+            "sha256": "fd5175d826d8cd5100cf51031f71c2cbe5091328f38490cb8f857cba7a5bfa6b"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "7983548e85ed3e0db2c1db1ed95ad1d3827784fcaf948e1b0067198a4650fc08"
+          },
+          {
+            "values": 524288,
+            "sha256": "817112dff2cdbab294d3883b658487568f833cdc4090389c596c4cd8ebacf06a"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "f4ed1f5f97570bba7049445f0ad44b34c4adf732ea3444d93b906d77f5c15058"
+          },
+          {
+            "values": 524288,
+            "sha256": "8d5df8fc86f89b6f310a498c12b95ed23f5c448d7a9968f5b4f2f5871bc3202d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "b1f562991798cee3a5cc2242386ac1748b43f42db4c16610532384ff48eb9697"
+          },
+          {
+            "values": 524288,
+            "sha256": "5b698cafdeca8e3991e4342c6dcbc56946967f4cb0f88c16c828f0f99f78f03f"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "5a55570e454aad8bfc1e3a2b58472aff916998b0a4157642f4af33d5825529b3"
+          },
+          {
+            "values": 524288,
+            "sha256": "cd825252e0465ceaf2973397a99e97446d8dd0dfa68b14684ca6d90145895f10"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "f96edc5a33fc265332331f9f54e32514a87f3a912988d6ce168c858ef2adbfa6"
+          },
+          {
+            "values": 524288,
+            "sha256": "89e9e14ae96b400962203ff3b506a25ff27478c92d90223d2b9e28855944a34d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "d8d4f418e5144665ca860fa9beca51a6b34508d5afdd3de0f3473ab085f9e169"
+          },
+          {
+            "values": 524288,
+            "sha256": "f36585fc46604ea25713523badea34e42a1fca29686124869f7d500ebcbfc5ee"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "682353096e4de82fb9357ed3abe65db4d1001cfd7d541f0a2d92348da3b5b4ff"
+          },
+          {
+            "values": 524288,
+            "sha256": "95b5393d627845be62922a36d011207ca984ad96e18770bade616ea389d39cd9"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "8a93e59041e1f1dda1af0fa28bc0266d7eb160482ce9b94e884223b0ab7f752c"
+          },
+          {
+            "values": 524288,
+            "sha256": "3554d395678c5b759e0837c7dd61dee257a3cbbb39aa09fe61cd5ce2cf087fc5"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "33adf634ec73ab8e16a583a62f4563a57ad7a598112c95990292f7ac911de4c0"
+          },
+          {
+            "values": 524288,
+            "sha256": "b04dec1e14b0ab4c3b78dbbaf102d152e0f922689b0828143b9ee20d4e32db1f"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "b7e154c89f56c9072fdfce8e2bc2581fcc0bd1e3b0497a3f909d141315f456e0"
+          },
+          {
+            "values": 524288,
+            "sha256": "648eb11f82a09f7d88ba4b3259bd7ec2e6be5a8fb0923e71d9712203dce05596"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "bfe58193cf06ce910ac564a9a250da8502ff14e58087bbcac8da2584178b3e5e"
+          },
+          {
+            "values": 524288,
+            "sha256": "6fbdef0ce85e0f13f6473e5965a496c858c2baacc76e086019099b50a8c3999f"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "af0c92cfd37afd725de0ff981f8845f6fc92e4ad534e96396b5574a6beca96b5"
+          },
+          {
+            "values": 524288,
+            "sha256": "84bb058f49e93f5cdbf588a43b81df5f4a69bdcb9d4208997b4bc4daba5f539f"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "aff73d62f14d6a0587821997a0bd390f2cb5f358844c2696bd1ea8c8367365f4"
+          },
+          {
+            "values": 524288,
+            "sha256": "aa6da5d49b0c705c537817ca04f149375cf4de067e9a8abb59d33c628dba5c2b"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "fca69b7c6d4d267a90c1a75fd80e52871d4bfa92340807ccdcbd110de7eb78c2"
+          },
+          {
+            "values": 524288,
+            "sha256": "003e801e2b5794782880042566b56f9f3dc47e65fb3f99eecac3d5e94b10643d"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "37d676c862cc51ff905e335deba9c86d0a8ce3bb58c691c6974c51a9dc9c1875"
+          },
+          {
+            "values": 524288,
+            "sha256": "86460d4e18c329329d53999ce240e6fc2e13e6567b02f6d51c45219de95f6896"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "afad842d25608e346ad8258719a1d0471f046278368b2152c80b159dbfc598c4"
+          },
+          {
+            "values": 524288,
+            "sha256": "d70c3cc6b97773072f33419c5325c48d81807d6cf7610872e0c042148910eba2"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "71ebd112f3d8033b98ebc875d9d0a7d0408fde54b44d793e82a5a65b0099c034"
+          },
+          {
+            "values": 524288,
+            "sha256": "8c2c493cfdc7b2df929a1fdf2b04c882207b6efe8be2480968394bf3110d2813"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "a610f3ae3b74ce5412ea0bf3f2052cba28335f88dc6676607c9f0c4b9ef08fc8"
+          },
+          {
+            "values": 524288,
+            "sha256": "dcf4b5dd1cc2c66eed7f44f26ff591f638a8ded5d9dc2afbe50e3084c7cef4ef"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "f944baa983396914cc8d7ed38ee38fa7e47af66c37160f7bd38bd9f32386f15b"
+          },
+          {
+            "values": 524288,
+            "sha256": "d0193c454ac5bc2872e92cad68793c7cca5700647060ca2fe59503d678ed3e7e"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "a8bfe0f15cf9ed7fa5f79a5a2cc35490996570ca0449673044997c3a5bdb60bd"
+          },
+          {
+            "values": 524288,
+            "sha256": "de0267cb49d9fc54b944eb1fbe9b53d994cb5bac18360cc4b05b9b7eee70a79c"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "c311e4e1087bdbeacc92adcc0ddf76b645d0730422c38df002ee57ba0738bd6d"
+          },
+          {
+            "values": 524288,
+            "sha256": "08d535ec00e7b0b870393d46746a281921397be8e3255a3052da7064005af578"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "5d1ebe88215302eccf2935704108a020ae8da7b2935273f5206a3b8e880472ef"
+          },
+          {
+            "values": 524288,
+            "sha256": "9f43eb3e77c313159fa67a3820a12c7d24ddcbef91cd3c0bcac4e3deb3217657"
+          }
+        ],
+        [
+          {
+            "values": 32768,
+            "sha256": "2b34e03692d73a71bc38e975946cf857eb61935cdf63afb195df02147a7867be"
+          },
+          {
+            "values": 524288,
+            "sha256": "8c16657f84f062fb83d8ecbb540b9ae87836b8f89ecacf179fc87f990214e0b7"
+          }
+        ],
+        [
+          {
+            "values": 524288,
+            "sha256": "dd6d4abac683b5c614e850d8ee5d4b9996048ff70e633cc73ead3900f06bf634"
+          },
+          {
+            "values": 524288,
+            "sha256": "61c5a9ceaaa28b4f87204967fd7675e8a0a3bb265b1c1d4da60ea03ce69c90d4"
+          }
+        ]
+      ]
+    },
+    {
+      "model_id": "Qwen3-1.7B",
+      "call": {
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "serving_configuration": {
+          "text_prefix_cache": true,
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false
+        },
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "model_id": "Qwen3-1.7B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_tokens": 8,
+        "timings": {
+          "initialization_memory": {
+            "before": {
+              "metal_allocated_bytes": 1485815808,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 1626243072,
+              "task_info_status": 0,
+              "task_internal_bytes": 253362176,
+              "task_physical_footprint_bytes": 1885064864,
+              "task_resident_bytes": 274546688,
+              "task_virtual_bytes": 447595986944
+            },
+            "other_model_ids_at_start": [],
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 5166153728,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 1398767616,
+              "task_info_status": 0,
+              "task_internal_bytes": 3799154688,
+              "task_physical_footprint_bytes": 5203646512,
+              "task_resident_bytes": 3889905664,
+              "task_virtual_bytes": 454615269376
+            }
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 5166153728,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1356513280,
+            "task_info_status": 0,
+            "task_internal_bytes": 3841622016,
+            "task_physical_footprint_bytes": 5203859504,
+            "task_resident_bytes": 3932372992,
+            "task_virtual_bytes": 454615269376
+          },
+          "reset_seconds": 0.0035431249998509884,
+          "memory_after_input": {
+            "metal_allocated_bytes": 5166153728,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1356513280,
+            "task_info_status": 0,
+            "task_internal_bytes": 3842736128,
+            "task_physical_footprint_bytes": 5205170512,
+            "task_resident_bytes": 3934732288,
+            "task_virtual_bytes": 454615269376
+          },
+          "prefix_cache_hit": false,
+          "prefix_cache_restored_tokens": 0,
+          "prefix_cache_captured_tokens": 64,
+          "prefix_cache_restore_seconds": 0,
+          "prefix_cache_capture_seconds": 0.0019460839976090938,
+          "executed_prefill_tokens": 137,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1356365824,
+            "task_info_status": 0,
+            "task_internal_bytes": 3845685248,
+            "task_physical_footprint_bytes": 5459335528,
+            "task_resident_bytes": 3937681408,
+            "task_virtual_bytes": 454992789504
+          },
+          "prefill_seconds": 0.6473281249927823,
+          "prefill_compile_ms": 25.377290999999996,
+          "prefill_profile": {
+            "prepare_ms": 1.4484180000000002,
+            "encode_ms": 8.228333,
+            "gpu_ms": 580.3943333303323,
+            "wait_ms": 600.689582
+          },
+          "input_tokens": 137,
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "host_input_seconds": 0.0011105830053566024,
+          "decode_seconds": 0.26098433299921453,
+          "memory_after_decode": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1356365824,
+            "task_info_status": 0,
+            "task_internal_bytes": 3845718016,
+            "task_physical_footprint_bytes": 5462563176,
+            "task_resident_bytes": 3937845248,
+            "task_virtual_bytes": 454992789504
+          },
+          "lazy_default_retired_bytes": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_planned_slots": 0,
+          "decode_profile": {
+            "prepare_ms": 2.6473750000000003,
+            "encode_ms": 10.473625,
+            "gpu_ms": 241.8642916745739,
+            "wait_ms": 245.533874
+          },
+          "decode_fused_head_dispatches": 0,
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_restore_native_bytes": 0,
+          "prefix_capture_native_bytes": 14680064,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/source/runtime/metal_serving.py"
+        },
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "ttft_seconds": 0.6519818329979898,
+        "total_seconds": 0.9150518329988699
+      },
+      "states": [
+        [
+          {
+            "values": 262144,
+            "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+          },
+          {
+            "values": 262144,
+            "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+          },
+          {
+            "values": 262144,
+            "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+          },
+          {
+            "values": 262144,
+            "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+          },
+          {
+            "values": 262144,
+            "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+          },
+          {
+            "values": 262144,
+            "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+          },
+          {
+            "values": 262144,
+            "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+          },
+          {
+            "values": 262144,
+            "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+          },
+          {
+            "values": 262144,
+            "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+          },
+          {
+            "values": 262144,
+            "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+          },
+          {
+            "values": 262144,
+            "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+          },
+          {
+            "values": 262144,
+            "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+          },
+          {
+            "values": 262144,
+            "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+          },
+          {
+            "values": 262144,
+            "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+          },
+          {
+            "values": 262144,
+            "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+          },
+          {
+            "values": 262144,
+            "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+          },
+          {
+            "values": 262144,
+            "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+          },
+          {
+            "values": 262144,
+            "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+          },
+          {
+            "values": 262144,
+            "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+          },
+          {
+            "values": 262144,
+            "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+          },
+          {
+            "values": 262144,
+            "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+          },
+          {
+            "values": 262144,
+            "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+          },
+          {
+            "values": 262144,
+            "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+          },
+          {
+            "values": 262144,
+            "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+          },
+          {
+            "values": 262144,
+            "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+          },
+          {
+            "values": 262144,
+            "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+          },
+          {
+            "values": 262144,
+            "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+          },
+          {
+            "values": 262144,
+            "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+          },
+          {
+            "values": 262144,
+            "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+          }
+        ]
+      ]
+    },
+    {
+      "model_id": "Qwen3-1.7B",
+      "call": {
+        "input_prompt_sha256": "5cb8c1b7b68f3d80515beeb1a3a5804b3a7bc6ada09de494febb88ab76174a67",
+        "serving_configuration": {
+          "text_prefix_cache": true,
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false
+        },
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "status": "ok",
+        "text": "{\"matched\": false, \"reason\":",
+        "model_id": "Qwen3-1.7B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_tokens": 8,
+        "timings": {
+          "initialization_memory": {
+            "before": {
+              "metal_allocated_bytes": 1485815808,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 1626243072,
+              "task_info_status": 0,
+              "task_internal_bytes": 253362176,
+              "task_physical_footprint_bytes": 1885064864,
+              "task_resident_bytes": 274546688,
+              "task_virtual_bytes": 447595986944
+            },
+            "other_model_ids_at_start": [],
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 5166153728,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 1398767616,
+              "task_info_status": 0,
+              "task_internal_bytes": 3799154688,
+              "task_physical_footprint_bytes": 5203646512,
+              "task_resident_bytes": 3889905664,
+              "task_virtual_bytes": 454615269376
+            }
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913203712,
+            "task_physical_footprint_bytes": 5437725272,
+            "task_resident_bytes": 4005363712,
+            "task_virtual_bytes": 454996983808
+          },
+          "reset_seconds": 0.0054937920067459345,
+          "memory_after_input": {
+            "metal_allocated_bytes": 5542330368,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913220096,
+            "task_physical_footprint_bytes": 5437610584,
+            "task_resident_bytes": 4005478400,
+            "task_virtual_bytes": 454996852736
+          },
+          "prefix_cache_hit": true,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_restore_seconds": 0.00036125000042375177,
+          "prefix_cache_capture_seconds": 0,
+          "executed_prefill_tokens": 71,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913236480,
+            "task_physical_footprint_bytes": 5469919832,
+            "task_resident_bytes": 4005494784,
+            "task_virtual_bytes": 454996983808
+          },
+          "prefill_seconds": 0.3686663339904044,
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "prepare_ms": 0.547041,
+            "encode_ms": 2.242291,
+            "gpu_ms": 330.2340833324706,
+            "wait_ms": 358.927709
+          },
+          "input_tokens": 135,
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "host_input_seconds": 0.0007972909952513874,
+          "decode_seconds": 0.23631466600636486,
+          "memory_after_decode": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913236480,
+            "task_physical_footprint_bytes": 5469919832,
+            "task_resident_bytes": 4005527552,
+            "task_virtual_bytes": 454996983808
+          },
+          "lazy_default_retired_bytes": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_planned_slots": 0,
+          "decode_profile": {
+            "prepare_ms": 0.69725,
+            "encode_ms": 2.277876,
+            "gpu_ms": 230.6594999972731,
+            "wait_ms": 232.573125
+          },
+          "decode_fused_head_dispatches": 0,
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_restore_native_bytes": 14680064,
+          "prefix_capture_native_bytes": 0,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/source/runtime/metal_serving.py"
+        },
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          895,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "ttft_seconds": 0.3749574169924017,
+        "total_seconds": 0.6117058749950957
+      },
+      "states": [
+        [
+          {
+            "values": 262144,
+            "sha256": "a9e60a71cb5edeb925c58789bee7ee0c9d1dbcbe42129d1b38759cedbaf404e4"
+          },
+          {
+            "values": 262144,
+            "sha256": "9e7c20b33dcbd76bca0e8e0e8cb559204419d104818f20b9d09699c6e0f197a6"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "b41ff1c20b498d3a98be4fc31cec69971d07e81c75a4b4add7704c7e5c978c7f"
+          },
+          {
+            "values": 262144,
+            "sha256": "96b1f920a094debe6d072142a12efc8e4c652d047676f874a5e9e426394c2215"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "59f1e894b61d97108b18e793552ad996e13d3dc1bae6137013640b1fb5222048"
+          },
+          {
+            "values": 262144,
+            "sha256": "e61b426dd8fc6034363c4e9485bd4db0a01e548735e7bb2d1866085423c97998"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "e79baa86fb225ac3efc8ec68f575935c6a42cc9691ce1b967c563ca9376ead50"
+          },
+          {
+            "values": 262144,
+            "sha256": "8bb70b0b95d6a3068b3bc22242d9586f5050b8e484667e1033e8bc55aa7aa00e"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8b20dd32f89b3cb9bad799b1fd11b1cfceeb15cd71b8d8e7dd43d53efe52af22"
+          },
+          {
+            "values": 262144,
+            "sha256": "5bdb56cfd2690c51cef36e80647257d0dc464171d4b6b7bfb660c45712c5ef86"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8beb233d286fd8aed6f2e0003f594410366d3632eab6c9ac31a1181b437106bf"
+          },
+          {
+            "values": 262144,
+            "sha256": "d973386c2200e6608f723ea3e76044765bd221f28252819bcd5a9d9a3894f77b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "6137ce0767766fac71ec06af189b0420b97f3cb2f6e4c68ba0456f86d3f66ef5"
+          },
+          {
+            "values": 262144,
+            "sha256": "0cf3957e4b7fbd33ab3d6abe92dcd1a61606e3950929aa92e81d0e1a10fa3309"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "673c2be83db30ac215ba453ea503db6eaee4dd191ae64cc04dd26da4970d5944"
+          },
+          {
+            "values": 262144,
+            "sha256": "30afa01c5e7289491d12937f86ab4a0a9e6d92e9ed78d9a96215e859c87cc9be"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "db2943c659e650fbd731d4fe3b16ef2ddb95e60644b47e2ba64c1aa088d9db9a"
+          },
+          {
+            "values": 262144,
+            "sha256": "7a6b7ff7170be3644ff832e4c566c7e314addfdaad28d1d602e80abd8c348d35"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "9be41a702028e88f232561da939813195a283214cadb4e50c784b2ebe193248f"
+          },
+          {
+            "values": 262144,
+            "sha256": "385a66e9ce19bbd1fb03d3b616fa47c04a872dbbc5cecd4b0608f4ab63dc924b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "643f83502ae81462d0b74da938509f66fa708d58b4ac9376dd0e873860dd3640"
+          },
+          {
+            "values": 262144,
+            "sha256": "9da95d5f009dfd4842d4da1148ff808ed4a87fc84e9f309332c11b375e8ad4f9"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "ef72809488512e2e1c8373c15d48956740399bc86e4751426b3090f093ec117e"
+          },
+          {
+            "values": 262144,
+            "sha256": "bc7fb859f88bc00fb59280893f3fc84ef297fb8c4a634d3f19fb3b8c8f393ab1"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "d22eb101a67d21215f0ab7c172f348e0b37a301be1c2ad5fa08778e29236705e"
+          },
+          {
+            "values": 262144,
+            "sha256": "1e604785c18d65ff7327af27ae576ca50d51fd1ddb60a22f632b5c794dec76e2"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "4d198c7f91b9dfeb227c48825f2434f4a71f8449a8e1c05bbbd897d8b1753943"
+          },
+          {
+            "values": 262144,
+            "sha256": "b3e081ba34241b36cc8e80417c8aa8daa6e30817703a98c4820d3dc2eaf465a9"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "c7bef8062b6fac75b941ff7565fcb1d886e7f3663e7637230a317adf44eaa94a"
+          },
+          {
+            "values": 262144,
+            "sha256": "4e8f0423c05399a2d310adc2a8c19b77701d09be3bc3058e730f69ec87d028d7"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "814fd9e7b74daa9d0b5382485273d180e7b05b4abaee42fc20e7e16e979495da"
+          },
+          {
+            "values": 262144,
+            "sha256": "c9caa3fed28850e1ac335a3184986a280ac9092ff3ffdb7a4701a1fb62d784c5"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8b14a6ce32efa55beb3cf9273e963344c6276186fa62f2f21678d022522d4f69"
+          },
+          {
+            "values": 262144,
+            "sha256": "f672eb2b69378e43ac1c44f8784748b079dd86f4b4660e0aceec8f1a85bc5dbc"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "ec91d16cc8e251dfc7dfc64fe3dab0bcffc43516fb780187c5187f87edd6ccaf"
+          },
+          {
+            "values": 262144,
+            "sha256": "45ce79994050dcd5f3ada4d9f2dc42599f421f3648706f6bfa87afa845846ef6"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "e30c687c9327421783844f485c522c8bc63fabed82c5a1eac7052ba29487007b"
+          },
+          {
+            "values": 262144,
+            "sha256": "41fa9e0d295cd5a8844d5848e8c682accaea9c155a34518646cc8e7f49494593"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "62ae961ca5b7274209cf6d3136af435af6fb56deefa34e651432de1b3a533d4b"
+          },
+          {
+            "values": 262144,
+            "sha256": "959d170543e75da5bb2aca70aa71de9737609fe67334b2a0a4448517b88dfac0"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "f523a9d54b8c9529dedcb12ad1cb8459ad450627f2a5603f2414f62e2109ab1d"
+          },
+          {
+            "values": 262144,
+            "sha256": "0e7e452fb70b7451118f788ea24d50f5fc8210110e61530c98b98a281f641f19"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "6af81295f525de22c305b47b160b6231d88e4cd8cef3f9bf9cc4b74fc843d2a1"
+          },
+          {
+            "values": 262144,
+            "sha256": "15498ee1e6c4cc0a07f950c1a862e22ab137b790d7f1d9adbf39242b315b0f8a"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "be33a12b975ebdbf635372db9eed197be22597ad6b8f164dd8b4ac8691adebb8"
+          },
+          {
+            "values": 262144,
+            "sha256": "53563699c40aa4bf353e0d442ca240b61bb0339f93c081cf99ecfd6161a627b1"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "9f0a0e0e70af63066deb79b91843abd073ef8e2579efa9e80f8eb4cab7b701cb"
+          },
+          {
+            "values": 262144,
+            "sha256": "641aee9a03b4a129bc98c9fc1c1606f37f69ee86b6c37b4263a90dcecdc471fc"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "3f4991abec875a25b8ab90064243911597694b9da487264083f606f9d41aad62"
+          },
+          {
+            "values": 262144,
+            "sha256": "2b5577f7f51322c007939178e251922294fdc85b303573d9673dad8bdd609bb1"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "ce61f0303d985ecaacdca075003796cc5f89efa7a9298ed41d509a4d0c0174ff"
+          },
+          {
+            "values": 262144,
+            "sha256": "05ddcb790f46dd25986dc700300f4715504d64bfeaf64de130043221b48e7a1a"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "71f8cd5199a02d79397113d9552b616b1f050767debd431f5878f76537a351a6"
+          },
+          {
+            "values": 262144,
+            "sha256": "08459e54e7ac787c21334a6c0718fcde3be8393259be192e21fa3dbde994ce5b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "07018666e1af48946f153d24e809317b8616ce03b95b452096d5d6d4ccad15d6"
+          },
+          {
+            "values": 262144,
+            "sha256": "a5d39ff8c02c8b77a3f33c933a15a7642c2a57f08e19ee94e335d8a633c7e521"
+          }
+        ]
+      ]
+    },
+    {
+      "model_id": "Qwen3-1.7B",
+      "call": {
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "serving_configuration": {
+          "text_prefix_cache": true,
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false
+        },
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "model_id": "Qwen3-1.7B",
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_tokens": 8,
+        "timings": {
+          "initialization_memory": {
+            "before": {
+              "metal_allocated_bytes": 1485815808,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 1626243072,
+              "task_info_status": 0,
+              "task_internal_bytes": 253362176,
+              "task_physical_footprint_bytes": 1885064864,
+              "task_resident_bytes": 274546688,
+              "task_virtual_bytes": 447595986944
+            },
+            "other_model_ids_at_start": [],
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 5166153728,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 1398767616,
+              "task_info_status": 0,
+              "task_internal_bytes": 3799154688,
+              "task_physical_footprint_bytes": 5203646512,
+              "task_resident_bytes": 3889905664,
+              "task_virtual_bytes": 454615269376
+            }
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913367552,
+            "task_physical_footprint_bytes": 5437889112,
+            "task_resident_bytes": 4005658624,
+            "task_virtual_bytes": 454996983808
+          },
+          "reset_seconds": 0.0031737910030642524,
+          "memory_after_input": {
+            "metal_allocated_bytes": 5542330368,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913367552,
+            "task_physical_footprint_bytes": 5437758040,
+            "task_resident_bytes": 4005658624,
+            "task_virtual_bytes": 454996852736
+          },
+          "prefix_cache_hit": true,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_restore_seconds": 0.0002995000104419887,
+          "prefix_cache_capture_seconds": 0,
+          "executed_prefill_tokens": 73,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913367552,
+            "task_physical_footprint_bytes": 5470050904,
+            "task_resident_bytes": 4005658624,
+            "task_virtual_bytes": 454996983808
+          },
+          "prefill_seconds": 0.3602952500077663,
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "prepare_ms": 0.553292,
+            "encode_ms": 2.2215420000000003,
+            "gpu_ms": 332.94041668705177,
+            "wait_ms": 355.833459
+          },
+          "input_tokens": 137,
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "host_input_seconds": 0.0026971249899361283,
+          "decode_seconds": 0.23064475000137463,
+          "memory_after_decode": {
+            "metal_allocated_bytes": 5542461440,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 1354760192,
+            "task_info_status": 0,
+            "task_internal_bytes": 3913383936,
+            "task_physical_footprint_bytes": 5470067288,
+            "task_resident_bytes": 4005675008,
+            "task_virtual_bytes": 454996983808
+          },
+          "lazy_default_retired_bytes": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_planned_slots": 0,
+          "decode_profile": {
+            "prepare_ms": 0.674875,
+            "encode_ms": 2.3183330000000004,
+            "gpu_ms": 225.14291664992925,
+            "wait_ms": 226.948583
+          },
+          "decode_fused_head_dispatches": 0,
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_restore_native_bytes": 14680064,
+          "prefix_capture_native_bytes": 0,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-lazy-defaults/source/runtime/metal_serving.py"
+        },
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "ttft_seconds": 0.3661661660007667,
+        "total_seconds": 0.5971927499922458
+      },
+      "states": [
+        [
+          {
+            "values": 262144,
+            "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+          },
+          {
+            "values": 262144,
+            "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+          },
+          {
+            "values": 262144,
+            "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+          },
+          {
+            "values": 262144,
+            "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+          },
+          {
+            "values": 262144,
+            "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+          },
+          {
+            "values": 262144,
+            "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+          },
+          {
+            "values": 262144,
+            "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+          },
+          {
+            "values": 262144,
+            "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+          },
+          {
+            "values": 262144,
+            "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+          },
+          {
+            "values": 262144,
+            "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+          },
+          {
+            "values": 262144,
+            "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+          },
+          {
+            "values": 262144,
+            "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+          },
+          {
+            "values": 262144,
+            "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+          },
+          {
+            "values": 262144,
+            "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+          },
+          {
+            "values": 262144,
+            "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+          },
+          {
+            "values": 262144,
+            "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+          },
+          {
+            "values": 262144,
+            "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+          },
+          {
+            "values": 262144,
+            "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+          },
+          {
+            "values": 262144,
+            "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+          },
+          {
+            "values": 262144,
+            "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+          },
+          {
+            "values": 262144,
+            "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+          },
+          {
+            "values": 262144,
+            "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+          },
+          {
+            "values": 262144,
+            "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+          },
+          {
+            "values": 262144,
+            "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+          },
+          {
+            "values": 262144,
+            "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+          },
+          {
+            "values": 262144,
+            "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+          },
+          {
+            "values": 262144,
+            "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+          },
+          {
+            "values": 262144,
+            "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+          }
+        ],
+        [
+          {
+            "values": 262144,
+            "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+          },
+          {
+            "values": 262144,
+            "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+          }
+        ]
+      ]
+    }
+  ]
+}
