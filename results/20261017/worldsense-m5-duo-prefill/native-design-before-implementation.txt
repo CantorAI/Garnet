@@ -1,0 +1,31 @@
+WS-M5-49 — Minimal isolated prefill program and 2K-by-4row loading
+
+Declared before source setup/build/execution.
+
+WS48 authoritative terminal result: all correctness checks and raw resource screen pass, matched prior-primary screen VALID REJECT. 4B TTFT+10.5822%, decode-24.7743%, textdecode-24.9700%, Skillwall+18.8645%; matched sampled footprint+2.4459% exceeds2%. Metal buffer allocation unchanged. Legacy MAIN actual source was byte-identical. All28calls/14parents archived, WS10 restored; no unchanged retry. OS AC100%/no warning metadata is not GPU clocks or exclusion. Compression is observed, not a proven cause.
+
+Distinct joint hypothesis
+A. Replace full legacy MAIN duplication inside isolated prefill library with a minimal source preamble: exact metal_stdlib/namespace, exact BF16Params struct, exact primary_quad_kword helper, followed by the vector-prefill fragment. MAIN remains exactly legacy prior-primary source. Only3new prefill PSOs and tile proof use new library; all legacy/body/decode/vision remain MAIN. No duplicate weights or cache. This may reduce compiler/library/init/footprint costs; not established.
+B. Replace 4Kx4row quad loading with 2Kx4row duo, preserving packed format/u32metadata/original FP32 words. In generic C32/K32/128threads old loader has64quads, new128duos; in C64/K32/256threads old128quads, new256duos; C64/K64/256threads new512duos (2iterations/thread). These are static work assignments, not hardware utilization/ISA/bank-layout claims. Each duo emits two aligned float4 stores of restored original bits. All production/diagnostic loaders use identical templates. Shapes/threads/right-bytecounts/barriers/F32multiply/reduction/K-order/output unchanged. Joint experiment, not isolated component causality.
+
+Duo layout and bounds
+Packed admission row%4==0, inner%128==0 and4valid rows. Tile K32/64, columns32/64; duo k%2==0. meta=metadata[(row/4)*(inner/128)+k/128]; at=(meta>>9)*256; index=(k%128)*4. Compact reads uint2 signmant at+index (8aligned), uint tags at+512+index/2 (4aligned); low/high16bits decode via EXACT original helper into2ushort4 values. Raw reads uint4 at+index*2 (16aligned) and bitcasts xy/zw. Last duo k126 stays inside signmant512/tag256/raw1024 byte blocks. No float arithmetic. Out-of-range tiles emit zeros; admitted groups/tile bases ensure no partially valid4rowgroup. Template filler count=(C/4)*(K/2); localK=2*(index/(C/4)), localCol=4*(index%(C/4)); same contiguous scalar FP32 view of aligned threadgroup float4 storage as48.
+
+Source/options
+Seed frozen WS48 1716files/sixoverlay; verify every hash before copy. Same canonical f21 and six overlay files. Original primary/body/embedded shaders, CPUcodec, Model, wrapper, numerical/projection tests, CUDA, profiles/budgets/bounded prefix policy unchanged. Full-primary eager bothmodels; LAZY/CACHED_METADATA OFF. New implementation uses existing defaultOFF PRIMARY_VECTOR_PREFILL and PRIMARY_PREFILL_ISOLATED_LIBRARY options; not a retry because actual shader program and loader change. Four freshbuilds rawOFF/prior-primary/candidate/fault. Matched prior-primary differs by VECTOR and ISOLATED, raw differs3flags. Add candidate source-route markers for duo and minimal library; markers alone do not prove completedGPUwork.
+
+Proof before performance
+Seven original native tests each4builds and186original complete FP32 projection records exact. Preserve finite/mixed compact/raw/sign/zero/tail260/nonzero row/bounds/openbatch/8Miwordcap/Abort/ownership checks. Original2 plus THREE tile-placement GPU readers EACH5921308672 originalFP32words over398packed matrices;48raw, retained9033678080B. Full32VLM28text states/tokens/trainedlayers/vision/grid/host/private/shared/rebuild/invalid/prefix/capacity across raw/priorprimary/candidate actualAPI modes, five full records each, original bounds/goldens unchanged. Independent C++ fragment/inverse body proof; actual constructor dumps must show priorprimary=candidate=fault MAIN byteexact, candidateprefill exactly minimalpreamble+fragment, helper/ABI byteexact canonical, no legacy kernels in newprefill source. No GPU ISA/performance claim from source identity. Store actual program bytes/source/init costs.
+
+Fresh gates unchanged from48
+Freeze source/build/library/models/assets/runtime/SDK/host/cases/Skill/drivers and two external CMake profiles beforedispatch. No consumed edits/build/otherinvestigationGPU/archive copies duringtiming. Preserve first/warm/setup/failures and allparentrequests. No favorable unchangedretry/pooling or relaxed outputs/numerics.
+1.NEW8raw/candidate resource: >=10%Metal and>=5%processfootprint reduction; exactnativeoutputs. Sampled snapshots, notpeaks/freeRAM; timings ineligible as speed.
+2.NEW20matched prior-primary/candidate: >=5%4BwarmTTFTreduction; BOTHmodel TTFT/total/deriveddecode/nativeSkillwall<=2%regression; sampledMetal andfootprint<=2%increase. Validfailure stops laterstages, no unchangedretry.
+3.NEW20rawcontrol/candidate: original2%model/wall and10%Metal gates.
+4.NEW20actualWS10/candidate: original2%model/wall; oldmemoryNULLunavailable.
+5.NEW48full3frame/queryfourmirroredworkers: BOTHpairs independentlypass original exactoutput/2%/memorygates.
+6.Canonicalintegration/rebuild/repeatallcorrectness, NEW48actualWS10 BOTHpairs independentlypass +normalappsmoke beforepromotion.
+Prototype116calls/6outcomes. Power/thermal OSmetadata outside inference per48plan, not direct GPUtelemetry or new exclusion/gate. Fullproduction acceptance remains distinct.
+
+Service/reporting
+NativeC++/Metal/XLang3 inference/images; CPython orchestration/audit only. Fourfiles/noCam, secondcarcorrelated. Restore exact WS10 normal service/portal registry/defaulttenant/fourfiles/validbenchmarkPOST404 aftereach exclusive stage/failure. FixedframesactualWorldSenseSkill/Galaxy/Garnet excludes live decode/scheduling/event/worldstatewrites/retrieval/ranking; live normal smoke required. M5/24GiB/4B separatefromunmetM4mini/vLLM. Paperready hashes/method/rawmetrics/costs/uncertainty/keep-reject required. No globaloptimumclaim.
