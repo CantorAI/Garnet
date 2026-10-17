@@ -1,0 +1,14 @@
+{
+  "compatible_committed_base": "570a061298985c97545504fde2a43fe07a5f27dc",
+  "description": "Compatible base chosen after run, exact final consumed source hashes recorded separately. Pre-thread-local context source plus final concurrency unit recreates earlier counter issue; failed concurrency executable hash not captured. Earlier serial guard shared-library hashes retained. Initial CMake profile copied separately. Derived bytecode excluded.",
+  "changed_paths": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/memory_stats_test.mm",
+    "test2026/metal/request_scope_test.mm"
+  ],
+  "git_apply_check": true
+}

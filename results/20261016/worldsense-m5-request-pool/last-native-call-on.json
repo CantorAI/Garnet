@@ -1,0 +1,161 @@
+{
+  "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; request_autorelease_pool; dense_prefix_cache; body_shape",
+  "generated_token_ids": [
+    4913,
+    36734,
+    788,
+    830,
+    11,
+    330,
+    19895,
+    788
+  ],
+  "generated_tokens": 8,
+  "image_preprocess_backend": "",
+  "image_preprocess_seconds": 0,
+  "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+  "model_id": "Qwen3-1.7B",
+  "native_request_scope": {
+    "api_wall_seconds_before_final_dump": 0.650974291,
+    "invocations": 1,
+    "memory_after_scope": {
+      "metal_allocated_bytes": 4200890368,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 75726848,
+      "task_info_status": 0,
+      "task_internal_bytes": 3847421952,
+      "task_physical_footprint_bytes": 4125283080,
+      "task_resident_bytes": 3938811904,
+      "task_virtual_bytes": 453656428544
+    }
+  },
+  "serving_configuration": {
+    "capacity": 256,
+    "image_pixels": 65536,
+    "prefill_chunk": 16,
+    "requested_output_limit": 8,
+    "share_vision_weights": false,
+    "text_prefix_cache": true
+  },
+  "status": "ok",
+  "text": "{\"matched\": true, \"reason\":",
+  "timings": {
+    "decode_fused_head_dispatches": 0,
+    "decode_profile": {
+      "encode_ms": 2.7594999999999996,
+      "gpu_ms": 232.18487499980256,
+      "prepare_ms": 0.7794169999999999,
+      "wait_ms": 234.11420900000002
+    },
+    "decode_seconds": 0.23835574999975506,
+    "executed_prefill_tokens": 73,
+    "host_input_seconds": 0.003421542001888156,
+    "initialization_memory": {
+      "after_decoder_ready": {
+        "metal_allocated_bytes": 3824713728,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 120274944,
+        "task_info_status": 0,
+        "task_internal_bytes": 3731013632,
+        "task_physical_footprint_bytes": 3855733008,
+        "task_resident_bytes": 3820830720,
+        "task_virtual_bytes": 453270650880
+      },
+      "before": {
+        "metal_allocated_bytes": 141230080,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 132825088,
+        "task_info_status": 0,
+        "task_internal_bytes": 187711488,
+        "task_physical_footprint_bytes": 322881360,
+        "task_resident_bytes": 204931072,
+        "task_virtual_bytes": 446142414848
+      },
+      "other_model_ids_at_start": []
+    },
+    "input_tokens": 137,
+    "memory_after_decode": {
+      "metal_allocated_bytes": 4200890368,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 75726848,
+      "task_info_status": 0,
+      "task_internal_bytes": 3847421952,
+      "task_physical_footprint_bytes": 4125283080,
+      "task_resident_bytes": 3938811904,
+      "task_virtual_bytes": 453656428544
+    },
+    "memory_after_input": {
+      "metal_allocated_bytes": 4200890368,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 75726848,
+      "task_info_status": 0,
+      "task_internal_bytes": 3847389184,
+      "task_physical_footprint_bytes": 4093088520,
+      "task_resident_bytes": 3938779136,
+      "task_virtual_bytes": 453656428544
+    },
+    "memory_after_prefill": {
+      "metal_allocated_bytes": 4201021440,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 75726848,
+      "task_info_status": 0,
+      "task_internal_bytes": 3847405568,
+      "task_physical_footprint_bytes": 4125397768,
+      "task_resident_bytes": 3938795520,
+      "task_virtual_bytes": 453656559616
+    },
+    "memory_before_request": {
+      "metal_allocated_bytes": 4200890368,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 75726848,
+      "task_info_status": 0,
+      "task_internal_bytes": 3847389184,
+      "task_physical_footprint_bytes": 4093088520,
+      "task_resident_bytes": 3938779136,
+      "task_virtual_bytes": 453656428544
+    },
+    "prefill_chunk_plan": [
+      16,
+      16,
+      16,
+      16,
+      16
+    ],
+    "prefill_compile_ms": 0,
+    "prefill_profile": {
+      "encode_ms": 3.01579,
+      "gpu_ms": 367.4861250183312,
+      "prepare_ms": 0.674292,
+      "wait_ms": 398.943168
+    },
+    "prefill_seconds": 0.40461420798965264,
+    "prefix_cache_capture_seconds": 0,
+    "prefix_cache_captured_tokens": 0,
+    "prefix_cache_hit": true,
+    "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+    "prefix_cache_native_bytes": 14680064,
+    "prefix_cache_native_entries": 1,
+    "prefix_cache_restore_seconds": 0.0003780410042963922,
+    "prefix_cache_restored_tokens": 64,
+    "prefix_capture_native_bytes": 0,
+    "prefix_restore_native_bytes": 14680064,
+    "reset_seconds": 0.003940416005207226,
+    "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-request-pool/source/runtime/metal_serving.py"
+  },
+  "total_seconds": 0.6506553750077728,
+  "ttft_seconds": 0.411976165996748
+}

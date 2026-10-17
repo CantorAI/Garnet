@@ -1,0 +1,36 @@
+compiled Garnet decoder layer 0 linear_attention ms 420.176208
+compiled Garnet decoder layer 1 linear_attention ms 388.763041
+compiled Garnet decoder layer 2 linear_attention ms 346.636041
+compiled Garnet decoder layer 3 full_attention ms 347.917083
+compiled Garnet decoder layer 4 linear_attention ms 311.068
+compiled Garnet decoder layer 5 linear_attention ms 301.728792
+compiled Garnet decoder layer 6 linear_attention ms 327.167084
+compiled Garnet decoder layer 7 full_attention ms 288.283875
+compiled Garnet decoder layer 8 linear_attention ms 304.105167
+compiled Garnet decoder layer 9 linear_attention ms 293.2515
+compiled Garnet decoder layer 10 linear_attention ms 381.858667
+compiled Garnet decoder layer 11 full_attention ms 379.675791
+compiled Garnet decoder layer 12 linear_attention ms 382.680542
+compiled Garnet decoder layer 13 linear_attention ms 392.857917
+compiled Garnet decoder layer 14 linear_attention ms 384.904042
+compiled Garnet decoder layer 15 full_attention ms 360.462958
+compiled Garnet decoder layer 16 linear_attention ms 440.704208
+compiled Garnet decoder layer 17 linear_attention ms 345.194125
+compiled Garnet decoder layer 18 linear_attention ms 392.250459
+compiled Garnet decoder layer 19 full_attention ms 426.564833
+compiled Garnet decoder layer 20 linear_attention ms 316.443625
+compiled Garnet decoder layer 21 linear_attention ms 416.966125
+compiled Garnet decoder layer 22 linear_attention ms 420.259417
+compiled Garnet decoder layer 23 full_attention ms 442.960083
+compiled Garnet decoder layer 24 linear_attention ms 420.798917
+compiled Garnet decoder layer 25 linear_attention ms 478.558542
+compiled Garnet decoder layer 26 linear_attention ms 545.040875
+compiled Garnet decoder layer 27 full_attention ms 508.698709
+compiled Garnet decoder layer 28 linear_attention ms 514.724
+compiled Garnet decoder layer 29 linear_attention ms 909.542417
+compiled Garnet decoder layer 30 linear_attention ms 527.829333
+compiled Garnet decoder layer 31 full_attention ms 575.402625
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-request-pool/api_state_guard.py", line 41, in <module>
+    assert row['states']==ref['states']and row['call']['generated_token_ids']==ref['generated_token_ids']
+AssertionError

@@ -1,0 +1,19 @@
+{
+  "experiment": "WS-M5-13",
+  "declared_utc": "2026-10-17T00:14:04.319673+00:00",
+  "hypothesis": "Bound native ServeModel/InferJson autorelease lifetime to each synchronous API call. Release retired resources while retained graph/session/command owners remain valid. No inference math, precision, prompts, model admission, prefill64/text16-prefix policies or CUDA changes.",
+  "tradeoffs": "Pool setup/drain CPU cost; releases occur at request/model-load boundaries. Pools do not free strongly owned cached graph buffers, so no assumed memory gain. C++ exceptions caught inside pool then rethrown after normal pool drain.",
+  "evidence": "WS12 actual resources20.409GiB vs17.760GiB recommended and native4MiB lifetime unit; actual request allocations plateau, not unbounded leak proof.",
+  "validation": "ON/OFF native allocation/alias/nesting/exception/recovery tests; real native serving entrypoint all32VLM/all28text state/token parity, capacity failure/recovery, surviving owners, correct per-API pool counters before timing.",
+  "design": "Separate fresh processes and native binaries, same source and telemetry, only pool option differs. Do not mix policies within a process, since older unpooled resources cannot be removed by a nested pool. First control/candidate car screen, four non-warm repeats each after one warm request. Only on pass run fresh full three-frame+query control/candidate and candidate/control confirmation pairs, independently passing.",
+  "gates": {
+    "both_models_total_ttft_decode_max_regression": 0.02,
+    "4b_total_min_gain": 0.03,
+    "native_skill_wall_min_gain": 0.05,
+    "sampled_post_request_metal_max_min_reduction": 0.1,
+    "exact_full_outputs_states_inputs_prompts_configs_and_native_counters": true
+  },
+  "scope": "Timings include instrumentation; native API wall separately includes scope drain/snapshot/parse, model total excludes outer cleanup. Native Skill wall includes API cleanup. Memory snapshots not peaks; initialization/first and warm requests separate. No image/answer reuse, CPython image processing, camera or global-optimum claim.",
+  "pre_timing_harness_note": "Initial OFF serving guard passed32VLM parity/recovery, then compared16 generated text tokens/states to an8-token reference. First8 tokens match; fixed fixture limit to8 and retained initial raw result/driver/log. No model change or speed samples.",
+  "pre_timing_counter_note": "Native overlap unit proved process-global invocation deltas can include another thread. Per-thread counter now measures only caller scopes, with nested calls still counted. No inference/ownership changes; final ON/OFF native and serving-state guards rerun. Failure retained."
+}
