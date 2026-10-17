@@ -1,0 +1,234 @@
+[
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "control-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 0,
+      "uploads": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 0,
+    "planned_slots": 0,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 201,
+      "allocated_bytes": 6405324800,
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "metadata_bytes": 32819200,
+      "original_bytes": 8401715200,
+      "payload_bytes": 6369344512,
+      "prefill_encoded": 1400,
+      "uploads": 201,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "prefill_encoded": 1400,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "retired_bytes": 1152909312,
+    "planned_slots": 288,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 0,
+    "warmup": true,
+    "primary_storage_after": {
+      "active_weights": 201,
+      "allocated_bytes": 6405324800,
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "metadata_bytes": 32819200,
+      "original_bytes": 8401715200,
+      "payload_bytes": 6369344512,
+      "prefill_encoded": 1400,
+      "uploads": 201,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 1883176960,
+    "planned_slots": 168,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3.5-4B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 201,
+      "allocated_bytes": 6405324800,
+      "decode_encoded": 37600,
+      "head_encoded": 190,
+      "metadata_bytes": 32819200,
+      "original_bytes": 8401715200,
+      "payload_bytes": 6369344512,
+      "prefill_encoded": 2800,
+      "uploads": 201,
+      "vector_decode_encoded": 37600,
+      "vector_head_encoded": 190
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 18800,
+      "head_encoded": 95,
+      "prefill_encoded": 1400,
+      "vector_decode_encoded": 18800,
+      "vector_head_encoded": 95
+    },
+    "retired_bytes": 1152909312,
+    "planned_slots": 288,
+    "rehydrated_bytes": 0
+  },
+  {
+    "worker": "candidate-1",
+    "model_id": "Qwen3-1.7B",
+    "repetition": 1,
+    "warmup": false,
+    "primary_storage_after": {
+      "active_weights": 201,
+      "allocated_bytes": 6405324800,
+      "decode_encoded": 37600,
+      "head_encoded": 190,
+      "metadata_bytes": 32819200,
+      "original_bytes": 8401715200,
+      "payload_bytes": 6369344512,
+      "prefill_encoded": 2800,
+      "uploads": 201,
+      "vector_decode_encoded": 37600,
+      "vector_head_encoded": 190
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "head_encoded": 0,
+      "prefill_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    },
+    "retired_bytes": 1883176960,
+    "planned_slots": 168,
+    "rehydrated_bytes": 0
+  }
+]
