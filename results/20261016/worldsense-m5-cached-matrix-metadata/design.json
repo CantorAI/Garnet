@@ -1,0 +1,15 @@
+{
+  "experiment": "WS-M5-34",
+  "declared_utc": "2026-10-17T09:48:33.002477+00:00",
+  "seed": "Frozen WS15 source; its rejection retained, no unchanged retry",
+  "hypothesis": "Immutable native matrix storage/layout metadata avoids repeated MPS property calls and local autorelease pools in alias/layout/inventory checks while retaining WS15 exact lazy-default storage retirement. No attribution of prior slowdowns or assumed speed gain.",
+  "source_evidence": "metal_context.mm constructs MetalMatrix::Impl and assigns its matrix at one Allocate site only. MetalMatrix copies share the same Impl; no external Objective-C mutation API. Numeric buffer/device identity is valid only while its Impl owns the MPSMatrix; no extra retained buffer or process-global pointer cache.",
+  "change": "Default-OFF CACHED_MATRIX_METADATA requires LAZY_RESIDENT_DEFAULTS; cache numeric identity/device/rows/columns/rowBytes/offset/length/allocated bytes at allocation. SharesStorage, CompatibleLayout, IsDefaultLayout and MatrixBufferInfo use cached values. All other pools, host operations, encoding, model/runtime source and native arithmetic unchanged. C++ live-property audit test runs outside timing.",
+  "validation": "OFF/ON native references + metadata/live property parity across empty/copy/move/reassignment/distinct same/different padded shapes, host update/zero, pending GPU output/Submit/Abort and surviving another context. Full32VLM/28text finite states/tokens/prefix/capacity/vision; ordinary/resident graph alternation, two sessions, close/rebuild/invalid controls and partial allocation faults.",
+  "protocol": {
+    "resource": "Fresh8realWorldSensecalls >=10% sampledMetal and >=5% sampled process footprint, exact/golden/native/identities.",
+    "speed": "Only ifresourcepasses,NEW20realWorldSensecalls bothmodelsTTFT/total/decode andnativeSkillwall <=2%regression.",
+    "confirmation": "Onlyifspeedpasses,NEW48calls mirrored4workers/twoindependentlypassingfull3frame/querypairs beforepromotion."
+  },
+  "tradeoffs": "Extra numeric metadata per matrix; allocation-time properties and checks counted in initialization. Pointer identities are not physical residency proof. Does not optimize GPU arithmetic; host savings may be immaterial. All old rejected runs retained. No source/build/GPU/archive jobs during performance. Preserve CUDA, BF16/FP32, context/image budgets and exact output gates."
+}

@@ -1,0 +1,26 @@
+{
+  "base_commit": "2564b17d2eb71f8580dd95ffb83f7600cb179199",
+  "base_choice": "Current committed tree selected after experiment; compatible reconstruction base, not source checkout identity at build time",
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/inventory_test.cpp",
+    "test2026/metal/matrix_metadata_test.cpp",
+    "test2026/metal/memory_stats_test.mm"
+  ],
+  "full_closure_sha256_file": "starting-source-manifest.json",
+  "overlay_apply_check": true,
+  "fault_overlay_changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h"
+  ],
+  "scope": "Overlay covers every frozen source file different from base. Archives omit unchanged base files. Test fixtures contain original absolute paths; regenerate numeric fixtures with make_resident_fixtures.py when relocating."
+}

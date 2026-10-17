@@ -1,0 +1,29 @@
+Frozen source, library flags and rehashed checkpoint assets PASS
+All prerequisites/source/model/build/dependencies/backup/request frozen; no worker dispatched
+START control-1 2026-10-17T09:55:08Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-17T09:57:32Z
+FINISH candidate-1 exit 0
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+{
+  "status": "rejected_resource_feasibility",
+  "passed": false,
+  "sampled_maximum_bytes": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18054723984
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 18867290112,
+      "task_physical_footprint_bytes": 18059327816
+    }
+  },
+  "reduction": {
+    "metal_allocated_bytes": 0.1386127060400516,
+    "task_physical_footprint_bytes": -0.0002549932086517437
+  },
+  "scope": "Eight actual WorldSense/Galaxy calls over two fresh workers and one warmup+one followup each. Maximum post-decode snapshots, not peaks/free system RAM. No timing or speed promotion from this resource feasibility check."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 55076
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

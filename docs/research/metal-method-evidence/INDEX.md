@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T09:45:18.635652+00:00
+Generated UTC: 2026-10-17T10:02:02.295540+00:00
 
-Base HEAD at generation: `ee41456de01a3ee56fb8efdd1c2c44eb00029c9f`. Reports indexed: **223**.
+Base HEAD at generation: `2564b17d2eb71f8580dd95ffb83f7600cb179199`. Reports indexed: **224**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -185,6 +185,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/vector-vision-calibrated](../../../results/20261016/vector-vision-calibrated/README.md) | Prospective null-first timing design for vector vision |
 | [results/20261016/vector-vision-native](../../../results/20261016/vector-vision-native/README.md) | Ordered float4 vision context: private native integration |
 | [results/20261016/wide-block-packed-prefill](../../../results/20261016/wide-block-packed-prefill/README.md) | Wide output block packed prefill rejected by timing |
+| [results/20261016/worldsense-m5-cached-matrix-metadata](../../../results/20261016/worldsense-m5-cached-matrix-metadata/README.md) | WS-M5-34: cached immutable matrix metadata — resource gate rejected |
 | [results/20261016/worldsense-m5-chunk64](../../../results/20261016/worldsense-m5-chunk64/README.md) | WS-M5-07: VLM-only prefill64 — rejected |
 | [results/20261016/worldsense-m5-coalesced-nopad](../../../results/20261016/worldsense-m5-coalesced-nopad/README.md) | WS-M5-05: unpadded coalesced BF16 prefill — rejected |
 | [results/20261016/worldsense-m5-coalesced-prefill](../../../results/20261016/worldsense-m5-coalesced-prefill/README.md) | WS-M5-04: padded coalesced BF16 prefill — rejected |

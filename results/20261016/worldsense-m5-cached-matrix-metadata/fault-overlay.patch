@@ -1,0 +1,77 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -383,3 +383,11 @@
+ add_executable(garnet_matrix_metadata_test test2026/metal/matrix_metadata_test.cpp)
+ target_link_libraries(garnet_matrix_metadata_test PRIVATE garnet_metal)
+ add_test(NAME metal_matrix_metadata_reference COMMAND garnet_matrix_metadata_test)
++
++option(GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS "Correctness-only deferred allocation fault injection" OFF)
++if(GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS)
++ if(NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++  message(FATAL_ERROR "Test faults require lazy resident defaults")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS=1)
++endif()
+--- a/src/backends/metal/compiled_graph.cpp
++++ b/src/backends/metal/compiled_graph.cpp
+@@ -194,6 +194,9 @@
+ }
+ void MetalCompiledGraph::Clear() {
+ #ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    lazyTestFailAfter_=-1;
++#endif
+     lazyDefaultPlanReady_=false;lazyDefaultSlots_.clear();lazyRetiredBytes_=lazyRehydratedBytes_=0;
+ #endif
+     visionParallelDispatches_=0;
+@@ -1126,6 +1129,10 @@
+ #ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+     if(slots_[id].matrix.Valid())return;
+     if(std::find(lazyDefaultSlots_.begin(),lazyDefaultSlots_.end(),id)==lazyDefaultSlots_.end())throw std::logic_error("Missing non-deferred graph storage");
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    if(lazyTestFailAfter_==0){lazyTestFailAfter_=-1;throw std::runtime_error("Injected deferred storage allocation failure");}
++    if(lazyTestFailAfter_>0)--lazyTestFailAfter_;
++#endif
+     auto matrix=gpu_->Allocate(slots_[id].rows,slots_[id].columns);auto info=MetalContext::MatrixBufferInfo(matrix);slots_[id].matrix=std::move(matrix);lazyRehydratedBytes_+=info.allocatedBytes;
+ #else
+     (void)id;
+@@ -1153,3 +1160,7 @@
+ #endif
+ }
+ }
++
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++namespace Garnet {void MetalCompiledGraph::TestLazyFailAfter(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(n<0||n>3)throw std::invalid_argument("Invalid fault countdown");lazyTestFailAfter_=n;}}
++#endif
+--- a/src/backends/metal/compiled_graph.h
++++ b/src/backends/metal/compiled_graph.h
+@@ -47,6 +47,9 @@
+     bool lazyDefaultPlanReady_=false;std::vector<size_t> lazyDefaultSlots_;
+     size_t lazyRetiredBytes_=0,lazyRehydratedBytes_=0;
+ #endif
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    int64_t lazyTestFailAfter_=-1;
++#endif
+     void RetireResidentDefaults();
+     void MaterializeDefault(size_t slot);
+     void Clear();
+@@ -68,6 +71,9 @@
+     size_t LazyRetiredBytes() const;
+     size_t LazyRehydratedBytes() const;
+     size_t LazyPlannedSlots() const;
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    void TestLazyFailAfter(int64_t n);
++#endif
+     bool Ready() const {return ready_;}
+     double CompileMs() const {return compileMs_;}
+     double LastInferenceMs() const {return inferenceMs_;}
+@@ -83,6 +89,9 @@
+         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
+         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
+         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++        APISET().AddFunc<1>("_test_lazy_fail_after",&MetalCompiledGraph::TestLazyFailAfter);
++#endif
+         APISET().AddProp("lazy_default_retired_bytes",&MetalCompiledGraph::LazyRetiredBytes);
+         APISET().AddProp("lazy_default_rehydrated_bytes",&MetalCompiledGraph::LazyRehydratedBytes);
+         APISET().AddProp("lazy_default_planned_slots",&MetalCompiledGraph::LazyPlannedSlots);

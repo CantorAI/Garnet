@@ -1,0 +1,5 @@
+{
+  "scope": "Post-timing packaging preflight before any finalizer execution",
+  "caught": "Three inherited finalizer paths retained the m5-request-residency destination despite plain work-name replacement. Derived-destination assertion would reject finalizer; fixed all three paths and added same guard to post-finalizer.",
+  "outcome": "No finalizer attempted with stale paths and no prior archive mutated. Exporter adds metadata capability and lazy counters only after timing; it is not an inference driver."
+}
