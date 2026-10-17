@@ -1,0 +1,80 @@
+Pinned source/model/build/SDK/host/driver files 5298
+START control-1 2026-10-17T21:36:11Z
+FINISH control-1 exit 0
+Validated10 raw calls/output/native/library/source control-1
+START candidate-1 2026-10-17T21:39:30Z
+FINISH candidate-1 exit 0
+Validated10 raw calls/output/native/library/source candidate-1
+START candidate-2 2026-10-17T21:44:13Z
+FINISH candidate-2 exit 0
+Validated10 raw calls/output/native/library/source candidate-2
+START control-2 2026-10-17T21:48:47Z
+FINISH control-2 exit 0
+Validated10 raw calls/output/native/library/source control-2
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+Dependencies unchanged 5298
+{
+  "status": "diagnostic_difference",
+  "preserved_within_2percent": false,
+  "diagnostic_only": true,
+  "promote": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": 0.9434631621513507,
+      "total_change": 0.7619025615160002,
+      "decode_gain": -0.0450688521150272
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": 1.2423362874548727,
+      "total_change": 0.8462482014977264,
+      "decode_gain": -0.30664589351118143
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": null,
+    "candidate-1": 21903376384
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-1": 26.83708589601156,
+    "candidate-1": 44.599188666499685
+  },
+  "native_skill_wall_gain": -0.6618491604980059,
+  "scope": "WS55 raw-runtime diagnostic: original warm first/TTFT/total/deriveddecode/Skillwall definitions and2%orientation perpair. No optimization acceptance or promotion. Each pair reported independently; old memory unavailable/null. Existing WS53/54 rejections unchanged."
+}
+{
+  "status": "diagnostic_within_2percent",
+  "preserved_within_2percent": true,
+  "diagnostic_only": true,
+  "promote": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.09483973922144862,
+      "total_change": -0.0872883343025963,
+      "decode_gain": 0.010997097527055688
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.08192452842075237,
+      "total_change": -0.07975966124720058,
+      "decode_gain": 0.060634091409480284
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-2": null,
+    "candidate-2": 21903376384
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-2": 47.499357604494435,
+    "candidate-2": 42.73670689598657
+  },
+  "native_skill_wall_gain": 0.10026768673724584,
+  "scope": "WS55 raw-runtime diagnostic: original warm first/TTFT/total/deriveddecode/Skillwall definitions and2%orientation perpair. No optimization acceptance or promotion. Each pair reported independently; old memory unavailable/null. Existing WS53/54 rejections unchanged."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 81589
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

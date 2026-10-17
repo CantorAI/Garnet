@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T21:24:33.334450+00:00
+Generated UTC: 2026-10-17T22:02:39.196709+00:00
 
-Base HEAD at generation: `aebaf00eace8fc4e512db5ca1704ae77af540123`. Reports indexed: **245**.
+Base HEAD at generation: `59a882e9765d4c1f61cd6bc117aa620dd06abd16`. Reports indexed: **246**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -237,6 +237,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-primary-narrow-vocab](../../../results/20261017/worldsense-m5-primary-narrow-vocab/README.md) | WS-M5-41 semantic raw narrow vocabulary: rejected |
 | [results/20261017/worldsense-m5-primary-u32-integration](../../../results/20261017/worldsense-m5-primary-u32-integration/README.md) | WS-M5-40 canonical integration: production acceptance rejected |
 | [results/20261017/worldsense-m5-primary-value16](../../../results/20261017/worldsense-m5-primary-value16/README.md) | WS-M5-43 value16 sign/mantissa fold: rejected |
+| [results/20261017/worldsense-m5-raw-runtime-diagnostic](../../../results/20261017/worldsense-m5-raw-runtime-diagnostic/README.md) | WS-M5-55 — Mirrored raw-runtime diagnostic is mixed, with large control drift |
 | [results/20261017/worldsense-m5-vector-prefill](../../../results/20261017/worldsense-m5-vector-prefill/README.md) | WS-M5-47 — Exact vector prefill loading rejected by matched timing |
 | [results/20261017/worldsense-m5-wide-cached-prefill](../../../results/20261017/worldsense-m5-wide-cached-prefill/README.md) | WS-M5-53 — Wide 4B storage with cached metadata rejected on text decoding |
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |

@@ -1,0 +1,183 @@
+{
+  "status": "diagnostic_within_2percent",
+  "preserved_within_2percent": true,
+  "diagnostic_only": true,
+  "promote": false,
+  "checks": [
+    {
+      "worker": "control-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    }
+  ],
+  "metrics": {
+    "control-2": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 9.958355667011347,
+        "total": 11.287090312500368,
+        "decode_tps": 25.780996750180982
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 23.504768854007125,
+        "total": 36.207555145490915,
+        "decode_tps": 7.314908620298068
+      }
+    },
+    "candidate-2": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 9.013907812477555,
+        "total": 10.30185899999924,
+        "decode_tps": 26.06451288578743
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 21.579151750003803,
+        "total": 33.319652812497225,
+        "decode_tps": 7.758441458233217
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.09483973922144862,
+      "total_change": -0.0872883343025963,
+      "decode_gain": 0.010997097527055688
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.08192452842075237,
+      "total_change": -0.07975966124720058,
+      "decode_gain": 0.060634091409480284
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-2": null,
+    "candidate-2": 21903376384
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-2": 47.499357604494435,
+    "candidate-2": 42.73670689598657
+  },
+  "native_skill_wall_gain": 0.10026768673724584,
+  "scope": "WS55 raw-runtime diagnostic: original warm first/TTFT/total/deriveddecode/Skillwall definitions and2%orientation perpair. No optimization acceptance or promotion. Each pair reported independently; old memory unavailable/null. Existing WS53/54 rejections unchanged."
+}

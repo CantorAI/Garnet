@@ -1,0 +1,68 @@
+{
+  "commands": {
+    "old": [
+      "/usr/bin/c++",
+      "-DGARNET_METAL_ATTENTION_PREFIX=1",
+      "-DGARNET_METAL_BODY_SHAPE=1",
+      "-DGARNET_METAL_DENSE_PREFIX_CACHE=1",
+      "-DGARNET_METAL_LINEAR_CHUNK_CONV=1",
+      "-DGARNET_METAL_LINEAR_CHUNK_DELTA=1",
+      "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1",
+      "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=1",
+      "-DGARNET_METAL_QWEN35_4B_WIDE_PREFILL=1",
+      "-DGARNET_METAL_RESIDENT_KV_INPLACE=1",
+      "-I/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source/src/backends/metal",
+      "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++17",
+      "-arch",
+      "arm64",
+      "-fPIC",
+      "-fobjc-arc",
+      "-E",
+      "-P",
+      "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source/src/backends/metal/metal_context.mm"
+    ],
+    "newraw": [
+      "/usr/bin/c++",
+      "-DGARNET_METAL_ATTENTION_PREFIX=1",
+      "-DGARNET_METAL_BODY_SHAPE=1",
+      "-DGARNET_METAL_DENSE_PREFIX_CACHE=1",
+      "-DGARNET_METAL_LINEAR_CHUNK_CONV=1",
+      "-DGARNET_METAL_LINEAR_CHUNK_DELTA=1",
+      "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1",
+      "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=1",
+      "-DGARNET_METAL_QWEN35_4B_WIDE_PREFILL=1",
+      "-DGARNET_METAL_RESIDENT_KV_INPLACE=1",
+      "-I/Users/shawn/CantorAI/out/research/worldsense-isolated-primary/source/src/backends/metal",
+      "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++17",
+      "-arch",
+      "arm64",
+      "-isysroot",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "-fPIC",
+      "-fobjc-arc",
+      "-E",
+      "-P",
+      "/Users/shawn/CantorAI/out/research/worldsense-isolated-primary/source/src/backends/metal/metal_context.mm"
+    ]
+  },
+  "selected_constructor_expressions_equal_ignoring_outer_whitespace": true,
+  "all_selected_raw_string_literals_byte_exact": true,
+  "active_body_shape_header_byte_exact": true,
+  "preprocessing": {
+    "old": {
+      "preprocessed_sha256": "6047f29a9035946a7557c519e6277b7956e563fe7d2c1e439ceb91f1ddf06cc1",
+      "selected_bytes": 59303
+    },
+    "newraw": {
+      "preprocessed_sha256": "363d6261c343803c9936aa84024956589073d2a7b5f4a2d935a109920e42c79a",
+      "selected_bytes": 59303
+    }
+  },
+  "scope": "Preprocessed selected source-generation expressions and active shader header only, not actual old constructor dump, CPU/GPU machine-code identity or performance."
+}

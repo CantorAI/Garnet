@@ -1,0 +1,36 @@
+from pathlib import Path
+import subprocess,shlex,json,hashlib,shutil,datetime,re,ast
+root=Path('/Users/shawn/Documents/Codex/2026-10-15/i');r=Path('/Users/shawn/CantorAI');w=root/'work/worldsense-raw-runtime-diagnostic';prior=root/'work/worldsense-isolated-primary';sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();assert json.loads((w/'protocol.json').read_text())['experiment']=='WS-M5-55'
+oldsource=r/'out/research/worldsense-prefix-cache/source';newsource=r/'out/research/worldsense-isolated-primary/source';oldbuild=r/'out/build/garnet-metal-worldsense-prefix-cache';newbuild=r/'out/build/garnet-metal-worldsense-isolated-primary-off';n=r/'out/build/macos-arm64-release/bin'
+oldmanifest=json.loads((prior/'production-speed/control-source-before-dispatch.json').read_text());newmanifest=json.loads((prior/'correctness-source-manifest.json').read_text());assert len(oldmanifest)==1706 and len(newmanifest)==1718
+assert all(sha(oldsource/k)==h for k,h in oldmanifest.items())and all(sha(newsource/k)==h for k,h in newmanifest.items())
+(w/'control-source-before-dispatch.json').write_text(json.dumps(oldmanifest,indent=2)+'\n');(w/'starting-source-manifest.json').write_text(json.dumps(newmanifest,indent=2)+'\n')
+def flags(b):
+ return {line.split(':BOOL=')[0]:line.split(':BOOL=')[1]for line in (b/'CMakeCache.txt').read_text().splitlines()if line.startswith('GARNET_')and ':BOOL='in line}
+a,b=flags(oldbuild),flags(newbuild);assert all(a[k]==b[k]for k in a.keys()&b.keys())and not(a.keys()-b.keys())and all(b[k]=='OFF'for k in b.keys()-a.keys());(w/'build-flag-comparison.json').write_text(json.dumps({'old':a,'newraw':b,'common_flags_equal':True,'all_additional_flags_OFF':True},indent=2)+'\n')
+assert sha(oldbuild/'libgarnet.dylib')==sha(n/'libgarnet.dylib')=='dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72'
+assert sha(newbuild/'libgarnet.dylib')==json.loads((prior/'environment.json').read_text())['libraries']['off']
+assert json.loads((prior/'native-results.json').read_text())['off']==0 and json.loads((prior/'correctness-terminal.json').read_text())['terminal_exit_code']==0
+shutil.copy2(n/'libgarnet.dylib',w/'before-libgarnet.dylib')
+for name in ['wait_cantor.py','restore_normal.py']:(w/name).write_text((prior/name).read_text().replace('worldsense-isolated-primary','worldsense-raw-runtime-diagnostic'))
+shutil.copy2(prior/'production-speed/cases.json',w/'cases.json');assert json.loads((w/'cases.json').read_text())['repeats']==4
+programs={};commands={};toolchain={}
+for label,build,source in [('old',oldbuild,oldsource),('newraw',newbuild,newsource)]:
+ text=(build/'CMakeFiles/garnet_metal.dir/flags.make').read_text();defs={}
+ for line in text.splitlines():
+  if ' = 'in line:k,v=line.split(' = ',1);defs[k]=shlex.split(v)
+ cmd=['/usr/bin/c++',*defs['OBJCXX_DEFINES'],*defs['OBJCXX_INCLUDES'],*defs['OBJCXX_FLAGS'],'-E','-P',str(source/'src/backends/metal/metal_context.mm')];raw=subprocess.check_output(cmd,text=True);start=raw.index('NSString* source=');end=raw.index('auto library=[impl_->device newLibraryWithSource:',start);part=raw[start:end];(w/('selected-constructor-'+label+'.txt')).write_text(part)
+ literals=re.findall(r'R"([A-Za-z0-9_]*)\(([\s\S]*?)\)\1"',part);programs[label]={'raw_literals':literals,'expression':re.sub(r'\s+',' ',part).strip(),'preprocessed_sha256':hashlib.sha256(raw.encode()).hexdigest(),'selected_bytes':len(part.encode())};commands[label]=cmd
+ toolchain[label]={'flags_make':text,'macho_load_commands':subprocess.check_output(['otool','-l',str(build/'libgarnet.dylib')],text=True),'SDK_cache_fields':[line for line in (build/'CMakeCache.txt').read_text().splitlines()if line.startswith(('CMAKE_OSX_','CMAKE_CXX_COMPILER:','CMAKE_OBJCXX_COMPILER:'))]}
+assert programs['old']['raw_literals']==programs['newraw']['raw_literals'];assert programs['old']['expression']==programs['newraw']['expression'];assert (oldsource/'src/backends/metal/body_shape_shader.h').read_bytes()==(newsource/'src/backends/metal/body_shape_shader.h').read_bytes()
+(w/'static-shader-construction-proof.json').write_text(json.dumps({'commands':commands,'selected_constructor_expressions_equal_ignoring_outer_whitespace':True,'all_selected_raw_string_literals_byte_exact':True,'active_body_shape_header_byte_exact':True,'preprocessing':{k:{f:v for f,v in d.items()if f not in ['raw_literals','expression']}for k,d in programs.items()},'scope':'Preprocessed selected source-generation expressions and active shader header only, not actual old constructor dump, CPU/GPU machine-code identity or performance.'},indent=2)+'\n')
+(w/'toolchain-observations.json').write_text(json.dumps({'builds':toolchain,'current_sdk':subprocess.check_output(['xcrun','--show-sdk-path'],text=True),'xcode':subprocess.check_output(['xcodebuild','-version'],text=True),'scope':'Recorded build declarations and actual existing binaries. Current SDK observation is not retroactive proof of the old build environment; explicit/default SDK flags differ.'},indent=2)+'\n')
+# Controller changes only staging role, immutable source identity, four-worker order,
+# stage-local backup/wait paths, and predeclared OS observations outside inference.
+s=(prior/'production-speed/controller.py').read_text().replace("work/worldsense-isolated-primary/production-speed","work/worldsense-raw-runtime-diagnostic").replace("str(w.parent/'wait_cantor.py')","str(w/'wait_cantor.py')").replace("stage(w.parent/'before-libgarnet.dylib')","stage(w/'before-libgarnet.dylib')").replace('garnet-metal-worldsense-isolated-primary-on/libgarnet.dylib','garnet-metal-worldsense-isolated-primary-off/libgarnet.dylib')
+for phase in ['before','after']:
+ needle="state['power_"+phase+"']=dict(status=power.returncode,output=power.stdout)";assert s.count(needle)==1;s=s.replace(needle,needle+"\n  thermal=command(['/usr/bin/pmset','-g','therm'],False);state['thermal_"+phase+"']=dict(status=thermal.returncode,output=thermal.stdout)",1)
+ast.parse(s);(w/'controller.py').write_text(s)
+env={'old_source':str(oldsource),'new_source':str(newsource),'libraries':{'off':sha(oldbuild/'libgarnet.dylib'),'on':sha(newbuild/'libgarnet.dylib')},'control_serving_sha256':sha(oldsource/'runtime/metal_serving.py'),'source_branch':'feature/qwen35-metal','source_commit':subprocess.check_output(['git','-C',str(r/'Garnet'),'rev-parse','HEAD'],text=True).strip(),'comparison':'Exact existingWS10 versus exact existing54OFF; both raw; diagnostic only; no source edits/rebuild/promotion'};(w/'environment.json').write_text(json.dumps(env,indent=2)+'\n')
+(w/'reused-correctness-provenance.json').write_text(json.dumps({'immutable_commit':'59a882e9765d4c1f61cd6bc117aa620dd06abd16','archive':'results/20261017/worldsense-m5-isolated-primary','raw54_source_manifest_sha256':sha(prior/'correctness-source-manifest.json'),'raw54_library_sha256':sha(newbuild/'libgarnet.dylib'),'native_results':json.loads((prior/'native-results.json').read_text()),'full_correctness_terminal':json.loads((prior/'correctness-terminal.json').read_text()),'scope':'Exact unchanged raw54OFF binary reuses completed native/full-API/numerical proof. WS55 has no new inference code or learned math.'},indent=2)+'\n')
+print('WS55 existing binaries, flags and preprocessed shader expressions verified; no worker dispatched')

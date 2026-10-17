@@ -1,0 +1,11 @@
+{
+  "calls": 40,
+  "parent_requests": 20,
+  "schedule": [
+    "control-1",
+    "candidate-1",
+    "candidate-2",
+    "control-2"
+  ],
+  "scope": "Every first/warm/failure model call once; parent Skill wall once per request. No optimized candidate or promotion. Two pairs independent, not pooled. Derived rates include host/stop/possible extraEOS; spans overlap/include gaps; memory/VM snapshots not peaks/process-specific swap attribution."
+}

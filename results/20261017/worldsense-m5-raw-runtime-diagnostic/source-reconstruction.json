@@ -1,0 +1,37 @@
+{
+  "old": {
+    "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+    "overlay_files": [
+      "cmake/GarnetMetal.cmake",
+      "runtime/metal_serving.py",
+      "src/backends/metal/compiled_graph.cpp",
+      "src/backends/metal/compiled_graph.h",
+      "src/backends/metal/decoder_session.cpp",
+      "src/backends/metal/decoder_session.h",
+      "src/backends/metal/metal_context.h",
+      "src/backends/metal/metal_context.mm",
+      "src/entry/metal_main.cpp"
+    ],
+    "source_files": 1706,
+    "manifest": "control-source-before-dispatch.json",
+    "scope": "Reconstruct ONLY keys in this manifest from base+overlays; files outside the manifest are not part of this recorded source closure."
+  },
+  "newraw": {
+    "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+    "overlay_files": [
+      "cmake/GarnetMetal.cmake",
+      "src/backends/metal/compiled_graph.cpp",
+      "src/backends/metal/compiled_graph.h",
+      "src/backends/metal/metal_context.h",
+      "src/backends/metal/metal_context.mm",
+      "src/backends/metal/primary_isolation_shader.h",
+      "src/backends/metal/primary_vector_prefill_shader.h",
+      "src/backends/metal/wide_checkpoint_policy.h",
+      "src/entry/metal_main.cpp",
+      "test2026/metal/primary_storage_test.cpp"
+    ],
+    "source_files": 1718,
+    "manifest": "starting-source-manifest.json",
+    "scope": "Reconstruct ONLY keys in this manifest from base+overlays; files outside the manifest are not part of this recorded source closure."
+  }
+}

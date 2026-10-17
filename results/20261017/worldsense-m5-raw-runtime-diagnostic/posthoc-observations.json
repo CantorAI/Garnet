@@ -1,0 +1,429 @@
+{
+  "descriptive_only": true,
+  "workers": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "ttft": 10.227638041993487,
+        "total": 18.52481800050009,
+        "decode_tps": 11.905916272492242,
+        "decode_phase_seconds": 7.831203354493482,
+        "post_decode_residual_seconds": 0.0004894165031146258,
+        "decode_profile": {
+          "prepare_ms": 6.7977265,
+          "encode_ms": 49.51887849999999,
+          "gpu_ms": 7736.346895850147,
+          "wait_ms": 7763.7032285000005
+        }
+      },
+      "Qwen3-1.7B": {
+        "ttft": 4.533277333001024,
+        "total": 5.751665021001827,
+        "decode_tps": 27.605760336492644,
+        "decode_phase_seconds": 1.2313148959947284,
+        "post_decode_residual_seconds": 0.0003765210130950436,
+        "decode_profile": {
+          "prepare_ms": 2.9750015000000003,
+          "encode_ms": 11.262144000000001,
+          "gpu_ms": 1177.4181666842196,
+          "wait_ms": 1210.4223350000002
+        }
+      },
+      "Skill_wall": 26.83708589601156
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "ttft": 22.9338039165159,
+        "total": 34.201411916496,
+        "decode_tps": 8.255015939044544,
+        "decode_phase_seconds": 11.260140687489184,
+        "post_decode_residual_seconds": 0.004511541497777216,
+        "decode_profile": {
+          "prepare_ms": 10.392184500000004,
+          "encode_ms": 72.01398350000001,
+          "gpu_ms": 11006.463208454079,
+          "wait_ms": 11167.056712
+        }
+      },
+      "Qwen3-1.7B": {
+        "ttft": 8.810257500503212,
+        "total": 10.133873333485099,
+        "decode_tps": 26.361600406364374,
+        "decode_phase_seconds": 1.2893261040007928,
+        "post_decode_residual_seconds": 0.0009085619676625356,
+        "decode_profile": {
+          "prepare_ms": 3.516312,
+          "encode_ms": 13.0336655,
+          "gpu_ms": 1223.6647291720146,
+          "wait_ms": 1263.4964805000002
+        }
+      },
+      "Skill_wall": 44.599188666499685
+    },
+    "candidate-2": {
+      "Qwen3.5-4B": {
+        "ttft": 21.579151750003803,
+        "total": 33.319652812497225,
+        "decode_tps": 7.758441458233217,
+        "decode_phase_seconds": 11.98804252098489,
+        "post_decode_residual_seconds": 0.0031694999925093725,
+        "decode_profile": {
+          "prepare_ms": 11.765936500000006,
+          "encode_ms": 89.65372999999998,
+          "gpu_ms": 11705.488999999943,
+          "wait_ms": 11886.152794500002
+        }
+      },
+      "Qwen3-1.7B": {
+        "ttft": 9.013907812477555,
+        "total": 10.30185899999924,
+        "decode_tps": 26.06451288578743,
+        "decode_phase_seconds": 1.3040458540053805,
+        "post_decode_residual_seconds": 0.0011750625126296654,
+        "decode_profile": {
+          "prepare_ms": 3.733853,
+          "encode_ms": 13.981750499999999,
+          "gpu_ms": 1245.7729166344507,
+          "wait_ms": 1282.7944174999998
+        }
+      },
+      "Skill_wall": 42.73670689598657
+    },
+    "control-2": {
+      "Qwen3.5-4B": {
+        "ttft": 23.504768854007125,
+        "total": 36.207555145490915,
+        "decode_tps": 7.314908620298068,
+        "decode_phase_seconds": 12.713426687492756,
+        "post_decode_residual_seconds": 0.001077895998605527,
+        "decode_profile": {
+          "prepare_ms": 11.5555825,
+          "encode_ms": 84.72427449999999,
+          "gpu_ms": 12340.896583220456,
+          "wait_ms": 12587.482518999997
+        }
+      },
+      "Qwen3-1.7B": {
+        "ttft": 9.958355667011347,
+        "total": 11.287090312500368,
+        "decode_tps": 25.780996750180982,
+        "decode_phase_seconds": 1.318642333499156,
+        "post_decode_residual_seconds": 0.0005347504920791835,
+        "decode_profile": {
+          "prepare_ms": 3.8852295000000003,
+          "encode_ms": 14.108623999999997,
+          "gpu_ms": 1260.5487500259187,
+          "wait_ms": 1296.4417085
+        }
+      },
+      "Skill_wall": 47.499357604494435
+    }
+  },
+  "first_after_init": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "ttft_seconds": 36.353568834019825,
+        "total_seconds": 44.10840791702503,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 15.512588250014232,
+        "total_seconds": 16.826494500011904,
+        "generated_tokens": 35
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "ttft_seconds": 39.31429979202221,
+        "total_seconds": 51.137641374982195,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 16.769628291978734,
+        "total_seconds": 18.012956167018274,
+        "generated_tokens": 35
+      }
+    },
+    "candidate-2": {
+      "Qwen3.5-4B": {
+        "ttft_seconds": 39.31153379101306,
+        "total_seconds": 50.33789029199397,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 15.188000790978549,
+        "total_seconds": 16.62953170799301,
+        "generated_tokens": 35
+      }
+    },
+    "control-2": {
+      "Qwen3.5-4B": {
+        "ttft_seconds": 38.77815987501526,
+        "total_seconds": 50.82224750000751,
+        "generated_tokens": 94
+      },
+      "Qwen3-1.7B": {
+        "ttft_seconds": 15.030578791018343,
+        "total_seconds": 16.26394341600826,
+        "generated_tokens": 35
+      }
+    }
+  },
+  "newraw_memory_snapshots": {
+    "candidate-1:Qwen3.5-4B": [
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18052676032,
+        "task_compressed_bytes": 14131986432,
+        "task_resident_bytes": 127844352
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18055085656,
+        "task_compressed_bytes": 14599389184,
+        "task_resident_bytes": 131055616
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18059525720,
+        "task_compressed_bytes": 14634188800,
+        "task_resident_bytes": 96714752
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18056920664,
+        "task_compressed_bytes": 14591000576,
+        "task_resident_bytes": 137756672
+      }
+    ],
+    "candidate-1:Qwen3-1.7B": [
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18051530328,
+        "task_compressed_bytes": 14360739840,
+        "task_resident_bytes": 366411776
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18051202648,
+        "task_compressed_bytes": 14183055360,
+        "task_resident_bytes": 544604160
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18052202072,
+        "task_compressed_bytes": 14183038976,
+        "task_resident_bytes": 544096256
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18050023000,
+        "task_compressed_bytes": 14146912256,
+        "task_resident_bytes": 579895296
+      }
+    ],
+    "candidate-2:Qwen3.5-4B": [
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18055985552,
+        "task_compressed_bytes": 14141538304,
+        "task_resident_bytes": 124076032
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18059968016,
+        "task_compressed_bytes": 14609809408,
+        "task_resident_bytes": 122486784
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18056871488,
+        "task_compressed_bytes": 14648492032,
+        "task_resident_bytes": 83197952
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18061442624,
+        "task_compressed_bytes": 14656995328,
+        "task_resident_bytes": 74366976
+      }
+    ],
+    "candidate-2:Qwen3-1.7B": [
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18050432552,
+        "task_compressed_bytes": 14473281536,
+        "task_resident_bytes": 252444672
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18051038784,
+        "task_compressed_bytes": 14293581824,
+        "task_resident_bytes": 433274880
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18051071552,
+        "task_compressed_bytes": 14316748800,
+        "task_resident_bytes": 405569536
+      },
+      {
+        "metal_allocated_bytes": 21903376384,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "task_physical_footprint_bytes": 18051923520,
+        "task_compressed_bytes": 14182727680,
+        "task_resident_bytes": 544833536
+      }
+    ]
+  },
+  "system_observations": {
+    "control-1": {
+      "page_size_bytes": 16384,
+      "global_counter_deltas": {
+        "Swapins": 1732226,
+        "Swapouts": 1985331,
+        "Pageouts": 4870,
+        "Compressions": 8805306,
+        "Decompressions": 7576328
+      },
+      "global_swapin_bytes": 28380790784,
+      "global_swapout_bytes": 32527663104,
+      "swap_before": "vm.swapusage: total = 5120.00M  used = 3832.12M  free = 1287.88M  (encrypted)\n",
+      "swap_after": "vm.swapusage: total = 9216.00M  used = 7522.12M  free = 1693.88M  (encrypted)\n",
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      },
+      "thermal_after": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      }
+    },
+    "candidate-1": {
+      "page_size_bytes": 16384,
+      "global_counter_deltas": {
+        "Swapins": 2734065,
+        "Swapouts": 2897223,
+        "Pageouts": 5779,
+        "Compressions": 11873396,
+        "Decompressions": 10922716
+      },
+      "global_swapin_bytes": 44794920960,
+      "global_swapout_bytes": 47468101632,
+      "swap_before": "vm.swapusage: total = 8192.00M  used = 7208.44M  free = 983.56M  (encrypted)\n",
+      "swap_after": "vm.swapusage: total = 9216.00M  used = 8010.56M  free = 1205.44M  (encrypted)\n",
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      },
+      "thermal_after": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      }
+    },
+    "candidate-2": {
+      "page_size_bytes": 16384,
+      "global_counter_deltas": {
+        "Swapins": 2647284,
+        "Swapouts": 2775484,
+        "Pageouts": 6229,
+        "Compressions": 10458692,
+        "Decompressions": 9467392
+      },
+      "global_swapin_bytes": 43373101056,
+      "global_swapout_bytes": 45473529856,
+      "swap_before": "vm.swapusage: total = 7168.00M  used = 5717.31M  free = 1450.69M  (encrypted)\n",
+      "swap_after": "vm.swapusage: total = 9216.00M  used = 7636.19M  free = 1579.81M  (encrypted)\n",
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      },
+      "thermal_after": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      }
+    },
+    "control-2": {
+      "page_size_bytes": 16384,
+      "global_counter_deltas": {
+        "Swapins": 2749505,
+        "Swapouts": 2897227,
+        "Pageouts": 3953,
+        "Compressions": 10859573,
+        "Decompressions": 9880717
+      },
+      "global_swapin_bytes": 45047889920,
+      "global_swapout_bytes": 47468167168,
+      "swap_before": "vm.swapusage: total = 9216.00M  used = 7484.19M  free = 1731.81M  (encrypted)\n",
+      "swap_after": "vm.swapusage: total = 8192.00M  used = 7864.31M  free = 327.69M  (encrypted)\n",
+      "power_before": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "power_after": {
+        "status": 0,
+        "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=5439587)\t100%; charged; 0:00 remaining present: true\n"
+      },
+      "thermal_before": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      },
+      "thermal_after": {
+        "status": 0,
+        "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+      }
+    }
+  },
+  "control_drift": {
+    "Qwen3.5-4B": {
+      "ttft": 1.2981619761570844,
+      "total": 0.9545430969693449,
+      "decode_tps": -0.3856072516486081
+    },
+    "Qwen3-1.7B": {
+      "ttft": 1.1967232391711908,
+      "total": 0.9624039771590138,
+      "decode_tps": -0.0661008269313802
+    },
+    "Skill_wall_change": 0.7699148778129312
+  },
+  "limits": "Global counters are not per-process attribution or proof that swap alone caused a given latency. Snapshots are not peaks/residency/freeRAM; recommended working set is not a hard allocation cap. No performance exclusion, changed prior decision or pooled/historical denominator. Source generation equality is not ISA identity."
+}

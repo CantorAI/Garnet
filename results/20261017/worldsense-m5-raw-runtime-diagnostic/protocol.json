@@ -1,0 +1,19 @@
+{
+  "experiment": "WS-M5-55",
+  "kind": "diagnostic_only",
+  "declared_utc": "2026-10-17T21:29:40.013610+00:00",
+  "design_sha256": "0d6b986dce9f9996a34c101a670b37f449e68fd29feed392df3b7702060c54aa",
+  "source_modified": false,
+  "promote": false,
+  "schedule": [
+    "control-1",
+    "candidate-1",
+    "candidate-2",
+    "control-2"
+  ],
+  "calls": 40,
+  "parent_requests": 20,
+  "repeats": 4,
+  "pair2_predeclared_regardless_pair1_timing": true,
+  "unchanged_optimizer_gates": true
+}
