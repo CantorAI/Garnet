@@ -1,0 +1,9 @@
+{
+  "source": "WS23 main + exact WS21 fault Graph header/cpp (mainfiles byte-identical verified)",
+  "cmake": "WS21 fault options verified append-only, appended after new trace configuration",
+  "test_only_delta": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "status": "complete_instrumented_diagnostic_no_promotion",
+  "calls": 32,
+  "all_exact_native_and_trace_integrity": true,
+  "warm_maximum_postbody_seconds_per_response": 0.00040978799999999996,
+  "warm_maximum_embedding_seconds_per_response": 0.02894524997100234,
+  "finding": "No evidence from these instrumented calls for large post-body autorelease cleanup or embedding overhead as the main delay. Larger spans occur inside native body, including GPU/wait intervals; aggregate per-call GPU and wait cannot locate individual submission stalls.",
+  "example": "Candidate2 warmreasoner firstnativebody.294372s/systemCPU.189899/minorfaults145/postbody.000003, whereas laternativecalls~.04-.054s. Process counters include other threads; no VM/driver/clock cause established.",
+  "limitations": [
+    "Tracing/JSON/allocation/export perturb wall times; no speedcomparison against untracedWS22.",
+    "No per-step GPU/wait capture, only per-call aggregates; do not sum overlapping GPU/wait.",
+    "Process minor/majorfault counts do not fullydescribe Metal residency or compressed VM; zero majorfaults is not proof of no memory pressure.",
+    "Small fixedcases; no causal/statistical/generalization claim; WS21 original gate remains failed."
+  ],
+  "next_direction": "Review resident weight footprint and submission/first-step allocation paths; choose a distinct mechanism supported by owner proofs and prior-method review, then native/model safety and fresh untraced WorldSense prospective gates."
+}

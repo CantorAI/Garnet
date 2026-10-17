@@ -1,0 +1,15 @@
+{
+  "seed": "/Users/shawn/CantorAI/out/research/worldsense-vision-workspace/source",
+  "changes": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/latency_trace.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/latency_trace_test.cpp",
+    "xModel/qwen35/vl_0_8b/metal_decoder.py"
+  ],
+  "all_Metal_kernels_byte_identical": true,
+  "cuda_generic_cpu_image_modelmath_context_unchanged": true,
+  "trace_note": "Extra clocks/syscalls/nativeJSON/property/file work adds observer overhead. post_body_seconds includes scope-return/closure cleanup and scheduling, not pure autorelease drain. Native scope/lock/error behavior preserved."
+}

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T04:36:42.930946+00:00
+Generated UTC: 2026-10-17T05:06:23.355190+00:00
 
-Base HEAD at generation: `868c8babb51300deaf7c12f2462a19f66bc6be09`. Reports indexed: **212**.
+Base HEAD at generation: `c3acf15fd191d0b5471339a119bc2fec31cee2c2`. Reports indexed: **213**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -196,6 +196,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-half-prefill](../../../results/20261016/worldsense-m5-half-prefill/README.md) | WS-M5-02: limited exact-half prefill through WorldSense — rejected |
 | [results/20261016/worldsense-m5-inputs](../../../results/20261016/worldsense-m5-inputs/README.md) | Fixed WorldSense M5 experiment inputs |
 | [results/20261016/worldsense-m5-inventory](../../../results/20261016/worldsense-m5-inventory/README.md) | WS-M5-14 native graph and session buffer-owner inventory |
+| [results/20261016/worldsense-m5-latency-trace](../../../results/20261016/worldsense-m5-latency-trace/README.md) | WS-M5-23 native and host latency tracing diagnostic |
 | [results/20261016/worldsense-m5-lazy-defaults](../../../results/20261016/worldsense-m5-lazy-defaults/README.md) | WS-M5-15: lazy resident default storage (rejected screen) |
 | [results/20261016/worldsense-m5-memory](../../../results/20261016/worldsense-m5-memory/README.md) | WS-M5-12 native WorldSense memory and lifetime diagnostic |
 | [results/20261016/worldsense-m5-mixed-chunk](../../../results/20261016/worldsense-m5-mixed-chunk/README.md) | WS-M5-09: VLM64 / reasoner32 — rejected |
