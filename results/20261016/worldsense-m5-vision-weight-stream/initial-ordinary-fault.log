@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-vision-weight-stream/ordinary_fault_guard.py", line 15, in <module>
+    changed=[tensor.tensor([x+.25 for x in host[0]],shape=shape,dtype=tensor.float32),inputs[1]];want=[3*(x+.25)+3*y for x,y in zip(*host)];g._test_graph_workspace_fail_after(1);rejected=False
+                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+AttributeError: 'compiled_graph' object has no attribute '_test_graph_workspace_fail_after'

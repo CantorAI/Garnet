@@ -1,0 +1,7 @@
+{
+  "stage": "candidate multigrid before first encode",
+  "failure": "Expected96 pooled weight slots before lazy plan constructed",
+  "evidence": "PooledWeightSlots getter reads workspacePlan_; BuildWorkspacePlan called by workspace_plan_json/Run, not getter. Graph primitive guard explicitly requested plan first.",
+  "action": "Explicitly request plan before asserting same96 count; preserve failed log. No source or gate change. Verify actual values and full embedding equality before accepting.",
+  "resolution_verified": "All four grids reported96 pooled slots after explicit plan; complete vision embedding records bitwise identical OFF/ON. Failed first attempt retained. No native source change."
+}

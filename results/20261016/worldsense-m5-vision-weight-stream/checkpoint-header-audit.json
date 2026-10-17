@@ -1,0 +1,975 @@
+{
+  "scope": "Checkpoint-header estimate only, not measured memory or safe-free proof. Assumes one live FP32 materialization buffer per exact weight shape; actual liveness/padding/owners may need more. Initial virtual/default allocation and setup retained.",
+  "targets": [
+    {
+      "name": "model.visual.blocks.0.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.0.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.0.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.0.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.1.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.1.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.1.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.1.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.10.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.10.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.10.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.10.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.11.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.11.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.11.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.11.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.12.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.12.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.12.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.12.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.13.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.13.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.13.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.13.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.14.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.14.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.14.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.14.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.15.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.15.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.15.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.15.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.16.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.16.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.16.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.16.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.17.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.17.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.17.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.17.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.18.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.18.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.18.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.18.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.19.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.19.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.19.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.19.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.2.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.2.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.2.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.2.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.20.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.20.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.20.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.20.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.21.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.21.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.21.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.21.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.22.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.22.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.22.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.22.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.23.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.23.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.23.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.23.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.3.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.3.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.3.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.3.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.4.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.4.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.4.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.4.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.5.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.5.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.5.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.5.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.6.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.6.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.6.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.6.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.7.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.7.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.7.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.7.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.8.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.8.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.8.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.8.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.9.attn.proj.weight",
+      "shape": [
+        1024,
+        1024
+      ],
+      "elements": 1048576,
+      "bf16_bytes": 2097152,
+      "fp32_bytes": 4194304
+    },
+    {
+      "name": "model.visual.blocks.9.attn.qkv.weight",
+      "shape": [
+        3072,
+        1024
+      ],
+      "elements": 3145728,
+      "bf16_bytes": 6291456,
+      "fp32_bytes": 12582912
+    },
+    {
+      "name": "model.visual.blocks.9.mlp.linear_fc1.weight",
+      "shape": [
+        4096,
+        1024
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    },
+    {
+      "name": "model.visual.blocks.9.mlp.linear_fc2.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "elements": 4194304,
+      "bf16_bytes": 8388608,
+      "fp32_bytes": 16777216
+    }
+  ],
+  "shape_counts": {
+    "1024x1024": 24,
+    "3072x1024": 24,
+    "4096x1024": 24,
+    "1024x4096": 24
+  },
+  "persistent_fp32_payload_bytes": 1207959552,
+  "raw_bf16_payload_bytes": 603979776,
+  "one_per_shape_fp32_payload_bytes": 50331648,
+  "hypothetical_payload_reduction_bytes": 553648128
+}

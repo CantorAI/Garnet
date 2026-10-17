@@ -1,0 +1,143 @@
+{
+  "status": "resource_feasibility_pass_requires_fresh_speed_screen",
+  "passed": true,
+  "checks": [
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_admission": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_admission": true
+    }
+  ],
+  "sampled_maximum_bytes": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18056526176
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 18692915200,
+      "task_physical_footprint_bytes": 16014785200
+    }
+  },
+  "reduction": {
+    "metal_allocated_bytes": 0.14657380340435466,
+    "task_physical_footprint_bytes": 0.11307496005038886
+  },
+  "calls": [
+    {
+      "worker": "control-1",
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "avoided_descriptor_bytes": 0,
+      "metal_allocated_bytes": 19677511680,
+      "task_physical_footprint_bytes": 16990795144,
+      "task_compressed_bytes": 13975289856
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "avoided_descriptor_bytes": 0,
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18044401344,
+      "task_compressed_bytes": 13600997376
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "avoided_descriptor_bytes": 0,
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18056526176,
+      "task_compressed_bytes": 14186151936
+    },
+    {
+      "worker": "control-1",
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "avoided_descriptor_bytes": 0,
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18051317168,
+      "task_compressed_bytes": 14321598464
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "avoided_descriptor_bytes": 1152712704,
+      "metal_allocated_bytes": 16467050496,
+      "task_physical_footprint_bytes": 14932211008,
+      "task_compressed_bytes": 13352173568
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "avoided_descriptor_bytes": 0,
+      "metal_allocated_bytes": 18692915200,
+      "task_physical_footprint_bytes": 16007657056,
+      "task_compressed_bytes": 12968230912
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "avoided_descriptor_bytes": 1152712704,
+      "metal_allocated_bytes": 18692915200,
+      "task_physical_footprint_bytes": 16014145168,
+      "task_compressed_bytes": 13489979392
+    },
+    {
+      "worker": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "avoided_descriptor_bytes": 0,
+      "metal_allocated_bytes": 18692915200,
+      "task_physical_footprint_bytes": 16014785200,
+      "task_compressed_bytes": 13682688000
+    }
+  ],
+  "scope": "Eight actual WorldSense/Galaxy calls over two fresh workers and one warmup+one followup each. Maximum post-decode snapshots, not peaks/free system RAM. No timing or speed promotion from this resource feasibility check."
+}

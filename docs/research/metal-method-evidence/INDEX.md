@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T05:06:23.355190+00:00
+Generated UTC: 2026-10-17T05:48:13.212986+00:00
 
-Base HEAD at generation: `c3acf15fd191d0b5471339a119bc2fec31cee2c2`. Reports indexed: **213**.
+Base HEAD at generation: `e4408cd8d17293f4a55c4b1713f645a864d906dc`. Reports indexed: **214**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -207,6 +207,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |
 | [results/20261016/worldsense-m5-small-prefill](../../../results/20261016/worldsense-m5-small-prefill/README.md) | WS-M5-06: existing smaller BF16 prefill tile — rejected |
 | [results/20261016/worldsense-m5-storage-scopes](../../../results/20261016/worldsense-m5-storage-scopes/README.md) | WS-M5-16: graph/session storage lifetime pools (rejected screen) |
+| [results/20261016/worldsense-m5-vision-weight-stream](../../../results/20261016/worldsense-m5-vision-weight-stream/README.md) | WS-M5-24 exact vision-weight materialization: rejected companion decode regression |
 | [results/20261016/worldsense-m5-vision-workspace](../../../results/20261016/worldsense-m5-vision-workspace/README.md) | WS-M5-21 scalar vision workspace: rejected companion decode preservation |
 | [results/20261016/worldsense-m5-vlm-workspace](../../../results/20261016/worldsense-m5-vlm-workspace/README.md) | WS-M5-20 private dense buffers with VLM reuse: rejected resource gate |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |

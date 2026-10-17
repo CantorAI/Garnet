@@ -1,0 +1,39 @@
+{
+  "observed_utc": "2026-10-17T05:42:50.348443+00:00",
+  "scope": "Post-resource evidence index; original before-dispatch freeze retained separately. No speed decision or new pre-run identity claim.",
+  "all_checks": {
+    "primitive-native-results.json": {
+      "off": 0,
+      "on": 0
+    },
+    "graph-strengthened-results.json": {
+      "off": 0,
+      "on": 0
+    },
+    "native-results.json": {
+      "off": 0,
+      "on": 0
+    },
+    "api-correctness-result.json": true,
+    "private-trained-complete.json": true,
+    "fault-correctness-result.json": true
+  },
+  "vision_embeddings_exact": true,
+  "weight_fault_cases": 8,
+  "frozen_source_still_matches": true,
+  "files": {
+    "primitive-proof.json": "52d15375465d5ad391afb6626757f6951497bf4bb48ab7084edd1e40694ca042",
+    "graph-strengthened-results.json": "4b2df16ba560b8619236283029ebcc135257514ad3967d6acebb31867bc5cbcf",
+    "api-state-guard-off.json": "855cab1ce32faa862e1707f9d0badc2fd38b02214ffd2f61e250cb6e6be743a6",
+    "api-state-guard-on.json": "9d23f5c3e82d4b9e4e194aad747ba500c552cb600be2cd003a90414ad4aec7f2",
+    "vision-grid-off.json": "6ab55b0d9954dcabc855f26f94df3230120db2904ce0322abbd26b2c6eee1af6",
+    "vision-grid-on.json": "6ab55b0d9954dcabc855f26f94df3230120db2904ce0322abbd26b2c6eee1af6",
+    "private-trained-complete.json": "bef8f1acfaddec0bf4f70da0d07712d4226795d6120a8e97d4c876402a8d7b56",
+    "weight-fault-result.json": "a75c3da63c4f346086ae8fa32f2ceb0670cf425587740ec8065275c430dd8bad",
+    "fault-preparation.json": "d96fa3855e7af5025312c20bcc1a0b3f48bdb666f92555472c87a3cff087d14f",
+    "initial-full-model-failure.json": "611a182b2c14d829070ceb28b400b4fc5d9835fb2d5dbc6a18842af18eec2ea0",
+    "starting-source-manifest.json": "4930d6015c78c19b6dcc09d35a7b4430cbab72124b1e932588edabe6e762f1c1",
+    "cohort-preparation-complete.json": "f06d3ee6f117ad38869b981c06edf495041ffa3147948802107bda5b10f35f28",
+    "source-scope-audit.json": "73f3323978f79bd8c4934b32090959d225d92c6d8600b9763d8b1bdec5425e7e"
+  }
+}

@@ -1,0 +1,10 @@
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+RESTORED VALIDATED PRODUCTION LIBRARY AND NORMAL SERVICE
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-vision-weight-stream/correctness.py", line 18, in <module>
+    run([str(n/'xlang3'),'-B',str(w/'vision_grid_guard.py'),mode],'vision-grid-'+mode+'.log')
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-vision-weight-stream/correctness.py", line 5, in run
+    with (w/log).open('w')as stream:subprocess.run(args,stdout=stream,stderr=subprocess.STDOUT,check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3', '-B', '/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-vision-weight-stream/vision_grid_guard.py', 'on']' returned non-zero exit status 1.
