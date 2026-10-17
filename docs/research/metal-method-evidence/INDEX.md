@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T22:02:39.196709+00:00
+Generated UTC: 2026-10-17T22:47:56.599655+00:00
 
-Base HEAD at generation: `59a882e9765d4c1f61cd6bc117aa620dd06abd16`. Reports indexed: **246**.
+Base HEAD at generation: `5a687e206ceb02f4ffd3b4e8843a3e4d288255fb`. Reports indexed: **247**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -238,6 +238,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-primary-u32-integration](../../../results/20261017/worldsense-m5-primary-u32-integration/README.md) | WS-M5-40 canonical integration: production acceptance rejected |
 | [results/20261017/worldsense-m5-primary-value16](../../../results/20261017/worldsense-m5-primary-value16/README.md) | WS-M5-43 value16 sign/mantissa fold: rejected |
 | [results/20261017/worldsense-m5-raw-runtime-diagnostic](../../../results/20261017/worldsense-m5-raw-runtime-diagnostic/README.md) | WS-M5-55 — Mirrored raw-runtime diagnostic is mixed, with large control drift |
+| [results/20261017/worldsense-m5-request-weight-residency](../../../results/20261017/worldsense-m5-request-weight-residency/README.md) | WS-M5-56 — Whole-request native raw-weight residency rejected by text decode gate |
 | [results/20261017/worldsense-m5-vector-prefill](../../../results/20261017/worldsense-m5-vector-prefill/README.md) | WS-M5-47 — Exact vector prefill loading rejected by matched timing |
 | [results/20261017/worldsense-m5-wide-cached-prefill](../../../results/20261017/worldsense-m5-wide-cached-prefill/README.md) | WS-M5-53 — Wide 4B storage with cached metadata rejected on text decoding |
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |

@@ -1,0 +1,17 @@
+loading initial cache file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-request-weight-residency/build-profile/MetalWorldSense4BPrefix.cmake
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-request-weight-residency-off
+[  6%] Built target garnet_native_image
+[ 13%] Built target garnet_metal
+[ 20%] Built target garnet_inventory_test
+[ 27%] Built target garnet_memory_stats_test
+[ 34%] Built target garnet_prefix_copy_test
+[ 41%] Built target garnet_metal_matmul_test
+[ 48%] Built target garnet_matrix_metadata_test
+[ 79%] Built target garnet
+[ 86%] Built target garnet_primary_storage_test
+[ 93%] Built target garnet_primary_projection_test
+[ 96%] Building CXX object CMakeFiles/garnet_request_residency_test.dir/test2026/metal/request_residency_test.cpp.o
+[100%] Linking CXX executable garnet_request_residency_test
+[100%] Built target garnet_request_residency_test

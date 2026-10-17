@@ -1,0 +1,121 @@
+{
+  "utc": "2026-10-17T22:33:06.070984+00:00",
+  "wide_admission_scope_verified": true,
+  "raw_MAIN_and_primary_fragments_exact_WS53": true,
+  "cached_native_live_property_suite_ON_fault_executed": true,
+  "ordinary_resident_late_session_invalid_rebuild_rehydration_exact": true,
+  "normal_API_retirement_and_zero_rehydration": {
+    "off": [
+      {
+        "model_id": "Qwen3.5-4B",
+        "capacity": 512,
+        "lazy_default_retired_bytes": 0,
+        "lazy_default_planned_slots": 0,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3.5-4B",
+        "capacity": 512,
+        "lazy_default_retired_bytes": 0,
+        "lazy_default_planned_slots": 0,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 0,
+        "lazy_default_planned_slots": 0,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 0,
+        "lazy_default_planned_slots": 0,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 0,
+        "lazy_default_planned_slots": 0,
+        "lazy_default_rehydrated_bytes": 0
+      }
+    ],
+    "primary": [
+      {
+        "model_id": "Qwen3.5-4B",
+        "capacity": 512,
+        "lazy_default_retired_bytes": 369623040,
+        "lazy_default_planned_slots": 192,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3.5-4B",
+        "capacity": 512,
+        "lazy_default_retired_bytes": 369623040,
+        "lazy_default_planned_slots": 192,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 239009792,
+        "lazy_default_planned_slots": 168,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 239009792,
+        "lazy_default_planned_slots": 168,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 239009792,
+        "lazy_default_planned_slots": 168,
+        "lazy_default_rehydrated_bytes": 0
+      }
+    ],
+    "on": [
+      {
+        "model_id": "Qwen3.5-4B",
+        "capacity": 512,
+        "lazy_default_retired_bytes": 369623040,
+        "lazy_default_planned_slots": 192,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3.5-4B",
+        "capacity": 512,
+        "lazy_default_retired_bytes": 369623040,
+        "lazy_default_planned_slots": 192,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 239009792,
+        "lazy_default_planned_slots": 168,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 239009792,
+        "lazy_default_planned_slots": 168,
+        "lazy_default_rehydrated_bytes": 0
+      },
+      {
+        "model_id": "Qwen3-1.7B",
+        "capacity": 256,
+        "lazy_default_retired_bytes": 239009792,
+        "lazy_default_planned_slots": 168,
+        "lazy_default_rehydrated_bytes": 0
+      }
+    ]
+  },
+  "scope": "Existingcompletecorrectness cases, nophysicalfree/performance claim. Disabled legacylinear allocation-injection branch remains unexecuted/unclaimed."
+}

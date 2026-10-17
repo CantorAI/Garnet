@@ -1,0 +1,12 @@
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Native8tests off exit 0
+Native8tests primary exit 0
+Native8tests on exit 8
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 84561
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-request-weight-residency/native_controller.py", line 23, in <module>
+    if p.returncode:raise RuntimeError('Native correctness failure '+mode)
+RuntimeError: Native correctness failure on

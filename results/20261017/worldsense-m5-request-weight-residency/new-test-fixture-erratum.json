@@ -1,0 +1,8 @@
+{
+  "utc": "2026-10-17T22:22:39.113267+00:00",
+  "initial_native_controller_session": 9165,
+  "terminal_exit_code": 1,
+  "failure": "New negative fixture128x128 did not satisfy original primary admission shape/size. Original7 candidate tests passed; new8th failed before intended packed-negative branch.",
+  "fix": "Use512x128 fixture already supported by original primary tests; no inference/source math/numerical bound/budget/gate change. Rebuild before correctness rerun; no performance run occurred.",
+  "original_sources_logs_binary_hashes_retained": true
+}

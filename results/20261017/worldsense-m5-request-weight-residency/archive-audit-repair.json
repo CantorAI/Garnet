@@ -1,0 +1,7 @@
+{
+  "initial_audit_session": 33083,
+  "exit_code": 1,
+  "failure": "Archive replay used work-relative WS54 program path, unavailable from archive. Numerical/benchmark records were not changed.",
+  "fix": "Resolve eight WS54 actual generated programs directly from immutable59a882e9765d4c1f61cd6bc117aa620dd06abd16 into temporary audit directory, then run same byte-equality checks.",
+  "inference_or_benchmark_rerun": false
+}

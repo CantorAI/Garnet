@@ -1,0 +1,14 @@
+{
+  "wide_admission_scope_verified": true,
+  "original_context_and_session_code_exact_after_lifecycle_inverse": true,
+  "original_Model_infer_AST_exact_after_lifecycle_inverse": true,
+  "all_other_serving_AST_exact": true,
+  "original_math_shaders_codecs_xModels_CUDA_tests_exact": true,
+  "all_four_actual_programs_byte_exact_WS54": true,
+  "unchanged_WS32_budget_helper": true,
+  "request_limits_4GiB_2048_and_test_only_64KiB": true,
+  "trained_request_coverage_generation_invalid_nested_close_reset_contention_pass": true,
+  "source_files": 1720,
+  "canonical_overlays": 15,
+  "scope": "Exact source inverse and executed correctness guards; no speed or physical residency claim."
+}

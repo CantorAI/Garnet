@@ -1,0 +1,36 @@
+{
+  "analyze_resource.py": {
+    "numeric_golden_source_metric_AST_unchanged": true,
+    "only_native_route_replaced": true,
+    "real_native_calls_validated": 15,
+    "wrong_capabilities_lazy_owner_metadata_vector_counts_rejected": true,
+    "text_zero_primary_deltas_and_only_zero_or_VLM201_global_owner_verified": true,
+    "new_request_telemetry_negative_guards_exercised": 95
+  },
+  "speed/analyze.py": {
+    "numeric_golden_source_metric_AST_unchanged": true,
+    "only_native_route_replaced": true,
+    "real_native_calls_validated": 15,
+    "wrong_capabilities_lazy_owner_metadata_vector_counts_rejected": true,
+    "text_zero_primary_deltas_and_only_zero_or_VLM201_global_owner_verified": true,
+    "new_request_telemetry_negative_guards_exercised": 95
+  },
+  "confirmation/analyze.py": {
+    "numeric_golden_source_metric_AST_unchanged": true,
+    "only_native_route_replaced": true,
+    "real_native_calls_validated": 15,
+    "wrong_capabilities_lazy_owner_metadata_vector_counts_rejected": true,
+    "text_zero_primary_deltas_and_only_zero_or_VLM201_global_owner_verified": true,
+    "new_request_telemetry_negative_guards_exercised": 95
+  },
+  "primary-speed/analyze.py": {
+    "shared_full_golden_input_model_metric_prefix_AST_unchanged": true,
+    "additional_prospective_5percent_VLM_TTFT_and2percent_memory_preservation": true,
+    "no_original_stage_gate_relaxed": true,
+    "text_zero_primary_deltas_and_only_zero_or_VLM201_global_owner_verified": true,
+    "new_request_telemetry_negative_guards_exercised": 95
+  },
+  "production-speed/analyze.py": {
+    "new_request_telemetry_negative_guards_exercised": 75
+  }
+}
