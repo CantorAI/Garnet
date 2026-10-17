@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T12:07:07.107209+00:00
+Generated UTC: 2026-10-17T12:44:08.518185+00:00
 
-Base HEAD at generation: `504bf07d7449d9de425d3bb7cb11cac6a61398c5`. Reports indexed: **228**.
+Base HEAD at generation: `c3eb0f10cc5680bd62501864a97199ebb7571a87`. Reports indexed: **229**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -209,6 +209,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-prefix-cache](../../../results/20261016/worldsense-m5-prefix-cache/README.md) | WS-M5-10 native bounded text prefix cache and wider VLM prefill |
 | [results/20261016/worldsense-m5-primary-blocks](../../../results/20261016/worldsense-m5-primary-blocks/README.md) | WS-M5-36: sole-primary lossless BF16 blocks — CPU feasibility |
 | [results/20261016/worldsense-m5-primary-gpu](../../../results/20261016/worldsense-m5-primary-gpu/README.md) | WS-M5-37 lossless primary weights: resource pass, decode regression |
+| [results/20261016/worldsense-m5-primary-kmajor](../../../results/20261016/worldsense-m5-primary-kmajor/README.md) | WS-M5-39 direct K-order decode: companion speed regression |
 | [results/20261016/worldsense-m5-primary-vector](../../../results/20261016/worldsense-m5-primary-vector/README.md) | WS-M5-38 vector primary weights: companion decode regression |
 | [results/20261016/worldsense-m5-private-execution](../../../results/20261016/worldsense-m5-private-execution/README.md) | WS-M5-25 actual private execution: rejected companion decode regression |
 | [results/20261016/worldsense-m5-private-resident-defaults](../../../results/20261016/worldsense-m5-private-resident-defaults/README.md) | WS-M5-30: private resident deferred defaults — rejected |

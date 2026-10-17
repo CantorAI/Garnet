@@ -1,0 +1,22 @@
+[
+  {
+    "kernel": "primary_bf16_decode",
+    "inverse_load_substitution_exact": true,
+    "old_load": "ushort4 b0=quad.r0,b1=quad.r1,b2=quad.r2,b3=quad.r3;",
+    "new_load": "ushort4 weights[4]={quad.k0,quad.k1,quad.k2,quad.k3};",
+    "old_convert": "float4 w=as_type<float4>(uint4(b0[j],b1[j],b2[j],b3[j])<<16);",
+    "new_convert": "float4 w=as_type<float4>(uint4(weights[j])<<16);",
+    "original_sha256": "560a4c7f19414e3b2d6d7d33ee5d97d34b4efa3a9eb9446d95ff11c6905c7373",
+    "new_sha256": "cd3d61eff8ba59fcd64fa003a424a1214057e8d818b00fef17faefe8adb42ee7"
+  },
+  {
+    "kernel": "primary_specialized_bf16_decode",
+    "inverse_load_substitution_exact": true,
+    "old_load": "ushort4 b0=quad.r0,b1=quad.r1,b2=quad.r2,b3=quad.r3;",
+    "new_load": "ushort4 weights[4]={quad.k0,quad.k1,quad.k2,quad.k3};",
+    "old_convert": "float4 w=as_type<float4>(uint4(b0[j],b1[j],b2[j],b3[j])<<16);",
+    "new_convert": "float4 w=as_type<float4>(uint4(weights[j])<<16);",
+    "original_sha256": "d5773a02f86414a9b5d07fa71da20a415348f42af9545a3473dc075e42917123",
+    "new_sha256": "40c040d63dd1a3d63a9275101c1f17c4a258f87e84c96863201b68de61fdab1e"
+  }
+]

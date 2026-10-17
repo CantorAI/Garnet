@@ -1,0 +1,9 @@
+{
+  "experiment": "WS-M5-39",
+  "declared_utc": "2026-10-17T12:11:00.275846+00:00",
+  "seed": "Frozen WS38 plus direct K-major load reconstruction and a compiled capability marker only.",
+  "hypothesis": "Avoid row-vector reconstruction/transposition before original FP32 FMA loop. Compiler/register behavior may regress; no speed prediction.",
+  "fixed": "Codec,64bit variable metadata,398matrix admission,primary-only ownership,128thread geometry,prefill,FP32 arithmetic,counters,profiles,budgets,CUDA.",
+  "gates": "All original native/full-model/fault/dualGPUcorpus checks; NEW8resource10%Metal5%footprint; NEW20speedbothmodelsTTFTtotalderiveddecodeandSkillwall2%preservation; NEW48fourworker3frame/querytwopairs independentlypass beforepromotion.",
+  "accounting": "Native/XLang3 image/inference; CPython orchestration only. No camera,competingGPU/build/archivecopyduringtiming. Preserve first/warm/failures/source/model/build/SDK identities. Restore WS10 after each phase."
+}
