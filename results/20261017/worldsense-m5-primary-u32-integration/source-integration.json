@@ -1,0 +1,27 @@
+{
+  "base_commit": "481172cde24bdb2fba6f7948a08b040d37fce233",
+  "prototype_source_manifest": "../worldsense-primary-u32/starting-source-manifest.json",
+  "tested_files_integrated": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_32_contract.h",
+    "src/backends/metal/primary_block_codec.h",
+    "src/backends/metal/primary_block_shader.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/inventory_test.cpp",
+    "test2026/metal/matrix_metadata_test.cpp",
+    "test2026/metal/memory_stats_test.mm",
+    "test2026/metal/primary_projection_test.cpp",
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "additional_profile": "cmake/MetalWorldSense4BPrimary.cmake",
+  "only_runtime_change_from_prototype": "Optional inventory capture root moved under model cache; normal collectNativeInventory=False branch unchanged. AST equivalence after only this assignment normalization passes.",
+  "prototype_unchanged": true,
+  "promoted": false
+}

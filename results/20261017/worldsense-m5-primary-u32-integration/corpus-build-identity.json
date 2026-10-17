@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/Garnet/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/Garnet/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/Garnet/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-u32-integration/primary_corpus_test.cpp",
+    "/Users/shawn/CantorAI/Garnet/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-u32-integration-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-u32-integration-on/primary_corpus_test"
+  ],
+  "source_sha256": "3b273fbcb42410b64854b75d0810592e04bf0e8bee7f67cc1fca905678393330",
+  "library_sha256": "ce11c6e7a5546a1c9f34b5e6b16c7a7ee5157a9bd179d25edb991c4f38412454",
+  "executable_sha256": "cb90661d42f7a7bf78ea5c9cfe767b260d6c1fc3cb60dd80006f5c056a650d98"
+}

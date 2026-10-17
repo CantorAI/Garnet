@@ -1,0 +1,205 @@
+{
+  "status": "passed_individual_confirmation_pair",
+  "passed": true,
+  "checks": [
+    {
+      "worker": "control-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "query_plan",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-full-2",
+      "phase": "query_plan",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "query_plan",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-full-2",
+      "phase": "query_plan",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    }
+  ],
+  "metrics": {
+    "control-full-2": {
+      "Qwen3-1.7B": {
+        "samples": 3,
+        "ttft": 4.458227374998387,
+        "total": 7.650229999999283,
+        "decode_tps": 17.321349102349494
+      },
+      "Qwen3.5-4B": {
+        "samples": 3,
+        "ttft": 6.876859959011199,
+        "total": 21.636746290983865,
+        "decode_tps": 8.443571785868306
+      }
+    },
+    "candidate-full-2": {
+      "Qwen3-1.7B": {
+        "samples": 3,
+        "ttft": 2.5062121670052875,
+        "total": 4.704999292007415,
+        "decode_tps": 22.285013152399916
+      },
+      "Qwen3.5-4B": {
+        "samples": 3,
+        "ttft": 6.299357333016815,
+        "total": 17.758631542004878,
+        "decode_tps": 9.83454918649197
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.4378455928335879,
+      "total_change": -0.3849859034293275,
+      "decode_gain": 0.2865633629759903
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.08397766268857121,
+      "total_change": -0.17923742769933093,
+      "decode_gain": 0.16473803218582095
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-full-2": null,
+    "candidate-full-2": 19102498816
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-full-2": 35.891538041993044,
+    "candidate-full-2": 19.64201095799217
+  },
+  "native_skill_wall_gain": 0.4527397813097046,
+  "scope": "Additional canonical-source acceptance versus actual deployedWS10. Existing full prototype resource and two-pair confirmation gates remain prerequisites. Same exact/golden/budget/2%TTFTtotaldecodeSkillwall gates; oldWS10memory telemetry unavailable and represented as null, not fabricated. Candidate native memory snapshots diagnostic only. First/warm separate."
+}

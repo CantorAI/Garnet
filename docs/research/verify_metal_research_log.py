@@ -8,11 +8,25 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import re
+import subprocess
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs/research'
 OUT = DOCS / 'metal-method-evidence'
+
+# These reports describe the d52 source integrated at this immutable revision.
+# Later valid backend changes must not be compared to historical source hashes.
+# The report's original expected hashes remain mandatory, including before/after
+# hashes for every regenerated experimental transformation.
+HISTORICAL_D52_COMMIT = '14cdbc33f256b1b4bcefa5e542031af1ce4c0ac7'
+
+
+def historical_d52_bytes(name, expected_sha256):
+    raw = subprocess.check_output(
+        ['git', '-C', str(ROOT), 'show', HISTORICAL_D52_COMMIT + ':' + name])
+    assert hashlib.sha256(raw).hexdigest() == expected_sha256, name
+    return raw
 
 
 def main():
@@ -306,7 +320,7 @@ def main():
         assert [c.strip() for c in cells[2:]]==[' / '.join(f"{first[k]['initialization_s']:.6f}" for k in ('control','candidate')),' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate'))];vector_repeat_numbers+=4
     integration=json.loads((p/'branch-source-integration.json').read_text());assert integration['branch_source_integrated'] and integration['both_host_audits_pass'] and not integration['remote_default_library_changed'] and not integration['full_goal_met']
     assert len(integration['changes'])==8 and integration['measured_library_sha256']==vector_repeat['candidate_library_sha256']
-    for name,info in integration['changes'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==info['after_sha256']
+    for name,info in integration['changes'].items():historical_d52_bytes(name,info['after_sha256'])
     compact_audit=json.loads((ROOT/'results/20261016/compact-fused-projection-groups/initial/verification.json').read_text())
     assert compact_audit['verified_files']==33 and compact_audit['group_batch_checks']==16 and compact_audit['validated_executions']==104093 and compact_audit['timed_executions']==6400
     compact_decision=json.loads((ROOT/'results/20261016/compact-fused-projection-groups/decision-initial.json').read_text());assert not compact_decision['repeat_admitted'] and not compact_decision['native_integration_groups']
@@ -399,8 +413,8 @@ def main():
     assert len(prep['changes'])==len(factory['OPERATIONS'])==12 and len(prep['added_sources'])==5
     assert prep['selection']['confirmed_models']==['Qwen3-0.6B'] and not prep['full_goal_met']
     for name,operation in factory['OPERATIONS'].items():
-        p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==prep['changes'][name]['before']
-        assert hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==prep['changes'][name]['after']
+        raw=historical_d52_bytes(name,prep['changes'][name]['before'])
+        assert hashlib.sha256(operation(raw.decode()).encode()).hexdigest()==prep['changes'][name]['after']
     rejected=ROOT/'results/20261016/prepared-qkv-native'
     rejection=json.loads((rejected/'rejection/verification.json').read_text())
     assert rejection['candidate_rejected'] and not rejection['native_performance_admitted'] and not rejection['full_goal_met']
@@ -466,7 +480,7 @@ def main():
     paired_native=ROOT/'results/20261016/paired-norm-rope-native';paired_prep=json.loads((paired_native/'preparation.json').read_text());paired_factory=runpy.run_path(str(ROOT/'test2026/metal/make_paired_norm_rope_native.py'));paired_ops=paired_factory['operations'](paired_prep['selected_models'])
     assert len(paired_ops)==len(paired_prep['changes'])==12 and len(paired_prep['added_sources'])==5 and paired_prep['selection']==chain_decision
     for name,operation in paired_ops.items():
-        p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==paired_prep['changes'][name]['before'] and hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==paired_prep['changes'][name]['after']
+        raw=historical_d52_bytes(name,paired_prep['changes'][name]['before']);assert hashlib.sha256(operation(raw.decode()).encode()).hexdigest()==paired_prep['changes'][name]['after']
     for name,sha in paired_prep['added_sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha
     native_audit=json.loads((paired_native/'checks/verification.json').read_text());assert native_audit==json.loads((paired_native/'checks/mac-verification.json').read_text())
     assert native_audit['validation_stages']==34 and native_audit['paired_rope_trained_steps']==48 and not native_audit['reused_validation_stages'] and not native_audit['reused_compile_stages']
@@ -504,7 +518,7 @@ def main():
     tile_native=ROOT/'results/20261016/delta-value-tiles-native';tile_prep=json.loads((tile_native/'preparation.json').read_text());tile_ops=runpy.run_path(str(ROOT/'test2026/metal/make_delta_value_tiles_native.py'))['OPERATIONS']
     assert len(tile_ops)==len(tile_prep['changes'])==12 and len(tile_prep['added_sources'])==4 and len(tile_prep['source_sha256'])==1410 and tile_prep['selection']==tile_decision
     for name,operation in tile_ops.items():
-        p=ROOT/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==tile_prep['changes'][name]['before'] and hashlib.sha256(operation(p.read_text()).encode()).hexdigest()==tile_prep['changes'][name]['after']
+        raw=historical_d52_bytes(name,tile_prep['changes'][name]['before']);assert hashlib.sha256(operation(raw.decode()).encode()).hexdigest()==tile_prep['changes'][name]['after']
     for name,sha in tile_prep['added_sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha
     observed=json.loads((tile_native/'latest-observation.json').read_text());primitive=observed['native_primitive'];assert primitive['checks']==162 and primitive['selected']==6 and primitive['fallback']==156 and primitive['original_fp32_words_checked']==74805120 and primitive['pending_abort_recovery_alias_uninitialized_foreign']
     assert len(observed['completed_stages'])==9 and all(v['exit_code']==0 for v in observed['completed_stages']) and not observed['full32_gate_exists'] and not observed['native_model_profiles_exist']
@@ -586,6 +600,8 @@ def main():
                   half_triplet_cpu_profiles_checked=24,half_triplet_finite_edge_cases_checked=4590,
                   vector_native_initial_table_values_checked=vector_native_numbers,
                   vector_native_repeat_table_values_checked=vector_repeat_numbers,validated_branch_source_files=8,
+                  historical_source_commit=HISTORICAL_D52_COMMIT,
+                  historical_source_scope='8 integrated hashes and 36 experiment transformations checked against immutable d52 source; original recorded hashes unchanged',
                   compact_group_checks_audited=16,synthetic_triplet_shape_checks_audited=6,
                   union_learned_pairs_cpu_audited=76,prepared_union_primitive_cases_audited=24,
                   prepared_union_learned_table_values_checked=48,prepared_union_complete_numerical_profiles=304,

@@ -1,0 +1,26 @@
+{
+  "canonical": {
+    "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+    "source_manifest": "canonical-source-before-build.json",
+    "overlay_directory": "canonical-source",
+    "overlay_files": [],
+    "frozen_source_files": 1715
+  },
+  "control": {
+    "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+    "source_manifest": "control-source-before-dispatch.json",
+    "overlay_directory": "control-source",
+    "overlay_files": [
+      "cmake/GarnetMetal.cmake",
+      "runtime/metal_serving.py",
+      "src/backends/metal/compiled_graph.cpp",
+      "src/backends/metal/compiled_graph.h",
+      "src/backends/metal/decoder_session.cpp",
+      "src/backends/metal/decoder_session.h",
+      "src/backends/metal/metal_context.h",
+      "src/backends/metal/metal_context.mm",
+      "src/entry/metal_main.cpp"
+    ],
+    "frozen_source_files": 1706
+  }
+}
