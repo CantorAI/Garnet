@@ -1,0 +1,34 @@
+[  6%] Built target garnet_native_image
+[ 13%] Built target garnet_metal
+[ 27%] Built target garnet_inventory_test
+[ 27%] Built target garnet_memory_stats_test
+[ 41%] Built target garnet_prefix_copy_test
+[ 41%] Built target garnet_metal_matmul_test
+[ 48%] Built target garnet_storage_scope_test
+[ 86%] Built target garnet
+[ 86%] Built target garnet_storage_layout_test
+[ 96%] Building CXX object CMakeFiles/garnet_vision_workspace_test.dir/test2026/metal/vision_workspace_test.cpp.o
+[ 96%] Built target garnet_workspace_plan_test
+[100%] Linking CXX executable garnet_vision_workspace_test
+[100%] Built target garnet_vision_workspace_test
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-vision-workspace-off
+    Start 1: metal_inventory_reference
+1/8 Test #1: metal_inventory_reference ..........   Passed    0.60 sec
+    Start 2: metal_memory_stats_reference
+2/8 Test #2: metal_memory_stats_reference .......   Passed    0.23 sec
+    Start 3: metal_prefix_copy_reference
+3/8 Test #3: metal_prefix_copy_reference ........   Passed    0.28 sec
+    Start 4: metal_mps_matmul_reference
+4/8 Test #4: metal_mps_matmul_reference .........   Passed    0.90 sec
+    Start 5: metal_storage_scope_reference
+5/8 Test #5: metal_storage_scope_reference ......   Passed    0.22 sec
+    Start 6: metal_storage_layout_reference
+6/8 Test #6: metal_storage_layout_reference .....   Passed    0.21 sec
+    Start 7: metal_workspace_plan_reference
+7/8 Test #7: metal_workspace_plan_reference .....   Passed    0.26 sec
+    Start 8: metal_vision_workspace_reference
+8/8 Test #8: metal_vision_workspace_reference ...   Passed    0.47 sec
+
+100% tests passed out of 8
+
+Total Test time (real) =   3.18 sec

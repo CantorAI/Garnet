@@ -1,0 +1,22 @@
+{
+  "scope": "Logical output overwrite proof, no arithmetic or kernel change",
+  "dispatch": "EncodeVision validates operation-specific rows/columns and calls EncodeStateKernel10 with outRows*outColumns. Modes0/2/3/4/5/6/9 remain scalar vision_op; specialized switches choose1/7/8/10 only.",
+  "admitted_modes": {
+    "0": "Each logical element assigns a+bias",
+    "2": "Each logical element assigns GELU tanh",
+    "3": "Each logical element assigns GELU erf approximation",
+    "4": "Each logical element assigns merge permutation input",
+    "5": "Each logical element assigns input plus indexed positional sum",
+    "6": "Each logical element assigns RoPE result or copies V tail",
+    "9": "Each logical element assigns flatten permutation input"
+  },
+  "excluded_modes": [
+    1,
+    7,
+    8,
+    10
+  ],
+  "liveness": "All a/b/arguments conservative reads; full one-writer proof, singleton standard tracked FP32 buffers, protected weights/root/input/output/aliases, strict oldlast<newfirst unchanged. No same-op alias permitted.",
+  "native_validation": "56cases/build, both8test suites pass: NaNoutput vs fresh bit equality, CPU reference tolerance3e-6, batch1/2,tokens4/8,columns7/12,merge4,queuedsecondproducer with intervening consumer,invalidmode+Abort. Outputslogical notpadding; no physical RAM/performance claim.",
+  "metal_context_mm_sha256": "78851d916a27ca8771376c3dcfa8b4598c3dcc5ba60e04aff87d163699d97dcd"
+}

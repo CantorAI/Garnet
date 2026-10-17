@@ -1,0 +1,15 @@
+{
+  "seed": "/Users/shawn/CantorAI/out/research/worldsense-vlm-workspace/source",
+  "changes": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/resident_workspace_plan.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/vision_workspace_test.cpp"
+  ],
+  "cuda_unchanged": true,
+  "all_Metal_kernels_byte_identical": true,
+  "model_math_context_precision_images_unchanged": true
+}

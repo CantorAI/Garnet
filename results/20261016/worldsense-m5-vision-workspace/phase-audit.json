@@ -1,0 +1,89 @@
+{
+  "warm_median_phases": {
+    "control-1": {
+      "Qwen3.5-4B": {
+        "vision_seconds": 9.606990978994872,
+        "host_input_seconds": 0.046976354002254084,
+        "prefill_seconds": 17.039988957993046,
+        "decode_seconds": 11.664349375496386,
+        "reset_seconds": 0.04149358350696275,
+        "prefix_cache_restore_seconds": 0.0,
+        "decode_profile": {
+          "encode_ms": 102.76512200000003,
+          "gpu_ms": 11305.586500035133,
+          "prepare_ms": 12.518417000000005,
+          "wait_ms": 11528.5428135
+        },
+        "prefill_profile": {
+          "encode_ms": 7.457520000000001,
+          "gpu_ms": 15586.765333340736,
+          "prepare_ms": 12.095229500000002,
+          "wait_ms": 17008.200374
+        }
+      },
+      "Qwen3-1.7B": {
+        "vision_seconds": null,
+        "host_input_seconds": 0.0179256039991742,
+        "prefill_seconds": 8.127504978998331,
+        "decode_seconds": 1.2822920625039842,
+        "reset_seconds": 0.38405210400378564,
+        "prefix_cache_restore_seconds": 0.009102562005864456,
+        "decode_profile": {
+          "encode_ms": 11.569789,
+          "gpu_ms": 1234.6484791851253,
+          "prepare_ms": 3.265689,
+          "wait_ms": 1264.10798
+        },
+        "prefill_profile": {
+          "encode_ms": 5.7942915,
+          "gpu_ms": 7378.990479155618,
+          "prepare_ms": 2.0525205,
+          "wait_ms": 8087.511584
+        }
+      }
+    },
+    "candidate-1": {
+      "Qwen3.5-4B": {
+        "vision_seconds": 0.6957067714974983,
+        "host_input_seconds": 0.0346498114959104,
+        "prefill_seconds": 5.798238124996715,
+        "decode_seconds": 10.71509304150095,
+        "reset_seconds": 0.0629728130006697,
+        "prefix_cache_restore_seconds": 0.0,
+        "decode_profile": {
+          "encode_ms": 84.06235699999999,
+          "gpu_ms": 10316.16670834046,
+          "prepare_ms": 12.217601499999997,
+          "wait_ms": 10367.5088785
+        },
+        "prefill_profile": {
+          "encode_ms": 5.099187,
+          "gpu_ms": 5381.023854177329,
+          "prepare_ms": 1.857875,
+          "wait_ms": 5788.1227715
+        }
+      },
+      "Qwen3-1.7B": {
+        "vision_seconds": null,
+        "host_input_seconds": 0.006296312501945067,
+        "prefill_seconds": 1.7700260414931108,
+        "decode_seconds": 1.7370361045032041,
+        "reset_seconds": 0.20645593749941327,
+        "prefix_cache_restore_seconds": 0.0074650829992606305,
+        "decode_profile": {
+          "encode_ms": 18.263602499999998,
+          "gpu_ms": 1696.6326666879468,
+          "prepare_ms": 4.632562999999999,
+          "wait_ms": 1708.1413544999998
+        },
+        "prefill_profile": {
+          "encode_ms": 6.733958499999999,
+          "gpu_ms": 1424.3374166690046,
+          "prepare_ms": 1.4471440000000002,
+          "wait_ms": 1750.6622289999998
+        }
+      }
+    }
+  },
+  "scope": "Descriptive single-screen phases; no clock/thermal/VM/allocator causal attribution, no confirmed speed gain."
+}

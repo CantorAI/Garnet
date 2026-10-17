@@ -1,0 +1,12 @@
+{
+  "status": "starting_after_resource_pass",
+  "prerequisite": "resource exact/native +10%Metal/+5%physical gates pass",
+  "fresh_workers": [
+    "control-1",
+    "candidate-1"
+  ],
+  "calls": 20,
+  "warmups_retained": true,
+  "no_promotion_without_two_fresh_full_confirmations": true,
+  "started_utc": "2026-10-17T04:11:21.276766+00:00"
+}

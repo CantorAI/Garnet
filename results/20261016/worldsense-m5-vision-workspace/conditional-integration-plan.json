@@ -1,0 +1,36 @@
+{
+  "status": "prepared_only_no_production_changes",
+  "required_before_integration": [
+    "fresh speed screen passes unchanged gates",
+    "two fresh full3frame/query mirrored confirmation pairs each pass"
+  ],
+  "source_files_different_from_current_production": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/resident_workspace_plan.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/inventory_test.cpp",
+    "test2026/metal/memory_stats_test.mm",
+    "test2026/metal/storage_layout_test.cpp",
+    "test2026/metal/storage_scope_test.mm",
+    "test2026/metal/vision_workspace_test.cpp",
+    "test2026/metal/workspace_plan_test.cpp",
+    "xModel/qwen/metal_dense/decoder.py",
+    "xModel/qwen35/vl_0_8b/metal_decoder.py"
+  ],
+  "integration_requirements": [
+    "Keep workspace flags defaultOFF and preserve base WS10 profile; new explicit opt-in profile for validated workspace combination only after confirmation.",
+    "Include full transitive native ownership/diagnostic/runtime/admission/plan changes and all8native tests, not only final whitelist.",
+    "Run integrated OFF/ON native suites and full model parity/safety checks; no test hooks in measured or serving library.",
+    "Leave CUDA native math and image path unchanged. Preserve checkpoint/context/precision/profile identities.",
+    "Validate ordinary service on best confirmed library,4files/noCamera,benchmark404; defaultprofile Skill/search smoke and exact results required.",
+    "Archive raw source/build/model/input identities, first/warm calls, independent gates, failure/tradeoff decisions and compatible source overlays before commit/push."
+  ],
+  "running_benchmark_unchanged": true
+}
