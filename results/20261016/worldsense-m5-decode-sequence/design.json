@@ -1,0 +1,18 @@
+{
+  "experiment": "WS-M5-22",
+  "status": "design_only_diagnostic_not_speed_promotion",
+  "declared_utc": "2026-10-17T04:22:54.827070+00:00",
+  "question": "Does the observed companion decode regression persist across consecutive identical WorldSense PlanSearch calls following a fixed video Skill, or depend on preceding request sequence?",
+  "prior_evidence": "WS21 exactscreen totalgain55.9%/62.7%,textdecode\u221226.04% rejection868c8babb retained. Private dense buffers did not prevent regression; no causal conclusion.",
+  "serving_code": "Reuse exact frozen WS21 OFF/ON libraries/source; no model/math/context/CUDA/image/production-code changes. New workload, not retry of failed promotion screen.",
+  "workload": "Existing WorldSense authenticated featuregated benchmark: one fixed car currentSkill then TWO identical a passenger car text PlanSearch calls per window,1warm+1follow. Fresh control/candidate then reversed candidate/control workers:4workers\u00d78modelcalls=32. Retain allfirst/warm/setup.",
+  "source_audit": "Galaxy GarnetVLMFilter::PlanSearch always calls native infer_json; benchmark flag returns raw response. No answer cache. Existing backend allows max2queries, so duplicate query sequence needs no API/schema change.",
+  "validation": [
+    "Allcar Skill/LLM calls match frozenWS10 fullsemantics/prompts/config/tokens/image/Skill hashes.",
+    "Both identicalqueries match goldenWS10 query semanticplan and rawprompt/config/token IDs; annotate cachehit,input/generatedtokens and index withinwindow.",
+    "Verify WS21 VLMfullwriter+workspace vs dense28private/no workspace counters, actualbinary/source/dependency identities, assignmentsrestore.",
+    "Compare percall servingdecodeTPS andnativeGPU/prepare/encode/wait plusprefill/TTFT/total bymodel/queryposition/window/worker/order. No pooling ofwarms withfollowup; no independent-sample/stats claim."
+  ],
+  "interpretation": "Diagnostic only, no speedpass gate or promotion from favorable timing. Queryprompt/context differsfromSkillreasoner; compare identicalquerypositions toavoid conflating tasks. Cannot infer frequency/thermal/VMcause withouttelemetry. Newoptimization onlyafterevidence, thenfreshprospectivepromotionprotocol.",
+  "cleanup": "Restore exactWS10normalservice,4file sources/no camera/validbenchmark404; archiveall32calls+methods+identities andlimits."
+}

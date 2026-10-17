@@ -1,0 +1,41 @@
+{
+  "observed_utc": "2026-10-17T04:26:03.254335+00:00",
+  "finding": "Dense private marker suppresses buffer planning/retirement, but native Run StorageScope remains controlled by global LAZY_RESIDENT_DEFAULTS flag, so candidate private dense graph/session calls still differ from OFF control lifecycle.",
+  "evidence": [
+    {
+      "path": "src/backends/metal/decoder_session.cpp",
+      "start_line": 431,
+      "lines": [
+        "X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value positions,X::Value slots,X::Value active,int64_t predictionToken) {",
+        "#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS",
+        "    X::Value result;MetalContext::StorageScope([&]{result=RunUnscoped(std::move(graphs),std::move(hidden),std::move(positions),std::move(slots),std::move(active),predictionToken);});return result;",
+        "#else",
+        "    return RunUnscoped(std::move(graphs),std::move(hidden),std::move(positions),std::move(slots),std::move(active),predictionToken);",
+        "#endif",
+        "}"
+      ]
+    },
+    {
+      "path": "src/backends/metal/compiled_graph.cpp",
+      "start_line": 1218,
+      "lines": [
+        "X::Value MetalCompiledGraph::Run(X::Value inputs) {",
+        "#ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS",
+        "    X::Value result;MetalContext::StorageScope([&]{result=RunUnscoped(std::move(inputs));});return result;",
+        "#else",
+        "    return RunUnscoped(std::move(inputs));",
+        "#endif",
+        "}"
+      ]
+    }
+  ],
+  "interpretation": "Static code-path difference only. Does not establish measured regression cause or justify changing WS21 rejection. Sequence diagnostic already running unchanged. Consider a separate prospective lifecycle isolation only after diagnostic evidence and ownership/exception/concurrency review.",
+  "no_runtime_or_source_changes": true,
+  "concurrency_constraints_from_source": [
+    "Session.Build retains owners, but Session.Run accepts its own actual graph list and validates compatible input/state layouts; a cached private flag from Build alone would not safely select lifetime policy for alternate prefill graphs.",
+    "Session.RunUnscoped locks session then sorted actual layer/head graph mutexes. Any future per-call scope choice must use actual validated owners under these locks, preserving lock order and exception/Abort/unbinding semantics.",
+    "Graph.RunUnscoped owns graph mutex; reading private marker outside that mutex to skip a scope would introduce a race with Build/Close.",
+    "Dense vocabulary head is built with ordinary build(), so a future all-private scope contract must explicitly account for head construction and prior ordinary-head pooling, preserving exact projection behavior."
+  ],
+  "status": "Read-only design constraints; no implementation, no measured causal evidence"
+}

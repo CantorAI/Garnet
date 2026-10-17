@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-17T04:21:47.472392+00:00",
-  "source_commit": "03b188ac7f0b3fc926926e5d7accdbde3e1e2932",
+  "generated_at_utc": "2026-10-17T04:36:42.930946+00:00",
+  "source_commit": "868c8babb51300deaf7c12f2462a19f66bc6be09",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -89,7 +89,7 @@
     "results/20261016/worldsense-m5-vlm-workspace/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-vlm-workspace/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 211,
+  "report_count": 212,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -5215,6 +5215,76 @@
       "evidence_directories": [
         "source"
       ]
+    },
+    {
+      "experiment_id": "results/20261016/worldsense-m5-decode-sequence",
+      "title": "WS-M5-22 WorldSense repeated-search sequence diagnostic",
+      "report_path": "results/20261016/worldsense-m5-decode-sequence/README.md",
+      "report_sha256": "830f2295f1fa6aae744dc8eef1f2465a0bbc1619c31f84511c10fc97a65a8e13",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-22 WorldSense repeated-search sequence diagnostic\n\nWS-M5-22 completed sequence diagnostic, not a speed screen or promotion. WS21 rejection unchanged.\n\nQuestion: does companion decode behavior persist across repeated identical WorldSense search-planning calls and worker order? Exact frozen WS21 OFF/ON native source/libraries reused, no model/math/context/CUDA/image/serving-code changes. Existing authenticated featuregated benchmark runs fixedcar currentSkill then TWO identical 'a passenger car' PlanSearch calls perwindow,1warm+1follow. Fourfresh workers control1,candidate1,candidate2,control2,32calls. Galaxy PlanSearch source audited: each request calls native infer_json, benchmark returns raw response; no answer cache. All warmups/first/setup retained.\n\nBefore dispatch verified full frozen source/library hashes, current SDK/runtime/Galaxy/WorldSense backend identities and request, WS10 backup. Model asset hashes are exact WS21 reference copied, not a new rehash claim. Current environment captured separately from referenced original build environment. Small analysis/source-review scripts during cohort; no source/build/bulkarchive, unrelated host load not controlled.\n\nAll32calls valid/assignments restored, fullgolden tokens/text/prompt/config/input/image/Skill semantics andqueryplans match WS10; allactualVLMworkspace/fullwriter anddense28private/no-workspace routechecks pass. Samequeryinput411tokens/generated56 in allquerypositions; Skillreasoner input200/generated35, VLM393/94. Tasks differ, so only identicalqueryposition comparisons isolate request content. Prefixhits annotated; firstcoldquery miss and secondhit, allfollowup hits. No independent-sample/statistical or causalclaim.\n\nFollowup servingdecodeTPS: control1 VLM7.655,reasoner24.691,queries16.043/16.557;candidate1 VLM8.468,reasoner14.004,queries19.515/18.443;candidate2 VLM8.835,reasoner25.933,queries16.559/17.381;control2 VLM7.656,reasoner26.463,queries17.630/17.691. Candidate shortreasoner slowdown not consistent across two workers; querytimings differ too. These are diagnostic observations, not new optimization confirmation or a replacement WS21 pass.\n\nTiming-boundary audit preserves original servingTPS=(generated−1)/(total−TTFT). total includes generation plus after-loop memory/ownership telemetry/tokenizerresponse work. Also report loopTPS, postloop=servingtail−loop, and loop−nativewait. Native GPU andwait overlap; neveradd orlabelresidual pureCPU. Candidate1 followupreasoner GPU1.3228s vscontrol1 1.3078, nativewait1.5917vs1.3419,loop2.2821vs1.3720,postloop.1458vs.0051. Candidate2 reasonerGPU1.2645/outsidewait.024, while itsfirstquery hasoutsidewait.572. Unattributed gaps move between requests, not uniformGPUkernelregression. Clock/thermal/VM/allocator/pool cause not established.\n\nStatic lifecycle audit: private marker suppresses workspace/retirement but globalLAZY_RESIDENT_DEFAULTS stillwraps graph/session Run in native StorageScope. Privatebuffer isolation is not lifecycleisolation. Session.Run may accept different compatible prefillgraphs eachcall; any future policy must inspect actualgraphs under sortedlocks, preservehead/graph lifetimes, Abort/unbinding and Build/Close synchronization. A Build-cached private flag alone unsafe. No codechange made from hypothesis. Next separate instrumentation should measure native call/body/drain, embedding/host work and processfaults before selecting mechanism.\n\nArchive32rawcalls/nativeCSV+derivedphaseCSV, exactrequest/environment/source/library/dependencyIDs, partialaudits, allfirst/warm andtiming/lifecycle code evidence. Reconstruction references immutable committed WS21 archive868c8babb (fullclosure/compatiblebaseoverlay/faultsources/buildflags); diagnostic has no new nativecode. Fixedframes exclude livevideo decoding/scheduling/eventpersistence/retrieval/ranking. ValidatedWS10normalservice restored,4filesonline,cameraunmounted,benchmark validrequest404 (verificationrecord). Goalactive; no optimizationpromoted.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "README.md",
+        "analysis.json",
+        "analyze.py",
+        "archive-body.txt",
+        "audit.log",
+        "build-flag-comparison.json",
+        "calls.csv",
+        "candidate-diag-1.cantor-stderr.log",
+        "candidate-diag-1.cantor.log",
+        "candidate-diag-1.client.log",
+        "candidate-diag-1.json",
+        "candidate-diag-2.cantor-stderr.log",
+        "candidate-diag-2.cantor.log",
+        "candidate-diag-2.client.log",
+        "candidate-diag-2.json",
+        "cases.json",
+        "cohort-manifest.json",
+        "control-diag-1.cantor-stderr.log",
+        "control-diag-1.cantor.log",
+        "control-diag-1.client.log",
+        "control-diag-1.json",
+        "control-diag-2.cantor-stderr.log",
+        "control-diag-2.cantor.log",
+        "control-diag-2.client.log",
+        "control-diag-2.json",
+        "controller.log",
+        "controller.py",
+        "design.json",
+        "environment.json",
+        "file-manifest.json",
+        "interpretation.json",
+        "lifecycle-scope-audit.json",
+        "model-assets.json",
+        "partial-analysis.json",
+        "partial-audit.log",
+        "preparation-complete.json",
+        "prepare.log",
+        "prepare.py",
+        "restoration-verification.json",
+        "restore-normal.log",
+        "restore_normal.py",
+        "restored-final-normal.log",
+        "sequence-phases.csv",
+        "server-candidate-diag-1.log",
+        "server-candidate-diag-2.log",
+        "server-control-diag-1.log",
+        "server-control-diag-2.log",
+        "server-restored-control.log",
+        "source-reconstruction-reference.json",
+        "starting-source-manifest.json",
+        "timing-boundary-audit.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261016/worldsense-m5-decode-sequence/restoration-verification.json",
+          "sha256": "d6a6bd0e34f494001313614c598d0a98ff8040cde5511c6f97150960c0deaa09"
+        }
+      ],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261016/worldsense-m5-decode256",

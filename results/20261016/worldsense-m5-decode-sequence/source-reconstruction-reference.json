@@ -1,0 +1,15 @@
+{
+  "source_archive_commit": "868c8babb51300deaf7c12f2462a19f66bc6be09",
+  "relative_source_archive": "../worldsense-m5-vision-workspace",
+  "sha256": {
+    "file-manifest.json": "29d44d1296c3ee563af43acc5b7531dace267726e7455438f652be8322f13fc2",
+    "source-reconstruction.json": "65224094f3f93c02c6e88d886d2ef222393c877fe505fb8678e8e9b56968d345",
+    "source-overlay.patch": "c771ab5636036624151373797836fa7f62bac7fb0c14bf5eb22e96c795a446cd",
+    "starting-source-manifest.json": "622e3a18749f2f45ada750d28be184864b34fe9b6d291cf254b76e199a30d16c",
+    "environment.json": "b25069fd9bee425d667b5f2b8d5c01b6ab7c50291ac3b92b72cd0e6ae714f17f",
+    "build-flag-comparison.json": "8f2c9c8a79d4e2b8b9e09bea003abddca8aa712f918e4d19634b9b29da32b959",
+    "model-assets.json": "89633cce5fb79ae1e351c62c126a4f5b58aaf7ba8f10e6d29b0a45b0903bfc52"
+  },
+  "native_code_changes": false,
+  "scope": "Reuse exact WS21 frozen source/OFF-ON libraries. Original compatible-base overlay/build metadata in referenced committed archive. WS22 environment records current runtime/dependencies separately."
+}
