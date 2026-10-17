@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T07:34:51.991904+00:00
+Generated UTC: 2026-10-17T07:56:45.820754+00:00
 
-Base HEAD at generation: `8cf5dcd9b22379ae24afc723e2c1377fa9b9c619`. Reports indexed: **218**.
+Base HEAD at generation: `b26b645a5c50e10f35470977b8fb60b172c8487e`. Reports indexed: **219**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -191,6 +191,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-decode-sequence](../../../results/20261016/worldsense-m5-decode-sequence/README.md) | WS-M5-22 WorldSense repeated-search sequence diagnostic |
 | [results/20261016/worldsense-m5-decode-step-profile](../../../results/20261016/worldsense-m5-decode-step-profile/README.md) | WS-M5-26 per-token native GPU and wait diagnostic |
 | [results/20261016/worldsense-m5-decode256](../../../results/20261016/worldsense-m5-decode256/README.md) | WS-M5-11 shape-restricted eight-SIMD-group decode rejected |
+| [results/20261016/worldsense-m5-dense-decode1024](../../../results/20261016/worldsense-m5-dense-decode1024/README.md) | WS-M5-29: 1024-thread companion decode grouping — rejected |
 | [results/20261016/worldsense-m5-dense-decode256](../../../results/20261016/worldsense-m5-dense-decode256/README.md) | WS-M5-27 dense BF16 decode256: rejected companion throughput regression |
 | [results/20261016/worldsense-m5-dense-decode512](../../../results/20261016/worldsense-m5-dense-decode512/README.md) | WS-M5-28: 512-thread companion decode grouping — rejected |
 | [results/20261016/worldsense-m5-dual-chunk64](../../../results/20261016/worldsense-m5-dual-chunk64/README.md) | WS-M5-08: dual-model prefill64 — rejected after fresh confirmation |

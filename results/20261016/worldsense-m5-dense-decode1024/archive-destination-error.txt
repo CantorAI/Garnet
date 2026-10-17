@@ -1,0 +1,37 @@
+ M results/20261016/worldsense-m5-dense-decode512/confirmation/analyze.py
+ M results/20261016/worldsense-m5-dense-decode512/confirmation/prepare.py
+ M results/20261016/worldsense-m5-dense-decode512/execution-routes.csv
+ M results/20261016/worldsense-m5-dense-decode512/fault-overlay.patch
+ M results/20261016/worldsense-m5-dense-decode512/fault-source/cmake/GarnetMetal.cmake
+ M results/20261016/worldsense-m5-dense-decode512/file-manifest.json
+ M results/20261016/worldsense-m5-dense-decode512/source-overlay.patch
+ M results/20261016/worldsense-m5-dense-decode512/source-reconstruction.json
+ M results/20261016/worldsense-m5-dense-decode512/source/cmake/GarnetMetal.cmake
+ M results/20261016/worldsense-m5-dense-decode512/source/runtime/metal_serving.py
+ M results/20261016/worldsense-m5-dense-decode512/source/src/backends/metal/decoder_session.cpp
+ M results/20261016/worldsense-m5-dense-decode512/source/src/backends/metal/decoder_session.h
+ M results/20261016/worldsense-m5-dense-decode512/source/src/backends/metal/metal_context.h
+ M results/20261016/worldsense-m5-dense-decode512/source/src/backends/metal/metal_context.mm
+ M results/20261016/worldsense-m5-dense-decode512/source/src/entry/metal_main.cpp
+ M results/20261016/worldsense-m5-dense-decode512/speed/analysis.json
+ M results/20261016/worldsense-m5-dense-decode512/speed/analyze.py
+ M results/20261016/worldsense-m5-dense-decode512/speed/candidate-1.cantor.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/candidate-1.client.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/candidate-1.json
+ M results/20261016/worldsense-m5-dense-decode512/speed/cohort-manifest.json
+ M results/20261016/worldsense-m5-dense-decode512/speed/control-1.cantor.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/control-1.client.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/control-1.json
+ M results/20261016/worldsense-m5-dense-decode512/speed/control-completion-audit.json
+ M results/20261016/worldsense-m5-dense-decode512/speed/controller.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/controller.py
+ M results/20261016/worldsense-m5-dense-decode512/speed/environment.json
+ M results/20261016/worldsense-m5-dense-decode512/speed/prepare.py
+ M results/20261016/worldsense-m5-dense-decode512/speed/server-candidate-1.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/server-control-1.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/server-restored-control.log
+ M results/20261016/worldsense-m5-dense-decode512/speed/starting-source-manifest.json
+?? results/20261016/worldsense-m5-dense-decode512/source/src/backends/metal/dense_decode1024_shader.h
+?? results/20261016/worldsense-m5-dense-decode512/source/test2026/metal/dense_decode1024_test.cpp
+
+Reason: copied finalizer retained worldsense-m5-dense-decode512 destination. Correcting to1024;WS28restorefromcommittedHEAD. Originalrawcohorts/runtime/productioncodeunaffected.

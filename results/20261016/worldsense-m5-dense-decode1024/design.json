@@ -1,0 +1,33 @@
+{
+  "experiment": "WS-M5-29",
+  "declared_utc": "2026-10-17T07:36:01.052293+00:00",
+  "status": "prospective_feasibility",
+  "seed": "Frozen untraced WS28; preserve prior rejected experiments. Measured control/candidate both disable256 and512.",
+  "evidence": [
+    "WS28 complete20call WorldSense screen exact/native but companiondecode\u22128.3999% fails2%gate;memory resourcepass. No confirmation/promotion/retry.",
+    "M5 device-level maxThreadsPerThreadgroup width1024; kernel-specific limit and actual execution unproven.",
+    "Checkpoint shape audit196eligible companion projections;zero4B; vocabulary excluded."
+  ],
+  "hypothesis": "32SIMD32 groups/1024threads/128outputs may change scheduling/input sharing and preserve companion throughput in memory-saving profile. No speed prediction. This is final wider device-limit geometry, not proof of cross-cohort scaling.",
+  "implementation_plan": [
+    "First compile exact per-output shader with only functionname and groupstride16\u2192128 changed. Require actual PSO maxthreads>=1024 and SIMDwidth32; if unsupported archive feasibility failure and stop.",
+    "If feasible add defaultOFF DENSE_DECODE1024 capability requiringBODY_SHAPE, mutuallyexclusive256/512. Preserve original4MSL/body/256/512 shaders andCUDA.",
+    "Eligible row1,inner2048/6144,output257..99999. Cache immutable pipeline+wide;noTail divisible128;dispatch1024/128 onlyactualnewPSO,original128/16fallback. Separate cumulativeencoded1024counter withpostrequestgetter;256/512zero both measured variants."
+  ],
+  "correctness": [
+    "Native full outputwords on77shapes\u00d72inputs bitwiseequal plusFP64bound, tails/poison/input/invalid/batch/fallback/queuedowner/Abort/retry. Require actual1024route;fallbackalone insufficient.",
+    "Bothfull32VLM28textstates/tokens/prefix/capacity,multigridvision/private/mixedhead/faultrecovery."
+  ],
+  "gates": {
+    "resource": "Newfresh8actualWorldSensecalls exact/native/sourceidentity;>=10%Metal and>=5%sampledphysicalfootprint reduction.",
+    "speed": "Ifresourcepass newfresh20actualcalls;bothmodelsTTFT/total/decode+nativeSkillwall<=2%regression.",
+    "confirmation": "Ifscreenpass twoNEWfull3frame/query mirroredpairs eachindependentlypass beforeintegration."
+  },
+  "invariants": [
+    "NativeC++Metal/XLang3images/inference;CPythonorchestrationonly",
+    "OriginalBF16weights/FP32math/image/contextbudgets/CUDA unchanged",
+    "No camera;fourfiles;restorevalidatedWS10",
+    "No unchangedfavorableretry,gate relaxation,or causal claim fromcrosscohort256/512/1024differences"
+  ],
+  "tradeoffs": "1024threadgroups may hit register/resource limits,reduceoccupancy/increaseinputrereads or incur extra PSOmetadata; exactnumerics do not imply speed. Wholeprofile comparison includesmemory/privatepolicies,notisolatedkernelcausality."
+}

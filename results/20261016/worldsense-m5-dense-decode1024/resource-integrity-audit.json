@@ -1,0 +1,10 @@
+{
+  "resource_model_calls": 8,
+  "all_exact_and_native": true,
+  "call_artifacts": {
+    "control-1.json": "725f4779a29fc95cd640cc6e91de550c219febaaa27e68ebbb7dbd788ece77dd",
+    "candidate-1.json": "b73b271260da335ccffd79be70d660b7b05c8136432293d4b060636c655243c2"
+  },
+  "audit_preparation_error": "First supplemental read-only audit used nonexistent key native; corrected to existing native_admission. Original analyzer/results unchanged; no model call or measurement affected.",
+  "scope": "Resource raw-response integrity only; no speed inference."
+}

@@ -1,0 +1,18 @@
+{
+  "observed_utc": "2026-10-17T07:39:45.570889+00:00",
+  "status": "prepared_not_dispatched",
+  "scripts": [
+    "freeze.py",
+    "prepare_cohort.py",
+    "resource_stage.py",
+    "analyze_resource.py",
+    "speed",
+    "confirmation"
+  ],
+  "native_route_requirements": "256=0,512=0 for both;1024positive onlycandidatecompanion; actualsource/library hashes checked",
+  "freeze_flags": "10BOOLsettings;8differences:7memory/private plus1024;256and512OFFboth",
+  "acceptance": "Unchanged resource10%Metal/5%footprint;fresh20calls bothmodelsTTFT/total/decode+Skillwall2%;twofreshfullpairs",
+  "preparation_correction": "Resource analyzer copied t-variable counter clause initially retained512; corrected to1024 and512zero before any cohort freeze or dispatch. No measurement affected.",
+  "full_correctness_session": 34576,
+  "fault_build": "Prepared;notstarted;avoidconcurrentbuildwithfullmodelcorrectness"
+}

@@ -1,0 +1,10 @@
+{
+  "status": "pipeline_resource_feasibility_pass",
+  "pipelines": 8,
+  "compile_warning": "macOS SDK deprecates fastMathEnabled in favor of mathMode. Standalone probe uses fastMathEnabled=YES; actual full-source build retains existing compiler options and all correctness checks.",
+  "scope": "No dispatch, output correctness, occupancy, runtime speed, or pipeline equivalence to full backend proven by this standalone probe. Actual candidate must run native numerical and route checks.",
+  "source_seed_sha256": {
+    "/Users/shawn/CantorAI/out/research/worldsense-dense-decode512/source/src/backends/metal/body_shape_shader.h": "d5053a0b10a3ce0a08e1dce6591066abf6da291e9152518a4f75555838582b34",
+    "/Users/shawn/CantorAI/out/research/worldsense-dense-decode512/source/src/backends/metal/dense_decode512_shader.h": "64777af11340e269bbda0521c8264c8eed6359fe6907eb47451d7b154ad6ed21"
+  }
+}
