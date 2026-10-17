@@ -1,0 +1,39 @@
+define void @value16_probe(i32 addrspace(1)* nocapture noundef readonly "air-buffer-no-alias" %v0, <4 x i16> addrspace(1)* nocapture noundef writeonly "air-buffer-no-alias" %v1, i32 noundef %v2) local_unnamed_addr #0 {
+%v3 = mul i32 %v2, 3
+%v4 = zext i32 %v3 to i64
+%v5 = getelementptr inbounds i32, i32 addrspace(1)* %v0, i64 %v4
+%v6 = bitcast i32 addrspace(1)* %v5 to <4 x i8> addrspace(1)*
+%v7 = load <4 x i8>, <4 x i8> addrspace(1)* %v6, align 4, , !alias.scope !26,
+%v8 = add i32 %v3, 1
+%v9 = zext i32 %v8 to i64
+%v10 = getelementptr inbounds i32, i32 addrspace(1)* %v0, i64 %v9
+%v11 = load i32, i32 addrspace(1)* %v10, align 4, , !alias.scope !26,
+%v12 = add i32 %v3, 2
+%v13 = zext i32 %v12 to i64
+%v14 = getelementptr inbounds i32, i32 addrspace(1)* %v0, i64 %v13
+%v15 = load i32, i32 addrspace(1)* %v14, align 4, , !alias.scope !26,
+%v16 = tail call <4 x i32> @air.convert.u.v4i32.u.v4i8(<4 x i8> %v7) #2
+%v17 = and i32 %v11, 65535
+%v18 = insertelement <4 x i32> undef, i32 %v17, i64 0
+%v19 = lshr i32 %v17, 4
+%v20 = insertelement <4 x i32> %v18, i32 %v19, i64 1
+%v21 = lshr i32 %v17, 8
+%v22 = insertelement <4 x i32> %v20, i32 %v21, i64 2
+%v23 = lshr i32 %v17, 12
+%v24 = insertelement <4 x i32> %v22, i32 %v23, i64 3
+%v25 = and <4 x i32> %v24, <i32 15, i32 15, i32 15, i32 15>
+%v26 = and <4 x i32> %v16, <i32 127, i32 127, i32 127, i32 127>
+%v27 = shl <4 x i32> %v16, <i32 8, i32 8, i32 8, i32 8>
+%v28 = and <4 x i32> %v27, <i32 32768, i32 32768, i32 32768, i32 32768>
+%v29 = insertelement <4 x i32> poison, i32 %v15, i64 0
+%v30 = shufflevector <4 x i32> %v29, <4 x i32> poison, <4 x i32> zeroinitializer
+%v31 = add <4 x i32> %v25, %v30
+%v32 = shl <4 x i32> %v31, <i32 7, i32 7, i32 7, i32 7>
+%v33 = or <4 x i32> %v32, %v26
+%v34 = or <4 x i32> %v33, %v28
+%v35 = tail call <4 x i16> @air.convert.u.v4i16.u.v4i32(<4 x i32> %v34) #2
+%v36 = zext i32 %v2 to i64
+%v37 = getelementptr inbounds <4 x i16>, <4 x i16> addrspace(1)* %v1, i64 %v36
+store <4 x i16> %v35, <4 x i16> addrspace(1)* %v37, align 8, , !alias.scope !29,
+ret void
+}

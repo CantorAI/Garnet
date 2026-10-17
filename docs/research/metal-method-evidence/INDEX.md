@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T14:56:55.332364+00:00
+Generated UTC: 2026-10-17T15:44:14.347556+00:00
 
-Base HEAD at generation: `7c605abe1b4b5fc6aaf019d654a0789bed0aa632`. Reports indexed: **233**.
+Base HEAD at generation: `5e5807f25a625fdd61c01f087801722f3aa521bd`. Reports indexed: **234**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -229,6 +229,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-primary-narrow-attention](../../../results/20261017/worldsense-m5-primary-narrow-attention/README.md) | WS-M5-42 raw narrow attention with packed MLP: rejected |
 | [results/20261017/worldsense-m5-primary-narrow-vocab](../../../results/20261017/worldsense-m5-primary-narrow-vocab/README.md) | WS-M5-41 semantic raw narrow vocabulary: rejected |
 | [results/20261017/worldsense-m5-primary-u32-integration](../../../results/20261017/worldsense-m5-primary-u32-integration/README.md) | WS-M5-40 canonical integration: production acceptance rejected |
+| [results/20261017/worldsense-m5-primary-value16](../../../results/20261017/worldsense-m5-primary-value16/README.md) | WS-M5-43 value16 sign/mantissa fold: rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |

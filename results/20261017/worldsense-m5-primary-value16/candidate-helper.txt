@@ -1,0 +1,6 @@
+inline ushort4 primary_quad_kword(uint sm,ushort tags,uint base) {
+    ushort4 signMant=ushort4(as_type<uchar4>(sm));
+    ushort4 exponents=ushort4(tags,tags>>4,tags>>8,tags>>12)&ushort(15);
+    ushort4 placed=(signMant*ushort(257))&ushort(0x807f);
+    return placed|((exponents+ushort(base))<<ushort(7));
+}

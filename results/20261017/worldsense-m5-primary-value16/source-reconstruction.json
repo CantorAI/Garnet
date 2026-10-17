@@ -1,0 +1,12 @@
+{
+  "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "base_scope": "Actual canonical f21c1a258 seed verified before WS43; later repository archive/docs commits had identical consumed source.",
+  "overlay_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/primary_block_shader.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "source_manifest": "starting-source-manifest.json",
+  "full_closure_files": 1715
+}

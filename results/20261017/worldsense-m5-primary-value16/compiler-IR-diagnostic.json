@@ -1,0 +1,86 @@
+{
+  "utc": "2026-10-17T15:06:21.191081+00:00",
+  "scope": "Exact helper fragment in dynamic standalone Metalprobe, CLI defaults withO3. Runtime selectedprofile uses nilMTLCompileOptions; this does not claim whole-runtime-kernel or GPUmachinecode identity, registerusage, timing or causal speed.",
+  "commands": [
+    [
+      "xcrun",
+      "-sdk",
+      "macosx",
+      "metal",
+      "-O3",
+      "-S",
+      "-emit-llvm",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-value16/probe-off.metal",
+      "-o",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-value16/probe-off.ll"
+    ],
+    [
+      "xcrun",
+      "-sdk",
+      "macosx",
+      "metal",
+      "-O3",
+      "-S",
+      "-emit-llvm",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-value16/probe-on.metal",
+      "-o",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-value16/probe-on.ll"
+    ]
+  ],
+  "versions": {
+    "compiler": {
+      "exit": 0,
+      "stdout": "Apple metal version 32023.921 (metalfe-32023.921.6)\nTarget: air64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Users/shawn/Library/Developer/DVTDownloads/MetalToolchain/mounts/389a215aea89fda945178f9fb8bcdc6aa0e20570/Metal.xctoolchain/usr/metal/current/bin\n",
+      "stderr": ""
+    },
+    "path": {
+      "exit": 0,
+      "stdout": "/Users/shawn/Library/Developer/DVTDownloads/MetalToolchain/mounts/389a215aea89fda945178f9fb8bcdc6aa0e20570/Metal.xctoolchain/usr/bin/metal\n",
+      "stderr": ""
+    },
+    "sdk": {
+      "exit": 0,
+      "stdout": "27.0\n",
+      "stderr": ""
+    }
+  },
+  "variants": {
+    "off": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "dca918b4453d52a03997fce517ab62b6c1b1d8e2d00755110fa5ba99b9b82c9f",
+      "IR_sha256": "ae52f4c11f40639f75a2a41f3be8282ad8359c1942acc7da5395ed366f4e1eeb",
+      "normalized_function_sha256": "5603991b0db192fb7748c0ec96c94198f96ee89782ff7ee36249a7aaddd7439e",
+      "integer_opcode_counts": {
+        "shl": 2,
+        "lshr": 3,
+        "or": 2,
+        "and": 4,
+        "mul": 1,
+        "trunc": 0,
+        "zext": 4
+      }
+    },
+    "on": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "fe3df693272c6b0eda0b5a638c4df62f48465514d969b751e9857b9e8d871730",
+      "IR_sha256": "9be1e9623dcd8db1e97f0150c59e21d65fa448d245482b30cde731c7cba6747d",
+      "normalized_function_sha256": "72c31dc33ece6ea620b83ba6b06fdd5e2acf4b609c874f0e9974941d0668ca1c",
+      "integer_opcode_counts": {
+        "shl": 1,
+        "lshr": 3,
+        "or": 1,
+        "and": 2,
+        "mul": 2,
+        "trunc": 2,
+        "zext": 4
+      }
+    }
+  },
+  "normalized_helper_probe_IR_identical": false,
+  "performance_eligible": true,
+  "decision": "distinct_standalone_integer_IR_requires_full_native_GPU_correctness_and_fresh_gates"
+}
