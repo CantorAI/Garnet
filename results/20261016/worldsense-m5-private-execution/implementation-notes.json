@@ -1,0 +1,20 @@
+{
+  "stage": "Isolated OFF/ON builds and native9/generic/actualpolicy guards pass; fullmodel correctness running",
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/entry/metal_main.cpp",
+    "xModel/qwen/metal_dense/decoder.py"
+  ],
+  "all_Metal_kernels_unchanged_from_WS24": true,
+  "completed_route_counter_semantics": "Increment only after successful execute return; invalid/failed calls do not increment. Clear/Build resets; Reset retains counts. Counters are cumulative per native session/graph, not perrequest.",
+  "locking": "Ordinary graph selects inside graph mutex; session actual layers and head selected after session mutex and sorted distinct graph/head locks. Lambda body executes under same locks. New flag removes outer scope and nests scope inside locked branch only for nonprivate. Existing OFF wrapper retains original path.",
+  "private_head": "Generic build_private preserves ordinary false bf16Projections and explicit head op bf16_weight; shared marker inherited only after success. Head checked alongside actual supplied layers.",
+  "limits": "No cleanup causality or measured speed/memory claim. Native tests correctness only; WS10 production library unchanged. Fault-only hook extends existing encoder injection to private session graph.",
+  "validation_order_refinement": "Wholly-private eligibility is read after session/actual graph locks and head generation validation, before the unchanged execute body completes layer/profile/input validation. This refines the design ordering: all input/profile checks still precede GPU encoding/state changes, and failed calls do not increment completed-route counters. Immutable private ownership governs scope eligibility even for rejected input; invalid/closed/head-generation/Abort tests cover rejection/recovery. No duplicate validation loop or model-name/cached selection.",
+  "counter_capability_limit": "Private/scoped completed-route instrumentation active only with PRIVATE_EXECUTION; disabled builds expose zero counters, which does not universally establish absence of other scope policies. Control measured here also has LAZY_RESIDENT_DEFAULTS OFF by frozen flags. Counters cumulative per object; not per-call work or GPU-only timings."
+}

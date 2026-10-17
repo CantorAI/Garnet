@@ -1,0 +1,32 @@
+{
+  "experiment": "WS-M5-25",
+  "status": "design_only",
+  "declared_utc": "2026-10-17T05:49:32.921048+00:00",
+  "seed": "Frozen untraced WS24, rejected result retained, no changes to productionWS10",
+  "evidence": [
+    "WS24 lower sampled task footprint11.31% still companiondecode\u221226.59%; memory saving alone does not establish a fix.",
+    "Dense layers/prefill graphs are private, but DenseMetalDecoder head uses ordinary build. Native session Run globally enters StorageScope whenever LAZY_RESIDENT_DEFAULTS is compiled, irrespective of actual graphs. EnsureWorkspaces and RetireResidentDefaults are visited for all private layers.",
+    "Session.Run accepts alternate graph lists; selection cached at Build is unsafe. Existing RunUnscoped takes session mutex then distinct sorted graph/head locks. Policy must be decided only there, after owner/generation/profile validation.",
+    "WS23 warm postbody\u22640.000410s and embedding\u22640.028945s did not support cleanup/embedding as main cause. This is an execution-policy isolation experiment, not a claim of cleanup causality."
+  ],
+  "hypothesis": "Restore a fully private dense execution path while retaining VLM memory reuse. Exclude workspace/deferred-storage bookkeeping and lifecycle wrapper only when every actual participating graph including head has immutable private storage under existing locks. Preserve existing policy for any mixed/nonprivate list.",
+  "implementation_plan": [
+    "New defaultOFF Metal PRIVATE_EXECUTION flag; requires DENSE_PRIVATE_STORAGE; no CUDA/genericCPU/image/math changes.",
+    "Add generic build_private using exactly ordinary build precision path plus immutable private marker, alongside existing build_bf16_private. Dense vocabulary head uses generic private build only under new capability, preserving explicit bf16_weight and checkpoint semantics. Shared inheritance/Clear/failure behavior unchanged.",
+    "Refactor native session execution into a locked validation/dispatch stage and body helper without duplicate locks or input reads. Decide full-private under locks for actual supplied layers and actual head; do not use model-name or session-build cached flags.",
+    "Fully private path bypasses StorageScope and empty workspace/retirement housekeeping; mixed/private plus ordinary head retains existing scoped behavior. Native timing/counters report actual selected route; preserve exceptions, GPUAbort, poison/reset, root/inputs/state unchanged.",
+    "Ordinary Graph.Run private bypass must select under same graph mutex, not check-unlock-run; generic/public nonprivate and all VLM paths retain scope. Preserve all actual GPU commands and values."
+  ],
+  "required_validation": [
+    "Both native suites and full32VLM28text state/token/prefix/capacity parity, multigrid vision embeddings, trained4/6 original/private tests.",
+    "New generic private head preserves original outputs/weight dtypes, defaultOFF fallback, shared-source-close, failed construction and Clear/rebuild reset.",
+    "Actualgraph policy tests private-only and mixed alternate prefill/decode lists, ordinary vs private head, owner closed/rebuilt, repeated sessions, invalid inputs and graph generation. Scope counters prove path without inferring from model names; callback exceptions/Abort and fault injection recovery.",
+    "No lock order reversal, duplicate locks, unsynchronized private flag reads or cached admission. Preserve all old gates."
+  ],
+  "prospective_protocol": {
+    "resource": "NEWfresh actualWorldSense8calls vsWS10; all exact/native;\u226510%Metal and\u22655%sampled taskfootprint reduction, all first/warm retained.",
+    "speed": "Ifresourcepass NEWfresh20calls; bothmodelsTTFT/total/decode andSkillwall\u22642%regression; no unchanged favorable retry.",
+    "confirmation": "Ifscreenpasses twofresh full3frame/query mirroredpairs independentlypass before integration/promotion."
+  },
+  "tradeoffs": "More execution branches and helper refactor require lock/lifetime proofs. May not improve companion throughput. No speed, causality or production claim; test-only injection remains separate."
+}

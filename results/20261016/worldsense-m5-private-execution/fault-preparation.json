@@ -1,0 +1,18 @@
+[
+  {
+    "path": "cmake/GarnetMetal.cmake",
+    "merge_exit": 1,
+    "resolution": "Verified old fault CMake is append-only relative to original source; appended exact fault delta to new full main CMake. Conflict shared terminal endif not resolved by dropping markers."
+  },
+  {
+    "path": "src/backends/metal/compiled_graph.h",
+    "merge_exit": 0
+  },
+  {
+    "path": "src/backends/metal/compiled_graph.cpp",
+    "merge_exit": 0
+  },
+  {
+    "test_hook_extension": "Only fault-source: existing encoder failure hook also admitted for privateStorage graph when encoded by session (packedOutput=false). Enables Abort/poison/reset recovery on actual private route. No test code in measured source."
+  }
+]

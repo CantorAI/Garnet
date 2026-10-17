@@ -1,0 +1,18 @@
+loading initial cache file /Users/shawn/CantorAI/Garnet/cmake/MetalWorldSense4BPrefix.cmake
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-private-execution-fault
+[  6%] Built target garnet_native_image
+[ 12%] Built target garnet_metal
+[ 19%] Built target garnet_memory_stats_test
+[ 25%] Built target garnet_inventory_test
+[ 32%] Built target garnet_metal_matmul_test
+[ 38%] Built target garnet_prefix_copy_test
+[ 45%] Built target garnet_storage_scope_test
+[ 48%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/compiled_graph.cpp.o
+[ 54%] Built target garnet_storage_layout_test
+[ 61%] Built target garnet_workspace_plan_test
+[ 67%] Built target garnet_vision_workspace_test
+[ 74%] Built target garnet_vision_weight_stream_test
+[ 77%] Linking CXX shared library libgarnet.dylib
+[100%] Built target garnet

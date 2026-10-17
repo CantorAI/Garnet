@@ -1,0 +1,56 @@
+{
+  "valid": true,
+  "calls": [
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "exact": true
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "exact": true
+    }
+  ],
+  "scope": "Completed control only; no comparative speed conclusion until candidate complete"
+}

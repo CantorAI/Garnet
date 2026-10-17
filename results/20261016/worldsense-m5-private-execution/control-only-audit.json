@@ -1,0 +1,27 @@
+{
+  "valid": true,
+  "calls": [
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "phase": "phase1"
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "phase": "phase3"
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "phase": "phase1"
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "phase": "phase3"
+    }
+  ],
+  "new_private_execution_disabled": true,
+  "scope": "Completed control only; paired correctness and memory gate awaits candidate"
+}

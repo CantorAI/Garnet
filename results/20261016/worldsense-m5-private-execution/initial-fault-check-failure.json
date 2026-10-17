@@ -1,0 +1,5 @@
+{
+  "failure": "Weight fault guard missing local graph-off.json reference; no native assertion failure",
+  "cause": "WS25 copied the fault script without its two-projection control guard prerequisite",
+  "action": "Run fresh OFF/ON two-projection graph guards in WS25, then resume weight/private fault stages only. Completed private4/6, native9fault and ordinaryfault results retained. No native source or gate change."
+}

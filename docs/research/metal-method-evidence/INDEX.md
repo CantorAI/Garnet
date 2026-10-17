@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T05:48:13.212986+00:00
+Generated UTC: 2026-10-17T06:12:06.133936+00:00
 
-Base HEAD at generation: `e4408cd8d17293f4a55c4b1713f645a864d906dc`. Reports indexed: **214**.
+Base HEAD at generation: `dc1c605f148500fb1bf4850cfef56c2238b7ea98`. Reports indexed: **215**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -201,6 +201,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-memory](../../../results/20261016/worldsense-m5-memory/README.md) | WS-M5-12 native WorldSense memory and lifetime diagnostic |
 | [results/20261016/worldsense-m5-mixed-chunk](../../../results/20261016/worldsense-m5-mixed-chunk/README.md) | WS-M5-09: VLM64 / reasoner32 — rejected |
 | [results/20261016/worldsense-m5-prefix-cache](../../../results/20261016/worldsense-m5-prefix-cache/README.md) | WS-M5-10 native bounded text prefix cache and wider VLM prefill |
+| [results/20261016/worldsense-m5-private-execution](../../../results/20261016/worldsense-m5-private-execution/README.md) | WS-M5-25 actual private execution: rejected companion decode regression |
 | [results/20261016/worldsense-m5-request-pool](../../../results/20261016/worldsense-m5-request-pool/README.md) | WS-M5-13 native request pool memory gate failed |
 | [results/20261016/worldsense-m5-resident-admission](../../../results/20261016/worldsense-m5-resident-admission/README.md) | WS-M5-17: explicit resident build admission (rejected physical-memory feasibility) |
 | [results/20261016/worldsense-m5-resident-workspace](../../../results/20261016/worldsense-m5-resident-workspace/README.md) | WS-M5-18: active resident scratch pools (rejected physical-memory gate) |

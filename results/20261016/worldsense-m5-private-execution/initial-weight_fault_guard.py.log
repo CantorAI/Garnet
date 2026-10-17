@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-private-execution/weight_fault_guard.py", line 27, in <module>
+    reference=[r for r in json.loads((w/'graph-off.json').read_text())if r['batch']==batch and r['iteration']==0][0];assert digest(expected)==reference['sha256']
+                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/pathlib/__init__.py", line 787, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: No such file or directory
