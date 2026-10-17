@@ -1,0 +1,17 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-resident-admission-off
+    Start 1: metal_inventory_reference
+1/6 Test #1: metal_inventory_reference ........   Passed    0.04 sec
+    Start 2: metal_memory_stats_reference
+2/6 Test #2: metal_memory_stats_reference .....   Passed    0.03 sec
+    Start 3: metal_prefix_copy_reference
+3/6 Test #3: metal_prefix_copy_reference ......   Passed    0.05 sec
+    Start 4: metal_mps_matmul_reference
+4/6 Test #4: metal_mps_matmul_reference .......   Passed    0.65 sec
+    Start 5: metal_storage_scope_reference
+5/6 Test #5: metal_storage_scope_reference ....   Passed    0.03 sec
+    Start 6: metal_storage_layout_reference
+6/6 Test #6: metal_storage_layout_reference ...   Passed    0.03 sec
+
+100% tests passed out of 6
+
+Total Test time (real) =   0.85 sec

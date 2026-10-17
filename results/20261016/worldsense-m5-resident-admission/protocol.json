@@ -1,0 +1,26 @@
+{
+  "experiment": "WS-M5-17",
+  "declared_utc": "2026-10-17T02:21:05.787350+00:00",
+  "hypothesis": "Explicit resident construction avoids first allocation of default inputs1/2 and terminal inactive packed root, preserving exact graph/session behavior. Determine whether logical saving translates to sampled physical footprint; no assumed speed/RAM benefit.",
+  "correctness_required": "OFF/ON6native references; full32VLM/28text finite state/token/prefix/capacity recovery; initial native owner inventory omission; trained four-input linear and six-input attention ordinary/resident alternation, second sessions, invalid/closed rebuilt/shared owner lifecycle; separate second-allocation failure/recovery for4/6inputs.",
+  "resource_feasibility": {
+    "path": "Real WorldSense/Galaxy car Skill, fresh control then candidate, one warmup+one followup per worker (repeats1), all8model calls retained",
+    "gates": {
+      "exact_outputs_prompts_config_input_hashes_skill_semantics_native_counters": true,
+      "no_initial_retirement_or_serving_regrowth": true,
+      "min_sampled_post_decode_metal_allocation_reduction": 0.1,
+      "min_sampled_post_decode_task_physical_footprint_reduction": 0.1
+    },
+    "interpretation": "Compare maximum sampled post-decode values over all returned calls after same workload; not peaks/system RAM and no timing promotion from resource check. Failure rejects mechanism for current headroom objective, without unchanged retries."
+  },
+  "performance_if_resource_passes": {
+    "screen": "New fresh control/candidate car workers1warm+4measured; same frozen inputs/model/source policy",
+    "gates": {
+      "models_ttft_total_decode_max_regression": 0.02,
+      "native_skill_wall_max_regression": 0.02,
+      "exact_semantics": true
+    },
+    "confirmation": "Only after screen passes, two fresh full three-frame/query C/A then A/C pairs, each independently passes"
+  },
+  "tradeoffs": "Full2048 admission/native C++ image prep/BF16-FP32/CUDA preserved. Ordinary callers may materialize defaults and lose the never-allocated benefit; unsupported admission rejects. Descriptor bytes are requested padded buffer lengths, not allocatedSize/physical savings. Faults absent from timed binaries. Preserve all setup/failures/method/source/model/build/input identities."
+}
