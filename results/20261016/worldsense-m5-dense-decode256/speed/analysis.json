@@ -1,0 +1,181 @@
+{
+  "status": "rejected",
+  "passed": false,
+  "checks": [
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    }
+  ],
+  "metrics": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 8.696124583002529,
+        "total": 9.96756127050321,
+        "decode_tps": 26.745832995880598
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 22.338258208495972,
+        "total": 32.7804493750009,
+        "decode_tps": 9.098021537827918
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 2.0114420000027167,
+        "total": 3.4404961870022817,
+        "decode_tps": 23.654034475557154
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 5.953328333496756,
+        "total": 15.749642104499799,
+        "decode_tps": 9.4222373733523
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.7686967360225856,
+      "total_change": -0.6548306959312438,
+      "decode_gain": -0.1155992606698637
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.7334918292227229,
+      "total_change": -0.5195416046824902,
+      "decode_gain": 0.03563586150860942
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": 21903376384,
+    "candidate-1": 18692915200
+  },
+  "sampled_metal_reduction": 0.14657380340435466,
+  "native_skill_wall_p50": {
+    "control-1": 43.10226947949559,
+    "candidate-1": 19.455598312495567
+  },
+  "native_skill_wall_gain": 0.5486177747148351,
+  "scope": "Fresh single-car screen. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}

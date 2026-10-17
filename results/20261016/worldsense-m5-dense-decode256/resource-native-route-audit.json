@@ -1,0 +1,157 @@
+{
+  "records": [
+    {
+      "worker": "control-1",
+      "warmup": true,
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "generated_tokens": 94,
+      "encoded_total": 0,
+      "prefill_chunk_plan": [
+        64,
+        64,
+        64,
+        64,
+        64,
+        64,
+        16
+      ]
+    },
+    {
+      "worker": "control-1",
+      "warmup": true,
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "generated_tokens": 35,
+      "encoded_total": 0,
+      "prefill_chunk_plan": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "worker": "control-1",
+      "warmup": false,
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "generated_tokens": 94,
+      "encoded_total": 0,
+      "prefill_chunk_plan": [
+        64,
+        64,
+        64,
+        64,
+        64,
+        64,
+        16
+      ]
+    },
+    {
+      "worker": "control-1",
+      "warmup": false,
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "generated_tokens": 35,
+      "encoded_total": 0,
+      "prefill_chunk_plan": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "worker": "candidate-1",
+      "warmup": true,
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "generated_tokens": 94,
+      "encoded_total": 0,
+      "prefill_chunk_plan": [
+        64,
+        64,
+        64,
+        64,
+        64,
+        64,
+        16
+      ]
+    },
+    {
+      "worker": "candidate-1",
+      "warmup": true,
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "generated_tokens": 35,
+      "encoded_total": 6860,
+      "prefill_chunk_plan": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "worker": "candidate-1",
+      "warmup": false,
+      "phase": "phase1",
+      "model": "Qwen3.5-4B",
+      "generated_tokens": 94,
+      "encoded_total": 0,
+      "prefill_chunk_plan": [
+        64,
+        64,
+        64,
+        64,
+        64,
+        64,
+        16
+      ]
+    },
+    {
+      "worker": "candidate-1",
+      "warmup": false,
+      "phase": "phase3",
+      "model": "Qwen3-1.7B",
+      "generated_tokens": 35,
+      "encoded_total": 13720,
+      "prefill_chunk_plan": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    }
+  ],
+  "scope": "Cumulative encoded totals, not independent perrequest dispatch/completed-GPU counts; all first/warm resource calls retained. Shape-header196count and native unit tests support attribution."
+}

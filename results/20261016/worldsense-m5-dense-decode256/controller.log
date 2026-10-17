@@ -1,0 +1,27 @@
+START control-1 2026-10-17T06:56:43Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-17T06:58:10Z
+FINISH candidate-1 exit 0
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+{
+  "status": "resource_feasibility_pass_requires_fresh_speed_screen",
+  "passed": true,
+  "sampled_maximum_bytes": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18070387016
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 18692915200,
+      "task_physical_footprint_bytes": 16013621816
+    }
+  },
+  "reduction": {
+    "metal_allocated_bytes": 0.14657380340435466,
+    "task_physical_footprint_bytes": 0.11381965412134698
+  },
+  "scope": "Eight actual WorldSense/Galaxy calls over two fresh workers and one warmup+one followup each. Maximum post-decode snapshots, not peaks/free system RAM. No timing or speed promotion from this resource feasibility check."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 7085
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
