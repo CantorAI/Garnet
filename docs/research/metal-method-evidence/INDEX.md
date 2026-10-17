@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T19:14:32.415187+00:00
+Generated UTC: 2026-10-17T19:42:11.075662+00:00
 
-Base HEAD at generation: `30c39535429321d983416ffa6fd667ca18105443`. Reports indexed: **241**.
+Base HEAD at generation: `058286da76873e65087e92e71507b2dccecd7e44`. Reports indexed: **242**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -229,6 +229,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-direct-float-upload](../../../results/20261017/worldsense-m5-direct-float-upload/README.md) | WS-M5-50 — Direct FP32 weight upload rejected on text decode preservation |
 | [results/20261017/worldsense-m5-duo-prefill](../../../results/20261017/worldsense-m5-duo-prefill/README.md) | WS-M5-49 — Minimal program and duo prefill rejected on memory preservation |
 | [results/20261017/worldsense-m5-isolated-vector-prefill](../../../results/20261017/worldsense-m5-isolated-vector-prefill/README.md) | WS-M5-48 — Isolated vector prefill library rejected by matched timing |
+| [results/20261017/worldsense-m5-k32-prefill](../../../results/20261017/worldsense-m5-k32-prefill/README.md) | WS-M5-51 — Hoisted upload and K32-only prefill rejected on text preservation |
 | [results/20261017/worldsense-m5-primary-lazy](../../../results/20261017/worldsense-m5-primary-lazy/README.md) | WS-M5-45 — Joint primary weights and resident-default retirement rejected |
 | [results/20261017/worldsense-m5-primary-narrow-attention](../../../results/20261017/worldsense-m5-primary-narrow-attention/README.md) | WS-M5-42 raw narrow attention with packed MLP: rejected |
 | [results/20261017/worldsense-m5-primary-narrow-vocab](../../../results/20261017/worldsense-m5-primary-narrow-vocab/README.md) | WS-M5-41 semantic raw narrow vocabulary: rejected |

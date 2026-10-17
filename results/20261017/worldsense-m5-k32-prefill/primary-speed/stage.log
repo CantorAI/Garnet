@@ -1,0 +1,46 @@
+START control-1 2026-10-17T19:31:08Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-17T19:33:27Z
+FINISH candidate-1 exit 0
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+Build/SDK/host dependency identity unchanged 1870 primary-speed
+{
+  "matched_primary": true,
+  "matched_memory_preserved": true,
+  "sampled_max_footprint_bytes": {
+    "control-1": 15725229880,
+    "candidate-1": 15614670504
+  },
+  "minimum_VLM_TTFT_gain": 0.05,
+  "observed_VLM_TTFT_gain": 0.12684250850002787,
+  "status": "rejected",
+  "passed": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": 0.2732051392051982,
+      "total_change": 0.1312147287117862,
+      "decode_gain": -0.033717650230180696
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.12684250850002787,
+      "total_change": -0.05328623752793438,
+      "decode_gain": -0.017170951550510405
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": 19091357696,
+    "candidate-1": 19091357696
+  },
+  "sampled_metal_reduction": 0.0,
+  "native_skill_wall_p50": {
+    "control-1": 19.854067603999283,
+    "candidate-1": 19.511166979005793
+  },
+  "native_skill_wall_gain": 0.01727105154635511,
+  "scope": "Matched primary-only/vector-prefill screen, exact common storage/lifetimes;5%VLMwarmTTFT improvement and2%model/wall/memory preservation required. Not isolated GPU timing or confirmed causal evidence. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 62435
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

@@ -1,0 +1,74 @@
+{
+  "experiment": "WS-M5-51",
+  "utc": "2026-10-17T19:40:19.015672+00:00",
+  "controller_session": 5795,
+  "terminal_exit_code": 0,
+  "all20_outputs_native_exact": true,
+  "passed": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": 0.2732051392051982,
+      "total_change": 0.1312147287117862,
+      "decode_gain": -0.033717650230180696
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.12684250850002787,
+      "total_change": -0.05328623752793438,
+      "decode_gain": -0.017170951550510405
+    }
+  ],
+  "sampled_footprint_change": -0.007030700145160607,
+  "native_skill_wall_gain": 0.01727105154635511,
+  "normal_restored": {
+    "validated_WS10_binary_restored": true,
+    "four_file_sources_online": true,
+    "camera_unmounted": true,
+    "benchmark_valid_request_http404": true,
+    "mounted": {
+      "/Users/shawn/CantorAI/out/test-media/car.avi": {
+        "deviceId": "34020000001320009003",
+        "channelId": "34020000001320009003",
+        "name": "Low Resolution Car Test",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/car.avi",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      },
+      "/Users/shawn/CantorAI/out/test-media/bunny.mp4": {
+        "deviceId": "34020000001320009002",
+        "channelId": "34020000001320009002",
+        "name": "Animated Rabbit Test",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/bunny.mp4",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      },
+      "/Users/shawn/CantorAI/out/test-media/car-second-view.avi": {
+        "deviceId": "34020000001320009004",
+        "channelId": "34020000001320009004",
+        "name": "Car Second Camera Control",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/car-second-view.avi",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      },
+      "/Users/shawn/CantorAI/out/test-media/pedestrians.mp4": {
+        "deviceId": "34020000001320009001",
+        "channelId": "34020000001320009001",
+        "name": "Pedestrians Test Video",
+        "sourcePath": "/Users/shawn/CantorAI/out/test-media/pedestrians.mp4",
+        "offsetMs": 0,
+        "loop": true,
+        "enabled": true,
+        "online": true
+      }
+    }
+  },
+  "later_stages_dispatched": false,
+  "candidate_promoted": false
+}

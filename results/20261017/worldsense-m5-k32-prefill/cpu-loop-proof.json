@@ -1,0 +1,144 @@
+{
+  "object_sha256": "e5fc3d500d73a79bc813150f3b137fc275797ac54c0418b725a483b0ce612d52",
+  "disassembly_command": [
+    "xcrun",
+    "llvm-objdump",
+    "--disassemble",
+    "--demangle",
+    "--no-show-raw-insn",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-k32-prefill-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+  ],
+  "relocation_command": [
+    "xcrun",
+    "llvm-objdump",
+    "--reloc",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-k32-prefill-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+  ],
+  "rowBytes_calls_in_function": 1,
+  "rowBytes_call_outside_all_backward_branch_intervals": true,
+  "rowBytes_call_address": 24312,
+  "backward_branch_intervals": [
+    {
+      "start": 24344,
+      "end": 24376
+    },
+    {
+      "start": 24344,
+      "end": 24396
+    },
+    {
+      "start": 24344,
+      "end": 24412
+    },
+    {
+      "start": 24492,
+      "end": 24524
+    },
+    {
+      "start": 24492,
+      "end": 24544
+    },
+    {
+      "start": 24492,
+      "end": 24564
+    },
+    {
+      "start": 24492,
+      "end": 24584
+    },
+    {
+      "start": 24492,
+      "end": 24604
+    },
+    {
+      "start": 24492,
+      "end": 24624
+    },
+    {
+      "start": 24492,
+      "end": 24640
+    },
+    {
+      "start": 24660,
+      "end": 24676
+    },
+    {
+      "start": 24648,
+      "end": 24696
+    },
+    {
+      "start": 24700,
+      "end": 24816
+    },
+    {
+      "start": 24832,
+      "end": 24896
+    },
+    {
+      "start": 24784,
+      "end": 24904
+    },
+    {
+      "start": 24928,
+      "end": 24944
+    },
+    {
+      "start": 24784,
+      "end": 24956
+    },
+    {
+      "start": 24972,
+      "end": 24988
+    },
+    {
+      "start": 24784,
+      "end": 24992
+    },
+    {
+      "start": 25168,
+      "end": 25184
+    },
+    {
+      "start": 25016,
+      "end": 25204
+    },
+    {
+      "start": 24700,
+      "end": 25208
+    }
+  ],
+  "branch_families_checked": [
+    "b",
+    "b.cond",
+    "cbz",
+    "cbnz",
+    "tbz",
+    "tbnz"
+  ],
+  "vector_shift_instructions": [
+    "    5fc0:      \tshll.4s\tv0, v0, #16",
+    "    5fd4:      \tshll.4s\tv0, v0, #16",
+    "    5fe8:      \tshll.4s\tv0, v0, #16",
+    "    5ffc:      \tshll.4s\tv0, v0, #16",
+    "    6010:      \tshll.4s\tv0, v0, #16",
+    "    6024:      \tshll.4s\tv0, v0, #16",
+    "    6038:      \tshll.4s\tv0, v0, #16",
+    "    6108:      \tshll.4s\tv4, v0, #16",
+    "    610c:      \tshll2.4s\tv0, v0, #16",
+    "    6110:      \tshll.4s\tv5, v1, #16",
+    "    6114:      \tshll2.4s\tv1, v1, #16",
+    "    6118:      \tshll.4s\tv6, v2, #16",
+    "    611c:      \tshll2.4s\tv2, v2, #16",
+    "    6120:      \tshll.4s\tv7, v3, #16",
+    "    6124:      \tshll2.4s\tv3, v3, #16",
+    "    6164:      \tshll.4s\tv0, v0, #16",
+    "    61c4:      \tshll.4s\tv0, v0, #16",
+    "    61d8:      \tshll.4s\tv0, v0, #16",
+    "    61ec:      \tshll.4s\tv0, v0, #16",
+    "    6200:      \tshll.4s\tv0, v0, #16",
+    "    6214:      \tshll.4s\tv0, v0, #16",
+    "    6228:      \tshll.4s\tv0, v0, #16",
+    "    623c:      \tshll.4s\tv0, v0, #16"
+  ],
+  "scope": "Existing built CPU object, not a timing/performance claim. One getter remains before conversion loops. Native bit tests and WorldSense metrics required."
+}
