@@ -1,0 +1,11 @@
+{
+  "test_only_global_budget_bytes": 65536,
+  "production_budget_bytes": 4294967296,
+  "production_source_unchanged": true,
+  "tests": [
+    "Active owner/set/attachment/request flags zero after every completed/drainedAbort",
+    "Native busy fallback reason5 while anothercontext reserves64KiB,readmissionafterrelease",
+    "Globalreservationzeroaftercleanup"
+  ],
+  "scope": "Faultbuildonlyinspectorandsmallerbudget. Not performanceevidence or proof ofphysicalresidency. Trainedfaultmodels mayfallbackbecauseoftestbudget."
+}

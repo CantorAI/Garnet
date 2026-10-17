@@ -1,0 +1,36 @@
+{
+  "experiment": "WS-M5-32",
+  "declared_utc": "2026-10-17T08:44:51.695671+00:00",
+  "status": "design_only",
+  "seed": "UntracedWS30source withprivate-residentdefaultsONcandidate;allwide2565121024OFFboth. RetainWS30/31rejections.",
+  "evidence": [
+    "WS30memorypass23.255%Metal/11.346%footprint butcompaniondecode\u22123.365%fails2%;WS31combinationrejected\u221230.532%. No unchangedretry orcausalranking.",
+    "Appleofficialresidencyguidance permitsrequestbeforecommandcommit butmaydeferundercontention;localSDK/APIsand1MiBbasiclifecycleprobePASS. No physicalresidencyorperfspeedproof.",
+    "Historicalruntimeinventorycompanionuniqueweights3441397760B;checkpoint2Dtotalsincludeunused/tiedheadentriesandareNOTactualruntimeadmissionproof."
+  ],
+  "hypothesis": "BoundedearlyexplicitresidencyrequestforactualBF16mastersmayreduce preparation/submissionorGPUresidencycostforcompanionwithoutalteringmath;unknownwhetherCPUoverheadoutweighsbenefit. No establishedresidencycause.",
+  "implementation_plan": [
+    "DefaultOFF WEIGHT_RESIDENCY Metal-only capability. SessionRun only,usingactualsuppliedlayers+headunderexistingsession/sortedgraphlocksafterfullvalidation;nevercacheinitialBuildgraphlist.",
+    "CollectactualBF16slotownersanddeduplicaterawMTLBufferidentities;validatealldevice/byteoverflow,capuniqueallocationcount2048 anduniqueallocatedbytes4GiB. Aprocess-global/devicebudget4GiB preventsconcurrentsetsummingbeyondbound. Abovebound/unavailableAPI/budgetbusy\u2192existingautomaticresidencyfallback,nomathchange.",
+    "OneMTLResidencySet peractivebatch,attachsessioncommandqueue,commitandrequestResidency beforeBegin/encoding;includeonlyrawBF16masters,notallbuffers/heaps/outputs. Capturedactualbytes/count/sourcecapabilitycountersproveadmission,notphysicalresidency.",
+    "Keepstrongweightownersuntilallpartialcommandsdrained. AfterSubmitAndWait success/failure ordrainedAbort:detach/end/removeAll/commit,clearowners/releasebudget. No persistentsetretainsclosedgraphs. DestructorcleanupandBeginfailurecovered.",
+    "Exposepostrequestcumulativeadmitted/fallbackcounts,lastadmittedbytes/count/currentactivebytes tosessionAPI/servingtimings;noextra pertokengetters. RecordCPUcollection/preparationcostthroughwholeWorldSensewall."
+  ],
+  "correctness": [
+    "NativeboundedAPI/lifecycle exactbuffers,duplicatebuffers/countcap/bytecap/overflow/device mismatch/unsupportedAPI/busybudgetfallback,partialsubmit/Abort/retry/ownerreleaseandnoactivebytesaftercompletion. Budgetpolicytestmayuseexplicittest-onlylimit,notmeasuredbuild.",
+    "Actualalternatelayer/head/sharedweights/generation/rebuild/new4/6private-residentordinarymaterialization andallocationfault;full32VLM28textstates/tokens/prefix/capacity/vision.",
+    "AdmissionexpectationbasedactualruntimeuniqueBF16bytes,notmodelID;learnedfull4Blikelyover4GiB(companionfits),mustverifyactualcounters."
+  ],
+  "prospective_protocol": {
+    "resource": "NEWfresh8WorldSensecalls exact/native/sourceidentity;>=10%Metal and>=5%sampledfootprint.",
+    "speed": "IfresourcepassesNEWfresh20calls,bothmodelsTTFTtotaldecode+Skillwall<=2%regression.",
+    "confirmation": "IfspeedpassesNEW48callsfourmirroredworkers,twoindependentfull3frame/querypairs eachpassbeforeintegration."
+  },
+  "tradeoffs": "Setconstruction/locking/ownerdedup+residencyrequestCPUcost eachnativebatch;onlyrawmasters explicitlyrequested,otherresourcesautomatic. Budgetfallbackmayremoveresidencyopportunitybutpreservescorrectness. Requestnotguaranteeorphysicalresidencymeasurement;setallocatedSizeincludesmetadata. No globalunboundedpinning/retainedgraphlifetimechanges.",
+  "invariants": [
+    "NativeC++Metal/XLang3images/inference;CPythonorchestration/auditonly",
+    "OriginalBF16FP32math/CUDA/image/contextbudgets",
+    "No camera/fourfiles/restoreWS10",
+    "No unchangedfavorableretry/gaterelaxation"
+  ]
+}

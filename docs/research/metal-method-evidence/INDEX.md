@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T08:41:30.749727+00:00
+Generated UTC: 2026-10-17T09:10:54.707781+00:00
 
-Base HEAD at generation: `4823dafa4a3a0bc5490a847a351db6b4b3781d74`. Reports indexed: **221**.
+Base HEAD at generation: `79994b6b776ef9d4323aeb2d9aacd422ea9e39b0`. Reports indexed: **222**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -217,6 +217,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-vision-weight-stream](../../../results/20261016/worldsense-m5-vision-weight-stream/README.md) | WS-M5-24 exact vision-weight materialization: rejected companion decode regression |
 | [results/20261016/worldsense-m5-vision-workspace](../../../results/20261016/worldsense-m5-vision-workspace/README.md) | WS-M5-21 scalar vision workspace: rejected companion decode preservation |
 | [results/20261016/worldsense-m5-vlm-workspace](../../../results/20261016/worldsense-m5-vlm-workspace/README.md) | WS-M5-20 private dense buffers with VLM reuse: rejected resource gate |
+| [results/20261016/worldsense-m5-weight-residency](../../../results/20261016/worldsense-m5-weight-residency/README.md) | WS-M5-32: bounded BF16 weight residency preparation — rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |

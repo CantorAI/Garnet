@@ -1,0 +1,16 @@
+{
+  "status": "correctness_passed_WorldSense_speed_rejected",
+  "all_original_inline_MSL_unchanged": true,
+  "cuda_files_unchanged": 21,
+  "admission": "actualRunlockedgraphsBF16slots;rawMTLBufferdedup;4GiB/2048cap;perdevice4GiBprocessbudget",
+  "lifecycle": "Setreusedemptymetadata,ownersretainedonlyactivebatch;attachment/requeststatetracked;cleanupafterdrainedSubmit/Abort;Endrejectsopen/pendingbatch",
+  "exception_boundary": "MovedgpuBegininsideexistingencodingtryforcleanupcoverage;bothOFF/ONsharethiscontrolsourcechange",
+  "stats": "OnepostrequestsessionJSONgetter;admitted/fallbackcumulative,lastandattemptedbytes/count,reason,activebytes. Notphysicalresidencyproof.",
+  "development": "Initialbuildpass;addedattachment/requestcleanupandnativebudget/lifetimetests,rebuildpass;finalEndopenbatchguardaddedthenfinalbuild/nativecontroller97846started. No model/timingcohortdispatched.",
+  "untested_hardware_branches": [
+    "pre-macOS15runtimefallback",
+    "cross-deviceweightrejectiononmultiGPU"
+  ],
+  "scope": "No numerical/performanceclaimbeforenativetests;formalmodel/faultgatesstillrequired.",
+  "final_evidence": "Fullmodel/native13/fault13/directowner-setcleanup/busybudget/actualRunoraclepass;rawWorldSense20callcompaniondecodegatefails."
+}

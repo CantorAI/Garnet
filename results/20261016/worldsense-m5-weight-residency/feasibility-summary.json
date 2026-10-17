@@ -1,0 +1,32 @@
+{
+  "observed_utc": "2026-10-17T08:43:34.190647+00:00",
+  "status": "basic_API_feasibility_pass_not_model_optimization",
+  "official_sources": [
+    "https://developer.apple.com/documentation/metal/simplifying-gpu-resource-management-with-residency-sets",
+    "https://developer.apple.com/documentation/metal/mtlresidencyset/requestresidency()"
+  ],
+  "source_hashes": {
+    "apple-residency.md": "f940895ddf8dac0d89c09106563b4c1d68883ac95e1f1e2076d42d6ce7921ca9",
+    "probe.mm": "4869612352dc54d8833491a6aec8524c270f503b82740cba4fcf1740b428821c",
+    "MTLResidencySet.h": "544f5c0c147dc24341391e629c3816e666661495915db2ae82ef6846343815c0",
+    "MTLCommandQueue.h": "6e9da7a33496e30ef20cd415a51dfc72cf1d3f6892b1d8d7e8cfdeab451f5761",
+    "MTLDevice.h": "bb4222866870a4a703cd1581fe55cf4fee4769fbee5efc795af51fbff95f2989"
+  },
+  "verified": {
+    "device": "Apple M5",
+    "buffer_bytes": 1048576,
+    "set_allocated_size": 1048576,
+    "queue_attach_request_and_blit_exact": true,
+    "detach_end_remove_commit": true,
+    "scope": "Basic1MiBAPI lifecycle only;allocatedSize is not proof of physical residency, no model correctness or performance evidence"
+  },
+  "interpretation": "AppleAPIcanrequestpreparationearlier,notaguaranteeundercontention. allocatedSizecountssetfootprint,notphysicalresidency. NoGarnetmodeltiming/numericalinferencefromprobe.",
+  "next_requirements": [
+    "InventoryactualBF16masterbytesforactiveactualRunlayersandhead;deduplicatebufferidentities,validatebytes/devices.",
+    "Bounduniquebytesandallocationcount;avoidglobalunboundedallbufferpinning.",
+    "Request/attachperactualbatchorrequest,end/detach/removeatcompleted/drainedAbort;retainedownersmustnotleakclosedgraphs.",
+    "Sharedweights,alternateRungraphs,partialsubmit,exceptions/Abort,olderOS/APIunavailablefallbackallneedproof.",
+    "MeasurethroughfreshWorldSensepairedscreen/fullconfirmationwithunchangedgates."
+  ],
+  "production": "WS10unchanged;fourfiles/noCamera verifiedafterWS31. Noexperimentbinaryinstalled."
+}

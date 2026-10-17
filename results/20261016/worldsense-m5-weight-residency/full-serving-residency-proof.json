@@ -1,0 +1,70 @@
+{
+  "records": [
+    {
+      "model": "Qwen3.5-4B",
+      "residency": {
+        "admitted": 0,
+        "fallback": 17,
+        "last_bytes": 0,
+        "last_count": 0,
+        "active_bytes": 0,
+        "attempted_bytes": 8409579520,
+        "attempted_count": 249,
+        "reason": 4
+      }
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "residency": {
+        "admitted": 0,
+        "fallback": 34,
+        "last_bytes": 0,
+        "last_count": 0,
+        "active_bytes": 0,
+        "attempted_bytes": 8409579520,
+        "attempted_count": 249,
+        "reason": 4
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "residency": {
+        "admitted": 16,
+        "fallback": 0,
+        "last_bytes": 3440902144,
+        "last_count": 197,
+        "active_bytes": 0,
+        "attempted_bytes": 3440902144,
+        "attempted_count": 197,
+        "reason": 1
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "residency": {
+        "admitted": 28,
+        "fallback": 0,
+        "last_bytes": 3440902144,
+        "last_count": 197,
+        "active_bytes": 0,
+        "attempted_bytes": 3440902144,
+        "attempted_count": 197,
+        "reason": 1
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "residency": {
+        "admitted": 40,
+        "fallback": 0,
+        "last_bytes": 3440902144,
+        "last_count": 197,
+        "active_bytes": 0,
+        "attempted_bytes": 3440902144,
+        "attempted_count": 197,
+        "reason": 1
+      }
+    }
+  ],
+  "scope": "Correctnessonlyactualnativeadmission/cumulativecounters;notphysicalresidencyorperformance."
+}
