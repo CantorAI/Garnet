@@ -1,0 +1,15 @@
+{
+  "status": "implemented_native14passed_before_final_prefix_owner_guard_revalidation",
+  "MSL_unchanged": true,
+  "cuda_files_unchanged": 21,
+  "lifetime": "logicalrequest/threadowner;actualsortedbufferidentity+size/devicevalidatedeachRun;reuseonlysameactivefingerprint;changedsetdrainedrelease/reacquire;Submitretainsrequestonly,Abortforceclearscache;Resetclearcachekeeplogicalscope,Close/Builddestroycontext",
+  "metrics": "GarnetnativeXLang3infer_jsonexistingRLock+tryfinally;TTFTpre-scopeoverheadadded,totalouterstartthroughcleanup+metadata;originalmiddecode memorykept,separatecleanupmemory;postcleanupstatsreported",
+  "development": "Initialbuild88634PASS;native14both87903PASS;addedCapture/Restore/ClearPrefix ownerchecks,originallogsretainedbefore-prefix-guard*. Rebuild/native40675running;no model/timingdispatchyet.",
+  "pending": [
+    "NativeSessionReset/Close/Build/thread/prefix-ownerchecks andactualRungraphchangesinsiderequest",
+    "Servingerrorfinallycleanupandmetricaccounting",
+    "Full32VLM28textstates/vision/prefix/capacity",
+    "Faultowner/busybudget/reuse/drainedcleanup",
+    "FreshWorldSense8/20/48 unchangedgates"
+  ]
+}

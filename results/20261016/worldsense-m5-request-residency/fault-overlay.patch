@@ -1,0 +1,265 @@
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -481,6 +481,21 @@
+ target_include_directories(garnet_dense_decode1024_test PRIVATE src/backends/metal)
+ target_link_libraries(garnet_dense_decode1024_test PRIVATE garnet_metal)
+ add_test(NAME metal_dense_decode1024_reference COMMAND garnet_dense_decode1024_test "${CMAKE_CURRENT_BINARY_DIR}/dense_decode1024_words.bin")
++option(GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS "Correctness-only deferred allocation fault injection" OFF)
++if(GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS)
++ if(NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS)
++  message(FATAL_ERROR "Test faults require lazy resident defaults")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS=1)
++endif()
++
++option(GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS "Correctness-only ordinary graph workspace hooks" OFF)
++if(GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS)
++ if(NOT GARNET_METAL_GRAPH_WORKSPACE)
++  message(FATAL_ERROR "Ordinary workspace hooks require ordinary workspace")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS=1)
++endif()
+ 
+ option(GARNET_METAL_PRIVATE_RESIDENT_DEFAULTS "Explicit deferred default state storage for private resident graphs" OFF)
+ if(GARNET_METAL_PRIVATE_RESIDENT_DEFAULTS)
+@@ -499,6 +514,14 @@
+ target_link_libraries(garnet_weight_residency_test PRIVATE garnet_metal)
+ add_test(NAME metal_weight_residency_reference COMMAND garnet_weight_residency_test)
+ 
++option(GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE "Test-only 64KiB residency budget and owner/set inspector" OFF)
++if(GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE)
++ if(NOT GARNET_METAL_WEIGHT_RESIDENCY)
++  message(FATAL_ERROR "Residency test inspector requires residency")
++ endif()
++ target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE=1)
++endif()
++
+ option(GARNET_METAL_REQUEST_WEIGHT_RESIDENCY "Explicit bounded request lifetime for weight residency" OFF)
+ if(GARNET_METAL_REQUEST_WEIGHT_RESIDENCY)
+  if(NOT GARNET_METAL_WEIGHT_RESIDENCY)
+--- a/src/backends/metal/compiled_graph.cpp
++++ b/src/backends/metal/compiled_graph.cpp
+@@ -208,11 +208,17 @@
+     return output;
+ }
+ void MetalCompiledGraph::Clear() {
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++    graphWorkspaceTestFailAfter_=graphWorkspaceTestEncodeOp_=-1;
++#endif
+     graphWorkspacePool_.clear();graphWorkspaceBoundSlots_=0;
+     materializedWeightSlots_.clear();rawVisionWeightSlots_.clear();weightExpansionDispatches_=0;
+     workspacePlanReady_=false;workspacePlan_.clear();
+     residentAvoidedStorageBytes_=0;privateStorage_=false;privateExecutionRuns_=scopedExecutionRuns_=0;
+ #ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    lazyTestFailAfter_=-1;
++#endif
+     lazyDefaultPlanReady_=false;lazyDefaultSlots_.clear();lazyRetiredBytes_=lazyRehydratedBytes_=0;
+ #endif
+     visionParallelDispatches_=0;
+@@ -966,6 +972,9 @@
+     static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout","DeltaSplit","ConvChunk","DeltaChunk","ExpandBF16Weight"};
+     for(size_t i=0;i<ops_.size();++i) {
+         if(!packedOutput&&!residentOps_[i])continue;
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++        if((packedOutput||privateStorage_)&&graphWorkspaceTestEncodeOp_==int64_t(i)){graphWorkspaceTestEncodeOp_=-1;throw std::runtime_error("Injected ordinary workspace encoder failure");}
++#endif
+         const auto& op=ops_[i];
+         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+ #ifdef GARNET_METAL_SCREENED_HEAD
+@@ -1215,6 +1224,10 @@
+ #ifdef GARNET_METAL_LAZY_RESIDENT_DEFAULTS
+     if(slots_[id].matrix.Valid())return;
+     if(std::find(lazyDefaultSlots_.begin(),lazyDefaultSlots_.end(),id)==lazyDefaultSlots_.end()&&std::none_of(workspacePlan_.begin(),workspacePlan_.end(),[&](const auto& entry){return entry.slot==id;}))throw std::logic_error("Missing non-deferred graph storage");
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    if(lazyTestFailAfter_==0){lazyTestFailAfter_=-1;throw std::runtime_error("Injected deferred storage allocation failure");}
++    if(lazyTestFailAfter_>0)--lazyTestFailAfter_;
++#endif
+     auto matrix=gpu_->Allocate(slots_[id].rows,slots_[id].columns);auto info=MetalContext::MatrixBufferInfo(matrix);slots_[id].matrix=std::move(matrix);lazyRehydratedBytes_+=info.allocatedBytes;
+ #else
+     (void)id;
+@@ -1327,7 +1340,11 @@
+ void MetalCompiledGraph::EnsureGraphWorkspace() {
+ #ifdef GARNET_METAL_GRAPH_WORKSPACE
+     std::map<std::pair<size_t,size_t>,size_t> required;for(const auto& e:workspacePlan_)required[{e.rows,e.columns}]=std::max(required[{e.rows,e.columns}],e.color+1);
+-    for(const auto& e:required){auto& buffers=graphWorkspacePool_[e.first];while(buffers.size()<e.second){auto matrix=gpu_->Allocate(e.first.first,e.first.second);if(!gpu_->HazardTracked(matrix))throw std::runtime_error("Ordinary workspace requires tracked resources");buffers.push_back(std::move(matrix));}}
++    for(const auto& e:required){auto& buffers=graphWorkspacePool_[e.first];while(buffers.size()<e.second){
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++if(graphWorkspaceTestFailAfter_==0){graphWorkspaceTestFailAfter_=-1;throw std::runtime_error("Injected ordinary workspace allocation failure");}if(graphWorkspaceTestFailAfter_>0)--graphWorkspaceTestFailAfter_;
++#endif
++auto matrix=gpu_->Allocate(e.first.first,e.first.second);if(!gpu_->HazardTracked(matrix))throw std::runtime_error("Ordinary workspace requires tracked resources");buffers.push_back(std::move(matrix));}}
+ #endif
+ }
+ size_t MetalCompiledGraph::GraphWorkspaceBytes()const{std::lock_guard<std::mutex> lock(mutex_);size_t n=0;for(const auto&e:graphWorkspacePool_)for(const auto&m:e.second)n+=MetalContext::MatrixBufferInfo(m).allocatedBytes;return n;}
+@@ -1345,6 +1362,16 @@
+ size_t MetalCompiledGraph::RawVisionWeightBytes() const {std::lock_guard<std::mutex> lock(mutex_);size_t n=0;for(auto id:rawVisionWeightSlots_){const auto&s=slots_[id];auto bytes=s.rows*s.columns*2;if(bytes>std::numeric_limits<size_t>::max()-n)throw std::overflow_error("Raw vision weight byte accounting overflow");n+=bytes;}return n;}
+ size_t MetalCompiledGraph::WeightExpansionDispatches() const {std::lock_guard<std::mutex> lock(mutex_);return weightExpansionDispatches_;}
+ }
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++namespace Garnet {void MetalCompiledGraph::TestLazyFailAfter(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(n<0||n>3)throw std::invalid_argument("Invalid fault countdown");lazyTestFailAfter_=n;}}
++#endif
++
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++namespace Garnet {
++void MetalCompiledGraph::TestGraphWorkspaceFailAfter(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(!ready_||n<0||n>4096)throw std::invalid_argument("Invalid ordinary workspace fault state");graphWorkspacePool_.clear();graphWorkspaceTestFailAfter_=n;}
++void MetalCompiledGraph::TestGraphWorkspaceEncodeOp(int64_t n){std::lock_guard<std::mutex> lock(mutex_);if(!ready_||n<0||uint64_t(n)>=ops_.size())throw std::invalid_argument("Invalid ordinary workspace fault operation");graphWorkspaceTestEncodeOp_=n;}
++}
++#endif
+ 
+ namespace Garnet {
+ bool MetalCompiledGraph::BuildBF16PrivateResident(X::Value graph,X::Value symbols,const std::string& checkpoint) {
+--- a/src/backends/metal/compiled_graph.h
++++ b/src/backends/metal/compiled_graph.h
+@@ -55,10 +55,16 @@
+     size_t weightExpansionDispatches_=0;
+     std::map<std::pair<size_t,size_t>,std::vector<MetalMatrix>> graphWorkspacePool_;
+     size_t graphWorkspaceBoundSlots_=0;
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++    int64_t graphWorkspaceTestFailAfter_=-1,graphWorkspaceTestEncodeOp_=-1;
++#endif
+     void EnsureGraphWorkspace();
+     bool workspacePlanReady_=false;
+     std::vector<WorkspaceBinding> workspacePlan_;
+     void BuildWorkspacePlan();
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    int64_t lazyTestFailAfter_=-1;
++#endif
+     void RetireResidentDefaults();
+     void MaterializeDefault(size_t slot);
+     void Clear();
+@@ -87,6 +93,10 @@
+     size_t ResidentAvoidedStorageBytes() const;
+     std::string WorkspacePlanJson();
+     size_t GraphWorkspaceBytes() const;
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++    void TestGraphWorkspaceFailAfter(int64_t);
++    void TestGraphWorkspaceEncodeOp(int64_t);
++#endif
+     size_t GraphWorkspaceCount() const;
+     size_t GraphWorkspaceSlots() const;
+     size_t GraphWorkspaceVisionSlots() const;
+@@ -101,6 +111,9 @@
+     size_t LazyRetiredBytes() const;
+     size_t LazyRehydratedBytes() const;
+     size_t LazyPlannedSlots() const;
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++    void TestLazyFailAfter(int64_t n);
++#endif
+     bool Ready() const {return ready_;}
+     double CompileMs() const {return compileMs_;}
+     double LastInferenceMs() const {return inferenceMs_;}
+@@ -121,6 +134,10 @@
+         APISET().AddProp("scoped_execution_runs",&MetalCompiledGraph::ScopedExecutionRuns);
+         APISET().AddFunc<3>("build_bf16_resident",&MetalCompiledGraph::BuildBF16Resident);
+         APISET().AddFunc<4>("build_shared_resident",&MetalCompiledGraph::BuildSharedResident);
++#ifdef GARNET_METAL_GRAPH_WORKSPACE_TEST_FAULTS
++        APISET().AddFunc<1>("_test_graph_workspace_fail_after",&MetalCompiledGraph::TestGraphWorkspaceFailAfter);
++        APISET().AddFunc<1>("_test_graph_workspace_encode_op",&MetalCompiledGraph::TestGraphWorkspaceEncodeOp);
++#endif
+         APISET().AddProp("graph_workspace_allocated_bytes",&MetalCompiledGraph::GraphWorkspaceBytes);
+         APISET().AddProp("graph_workspace_buffer_count",&MetalCompiledGraph::GraphWorkspaceCount);
+         APISET().AddProp("vision_materialized_weight_slots",&MetalCompiledGraph::MaterializedWeightSlots);
+@@ -134,6 +151,9 @@
+         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
+         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
+         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);
++#ifdef GARNET_METAL_LAZY_DEFAULTS_TEST_FAULTS
++        APISET().AddFunc<1>("_test_lazy_fail_after",&MetalCompiledGraph::TestLazyFailAfter);
++#endif
+         APISET().AddProp("lazy_default_retired_bytes",&MetalCompiledGraph::LazyRetiredBytes);
+         APISET().AddProp("lazy_default_rehydrated_bytes",&MetalCompiledGraph::LazyRehydratedBytes);
+         APISET().AddProp("lazy_default_planned_slots",&MetalCompiledGraph::LazyPlannedSlots);
+--- a/src/backends/metal/decoder_session.cpp
++++ b/src/backends/metal/decoder_session.cpp
+@@ -1,3 +1,4 @@
++#include <thread>
+ // SPDX-License-Identifier: Apache-2.0
+ #include "decoder_session.h"
+ #include "lowering_context.h"
+@@ -496,3 +497,12 @@
+ bool MetalDecoderSession::BeginWeightResidencyRequest(){std::lock_guard<std::mutex> lock(mutex_);if(!gpu_)throw std::logic_error("Closed session before residency request");return gpu_->BeginWeightResidencyRequest();}
+ void MetalDecoderSession::EndWeightResidencyRequest(){std::lock_guard<std::mutex> lock(mutex_);if(gpu_)gpu_->EndWeightResidencyRequest();}
+ }
++
++#ifdef GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE
++namespace Garnet {
++bool MetalDecoderSession::TestRequestThreadOwnership(){
++ {std::lock_guard<std::mutex> lock(mutex_);if(!gpu_)throw std::logic_error("Closed test session");gpu_->CheckWeightResidencyRequestOwner();if(gpu_->WeightResidencyStatsJSON().find("\"request_active\":1")==std::string::npos)throw std::logic_error("Test requires active request");}
++ int passed=0;std::thread worker([&]{for(int i=0;i<7;i++){try{switch(i){case 0:Reset();break;case 1:CapturePrefix(64);break;case 2:RestorePrefix(1);break;case 3:ClearPrefixCache();break;case 4:EndWeightResidencyRequest();break;case 5:BeginWeightResidencyRequest();break;case 6:Run(X::Value(),X::Value(),X::Value(),X::Value(),X::Value(),-1);break;}}catch(const std::exception& e){auto m=std::string(e.what());if(m.find("another thread")!=std::string::npos||(i==5&&m.find("Nested")!=std::string::npos))++passed;}}});worker.join();return passed==7;
++}
++}
++#endif
+--- a/src/backends/metal/decoder_session.h
++++ b/src/backends/metal/decoder_session.h
+@@ -75,6 +75,9 @@
+     size_t DenseDecode512EncodedTotal() const;
+     size_t DenseDecode1024EncodedTotal() const;
+     std::string WeightResidencyStatsJSON() const;
++#ifdef GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE
++    bool TestRequestThreadOwnership();
++#endif
+     bool BeginWeightResidencyRequest();
+     void EndWeightResidencyRequest();
+     bool Build(X::Value graphs,X::Value head);
+@@ -137,6 +140,9 @@
+         APISET().AddProp("dense_decode512_encoded_total",&MetalDecoderSession::DenseDecode512EncodedTotal);
+         APISET().AddProp("dense_decode1024_encoded_total",&MetalDecoderSession::DenseDecode1024EncodedTotal);
+         APISET().AddProp("weight_residency_stats_json",&MetalDecoderSession::WeightResidencyStatsJSON);
++#ifdef GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE
++        APISET().AddFunc<0>("test_request_thread_ownership",&MetalDecoderSession::TestRequestThreadOwnership);
++#endif
+         APISET().AddFunc<0>("begin_weight_residency_request",&MetalDecoderSession::BeginWeightResidencyRequest);
+         APISET().AddFunc<0>("end_weight_residency_request",&MetalDecoderSession::EndWeightResidencyRequest);
+         APISET().AddFunc<0>("reset",&MetalDecoderSession::Reset);
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -3081,7 +3081,14 @@
+ namespace Garnet {bool MetalContext::HazardTracked(const MetalMatrix& matrix)const{@autoreleasepool{return matrix.impl_&&matrix.impl_->matrix.device==impl_->device&&matrix.impl_->matrix.data.hazardTrackingMode==MTLHazardTrackingModeTracked;}}}
+ 
+ namespace Garnet {
+-namespace {constexpr uint64_t kWeightResidencyLimit=uint64_t(4)*1024*1024*1024;WeightResidencyBudget& ResidencyBudget(){static WeightResidencyBudget b(kWeightResidencyLimit);return b;}}
++namespace {constexpr uint64_t kWeightResidencyLimit=uint64_t(4)*1024*1024*1024;WeightResidencyBudget& ResidencyBudget(){
++#ifdef GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE
++ static WeightResidencyBudget b(65536);
++#else
++ static WeightResidencyBudget b(kWeightResidencyLimit);
++#endif
++ return b;}
++}
+ void MetalContext::EndWeightResidency() {
+  if(impl_->command||impl_->submitted.count)throw std::logic_error("Drain or Abort before ending weight residency");
+  impl_->weightResidencyFingerprint.clear();
+@@ -3125,6 +3132,10 @@
+ std::string MetalContext::WeightResidencyStatsJSON() const {
+  auto result="{\"admitted\":"+std::to_string(impl_->weightResidencyAdmitted)+",\"fallback\":"+std::to_string(impl_->weightResidencyFallback)+",\"last_bytes\":"+std::to_string(impl_->weightResidencyLastBytes)+",\"last_count\":"+std::to_string(impl_->weightResidencyLastCount)+",\"active_bytes\":"+std::to_string(impl_->weightResidencyActiveBytes)+",\"attempted_bytes\":"+std::to_string(impl_->weightResidencyAttemptedBytes)+",\"attempted_count\":"+std::to_string(impl_->weightResidencyAttemptedCount)+",\"reason\":"+std::to_string(impl_->weightResidencyReason)+"}";
+  result.pop_back();result+=",\"request_active\":"+std::to_string(impl_->weightResidencyRequest)+",\"request_starts\":"+std::to_string(impl_->weightResidencyRequestStarts)+",\"request_ends\":"+std::to_string(impl_->weightResidencyRequestEnds)+",\"request_reuses\":"+std::to_string(impl_->weightResidencyReuses)+"}";
++#if defined(GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE) && defined(GARNET_METAL_WEIGHT_RESIDENCY)
++ uint64_t count=0;if(@available(macOS 15.0,*)){if(impl_->weightResidencySet)count=impl_->weightResidencySet.allocationCount;}
++ result.pop_back();result+=",\"test_owners\":"+std::to_string(impl_->weightResidencyOwners.size())+",\"test_set_count\":"+std::to_string(count)+",\"test_attached\":"+std::to_string(impl_->weightResidencyAttached)+",\"test_requested\":"+std::to_string(impl_->weightResidencyRequested)+",\"test_global_used\":"+std::to_string(ResidencyBudget().Used(impl_->device.registryID))+"}";
++#endif
+  return result;
+ 
+ }
+--- a/test2026/metal/weight_residency_test.cpp
++++ b/test2026/metal/weight_residency_test.cpp
+@@ -22,6 +22,10 @@
+   g.Begin();bool rejected=false;try{g.BeginWeightResidency({w});}catch(...){rejected=true;}check(rejected,"Open batch accepted residency");rejected=false;try{g.EndWeightResidency();}catch(...){rejected=true;}check(rejected,"Premature residency end accepted");g.EncodeBF16MatVec(a,w,o);
+   if(pass==1){g.Flush();g.Abort();}else{g.SubmitAndWait();for(float v:g.Download(o))check(v==128,"Residency changed values");}
+   check(field(g,"active_bytes")==0,"Completion or drained Abort leak");
++#ifdef GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE
++ check(field(g,"test_owners")==0&&field(g,"test_set_count")==0&&field(g,"test_attached")==0&&field(g,"test_requested")==0&&field(g,"test_global_used")==0,"Retained owner/set/global budget after drain");
++#endif
++
+  }
+ #ifdef GARNET_METAL_WEIGHT_RESIDENCY
+  bool rejected=false;try{g.BeginWeightResidency({MetalBF16Weight()});}catch(...){rejected=true;}check(rejected&&field(g,"active_bytes")==0,"Invalid ownership");
+@@ -29,5 +33,9 @@
+ #endif
+  {auto temporary=g.UploadBF16(ones.data(),ones.size()*2,32,128);g.BeginWeightResidency({temporary});g.Begin();g.EncodeBF16MatVec(a,temporary,o);temporary=MetalBF16Weight();g.SubmitAndWait();for(float v:g.Download(o))check(v==128,"Owner release changed result");}
+  g.BeginWeightResidency({w});g.Abort();check(field(g,"active_bytes")==0,"BeforeBegin Abort leak");
++
++#ifdef GARNET_METAL_WEIGHT_RESIDENCY_TEST_STATE
++ {MetalContext first,second;std::vector<uint16_t> large(32768,0x3f80);auto big=first.UploadBF16(large.data(),65536,256,128);first.BeginWeightResidency({big});check(field(first,"reason")==1&&field(first,"test_global_used")==65536,"Test budget admission");second.BeginWeightResidency({w});check(field(second,"reason")==5&&field(second,"active_bytes")==0,"Native busy fallback not exercised");first.Abort();second.BeginWeightResidency({w});check(field(second,"reason")==1,"Budget not reusable");second.Abort();check(field(second,"test_global_used")==0&&field(second,"test_owners")==0&&field(second,"test_set_count")==0,"Budget/native set cleanup");}
++#endif
+  std::cout<<"Bounded residency numerical/dedup/allocationcap/owner/partialAbort/retry/budget isolation+concurrency PASS "<<g.WeightResidencyStatsJSON()<<'\n';return 0;
+ }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

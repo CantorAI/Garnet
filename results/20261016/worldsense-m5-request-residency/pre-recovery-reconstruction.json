@@ -1,0 +1,10 @@
+{
+  "base": "Final frozen WS33 source reconstructed from source-overlay.patch",
+  "overlay": "pre-recovery-overlay.patch",
+  "full_initial_closure_sha256": "pre-recovery-fix/initial-validation-identity.json",
+  "changed_files": [
+    "src/backends/metal/decoder_session.cpp"
+  ],
+  "apply_check_pass": true,
+  "scope": "Initial native/fullstate validation passed before static discovery of poisoned-Begin recovery gap. Alltiming uses correctedsource;no favorable unchanged retry."
+}

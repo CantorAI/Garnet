@@ -1,0 +1,38 @@
+{
+  "experiment": "WS-M5-33",
+  "declared_utc": "2026-10-17T09:14:51.628775+00:00",
+  "status": "design_only",
+  "seed": "FrozenuntracedWS32;allwide2565121024OFFboth;WEIGHT_RESIDENCY+REQUEST_WEIGHT_RESIDENCYONcandidatealongwith8memory/privateflags;12priorpolicysettings+new=13settings10differences. WS32rejectionretained.",
+  "evidence": [
+    "Posthocall20WS32rawcalls/promptidentitiesretained;companion4warmmedianencode14.178\u2192442.796ms,reportedGPUspans1254.506\u21921651.108ms,decode_seconds1.321\u21922.457. BothhostencodingandGPUspansgrow;noCPU-onlyorresidencycausalclaim. GPU/waitoverlap,neveradd.",
+    "runtime/metal_serving.py infer_json serializeswholeModel.infer underexistingthreading.RLock;currentperbatchsetsrequest/end/removeeachnativeRun.",
+    "Production4GiB/2048/process-devicebudget anddirectfaultcleanup/busy/admissionproofspass;requestreusehasnotbeenimplementedormeasured."
+  ],
+  "hypothesis": "RetainoneboundedsetduringaserializednativeGarnetgenerationrequest,reuseonlyidenticalactualbufferidentitiesacrossprefill/decodebatches,releasebeforereturn. Mayreducepreparationchurn;maystillhurtGPU/memoryorCPUcost. No performanceprediction.",
+  "implementation_plan": [
+    "DefaultOFF REQUEST_WEIGHT_RESIDENCY requiresWEIGHT_RESIDENCY. Existingperbatchbehavioroutsideexplicitrequestunchanged. NewBegin/EndRequestsessionAPIunderexistingmutex;rejectnested/cross-threadmisuse usingowneridentity. ModelservingalreadyserializedbyexistingRLock;donotintroduceparallelgeneration.",
+    "Begin logicalscopebeforeModel.infer/reset;nativeResetreleasescachedsetbutkeepslogicalrequestownership,Close/Buildclearscopeandallowners. ActualRunalwayscollects/validatesactualsuppliedlockedlayers/headrawBF16buffers,nevercachedBuildlist.",
+    "Comparecompleteuniquesortedbufferidentity+allocatedbytes/devicefingerprint;keepstrongownerswhileactivepreventABA. Identicalset+livebudget\u2192reusecounter,skipsetcommit/request. Changedset\u2192drainedreleaseoldthenboundednewadmission. Overcap/unavailable/busyfallbackautomatic;request4Bovercapstillvalidatedeachbatch.",
+    "SubmitAndWaitkeepssetonlyduringactiveexplicitrequestafterallpartialcommandsdrained;Abortalwaysforceclearscache/owners/set/budgeteveninsiderequest. EndRequestrequiresdrainedbatchthenendslogicalscopeandforcecleanup. Neverkeepbufferownersafterrequest.",
+    "GarnetXLang3runtimeinfer_json wrapsModel.infer withtry/finally;onlyEndifthatscopebegansuccessfully. Preserveoriginalexceptioncleanup;getpostcleanupnativeJSONcountersandoptionalpostcleanupmemorysnapshot. DoNOTalterimagepreprocessing.",
+    "MeasureouterrequestfrombeforeBeginthroughEnd;TTFTincludespreModelscopeoverhead,totalincludesallcleanup. DecodeTPSderivedfromtotal\u2212TTFTthereforeincludescleanup. Keeporiginalmemory_after_decode asmidrequestsample,addseparatecleanupmemorysample;no overwrittenmemoryimprovement.",
+    "Exposepostrequestscopeactive/reuses/start/end/cachedset countersinoneexistingJSONgetter;responseactivebytes/requestactive0. DirectnormalnativeRunoutsideRequestmustretainWS32perbatchcleanup."
+  ],
+  "correctness": [
+    "Native13existing+newrequestlifecycle:two/manybatchesreuse,duplicateorderchange,actualchangedweightset/overcap/fallback,noownerleak,partialAbort/retry,reset/Close/Build,non-nesting/threadownership,budgetcontention. Faulttest64KiB+owners/set/attached/request/globalusedinspectorstillrequired.",
+    "ActualRunBF16\u2194F32graph/headoraclesinsideexplicitrequest;uniqueweightidentitiesvalidatedeachRun;afterEndallactive0.",
+    "Servingearlyimage/tokenizer/modelerrorandnativeGPUfailuremustexecuteEndfinally;unchangedtokens/full32VLM28textstates/prefix/capacity/vision.",
+    "FullnativeAPIpostcleanupcountersandend-to-endwallcostsmustcoverrealWorldSensepaths,includingQueryPlanSearch."
+  ],
+  "protocol": {
+    "resource": "NEWfresh8WorldSensecalls,exact/native/sourceidentities,>=10%Metal>=5%sampledfootprint.",
+    "speed": "IfresourcepassesNEWfresh20calls,bothmodelsTTFTtotaldecodeandSkillwall<=2%regression.",
+    "confirmation": "IfspeedpassesNEW48callsfourmirroredworkers,twofull3frame/querypairseachindependentlypassbeforeintegration."
+  },
+  "tradeoffs": "Requestholds<=4GiBresidentpreparationbudgetlonger;othercontextsmayfallbackwhileheld. FingerprintvalidationCPUcostremains;reuseonlyreducessetchurn. Scope/exception/reset/threadownershipcomplexityandcleanupcostincluded;physicalresidencynotmeasured/guaranteed. No unchangedfavorableretry/gaterelaxation/crosscohortcausalratio.",
+  "source_reference_sha256": {
+    "runtime/metal_serving.py": "812754809c05622639726ab7c85c59ec947ba71df1e779c5c3acca39404d98c2",
+    "src/backends/metal/metal_context.mm": "aa5ebe82c398ce48e8928de76295c825cb0440f5d7d03f114b9fea264982a7cc",
+    "src/backends/metal/decoder_session.cpp": "bfbfc037f565f0be5e64c06617e39ce00f8eaa55417dcc234bbd30e612edbb0a"
+  }
+}

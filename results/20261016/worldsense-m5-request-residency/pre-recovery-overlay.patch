@@ -1,0 +1,10 @@
+--- a/src/backends/metal/decoder_session.cpp
++++ b/src/backends/metal/decoder_session.cpp
+@@ -493,6 +493,6 @@
+ namespace Garnet {std::string MetalDecoderSession::WeightResidencyStatsJSON() const {std::lock_guard<std::mutex> lock(mutex_);return gpu_?gpu_->WeightResidencyStatsJSON():"{}";}}
+ 
+ namespace Garnet {
+-bool MetalDecoderSession::BeginWeightResidencyRequest(){std::lock_guard<std::mutex> lock(mutex_);if(!gpu_)throw std::logic_error("Closed session before residency request");return gpu_->BeginWeightResidencyRequest();}
++bool MetalDecoderSession::BeginWeightResidencyRequest(){std::lock_guard<std::mutex> lock(mutex_);if(!gpu_||poisoned_)throw std::logic_error("Reset closed/failed session before residency request");return gpu_->BeginWeightResidencyRequest();}
+ void MetalDecoderSession::EndWeightResidencyRequest(){std::lock_guard<std::mutex> lock(mutex_);if(gpu_)gpu_->EndWeightResidencyRequest();}
+ }

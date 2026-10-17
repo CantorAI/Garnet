@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T09:10:54.707781+00:00
+Generated UTC: 2026-10-17T09:45:18.635652+00:00
 
-Base HEAD at generation: `79994b6b776ef9d4323aeb2d9aacd422ea9e39b0`. Reports indexed: **222**.
+Base HEAD at generation: `ee41456de01a3ee56fb8efdd1c2c44eb00029c9f`. Reports indexed: **223**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -209,6 +209,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-private-resident-defaults](../../../results/20261016/worldsense-m5-private-resident-defaults/README.md) | WS-M5-30: private resident deferred defaults — rejected |
 | [results/20261016/worldsense-m5-private-resident-dense512](../../../results/20261016/worldsense-m5-private-resident-dense512/README.md) | WS-M5-31: private resident defaults plus512 grouping — rejected |
 | [results/20261016/worldsense-m5-request-pool](../../../results/20261016/worldsense-m5-request-pool/README.md) | WS-M5-13 native request pool memory gate failed |
+| [results/20261016/worldsense-m5-request-residency](../../../results/20261016/worldsense-m5-request-residency/README.md) | WS-M5-33: request-scoped bounded weight residency — rejected |
 | [results/20261016/worldsense-m5-resident-admission](../../../results/20261016/worldsense-m5-resident-admission/README.md) | WS-M5-17: explicit resident build admission (rejected physical-memory feasibility) |
 | [results/20261016/worldsense-m5-resident-workspace](../../../results/20261016/worldsense-m5-resident-workspace/README.md) | WS-M5-18: active resident scratch pools (rejected physical-memory gate) |
 | [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |

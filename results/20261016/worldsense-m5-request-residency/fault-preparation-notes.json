@@ -1,0 +1,16 @@
+{
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.mm",
+    "test2026/metal/weight_residency_test.cpp"
+  ],
+  "test_global_budget_bytes": 65536,
+  "measured_global_budget_bytes": 4294967296,
+  "test_only_cross_thread_methods": 7,
+  "new_request_scope_source_preserved": true,
+  "not_built_yet": true
+}

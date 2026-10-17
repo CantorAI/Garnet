@@ -1,0 +1,8 @@
+{
+  "identified_before_fault_testing": true,
+  "current_issue": "NativeSessionBeginRequestrejectspoisonedstatebeforeModel.infercanperformnormalReset. PreviousnativeGPUfailurewouldblockfollowingpublicrequest.",
+  "required_fix": "AllowBeginonexistingpoisonedsession;RunstillrejectsuntilReset,Model.inferalreadyresetsinsideownershipscope. Keepclosed/nested/threadguards.",
+  "source_not_modified_while_model_validation_live": 7721,
+  "planned_test": "serving_request_guard.pyfaultnativeprefillencoderfailurethenpublicinferexactlearnedrecovery;allerrorcasesfinallyactive0.",
+  "no_timing_cohort_dispatched": true
+}
