@@ -1,0 +1,16 @@
+{
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_storage_test.cpp",
+    "src/backends/metal/primary_storage_policy.h"
+  ],
+  "seed_frozen_files": 1715,
+  "candidate_frozen_files": 1716,
+  "CUDA_files_unchanged": 21,
+  "entire_primary_shader_unchanged": true,
+  "scope": "Static delta, not numerical or performance proof"
+}
