@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T03:45:44.427822+00:00
+Generated UTC: 2026-10-17T03:58:53.567244+00:00
 
-Base HEAD at generation: `4bcdade1399d0f49d4eab3ec30b75dfc77014899`. Reports indexed: **209**.
+Base HEAD at generation: `c88943675b1c508c4a6e815561b62d9da55f4296`. Reports indexed: **210**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -205,6 +205,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261016/worldsense-m5-shared-half](../../../results/20261016/worldsense-m5-shared-half/README.md) | WS-M5-03: immutable shared exact-half body storage — rejected |
 | [results/20261016/worldsense-m5-small-prefill](../../../results/20261016/worldsense-m5-small-prefill/README.md) | WS-M5-06: existing smaller BF16 prefill tile — rejected |
 | [results/20261016/worldsense-m5-storage-scopes](../../../results/20261016/worldsense-m5-storage-scopes/README.md) | WS-M5-16: graph/session storage lifetime pools (rejected screen) |
+| [results/20261016/worldsense-m5-vlm-workspace](../../../results/20261016/worldsense-m5-vlm-workspace/README.md) | WS-M5-20 private dense buffers with VLM reuse: rejected resource gate |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
