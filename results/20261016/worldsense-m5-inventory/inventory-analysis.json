@@ -1,0 +1,302 @@
+{
+  "scope": "Read-only unique-buffer inventory per model collection. Categories use a priority rule for overlapping owners; references are not ARC counts. Models cannot be unioned by collection-local ids. No safe-free, peak RAM or speed claim.",
+  "all12_full_outputs_and_capture_hashes_valid": true,
+  "summaries": [
+    {
+      "call_index": 0,
+      "window": 0,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "467cd2ceb72474f47898dd15f23234662434082be67f573b77e795e8ab98264c.json",
+      "sha256": "a2b4b2f174cc7da87112ad853d53155d2c081814fed388d43ee3e4ba7f5d3f05",
+      "capture_bytes": 1693435,
+      "buffer_count": 3343,
+      "reference_count": 5042,
+      "unique_allocated_bytes": 12951362608,
+      "device_allocated_bytes": 18282971136,
+      "categories": {
+        "graph_inputs": 398068000,
+        "other_graph_storage": 1733305088,
+        "weights": 9747482624,
+        "graph_output_parts": 396689408,
+        "nonresident_written_temps_not_safe_free_proof": 488112128,
+        "private_session": 187705360
+      }
+    },
+    {
+      "call_index": 1,
+      "window": 0,
+      "phase": "phase3",
+      "model_id": "Qwen3-1.7B",
+      "capture": "dd4b4e46f7826c0babc7051489c5705f1df6ea3a186978f1c3e0f48898a8b9b9.json",
+      "sha256": "1212beb813b0d882cf0b5aa344442bf6f9ee07ed6dc23e95696409c240d76189",
+      "capture_bytes": 1052933,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 20508835840,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    },
+    {
+      "call_index": 2,
+      "window": 0,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "51d2bc2df69a4c376ac37b8ca2a27ae5afbbd20d70af148cdd3056f6b65bebf6.json",
+      "sha256": "f2be51a0842e20014d238c84402335e899186a2d736111cfe655074c4c06ba59",
+      "capture_bytes": 1693436,
+      "buffer_count": 3343,
+      "reference_count": 5042,
+      "unique_allocated_bytes": 13039935280,
+      "device_allocated_bytes": 20599357440,
+      "categories": {
+        "graph_inputs": 398215456,
+        "other_graph_storage": 1821730304,
+        "weights": 9747482624,
+        "graph_output_parts": 396689408,
+        "nonresident_written_temps_not_safe_free_proof": 488112128,
+        "private_session": 187705360
+      }
+    },
+    {
+      "call_index": 3,
+      "window": 0,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "21c9390f6fa06cdef39340c6fb6b218ab4cc21861cf25dcbdb0c28538088a027.json",
+      "sha256": "4717b1efad7a3add2e0ff43c998980eb812caa219cf1fc309407c1174301b333",
+      "capture_bytes": 2399394,
+      "buffer_count": 4543,
+      "reference_count": 7186,
+      "unique_allocated_bytes": 14345887664,
+      "device_allocated_bytes": 21907488768,
+      "categories": {
+        "graph_inputs": 591589664,
+        "other_graph_storage": 2472935040,
+        "weights": 9747482624,
+        "graph_output_parts": 589627392,
+        "nonresident_written_temps_not_safe_free_proof": 756547584,
+        "private_session": 187705360
+      }
+    },
+    {
+      "call_index": 4,
+      "window": 0,
+      "phase": "phase3",
+      "model_id": "Qwen3-1.7B",
+      "capture": "e2d4c8be4a7b8264fdaaac9364f410838c8c7f21c98f74770fb09fefe7223c87.json",
+      "sha256": "56145e2f4551ade0025d18f979d64c2b8c9b4cb428adde99a275d13efe170487",
+      "capture_bytes": 1052933,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 21907488768,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    },
+    {
+      "call_index": 5,
+      "window": 1,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "8e872a3fda6bf2c8563dca9a19b5357bfc7d17f661116c38860a79f1d7bd6eda.json",
+      "sha256": "cfdeef5e515a6abaf1b95e1ee4228b8ebf2214f494016ed584678353921f74a7",
+      "capture_bytes": 2398946,
+      "buffer_count": 4543,
+      "reference_count": 7186,
+      "unique_allocated_bytes": 13995725872,
+      "device_allocated_bytes": 21560115200,
+      "categories": {
+        "graph_inputs": 591016224,
+        "other_graph_storage": 2123346688,
+        "weights": 9747482624,
+        "graph_output_parts": 589627392,
+        "nonresident_written_temps_not_safe_free_proof": 756547584,
+        "private_session": 187705360
+      }
+    },
+    {
+      "call_index": 6,
+      "window": 1,
+      "phase": "phase3",
+      "model_id": "Qwen3-1.7B",
+      "capture": "77d8937fb5b3b168f687eeb64866534908e8a5c5dbe392d7c886ca443a0fe4ef.json",
+      "sha256": "1adbb1fecaf594222f0e9430d28579bcf2274d7e89c97a3edf7749600ee625c3",
+      "capture_bytes": 1052931,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 21560115200,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    },
+    {
+      "call_index": 7,
+      "window": 1,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "3ff2558fc42f7635a2f38382f65001d9c1e1732c992907b5c567741afcb08f35.json",
+      "sha256": "865a99ba8c4bafa7dc678fd9e594530ac1c7998109ac038b2c97f8a1b61fdee9",
+      "capture_bytes": 2398944,
+      "buffer_count": 4543,
+      "reference_count": 7186,
+      "unique_allocated_bytes": 14084298544,
+      "device_allocated_bytes": 21650636800,
+      "categories": {
+        "graph_inputs": 591163680,
+        "other_graph_storage": 2211771904,
+        "weights": 9747482624,
+        "graph_output_parts": 589627392,
+        "nonresident_written_temps_not_safe_free_proof": 756547584,
+        "private_session": 187705360
+      }
+    },
+    {
+      "call_index": 8,
+      "window": 1,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "0bf056116cdcc8e34b970d3359fd8f132b4f47bf8e2025347eec897b57df0e02.json",
+      "sha256": "682e8498bd54284fa935dfc4bc8578dff06d5029c6a204430d7501e33f020aba",
+      "capture_bytes": 2399394,
+      "buffer_count": 4543,
+      "reference_count": 7186,
+      "unique_allocated_bytes": 14345887664,
+      "device_allocated_bytes": 21914517504,
+      "categories": {
+        "graph_inputs": 591589664,
+        "other_graph_storage": 2472935040,
+        "weights": 9747482624,
+        "graph_output_parts": 589627392,
+        "nonresident_written_temps_not_safe_free_proof": 756547584,
+        "private_session": 187705360
+      }
+    },
+    {
+      "call_index": 9,
+      "window": 1,
+      "phase": "phase3",
+      "model_id": "Qwen3-1.7B",
+      "capture": "9afbddebdd0e477cc374a5f90407599d7cf7315c3d2106ad56d3751447fe82be.json",
+      "sha256": "772994dda9abb2fad10339946bcc67f80813684a15a44f7ddc27fc4931b41fff",
+      "capture_bytes": 1052933,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 21914517504,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    },
+    {
+      "call_index": 10,
+      "window": 0,
+      "phase": "search_plan",
+      "model_id": "Qwen3-1.7B",
+      "capture": "e7749cf07cdc782455a93472b8b4786736ac7a703dbb6483229d0ac9ccf360f0.json",
+      "sha256": "6e15cf3910bb0280aa5f9b1a9b755bbacb329e5db88872a2715865f5d09dba2d",
+      "capture_bytes": 1052933,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 21907488768,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    },
+    {
+      "call_index": 11,
+      "window": 1,
+      "phase": "search_plan",
+      "model_id": "Qwen3-1.7B",
+      "capture": "ebd1147dc3c8c8abe0ac7395a2056df5833fd8470ef475dc39e77e8af0c4b945.json",
+      "sha256": "abfdf027d1858579cef577fc8b99c8c65404d1e872a4dc4c8afe120cb3f1a96b",
+      "capture_bytes": 1052933,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 21914517504,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    }
+  ],
+  "largest_collection_by_model": {
+    "Qwen3-1.7B": {
+      "call_index": 1,
+      "window": 0,
+      "phase": "phase3",
+      "model_id": "Qwen3-1.7B",
+      "capture": "dd4b4e46f7826c0babc7051489c5705f1df6ea3a186978f1c3e0f48898a8b9b9.json",
+      "sha256": "1212beb813b0d882cf0b5aa344442bf6f9ee07ed6dc23e95696409c240d76189",
+      "capture_bytes": 1052933,
+      "buffer_count": 2163,
+      "reference_count": 3201,
+      "unique_allocated_bytes": 7556751792,
+      "device_allocated_bytes": 20508835840,
+      "categories": {
+        "graph_inputs": 943441312,
+        "other_graph_storage": 576515072,
+        "weights": 3441397760,
+        "graph_output_parts": 943423488,
+        "nonresident_written_temps_not_safe_free_proof": 1182203904,
+        "private_session": 469770256
+      }
+    },
+    "Qwen3.5-4B": {
+      "call_index": 3,
+      "window": 0,
+      "phase": "phase1",
+      "model_id": "Qwen3.5-4B",
+      "capture": "21c9390f6fa06cdef39340c6fb6b218ab4cc21861cf25dcbdb0c28538088a027.json",
+      "sha256": "4717b1efad7a3add2e0ff43c998980eb812caa219cf1fc309407c1174301b333",
+      "capture_bytes": 2399394,
+      "buffer_count": 4543,
+      "reference_count": 7186,
+      "unique_allocated_bytes": 14345887664,
+      "device_allocated_bytes": 21907488768,
+      "categories": {
+        "graph_inputs": 591589664,
+        "other_graph_storage": 2472935040,
+        "weights": 9747482624,
+        "graph_output_parts": 589627392,
+        "nonresident_written_temps_not_safe_free_proof": 756547584,
+        "private_session": 187705360
+      }
+    }
+  }
+}

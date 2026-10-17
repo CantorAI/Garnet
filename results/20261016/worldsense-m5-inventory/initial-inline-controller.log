@@ -1,0 +1,11 @@
+START inventory-1 2026-10-17T00:52:58Z
+FINISH inventory-1 exit 1
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-inventory/controller.py", line 40, in <module>
+    if proc.returncode:raise RuntimeError(label+' failed; raw failure retained')
+RuntimeError: inventory-1 failed; raw failure retained
+RESTORED ORIGINAL CONTROL AND LIVE ASSIGNMENTS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-inventory/controller.py", line 40, in <module>
+    if proc.returncode:raise RuntimeError(label+' failed; raw failure retained')
+RuntimeError: inventory-1 failed; raw failure retained

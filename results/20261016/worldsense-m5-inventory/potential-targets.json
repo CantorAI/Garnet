@@ -1,0 +1,14 @@
+{
+  "scope": "Potential storage targets from recorded roles, not a safe-free or memory-gain proof. Input slot1/2 indexing checked against compiled_graph.cpp BuildInternal symbol-allocation order. Separate model collections do not establish a global alias union.",
+  "models": {
+    "Qwen3-1.7B": {
+      "default_state_input_bytes": 939524096,
+      "inactive_legacy_root_bytes": 943652864
+    },
+    "Qwen3.5-4B": {
+      "default_state_input_bytes": 563085312,
+      "inactive_legacy_root_bytes": 589824000
+    }
+  },
+  "combined_candidate_bytes": 3036086272
+}

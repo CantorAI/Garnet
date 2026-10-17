@@ -1,0 +1,6 @@
+WorldSense fixed-frame suite started: inventory-1
+WorldSense fixed-frame suite: inventory-1 valid= False frames= 0 seconds= 96.33611254100106
+Traceback (most recent call last):
+  File "/Users/shawn/CantorAI/WorldSense/tools/benchmark_recorded.py", line 40, in <module>
+    raise RuntimeError('Benchmark failed; inspect saved output')
+RuntimeError: Benchmark failed; inspect saved output
