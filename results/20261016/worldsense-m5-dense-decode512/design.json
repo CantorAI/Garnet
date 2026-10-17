@@ -1,0 +1,30 @@
+{
+  "experiment": "WS-M5-28",
+  "status": "design_only",
+  "declared_utc": "2026-10-17T07:13:12.850088+00:00",
+  "seed": "Untraced frozenWS27 prototype; its rejection retained. DENSE_DECODE256 explicitlyOFF in measured control and newcandidate.",
+  "evidence": [
+    "WS27bothnative10/all154wordrecords/fullmodel/private/fault pass;8callresourcepass;fresh20calls exact/native butcompaniondecode\u221211.5599%fails2%gate. No purekernel comparison vsWS25 or unchanged retry.",
+    "WS26shows later GPU-duration differences andseparatehostoutlier, not established clock/thermal/VM/driver cause. Group size remains an exploratory GPU scheduling parameter.",
+    "Checkpointheaderaudit1961.7Beligible BF16projectionsinner2048/6144,out257..99999;zero4Beligible weights, vocabexcluded. Actualroute counters stillrequired."
+  ],
+  "hypothesis": "Test16SIMDgroups/512threads/64outputs per eligible body projection, retaining each output SIMD32arithmetic. More input sharing/changed occupancy may help or hurt; no speed prediction orcausal claim.",
+  "implementation_plan": [
+    "DefaultOFF DENSE_DECODE512 requiresBODY_SHAPE; reject simultaneous DENSE_DECODE256. Keep original256flag/code defaultOFF and its archived outcome. Native cache decision immutable perbinary, no live policy mutation.",
+    "Append512shaderclone oforiginalbody kernel, changing onlyfunctionname/groupstride16\u219264; retain alloriginalMSL/bodyheader and256shader. SameBF16bitexpansion/FP32FMA/SIMD32reduction. Eligibilityrow1,K2048/6144,output257..99999;4B/small/batch2/otherinners/headunchanged.",
+    "Wide pipeline creation/name/noTail/outputtile/maxthreads depend on fixed exclusive buildflag:512requires64divisible noTail andmaxthreads\u2265512. Cachepipeline+wide marker and dispatch512/64 onlyforactual512pipeline; baselinefallback originalconstants/geometry. Never dispatcholdshaderwith512geometry.",
+    "Separate cumulative encoded512counter andonepostrequest getter; encodedattempts mayincludeabortedcommands.256countermustremain0 innew measured builds. No pertoken getter, weight/scratch layout, precision, image, context, CPU/CUDA changes."
+  ],
+  "required_validation": [
+    "New512numeric/reference/tail272and784/poison/input/invalid/queuedowner/Abort suite modeledon77shapes\u00d72inputs; complete output wordsOFF/ON identical. Preserve existing10 suites;512additional suite verifiesactualencoded512route. Source-equality audit ofperoutputmath.",
+    "Hardwarefeasibility: M5mustactuallyselect512for eligible testcases; fallbackcorrectnessalone cannot qualifythisoptimization. Ifunsupported, retainfeasibilityfailure/no performance. Olderhardwarefallback sourcechecked, notclaimedexecuted.",
+    "Bothfull32VLM28textfinite states/tokens/prefix/capacity, multigridvision, original/private4/6/mixedhead/generation/sharedsource andseparatefault/poison/reset; actualcounterpositiveonlycompanion andzero4B,old256counter0.",
+    "Freeze actual9BOOLsettings(7memory+256OFF+512variable;8differences), source/build/model/SDK/runtime/request before actualWorldSense; nativeunitwall notspeedproof."
+  ],
+  "prospective_protocol": {
+    "resource": "NEWfreshWS10control vscombinedcandidate8calls(1warm1follow each),exact/native/sourceidentity and\u226510%reportedMetal/\u22655%sampledtaskfootprint reduction.",
+    "speed": "Ifresourcepasses NEWfresh20calls(1warm4measured each);bothmodelsTTFT/total/decode andnativeSkillwall preserve unchanged2%regression limits;no unchangedfavorableretry.",
+    "confirmation": "Ifscreenpasses2NEWfull3frame/query mirroredpairs eachindependentlypass beforeintegration/defaultOFF/publicprofile/normalservice checks."
+  },
+  "tradeoffs": "MoreSIMDgroups mayincrease occupancy pressure/register spills/inputrereads/cacheworking set or reduceparallel scheduling. ExtraPSOmetadata andencodedcounter included. No newweights/scratch intended; resource/latency measurements decide. Combinedpolicy comparison iswhole-profile retention, notpure512kernelcausality. KeepWS10bestvalidatedrunning."
+}

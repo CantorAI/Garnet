@@ -1,0 +1,12 @@
+{
+  "observed_utc": "2026-10-17T07:30:37.990029+00:00",
+  "session": 55860,
+  "status": "live_control_worker_confirmed",
+  "processes": [
+    "13001       04:33   2.3 /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/Cantor",
+    "13016       04:32   0.0 /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/WorldSense/../xlang3",
+    "13021       04:31   1.1 /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "13024       04:27   0.0 /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3"
+  ],
+  "action": "Retain original worker; no restart or retry. Controller timeout remains 1800 seconds."
+}
