@@ -1,0 +1,12 @@
+{
+  "object_sha256": "d2d711f18a766d82516957e32ae09e906b1c583263ad3992e93e6ec5be2a3604",
+  "relocation_command": [
+    "xcrun",
+    "llvm-objdump",
+    "--reloc",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-direct-float-upload-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+  ],
+  "relocation": "0000000000005f24 ARM64_RELOC_BRANCH26     _objc_msgSend$rowBytes",
+  "loop": "5f1c..5f3c contains5f24 call; branch back to5f1c",
+  "observation": "Measured-object initializer loop calls rowBytes once per word. Does not prove initialization time or any warm decode cause. A distinct future hoist could remove this call without changing weightbits; not implemented."
+}

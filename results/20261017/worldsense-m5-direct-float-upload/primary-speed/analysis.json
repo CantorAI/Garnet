@@ -1,0 +1,189 @@
+{
+  "matched_primary": true,
+  "matched_memory_preserved": true,
+  "sampled_max_footprint_bytes": {
+    "control-1": 15752197968,
+    "candidate-1": 15262316104
+  },
+  "minimum_VLM_TTFT_gain": 0.05,
+  "observed_VLM_TTFT_gain": 0.18905837190828312,
+  "status": "rejected",
+  "passed": false,
+  "checks": [
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    }
+  ],
+  "metrics": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 2.30253502051346,
+        "total": 3.662067458499223,
+        "decode_tps": 25.00886748039938
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 6.67128516601224,
+        "total": 16.05059929199342,
+        "decode_tps": 9.915569595988211
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 1.7799585629982175,
+        "total": 3.4241796665010042,
+        "decode_tps": 20.698227242948683
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 5.410022853990085,
+        "total": 15.055489791498985,
+        "decode_tps": 9.81257070103835
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.22695700732434865,
+      "total_change": -0.06495996993340725,
+      "decode_gain": -0.17236447195496352
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.18905837190828312,
+      "total_change": -0.06199827697342308,
+      "decode_gain": -0.010387592356926656
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": 19091357696,
+    "candidate-1": 19091357696
+  },
+  "sampled_metal_reduction": 0.0,
+  "native_skill_wall_p50": {
+    "control-1": 19.869675062494935,
+    "candidate-1": 18.374688896001317
+  },
+  "native_skill_wall_gain": 0.07523958805524122,
+  "scope": "Matched primary-only/vector-prefill screen, exact common storage/lifetimes;5%VLMwarmTTFT improvement and2%model/wall/memory preservation required. Not isolated GPU timing or confirmed causal evidence. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}

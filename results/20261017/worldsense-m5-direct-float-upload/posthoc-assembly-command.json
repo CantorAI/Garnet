@@ -1,0 +1,13 @@
+{
+  "command": [
+    "xcrun",
+    "llvm-objdump",
+    "--disassemble",
+    "--demangle",
+    "--no-show-raw-insn",
+    "--disassemble-symbols=__ZN6Garnet12MetalContext17UploadBF16AsFloatEPKvmmm",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-direct-float-upload-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+  ],
+  "returncode": 0,
+  "scope": "Read-only inspection of existing measured object AFTER73088terminal. No new build/timing/performance or cause claim."
+}

@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-17T18:52:10.289079+00:00",
+  "initial_build_session": 22772,
+  "terminal_exit_code": 0,
+  "reason": "Newtest storage label expected fp32; existing API reports matrix_fp32. Caught by source review before first native/model/timing. Test label corrected, original numerical/output requirements unchanged.",
+  "source_delta": [
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "no_native_or_performance_test_dispatched_before_repair": true
+}
