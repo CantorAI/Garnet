@@ -1,0 +1,11 @@
+{
+  "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-core-isolation/build.py",
+  "seed_sha256": "e76ddd3ed90db4d7311a7d31f3dae21d98567b95ae735ac2ebfdcfef0a5c112c",
+  "path_replacement": [
+    "worldsense-primary-core-isolation",
+    "worldsense-minimal-full-prefill"
+  ],
+  "before": "flags.update({key:full for key in ['GARNET_METAL_PRIMARY_VECTOR_PREFILL','GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY','GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY','GARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY','GARNET_METAL_DIRECT_FLOAT_WEIGHT_UPLOAD','GARNET_METAL_CACHED_MATRIX_METADATA']})",
+  "after": "flags['GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY']='OFF'\n flags.update({key:'ON'if compat or role in ['on','fault']else'OFF'for key in ['GARNET_METAL_PRIMARY_VECTOR_PREFILL','GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY','GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY']})\n flags.update({key:full for key in ['GARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY','GARNET_METAL_DIRECT_FLOAT_WEIGHT_UPLOAD','GARNET_METAL_CACHED_MATRIX_METADATA']})",
+  "result_sha256": "e4a89654fd93979ecb9ca672b4dfa479b80fe25070cf3c5907011d825b57d423"
+}

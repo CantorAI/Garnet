@@ -1,0 +1,60 @@
+loading initial cache file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-full-prefill/build-profile/MetalWorldSense4BPrefix.cmake
+-- The CXX compiler identification is AppleClang 21.0.0.21000334
+-- The OBJCXX compiler identification is AppleClang 21.0.0.21000334
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting OBJCXX compiler ABI info
+-- Detecting OBJCXX compiler ABI info - done
+-- Check for working OBJCXX compiler: /usr/bin/c++ - skipped
+-- Found JPEG: /opt/homebrew/lib/libjpeg.dylib (found version "80")
+-- Found ZLIB: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libz.tbd (found version "1.2.12")
+-- Found PNG: /opt/homebrew/lib/libpng.dylib (found version "1.6.59")
+-- Configuring done (0.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-full-prefill-fault
+[  6%] Building CXX object CMakeFiles/garnet_native_image.dir/src/image/native_image.cpp.o
+[  6%] Building OBJCXX object CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o
+[  9%] Linking CXX static library libgarnet_native_image.a
+[  9%] Built target garnet_native_image
+[ 12%] Linking OBJCXX static library libgarnet_metal.a
+[ 12%] Built target garnet_metal
+[ 19%] Building CXX object CMakeFiles/garnet_inventory_test.dir/test2026/metal/inventory_test.cpp.o
+[ 19%] Building OBJCXX object CMakeFiles/garnet_memory_stats_test.dir/test2026/metal/memory_stats_test.mm.o
+[ 22%] Linking OBJCXX executable garnet_memory_stats_test
+[ 25%] Linking CXX executable garnet_inventory_test
+[ 25%] Built target garnet_memory_stats_test
+[ 29%] Building CXX object CMakeFiles/garnet_prefix_copy_test.dir/test2026/metal/prefix_copy_test.cpp.o
+[ 29%] Built target garnet_inventory_test
+[ 32%] Building CXX object CMakeFiles/garnet_metal_matmul_test.dir/test2026/metal/matmul_test.cpp.o
+[ 35%] Linking CXX executable garnet_prefix_copy_test
+[ 35%] Built target garnet_prefix_copy_test
+[ 38%] Building CXX object CMakeFiles/garnet.dir/src/entry/metal_main.cpp.o
+[ 41%] Linking CXX executable garnet_metal_matmul_test
+[ 41%] Built target garnet_metal_matmul_test
+[ 45%] Building CXX object CMakeFiles/garnet_matrix_metadata_test.dir/test2026/metal/matrix_metadata_test.cpp.o
+[ 48%] Linking CXX executable garnet_matrix_metadata_test
+[ 48%] Built target garnet_matrix_metadata_test
+[ 51%] Building CXX object CMakeFiles/garnet_primary_storage_test.dir/test2026/metal/primary_storage_test.cpp.o
+[ 54%] Linking CXX executable garnet_primary_storage_test
+[ 54%] Built target garnet_primary_storage_test
+[ 58%] Building CXX object CMakeFiles/garnet_primary_projection_test.dir/test2026/metal/primary_projection_test.cpp.o
+[ 61%] Linking CXX executable garnet_primary_projection_test
+[ 61%] Built target garnet_primary_projection_test
+[ 64%] Building CXX object CMakeFiles/garnet_request_residency_test.dir/test2026/metal/request_residency_test.cpp.o
+[ 67%] Linking CXX executable garnet_request_residency_test
+[ 67%] Built target garnet_request_residency_test
+[ 70%] Building CXX object CMakeFiles/garnet_primary_core_isolation_test.dir/test2026/metal/primary_core_isolation_test.cpp.o
+[ 74%] Linking CXX executable garnet_primary_core_isolation_test
+[ 74%] Built target garnet_primary_core_isolation_test
+[ 77%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/compiled_graph.cpp.o
+[ 80%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/decoder_session.cpp.o
+[ 83%] Building CXX object CMakeFiles/garnet.dir/src/tensor/garnet_tensor.cpp.o
+[ 87%] Building CXX object CMakeFiles/garnet.dir/src/tensor/graph_capture.cpp.o
+[ 90%] Building CXX object CMakeFiles/garnet.dir/src/core/lowering_context.cpp.o
+[ 93%] Building CXX object CMakeFiles/garnet.dir/src/model/safetensors_index.cpp.o
+[ 96%] Building CXX object CMakeFiles/garnet.dir/src/tokenizer/qwen_tokenizer.cpp.o
+[100%] Linking CXX shared library libgarnet.dylib
+[100%] Built target garnet

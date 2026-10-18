@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/prepare_worldsense_ws71.py", line 36, in <module>
+    original=(old/rel).read_text();text=original.replace('worldsense-isolated-primary',slug);needle='def native_route(call,enabled,primary_control=False):\n';assert text.count(needle)==1;text=text.replace(needle,needle+guard);needle="  if (cap in call['backend'])!=enabled:return False";assert text.count(needle)==1;text=text.replace(needle,"  if cap in ['primary_vector_prefill','primary_prefill_isolated_library','primary_duo_prefill','primary_minimal_prefill_library','primary_full_isolated_library']:\n   if (cap in call['backend'])!=enabled:return False\n  elif cap in call['backend']:return False");ast.parse(text);p=w/rel;p.parent.mkdir(parents=True,exist_ok=True);assert not p.exists();p.write_text(text)
+AssertionError

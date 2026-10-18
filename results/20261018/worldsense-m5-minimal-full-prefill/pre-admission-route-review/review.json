@@ -1,0 +1,19 @@
+{
+  "utc": "2026-10-18T13:24:52.371696+00:00",
+  "before_any_native_route_audit_or_pipeline_dispatch": true,
+  "issue": "Original legacy-control native_route returns before later profile marker loop. Validate required vector/FULL and excluded extras before that return, and add all eight legacy marker corruptions to existing negative cases.",
+  "changes": [
+    {
+      "path": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/prepare_worldsense_ws71.py",
+      "before": " if 'primary_core_isolated_library'in call['backend']:return False",
+      "after": " for cap in ['primary_vector_prefill','primary_prefill_isolated_library','primary_duo_prefill','primary_minimal_prefill_library','primary_full_isolated_library']:\n  if (cap in call['backend'])!=enabled:return False\n for cap in ['direct_float_weight_upload','primary_vector_prefill_k32_only','cached_matrix_metadata']:\n  if cap in call['backend']:return False\n if 'primary_core_isolated_library'in call['backend']:return False"
+    },
+    {
+      "path": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/audit_routes_ws71.py",
+      "before": "['primary_core_isolated_library','packed_request_weight_residency','request_scope_weight_residency','primary_simd_metadata']",
+      "after": "['primary_core_isolated_library','packed_request_weight_residency','request_scope_weight_residency','primary_simd_metadata','primary_vector_prefill','primary_prefill_isolated_library','primary_duo_prefill','primary_minimal_prefill_library','primary_full_isolated_library','direct_float_weight_upload','primary_vector_prefill_k32_only','cached_matrix_metadata']"
+    }
+  ],
+  "all_original_metric_golden_threshold_AST_untouched": true,
+  "no_inference_source_test_model_build_or_timing_change": true
+}

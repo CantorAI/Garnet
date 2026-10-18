@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/audit_routes_ws71.py", line 6, in <module>
+    fn=next(v for v in ast.parse((w/rel).read_text()).body if isinstance(v,ast.FunctionDef)and v.name=='native_route');ns={};exec(compile(ast.Module(body=[fn],type_ignores=[]),'native admission','exec'),ns);route=ns['native_route'];positive=negative=legacy=0
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1256, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-full-prefill/analyze_resource.py'

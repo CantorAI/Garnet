@@ -1,0 +1,106 @@
+{
+  "build_corpus.py": {
+    "seed_sha256": "e043b47cfc55aed962a30d2c140e9a6d8dee20b5ecfe24bcb3410431d3e03563",
+    "current_sha256": "bf8f89763cdd31c8088c667b7879c8a753eab692ac1f6ca863cd3ab0beffbb7b",
+    "operations": [
+      {
+        "before": "garnet-metal-worldsense-minimal-full-prefill-compat56",
+        "after": "garnet-metal-worldsense-minimal-full-prefill-on",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed_sha256": "d2310dcf1ca55c3182e329f4b1d00a82eea225e7958d64ad80b952cff1c5cfe3",
+    "current_sha256": "982adb8528f9c350627312e459e442fee9ab44e7717b3fec98b0f79e51b43d91",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed_sha256": "ef2c4704d739dd8f88447f7b5ddaf80b0da0873896a7e2a7cb0e7fdc15dc3da7",
+    "current_sha256": "4ca88cf946bdf4b5f87b59f58cbece93e16daf912cfc272ec289d4f835fff613",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed_sha256": "8a359a917684c2e284774a2952c4bc5e27c45746efe4e9ef3748962bd5ee7936",
+    "current_sha256": "8a359a917684c2e284774a2952c4bc5e27c45746efe4e9ef3748962bd5ee7936",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed_sha256": "fd6057b3b179b15b5a4617a0f2d9f12a3c444b286a0b144d69ca316728fd9d9c",
+    "current_sha256": "4afdb97f58cec8603993fcab5b518159f6c9acbc835a9940afac8778864763d4",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed_sha256": "16b822198a45873f25471efeb30a5c696f7076466c6126814dedf8dca34e7714",
+    "current_sha256": "e42b9a761cda3d2472c763218e17343202344980ca7452960d875f5c8b785cf6",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed_sha256": "06134edb1f29b91e0f700168f3b53a56fe926af82dc863782bf89236b0bb4c3c",
+    "current_sha256": "049c6c828ba8a701da04f67e188af5e277b5b5afc6996d135f189838a768a950",
+    "operations": [
+      {
+        "before": "vector_expected=mode=='compat56';core_expected=mode=='on'",
+        "after": "vector_expected=mode in ['on','compat56'];core_expected=False;compat_expected=mode=='compat56'",
+        "count": 1
+      },
+      {
+        "before": "('request_scope_weight_residency'in call['backend'])==vector_expected",
+        "after": "('request_scope_weight_residency'in call['backend'])==compat_expected",
+        "count": 1
+      },
+      {
+        "before": "('cached_matrix_metadata'in call['backend'])==vector_expected",
+        "after": "('cached_matrix_metadata'in call['backend'])==compat_expected",
+        "count": 1
+      },
+      {
+        "before": "if vector_expected:\n  q=timings['request_weight_residency']",
+        "after": "if compat_expected:\n  q=timings['request_weight_residency']",
+        "count": 1
+      },
+      {
+        "before": "cached_metadata_expected=vector_expected",
+        "after": "cached_metadata_expected=compat_expected",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "primary_corpus_test.cpp": {
+    "seed_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "current_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "direct_float_corpus_test.cpp": {
+    "seed_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+    "current_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "request_session_guard.py": {
+    "seed_sha256": "7af0c4937819b3a92e9794600054fbcac34a898243a18523241d1368d86caf8a",
+    "current_sha256": "9e508cc5254c9accb6831dfa4c642129064d0209009dcd7051c2fbfb011f3b9b",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "request_full_session_guard.py": {
+    "seed_sha256": "62ca6b9928560d52d21ef6d20966a4f4e8eed8fe85411d45c1d728a856a594d6",
+    "current_sha256": "b0c8a5d91bea4d0c935b41a9ea6db76c11c0592b0d544311f422165772fa65b8",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  }
+}

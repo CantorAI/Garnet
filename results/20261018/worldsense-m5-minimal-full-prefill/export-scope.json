@@ -1,0 +1,18 @@
+{
+  "stage_calls": {
+    "resource": 8,
+    "production-speed": 20,
+    "functional-correctness-only": 4
+  },
+  "calls": 32,
+  "Skill_requests": 16,
+  "memory_rows": 22,
+  "core_delta_rows": 32,
+  "counter_available_rows": 22,
+  "worker_attempts": 5,
+  "no_hidden_performance_retries_or_later_stages": true,
+  "first": "All first/followups retained; first not hardware-cold, no init split inferred from readiness.",
+  "decode": "(generated-1)/(total-TTFT), includes host/stop/postloop/possibleEOS/snapshots/cleanup; not pureGPU.",
+  "memory": "Original postdecode snapshots, not peaks/free/unique/physical-residency RAM. Legacy speed memory and core counters unavailable/null, never invented zero.",
+  "decision": "Valid rejection: textTTFT and4Bderiveddecode fail unchanged2%gates despite favorable observed4BTTFT/total/wholeSkill. No later stages/promotion."
+}

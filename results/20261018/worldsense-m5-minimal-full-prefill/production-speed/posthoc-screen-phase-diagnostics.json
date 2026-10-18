@@ -1,0 +1,315 @@
+{
+  "utc": "2026-10-18T13:37:07.857006+00:00",
+  "scope": "Retained warm calls only, posthoc descriptive phase data; no new inference, exclusions, causal attribution or speed eligibility.",
+  "workers": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 1.2872871659928933,
+            "prefill_seconds": 4.999761000013677,
+            "decode_interval": 1.2876612499821931,
+            "post_decode_residual": 0.0003740839892998338,
+            "decode_gpu_ms": 1227.9592916893307,
+            "prefill_gpu_ms": 4411.59949998837,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 1.2696345419972204,
+            "prefill_seconds": 1.5180450830084737,
+            "decode_interval": 1.2774280839948915,
+            "post_decode_residual": 0.007793541997671127,
+            "decode_gpu_ms": 1241.4905415498652,
+            "prefill_gpu_ms": 1253.1531249696855,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 1.2858231670106761,
+            "prefill_seconds": 1.4295652080036234,
+            "decode_interval": 1.2893710420175921,
+            "post_decode_residual": 0.0035478750069160014,
+            "decode_gpu_ms": 1257.9517499834765,
+            "prefill_gpu_ms": 1164.6700416167732,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 1.343436416995246,
+            "prefill_seconds": 1.4999022909905761,
+            "decode_interval": 1.3437080000003334,
+            "post_decode_residual": 0.00027158300508745015,
+            "decode_gpu_ms": 1309.6766248636413,
+            "prefill_gpu_ms": 1293.8169166445732,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          }
+        ],
+        "medians": {
+          "decode_seconds": 1.2865551665017847,
+          "prefill_seconds": 1.508973686999525,
+          "decode_interval": 1.2885161459998926,
+          "post_decode_residual": 0.0019609794981079176,
+          "decode_gpu_ms": 1249.7211457666708,
+          "prefill_gpu_ms": 1273.4850208071293
+        }
+      },
+      "Qwen3.5-4B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 7.666987500007963,
+            "prefill_seconds": 11.350349999993341,
+            "decode_interval": 7.667891332996078,
+            "post_decode_residual": 0.0009038329881150275,
+            "decode_gpu_ms": 7409.502041846281,
+            "prefill_gpu_ms": 10141.133125056513,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 7.729614290990867,
+            "prefill_seconds": 5.706771958997706,
+            "decode_interval": 7.730009749997407,
+            "post_decode_residual": 0.0003954590065404773,
+            "decode_gpu_ms": 7599.6287498564925,
+            "prefill_gpu_ms": 4987.099916674197,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 8.035290041996632,
+            "prefill_seconds": 4.419741833000444,
+            "decode_interval": 8.035716125014005,
+            "post_decode_residual": 0.00042608301737345755,
+            "decode_gpu_ms": 7938.015874911798,
+            "prefill_gpu_ms": 4339.544833317632,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 8.499950291006826,
+            "prefill_seconds": 4.443482749979012,
+            "decode_interval": 8.50024179101456,
+            "post_decode_residual": 0.00029150000773370266,
+            "decode_gpu_ms": 8383.189208223484,
+            "prefill_gpu_ms": 4228.079874999821,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          }
+        ],
+        "medians": {
+          "decode_seconds": 7.882452166493749,
+          "prefill_seconds": 5.075127354488359,
+          "decode_interval": 7.882862937505706,
+          "post_decode_residual": 0.0004107710119569674,
+          "decode_gpu_ms": 7768.822312384145,
+          "prefill_gpu_ms": 4663.322374995914
+        }
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 1.2789422500063665,
+            "prefill_seconds": 1.685724000009941,
+            "decode_interval": 1.279790625005262,
+            "post_decode_residual": 0.0008483749988954514,
+            "decode_gpu_ms": 1248.0330000107642,
+            "prefill_gpu_ms": 1260.1032916863915,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 1.302031958999578,
+            "prefill_seconds": 1.633497582981363,
+            "decode_interval": 1.3033373339858372,
+            "post_decode_residual": 0.0013053749862592667,
+            "decode_gpu_ms": 1268.965166702401,
+            "prefill_gpu_ms": 1227.6153749553487,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 1.306667832977837,
+            "prefill_seconds": 1.8137640000204556,
+            "decode_interval": 1.30771024999558,
+            "post_decode_residual": 0.0010424170177429914,
+            "decode_gpu_ms": 1275.2872082637623,
+            "prefill_gpu_ms": 1322.8547917096876,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 1.2708540000021458,
+            "prefill_seconds": 1.5881296659936197,
+            "decode_interval": 1.2719612079963554,
+            "post_decode_residual": 0.0011072079942096025,
+            "decode_gpu_ms": 1242.1175833733287,
+            "prefill_gpu_ms": 1260.0287082896102,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          }
+        ],
+        "medians": {
+          "decode_seconds": 1.2904871045029722,
+          "prefill_seconds": 1.659610791495652,
+          "decode_interval": 1.2915639794955496,
+          "post_decode_residual": 0.001074812505976297,
+          "decode_gpu_ms": 1258.4990833565826,
+          "prefill_gpu_ms": 1260.0659999880008
+        }
+      },
+      "Qwen3.5-4B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 8.334354499995243,
+            "prefill_seconds": 3.987901625019731,
+            "decode_interval": 8.33524787396891,
+            "post_decode_residual": 0.0008933739736676216,
+            "decode_gpu_ms": 8201.954416756053,
+            "prefill_gpu_ms": 3596.042583405506,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 8.203350583004067,
+            "prefill_seconds": 3.722353999997722,
+            "decode_interval": 8.204500958003337,
+            "post_decode_residual": 0.001150374999269843,
+            "decode_gpu_ms": 8090.220041573048,
+            "prefill_gpu_ms": 3610.1400416810066,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 8.076772458996857,
+            "prefill_seconds": 4.367715083004441,
+            "decode_interval": 8.077622957993299,
+            "post_decode_residual": 0.0008504989964421839,
+            "decode_gpu_ms": 7971.0252495715395,
+            "prefill_gpu_ms": 3889.6149583451916,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 8.158562457974767,
+            "prefill_seconds": 4.060018583026249,
+            "decode_interval": 8.159897207980976,
+            "post_decode_residual": 0.0013347500062081963,
+            "decode_gpu_ms": 8052.682416862808,
+            "prefill_gpu_ms": 3683.842708298471,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          }
+        ],
+        "medians": {
+          "decode_seconds": 8.180956520489417,
+          "prefill_seconds": 4.02396010402299,
+          "decode_interval": 8.182199082992156,
+          "post_decode_residual": 0.0010218744864687324,
+          "decode_gpu_ms": 8071.451229217928,
+          "prefill_gpu_ms": 3646.9913749897387
+        }
+      }
+    }
+  },
+  "limits": "Differences formed per call before medians. GPU/wait/encode spans overlap/include gaps and separate medians are nonadditive. Phase/counter data do not establish isolated library-boundary/compiler/driver-memory/counter cost. Derived decode includes host/stop/postloop/possible EOS/snapshots; not pureGPU. No cross-trial causal ratio or reclassification of rejection."
+}

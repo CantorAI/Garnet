@@ -1,0 +1,49 @@
+{
+  "all_five_original_golden_numeric_metric_gate_AST_unchanged": true,
+  "files": {
+    "analyze_resource.py": true,
+    "speed/analyze.py": true,
+    "primary-speed/analyze.py": true,
+    "production-speed/analyze.py": true,
+    "confirmation/analyze.py": true
+  },
+  "only_native_admission_changed": true,
+  "full_route_mutation_audit_pending": false,
+  "driver_sha256": {
+    "analyze_resource.py": "acefdfd6c3388c0f6fbd715b89c3f3413b09963c918d41813fde26dd79ebc3c8",
+    "speed/analyze.py": "23416f40375444c53f2c45d9a59a22972148f155209f6abe5cb1248007bca57c",
+    "primary-speed/analyze.py": "87ab0e37028277f403fbddfd1a7e955445eed4eb757fccd5d4463ea3e956dd5d",
+    "production-speed/analyze.py": "d9dc35fba705d93a73070dcb2f32fe60d6133ba5bda0a6f37275af7f19e1d505",
+    "confirmation/analyze.py": "f590f99ec4051c110f9da0f96a29485026074844a10dfadcdf1df1446958b49a"
+  },
+  "full_route_mutation_audit_pass": true,
+  "utc": "2026-10-18T13:25:38.902173+00:00",
+  "native_route_audit": {
+    "analyze_resource.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copies_rejected": 4851,
+      "actual_legacy_WS10_calls": 0
+    },
+    "speed/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copies_rejected": 4851,
+      "actual_legacy_WS10_calls": 0
+    },
+    "primary-speed/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copies_rejected": 4851,
+      "actual_legacy_WS10_calls": 0
+    },
+    "production-speed/analyze.py": {
+      "actual_full_API_calls": 5,
+      "malformed_copies_rejected": 1798,
+      "actual_legacy_WS10_calls": 10
+    },
+    "confirmation/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copies_rejected": 4851,
+      "actual_legacy_WS10_calls": 0
+    }
+  },
+  "scope": "Offline copied actual calls. Strict14field snapshots/5encoded deltas/core provenance and legacy compatibility; original five quantitative/golden gates unchanged. No new inference/speed samples."
+}

@@ -1,0 +1,42 @@
+{
+  "prepare_functional": {
+    "seed_sha256": "f2c33d809ccfc237dbae8455960fa57d09a39a78eb14bf94dd823a6141c1293b",
+    "adapted_sha256": "cdc40748e444fdc7b855546ff8f39eaab9363f1a598799cde83fc49b58603b39",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "verify_functional": {
+    "seed_sha256": "f7753612414ffbd1431b93b16062d2a9cfeac7d0f479a0ac4439fd669ba3dedd",
+    "adapted_sha256": "0ce2de19e0288f19c71ad0c86737178c0e88a0e6c5f1d719f9fd8622c6f78688",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "prepare_resource": {
+    "seed_sha256": "b1e1e30c8ddd2498f2a02818534b8d96f40b24c8a0671c2f8cfa116274f02baf",
+    "adapted_sha256": "f7ec41a7272d4e72ffca04b49048ad80b3d58151f4f9141275d741cfb1c1d56e",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "verify_resource": {
+    "seed_sha256": "54975469775ac90d0a7cc70105260d3c17f185bda2feff185e8951c23f20732d",
+    "adapted_sha256": "a6138851395fa5990df389de8fc4c3bcf55a83bb2f17601aa74ec62beac10a9a",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "prepare_actual_speed": {
+    "seed_sha256": "781f875b95be1939db7963abd9947d19a6c2a1fffcebbc979e4b8582678ddfe4",
+    "adapted_sha256": "4e369410935f7716a5291424363cbd63dc336b52ce69bd5572c8ae7947071fb8",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "verify_screen": {
+    "seed_sha256": "02481b4aa2aad2cffe49c0a8a29a6b720e3fa953b336d9b4c1f4317f1afe58fd",
+    "adapted_sha256": "ec783b3765b58da24301740a99d7a67d5d0a7d1e1d518f552be7ccac40d7f938",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "admission": {
+    "seed_sha256": "96a5a2ab74a807507b229d952747e2f1f95d5a3c2b86615d287fa33c49621ef8",
+    "adapted_sha256": "0bebbd052ee900f2dfebbcbaa893dc2ee01384d5fbbc26fa79b2cb591a04d3fd",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  },
+  "audit_routes": {
+    "seed_sha256": "aa3028e41b70634871cef6b708b3b847a216209a81444797530c655b5eb7db22",
+    "adapted_sha256": "4fbd431d9525784d3801bbc02d76593d9a863c0f0b4e95555f35c6db6efbc383",
+    "scope": "Path/experiment identifiers and new learned-proof field names only; all original numeric metrics/goldens/thresholds retained. Native-route mutation audit remains same."
+  }
+}
