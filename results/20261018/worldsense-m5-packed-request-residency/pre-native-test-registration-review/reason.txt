@@ -1,0 +1,1 @@
+Review before any native execution found new test registration lacked its required output argument. Add only the complete-stream output path, update CMake inverse/manifest and reconfigure all6 builds. Prior27226 was successful compilation; no native/model/timing run existed. No kernel, API, numeric bound or runtime behavior changed.

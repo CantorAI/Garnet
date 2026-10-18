@@ -1,0 +1,18 @@
+{
+  "stage_calls": {
+    "resource": 8,
+    "production-speed": 20,
+    "functional-correctness-only": 4
+  },
+  "calls": 32,
+  "Skill_requests": 16,
+  "memory_rows": 22,
+  "post_cleanup_rows": 18,
+  "packed_lifecycle_rows": 18,
+  "worker_attempts": 5,
+  "no_hidden_performance_retries_or_later_stages": true,
+  "first": "All first/followups retained; first not hardware-cold, no init split inferred from readiness.",
+  "decode": "(generated-1)/(total-TTFT), includes host/stop/postloop/possibleEOS/snapshots/cleanup; not pureGPU.",
+  "memory": "Original postdecode snapshot metric retained. Separate postcleanup snapshots show release, not a replacement metric. Not peaks/free/unique/physical-residency RAM. Legacy speed memory unavailable/null.",
+  "decision": "Valid rejection: both model latency and4Bderiveddecode gates fail; wholeSkillwall within2%. No later stages/promotion."
+}

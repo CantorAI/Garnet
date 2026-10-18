@@ -1,0 +1,17 @@
+stage,artifact,artifact_sha256,worker,warmup,repetition,native_process_pid,native_call_seconds,observation_id
+resource,control-1.json,5bcc9495773fc461d2555a8852c7597c92bab5ff18d056743016baa1c277b810,control-1,True,0,10046,50.564572458999464,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+resource,control-1.json,5bcc9495773fc461d2555a8852c7597c92bab5ff18d056743016baa1c277b810,control-1,False,1,10046,12.642766334000044,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+resource,candidate-1.json,d3aa025a17e28aa46387d237ff1f1f4311c727250d2fc91cec6cb9b4f3fe57b1,candidate-1,True,0,10195,34.18441904100473,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+resource,candidate-1.json,d3aa025a17e28aa46387d237ff1f1f4311c727250d2fc91cec6cb9b4f3fe57b1,candidate-1,False,1,10195,12.733854042016901,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/control-1.json,7fdfba18c5addf4df604eee205a2f4633000a2e9493135d755774b266b051a5a,control-1,True,0,10644,56.3763603749976,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/control-1.json,7fdfba18c5addf4df604eee205a2f4633000a2e9493135d755774b266b051a5a,control-1,False,1,10644,21.272982624999713,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/control-1.json,7fdfba18c5addf4df604eee205a2f4633000a2e9493135d755774b266b051a5a,control-1,False,2,10644,25.865787791990442,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/control-1.json,7fdfba18c5addf4df604eee205a2f4633000a2e9493135d755774b266b051a5a,control-1,False,3,10644,13.711364666000009,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/control-1.json,7fdfba18c5addf4df604eee205a2f4633000a2e9493135d755774b266b051a5a,control-1,False,4,10644,14.46425662501133,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/candidate-1.json,bd3df306e08c9e0066bb757d87ce90f1c5ac8d66c49d6d396b445d04d7d56352,candidate-1,True,0,10971,37.72793474997161,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/candidate-1.json,bd3df306e08c9e0066bb757d87ce90f1c5ac8d66c49d6d396b445d04d7d56352,candidate-1,False,1,10971,17.296637624996947,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/candidate-1.json,bd3df306e08c9e0066bb757d87ce90f1c5ac8d66c49d6d396b445d04d7d56352,candidate-1,False,2,10971,18.061925957998028,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/candidate-1.json,bd3df306e08c9e0066bb757d87ce90f1c5ac8d66c49d6d396b445d04d7d56352,candidate-1,False,3,10971,18.257617082999786,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+production-speed,production-speed/candidate-1.json,bd3df306e08c9e0066bb757d87ce90f1c5ac8d66c49d6d396b445d04d7d56352,candidate-1,False,4,10971,18.283843250013888,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+functional-correctness-only,functional-smoke/candidate-1.json,1b80105898c0e58aae39dd329c6a97b1aa328b97cfe270b6c798b48e2fd38066,candidate-1,True,0,9715,37.86598349999986,F4647DAE-362F-41E1-98FE-10DEC31F3D4F
+functional-correctness-only,functional-smoke/candidate-1.json,1b80105898c0e58aae39dd329c6a97b1aa328b97cfe270b6c798b48e2fd38066,candidate-1,False,1,9715,13.17321004200494,F4647DAE-362F-41E1-98FE-10DEC31F3D4F

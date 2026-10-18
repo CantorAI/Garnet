@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_native_ws69.py", line 24, in <module>
+    log=(w/('native-'+role+'.log')).read_text();assert sorted(int(v)for v in re.findall(r'\d+/9\s+Test\s+#\s*(\d+):[^\n]*Passed',log))==list(range(1,10))and '100% tests passed, 0 tests failed out of 9'in log
+AssertionError

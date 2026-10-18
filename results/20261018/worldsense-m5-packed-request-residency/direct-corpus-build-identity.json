@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/direct_float_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-compat56/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-compat56/direct_float_corpus_test"
+  ],
+  "source_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+  "library_sha256": "b2b055bb06ce88ca7753a4cd0d2d971f08f9970f43841e1b5d4cd1dabc010c79",
+  "executable_sha256": "f6b715624b727dc43c10419513b84e0c7236ab8afd8b75f63b01cb6fe07ca772"
+}

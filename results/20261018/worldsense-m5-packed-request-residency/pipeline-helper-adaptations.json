@@ -1,0 +1,71 @@
+{
+  "prepare_functional": {
+    "seed_sha256": "23e0143a02b38c0c1e7aada66fadfedd40264c4d16c960fc8cc8d35d994b971d",
+    "adapted_sha256": "d767e636aac5ea190f63111c666c6c7d2c02cfff1bdf2952460780c0dc2c774d",
+    "operations": [
+      {
+        "before": "['full_four_actual_API_modes20calls_original32VLM28text_states_tokens_vision_exact']",
+        "after": "['four_API_modes20calls_original32VLM28text_states_tokens_vision_exact']",
+        "count": 1
+      },
+      {
+        "before": "len(m)==1726",
+        "after": "len(m)==1721",
+        "count": 1
+      },
+      {
+        "before": "['off','primary','on','fault','compat67']",
+        "after": "['off','primary','on','fault','compat56','compat56-fault']",
+        "count": 1
+      }
+    ]
+  },
+  "verify_functional": {
+    "seed_sha256": "1892e880f104d5a7159ca7dd1c3a77d803d7d6315798d0c5dde5b5bc3cde29aa",
+    "adapted_sha256": "59084f70722786be79067cf3c9065039467f797c81474f4a40988de9c206a755",
+    "operations": [
+      {
+        "before": "sole_storage=c['timings']['sole_storage_after'],sole_encoded_delta=c['timings']['sole_encoded_delta'],",
+        "after": "packed_request=c['timings']['packed_request_weight_residency'],post_cleanup_memory=c['timings']['memory_after_packed_request_cleanup'],",
+        "count": 1
+      }
+    ]
+  },
+  "prepare_resource": {
+    "seed_sha256": "57a9f554bfea80b90cbeafba74af833e1ef765580f12642ce227584b3f65022a",
+    "adapted_sha256": "89261ac6eb6e87ef5e481bc2aa5a1d75bf1c8e3d455e840b915011ea956d3002",
+    "operations": [
+      {
+        "before": "['both_new_GPU_helpers_EACH_all201_original_FP32_words']",
+        "after": "['both_original_GPU_readers_under_actual_lease_EACH_words']",
+        "count": 1
+      },
+      {
+        "before": "['native_tests_pass']==50",
+        "after": "['native_tests_pass']==54",
+        "count": 1
+      },
+      {
+        "before": "['off','primary','on','fault','compat67']",
+        "after": "['off','primary','on','fault','compat56','compat56-fault']",
+        "count": 1
+      }
+    ]
+  },
+  "verify_resource": {
+    "seed_sha256": "2e28e3b49c426a7ed3e90f41ac8ce3fc5408536804b7ffc0415526f6de27d01c",
+    "adapted_sha256": "1ca06e882828055d2132094736e5aea83010c94b5199978426e7aad4d981c6e1",
+    "operations": [
+      {
+        "before": "sole_after=c['timings']['sole_storage_after'],sole_delta=c['timings']['sole_encoded_delta']",
+        "after": "packed_request=c['timings'].get('packed_request_weight_residency'),post_cleanup_memory=c['timings'].get('memory_after_packed_request_cleanup')",
+        "count": 1
+      }
+    ]
+  },
+  "prepare_actual_speed": {
+    "seed_sha256": "3e44fc1c5b7f540db3fb99d2df983af996e68f7ddfcee3448de304639efdab36",
+    "adapted_sha256": "54696a9fdfd08e693ead9a670a70454ca574b6b38b3af8edba0b95b866c73040",
+    "operations": []
+  }
+}

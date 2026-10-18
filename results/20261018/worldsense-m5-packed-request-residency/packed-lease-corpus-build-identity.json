@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/packed_lease_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-packed-request-residency/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-on/packed_lease_corpus_test"
+  ],
+  "source_sha256": "6be67f835ba6a6bc28c9a7f64f3f4f951f13e39f73d399a3ed8bc0c5bf3d7ada",
+  "library_sha256": "56ba0e7479c869441bb9c36b493ccf46450b7fb419e3bb3b089d02abd41024c7",
+  "executable_sha256": "8f9293fb261e6e8f5406c3369cc539d45aac81c57df2ad8241ac3bc29cfe5180"
+}

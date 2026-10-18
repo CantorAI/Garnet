@@ -1,0 +1,221 @@
+[
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-compat56/primary_corpus_test",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-blocks/matrix-selection.json",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/corpus-GPU-bits.json"
+    ],
+    "log": "corpus-GPU-bits.log",
+    "started_utc": "2026-10-18T11:23:32.473398+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:14.099732+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-on/packed_lease_corpus_test",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-blocks/matrix-selection.json",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/packed-lease-corpus.json"
+    ],
+    "log": "packed-lease-corpus.log",
+    "started_utc": "2026-10-18T11:24:14.100069+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:34.124501+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-packed-request-residency-compat56/direct_float_corpus_test",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/direct-upload-selection.json",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/direct-upload-corpus.json"
+    ],
+    "log": "direct-upload-corpus.log",
+    "started_utc": "2026-10-18T11:24:34.124788+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:38.119242+00:00"
+  },
+  {
+    "command": [
+      "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/resident_controller.py"
+    ],
+    "log": "trained-resident-controller.log",
+    "started_utc": "2026-10-18T11:24:38.119502+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:47.039281+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/linear_guard.py",
+      "off"
+    ],
+    "log": "trained-linear-off.log",
+    "started_utc": "2026-10-18T11:24:47.039507+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:49.222165+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/linear_guard.py",
+      "on"
+    ],
+    "log": "trained-linear-on.log",
+    "started_utc": "2026-10-18T11:24:49.222445+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:51.717451+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/linear_guard.py",
+      "fault"
+    ],
+    "log": "trained-linear-fault.log",
+    "started_utc": "2026-10-18T11:24:51.717717+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:54.468400+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/linear_guard.py",
+      "compat56"
+    ],
+    "log": "trained-linear-compat56.log",
+    "started_utc": "2026-10-18T11:24:54.468686+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:24:56.998350+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/vision_grid_guard.py",
+      "off"
+    ],
+    "log": "vision-grid-off.log",
+    "started_utc": "2026-10-18T11:24:56.998647+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:25:10.523623+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/vision_grid_guard.py",
+      "on"
+    ],
+    "log": "vision-grid-on.log",
+    "started_utc": "2026-10-18T11:25:10.524618+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:25:31.167148+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/vision_grid_guard.py",
+      "compat56"
+    ],
+    "log": "vision-grid-compat56.log",
+    "started_utc": "2026-10-18T11:25:31.169730+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:25:50.334812+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/api_state_guard.py",
+      "off"
+    ],
+    "log": "api-state-guard-off.log",
+    "started_utc": "2026-10-18T11:25:50.335659+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:26:38.988552+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/api_state_guard.py",
+      "primary"
+    ],
+    "log": "api-state-guard-primary.log",
+    "started_utc": "2026-10-18T11:26:38.989060+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:27:28.649628+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/api_state_guard.py",
+      "on"
+    ],
+    "log": "api-state-guard-on.log",
+    "started_utc": "2026-10-18T11:27:28.650297+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:28:18.215627+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/api_state_guard.py",
+      "compat56"
+    ],
+    "log": "api-state-guard-compat56.log",
+    "started_utc": "2026-10-18T11:28:18.216504+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:29:04.588620+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/request_session_guard.py"
+    ],
+    "log": "request_session_guard.log",
+    "started_utc": "2026-10-18T11:29:04.589479+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:29:04.983255+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/request_full_session_guard.py"
+    ],
+    "log": "request_full_session_guard.log",
+    "started_utc": "2026-10-18T11:29:04.983804+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:29:06.127964+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/packed_layer_session_guard.py"
+    ],
+    "log": "packed_layer_session_guard.log",
+    "started_utc": "2026-10-18T11:29:06.128307+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:29:08.598745+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-packed-request-residency/packed_full_session_guard.py"
+    ],
+    "log": "packed_full_session_guard.log",
+    "started_utc": "2026-10-18T11:29:08.599399+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T11:29:33.213736+00:00"
+  }
+]
