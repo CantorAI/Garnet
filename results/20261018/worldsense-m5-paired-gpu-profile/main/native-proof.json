@@ -1,0 +1,128 @@
+{
+  "utc": "2026-10-18T17:36:34.752481+00:00",
+  "all_original_native_suites_plus_observer_pass": true,
+  "native_CTest_count": 39,
+  "roles": {
+    "legacy-quiet": {
+      "exit_code": 0,
+      "tests": 3
+    },
+    "legacy-trace": {
+      "exit_code": 0,
+      "tests": 3
+    },
+    "legacy-fault": {
+      "exit_code": 0,
+      "tests": 3
+    },
+    "current-quiet": {
+      "exit_code": 0,
+      "tests": 10
+    },
+    "current-trace": {
+      "exit_code": 0,
+      "tests": 10
+    },
+    "current-fault": {
+      "exit_code": 0,
+      "tests": 10
+    }
+  },
+  "full_original_projection_records": 186,
+  "all_six_complete_projection_streams_equal_seed74": true,
+  "projection_bytes": 3662272,
+  "projection_sha256": "2712ac0dab8babc0058e1c11be00405a9929ebb359d17fdf4ed3ab420d86c275",
+  "current_original20records432804words_exact": true,
+  "programs": {
+    "legacy-quiet": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "legacy-trace": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "legacy-fault": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "current-quiet": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f"
+      }
+    },
+    "current-trace": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f"
+      }
+    },
+    "current-fault": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f"
+      }
+    }
+  },
+  "legacy_actual_MAIN_exact_current_original_MAIN": true,
+  "legacy_prefill_empty_current_prefill_exact_seed74": true,
+  "counter_transactions": {
+    "legacy-quiet": {
+      "commands": 0,
+      "intervals": 0
+    },
+    "legacy-trace": {
+      "commands": 4,
+      "intervals": 8
+    },
+    "legacy-fault": {
+      "commands": 7,
+      "intervals": 14
+    },
+    "current-quiet": {
+      "commands": 0,
+      "intervals": 0
+    },
+    "current-trace": {
+      "commands": 4,
+      "intervals": 8
+    },
+    "current-fault": {
+      "commands": 7,
+      "intervals": 14
+    }
+  },
+  "input_identities_unchanged": true,
+  "no_learned_or_timing_execution": true
+}

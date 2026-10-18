@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-18T17:13:04.776538+00:00",
-  "source_commit": "e15c3f4325682098bd4c7b4a17da62254e1e36c5",
+  "generated_at_utc": "2026-10-18T18:57:27.422074+00:00",
+  "source_commit": "530a4ff8cb696fb48f54e79c05b0666f4e3aff0e",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "Experiment README reports under repository-root results and test2026/metal/results; source/model snapshots explicitly excluded.",
@@ -140,7 +140,7 @@
     "results/20261016/worldsense-m5-weight-residency/source/xModel/qwen3/text_1_7b/README.md",
     "results/20261016/worldsense-m5-weight-residency/source/xModel/qwen35/vl_4b/README.md"
   ],
-  "report_count": 266,
+  "report_count": 267,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -15595,6 +15595,48 @@
         "production-speed",
         "source",
         "speed",
+        "work"
+      ]
+    },
+    {
+      "experiment_id": "results/20261018/worldsense-m5-paired-gpu-profile",
+      "title": "WS-M5-76 — Paired legacy/current GPU-pass diagnostic",
+      "report_path": "results/20261018/worldsense-m5-paired-gpu-profile/README.md",
+      "report_sha256": "d2cdba9d2beca8d22a7c63d18384d0dd245ea8ca2769d898bdffdc84eb276d18",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# WS-M5-76 — Paired legacy/current GPU-pass diagnostic\n\nWS-M5-76: paired legacy/current GPU-pass diagnostic\nDecision: diagnostic capture and independent proof PASS. No optimization accepted.\nKeep selected WS10. Full Qwen3.5-4B optimization remains ACTIVE.\nCanonical evidence is prepared for independent source/raw-data reanalysis before publication.\n\nPurpose and exact comparison\nWS26 already profiled native/host/GPU per-token intervals; WS62 already captured\nboth4B andtext custom compute passes. WS62 had no actual matching selected-legacy\ncapture. WS76 adds a common-observer legacy/current comparison, not missing text\ncoverage or an unchanged speed retry. CURRENT means the WS74 minimal selective-\ndefaults profile, not WS75's rejected raw-wide-vocabulary variant. WS74 and75\nremain valid rejections; no favorable diagnostic result overrides either.\n\nLegacy immutable selected-source closure1706files becomes1708; current published\nWS74/e15c3f4325682098bd4c7b4a17da62254e1e36c5 closure1721becomes1723.\nSeven changed-or-added diagnostic paths each. Every existing edit independently\ninverts to its seed. Original graph/session/xModels/image/CUDA/engine/tests and\nall shader arithmetic strings remain. Both use identical bounded WS62counter\nhelper/test, with the prospectively declared dedicated test-fault macro rename.\nLegacy gains a diagnostic actual-program getter/retained MAIN string, an explicit\nobserver memory/setup asymmetry. Its rebuilt traced DLL is not the deployed\nWS10binary. No compilerISA/register/occupancy equivalence is claimed.\n\nThe initial six builds cover legacyquiet/trace/fault and currentONquiet/trace/\nfault. Four additional currentRAW/PRIMARY/COMPAT56/COMPAT56FAULT builds retain\nALLoriginal compatibility proof routes. Current captured profile enables only\nPRIMARY/WIDE/LAZY, VECTOR/PREFILL_ISOLATION/FULL and graph-local selective\nretirement; direct/K32/cached/request-residency/CORE areOFF. Captured libraries\nhave all test-fault hooksOFF. Legacy keeps original selected flags plus tracing.\nOriginal model weights/precision/prompts/limits/stops/prefix/image policy remain.\nNo camera, external CPython image prep or inference, or CUDA removal.\n\nNative and full learned proof before actual capture\nAll10builds and79CTest cases pass. Complete original186projection records\nmatch across all10roles and original74 under the unchanged FP64bounds. Seven\ncurrent roles additionally preserve20records/432804FP32words. Actual assembled\nMAIN/prefill/COREprograms match each original role; legacyMAIN equals original\nrawMAIN and has no separateprefill program. Both quiet preprocessors erase\nnative label work. Bounded timestamp/dependency/scope/nesting/thread/selection/\nAbort/invalid/overflow/unavailable/error/retry transactions pass independently.\n\nOne initial design-setup manifest assertion was retained before source/model\nexecution: a historical1722file starting manifest did not describe selected1706;\nresolved to the published legacy reconstruction recipe. One independent native\nauditor stopped on CTest summary wording after native terminal0. Original frozen\nauditor/failure remain. An inverse-exact post-terminal parser-only v2 checks EACH\noriginal test name Passed and exacttotal; same outputs pass, no native rerun or\nmath/reference/gate/data relaxation. Its identity is explicitly post-native.\n\nBefore the first learned call, both source closures, all19model assets,10libs,\noriginal and additional guards/oracles/fixtures, all outer drivers/verifiers and\nexact corpus command/source/staticlibrary/executable recipes were frozen.\nFour explicit build aliases preserve original proof mode names, with canonical\npaths, targets and library identities checked before/after. No fake loaded IDs.\n\nFull learned controller44452exit0:25subprocess checks, original16plus9supplemental.\nIndependent auditor52064exit0 on its FIRST execution. Each original FIVE GPU\nreaders checks ALL201packed matrices/4,200,857,600FP32words.245rawHOST buffers\ncheck1,724,383,232words; direct546weights/334,609,152words. Categories overlap,\nnot unique sums.446matrix corpus/original11,850,481,664bytes and retained packed+\nraw9,850,930,176bytes unchanged.64private resident steps; trainedlinear/inactive/\ninvalid/shared-owner/close/rebuild/late-session/host-private/vision grids/embedding\nhashes/prefix/capacity/errors/original4GiBcompatibility controls pass.\nFive currentAPI modes/25calls and three legacyAPI modes/15calls match ALL32VLM\nand28text layer-state bits and original tokens/prompts/profiles. Both sources\npropagate an actual learned counter-resolution error, clear request scope and\nrecover all28text states/tokens exactly afterreset. Native image preparation.\nThe short correctness API limits reach selectedstep4:32completed sampled commands,\n19,728intervals, exact native request/model/step and aligned ordered labels. This\nis not a claim that short tests reached modelsteps16/28; actual capture does.\n\nProspective actual WorldSense/Galaxy capture\nAll preparation/controller/admission/analysis/verifier drivers and both source/\nmodel/library closures plus1,920actual build/SDK/host dependency files frozen\nBEFORE dispatch. Original74native admission function byte-exact;10existing actual\nAPIcalls preflight both source-specific routes without new inference.\nController64451exit0. Four fresh owned Cantor workers in order LEGACY1,CURRENT1,\nCURRENT2,LEGACY2; two identical fixed-car Skill requests each, first andfollowup.\n8parent Skill requests/16model calls. Original capacity2048,VLM64/text16 chunks,\nimage65536/sharedvision/bounded64token textprefix2entries/64MiB/inputcaps/stops/\nthresholds retained. Every image freshly prepared/encoded natively, no image or\nanswer cache/speculation. Temporary owned launchd plists; original normalplist\nunchanged. No consumed edits/builds/competingGPU/hash sweeps/archive copies during\nrequests; bounded observation only. All owned PIDs verified stopped before trace\ncopies/full post-run hashes. First/followup/worker order retained without retry.\n\nIndependent actual audit17969exit0 FIRST execution: all original complete Skill/\nimage/prompt/config/token/text goldens and actual native routes pass. Every\npredeclared step4/16/28 is reached:48commands,30,864compute intervals,749custom\npasses per VLM command and537per text command. Request/model/PID/context/command/\nstep identities complete. Entire ordered RECORDED CUSTOM-PASS LABEL sequences match across the\npair after explicitly normalizing only raw/primary storage suffixes. All frozen\nsource/model/runtime/lib/driver and1,920dependency identities unchanged.\nNo extra custom-compute-pass-count explanation for the observed differences\nwas found. Equal recorded labels do not establish identical GPU operations,\ndispatch geometry, ISA, instruction counts or a hardware cause.\n\nObserved sampled command GPU spans, FOLLOWUP only, milliseconds atsteps4/16/28\nPair/model             Legacy                         Current\n1 / Qwen3.5-4B         80.065 /82.776 /78.448          61.040 /65.104 /68.124\n2 / Qwen3.5-4B         82.984 /85.493 /96.841          62.164 /63.400 /77.981\n1 / Qwen3-1.7B         37.030 /35.762 /39.399          36.016 /35.572 /35.780\n2 / Qwen3-1.7B         35.610 /35.762 /35.970          36.032 /35.523 /35.604\nAll FIRST calls also remain in raw JSON/CSV, without selection. All12matched4B\nwindows(first+followup/bothorders) have shorter current command spans. Text is\nmixed bystep/order. These are sparse instrumented command spans, not a full-\nrequest throughput gain, significance test, independent speed confirmation,\nor basis to promote the previously rejected profile.\n\nALL48windows show overlapping encoder timestamp intervals. Preserve raw-duration\nsum, mergedunion, overlap, sampledspan/gaps separately. Raw hardware units stay\nraw; original commandGPUmilliseconds are separate. Family MLPprojection sums\nare approximately48-49%for4B and51-52%fortext of the THREE SELECTED STEPS' summed\ncustom interval durations. They are not end-to-end fractions or speed predictions;\nMPS-owned encoders/uncovered work may be absent. Separate medians are nonadditive.\nNo clock/bandwidth/thermal/VM/physical-residency/register/occupancy/causal claim.\n\nPosthoc retained-call review, explicitly AFTER capture\nFor ALL16calls retained(total-TTFT)-decode_seconds as an arithmetic residual,\nnot pureCPU or isolated telemetry cost. Legacy1textfollowup has26.861ms even\nwithout the new memory-snapshot/graph-stat loops; current1followup0.716ms,\ncurrent2followup0.682ms,legacy2followup0.283ms. First-call residuals also vary.\nThus earlier single-cohort residuals do not establish the new getters/snapshots\nas their sole cause. Their individual cost remains unmeasured. No extra calls,\nmetric changes, favorable retry or acceptance claim from this posthoc review.\n\nArtifacts and practical limits\nWorking evidence: work/worldsense-paired-gpu-profile and its capture subfolder;\nfull proof: sibling worldsense-paired-gpu-profile-current/legacy folders.\nRaw workerJSON/complete counterJSONL/first-followup per-window CSVs/shape ranks/\nbothorder comparisons/source inverse manifests/build commands/SDK identities/\nall failures and audits retained. Canonical independent archive/publication next.\nFixed recorded-frame Skills exclude live decode/scheduling, event persistence,\nshared-world-state writes/dedup, retrieval/ranking, navigation and independent\ncamera fusion; the copied car view remains correlated. This M5/24GiB/4B goal\nis separate from the unmet original M4mini/smallmodel/vLLM handover.\n\nNormal selectedWS10 restored and independently rechecked: CantorPID76907,\nfour video files online, no camera, valid normal benchmarkPOST404, librarySHA\n dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72.\nGarnetfeature/qwen35-metal remains clean at publishedWS75commit\n530a4ff8cb696fb48f54e79c05b0666f4e3aff0e. No accepted-source integration/promotion.\nFull goal ACTIVE. After canonical closure, review measured host/ownership/codegen\npaths and previous methods before selecting a DISTINCT optimization. No successor\noptimization design/source/timing result exists yet.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [
+        "dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72"
+      ],
+      "adjacent_files": [
+        "README.md",
+        "calls.csv",
+        "current-source-reconstruction.json",
+        "export-scope.json",
+        "external-input-resolution.json",
+        "file-manifest.json",
+        "frozen-input-identities.json",
+        "legacy-source-reconstruction.json",
+        "not-bundled-local-artifacts.json",
+        "result.txt",
+        "skill-requests.csv"
+      ],
+      "verification_records": [],
+      "evidence_directories": [
+        "build-identities",
+        "current-proof",
+        "current-source",
+        "export-repair",
+        "frozen-external",
+        "frozen-inputs",
+        "identity-repair",
+        "legacy-proof",
+        "legacy-source",
+        "main",
+        "native",
+        "oracles",
+        "source-identity-repair",
         "work"
       ]
     },

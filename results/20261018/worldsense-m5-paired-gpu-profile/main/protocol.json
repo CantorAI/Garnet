@@ -1,0 +1,50 @@
+{
+  "experiment": "WS-M5-76",
+  "utc": "2026-10-18T17:29:11.924609+00:00",
+  "phase": "source-implemented-before-build",
+  "legacy_source": "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source",
+  "current_source": "/Users/shawn/CantorAI/out/research/worldsense-minimal-selective-defaults/source",
+  "legacy_source_files": 1706,
+  "current_source_files": 1721,
+  "current_seed_commit": "e15c3f4325682098bd4c7b4a17da62254e1e36c5",
+  "design_sha256": "14aae1137e543a8b27deb9d7c1dd398573d7030f8d99b6ff8f5768ddcf3d41e5",
+  "evidence": {
+    "/Users/shawn/CantorAI/Garnet/results/20261016/worldsense-m5-decode-step-profile/README.md": "4da9a3996037a1e1154005a373a705a498bad48fd17253a7614326828fd09c93",
+    "/Users/shawn/CantorAI/Garnet/results/20261018/worldsense-m5-gpu-pass-profile/README.md": "1ecf1938a598e88aa1afe489eb5b9b6d8068b2f006f3848c3829d7a97944959c",
+    "/Users/shawn/CantorAI/Garnet/results/20261018/worldsense-m5-primary-core-isolation/README.md": "bf480e75749b56e3e245faaea0a889b0e85e19be505471efcac78f8c1ad19b72",
+    "/Users/shawn/CantorAI/Garnet/results/20261018/worldsense-m5-validated-text-worker/README.md": "063b58ec51461aaad5a5b0f3ee2dcc09972d4e00c59ff56a388ea1c423195612",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-execution-review-after75/read-only-execution-source-review.json": "046f51f3b9c609f31b8ce00e23062c42ab01a329519592da5abbe43995c3bc80",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-execution-review-after75/native-telemetry-source-review.json": "73ef700511d319a780eaad7b7f1bffc35284ed85403b487daf95c954d0f38392",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-gpu-counter-profile/gpu_pass_counter_trace.inc": "5186f75c8e09d073d0b86e19adfff8eb54d048d5e257050014594162df2c7bc6",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-gpu-counter-profile/gpu_pass_counter_test.cpp": "2e93191a393d014281666e80a818e61b025dc22acd12b26e88fd0bf5c5df05bd"
+  },
+  "roles": [
+    "legacy-quiet",
+    "legacy-trace",
+    "legacy-fault",
+    "current-quiet",
+    "current-trace",
+    "current-fault"
+  ],
+  "worker_order": [
+    "legacy-1",
+    "current-1",
+    "current-2",
+    "legacy-2"
+  ],
+  "requests_per_worker": 2,
+  "actual_model_calls": 16,
+  "expected_selected_commands": 48,
+  "selected_decode_steps": [
+    4,
+    16,
+    28
+  ],
+  "promotion": false,
+  "original_optimization_gates_unchanged": true,
+  "no_successor_source_build_model_or_timing_yet": false,
+  "legacy_program_getter_observer_asymmetry_declared": true,
+  "initial_manifest_resolution_setup_failure": "Initial design script used similarly named WS10 historical starting manifest (1722files), which did not match the selected1706file closure. Assertion stopped before design/source/build/model. Initial script retained; corrected to published WS75 legacy reconstruction recipe and exact1706file manifest.",
+  "source_implemented": true,
+  "no_build_or_model_yet": true
+}

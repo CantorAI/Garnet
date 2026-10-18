@@ -1,0 +1,53 @@
+{
+  "api_state_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/api_state_guard.py",
+    "seed_sha256": "37b4d34d7f10d369bec76f96ca068150b96a5cf22c78b10af7af5f96c13e9d44",
+    "current_sha256": "18aae03cd82c91ab1d270506e9137b811fcefb9d649e080d6c291815cd3bb099",
+    "operations": [
+      {
+        "before": "mode=sys.argv[1];assert mode in ['off','primary','on','compat56'];expected=0 if mode=='off'else 1;vector_expected=mode in ['on','compat56'];core_expected=False;compat_expected=mode=='compat56';selective_expected=mode in ['primary','on']",
+        "after": "mode=sys.argv[1];assert mode in ['quiet','trace','fault']",
+        "count": 1
+      },
+      {
+        "before": "import garnet,metal_serving",
+        "after": "import garnet,metal_serving\nassert hasattr(garnet,\"counter_trace_step\")==hasattr(garnet,\"counter_trace_request_id\")== (mode!=\"quiet\")",
+        "count": 1
+      },
+      {
+        "before": "def infer(name,prompt,image,limit,layers):\n call=json.loads(garnet.infer_json(prompt,image,limit,name));assert ('primary_vector_prefill' in call.get('backend',''))==vector_expected;assert ('primary_prefill_isolated_library' in call.get('backend',''))==vector_expected;assert ('primary_bf16_blocks' in call.get('backend',''))==bool(expected);assert ('primary_vector_decode' in call.get('backend',''))==bool(expected);assert ('primary_kmajor_decode' in call.get('backend',''))==bool(expected);assert ('primary_u32_metadata' in call.get('backend',''))==bool(expected);(w/('last-native-call-'+mode+'.json')).write_text(json.dumps(call,indent=2));assert call['status']=='ok'\n assert ('primary_full_isolated_library'in call['backend'])==vector_expected\n assert ('request_scope_weight_residency'in call['backend'])==compat_expected\n retirement_expected=bool(expected)and (not selective_expected or name=='Qwen3.5-4B');assert ('primary_only_lazy_defaults'in call['backend'])==selective_expected\n timings=call['timings'];assert (timings['lazy_default_retired_bytes']>0)==retirement_expected and (timings['lazy_default_planned_slots']>0)==retirement_expected and timings['lazy_default_rehydrated_bytes']==0\n assert ('lazy_resident_defaults'in call['backend'])==bool(expected) and ('cached_matrix_metadata'in call['backend'])==compat_expected\n stats=timings['primary_storage_after'];delta=timings['primary_encoded_delta']\n graphs=[x['graph']for x in metal_serving._models[name].decoder.layers]+list(metal_serving._models[name].decoder.prefill_graphs.values())+[metal_serving._models[name].decoder.head]\n assert all(bool(g.wide_primary_eligible)==(bool(expected)and name=='Qwen3.5-4B')for g in graphs)\n assert ('wide_primary_storage'in call['backend'])==bool(expected)\n if expected and name=='Qwen3.5-4B':\n  assert stats['active_weights']>0 and stats['original_bytes']>stats['payload_bytes']+stats['metadata_bytes']>0 and stats['allocated_bytes']>0\n  assert all(delta[k]>0 for k in ['decode_encoded','prefill_encoded','head_encoded'])\n  assert delta['vector_decode_encoded']==delta['decode_encoded'] and delta['vector_head_encoded']==delta['head_encoded']\n elif expected:\n  assert all(stats[k]==0 for k in ['active_weights','original_bytes','payload_bytes','metadata_bytes','allocated_bytes'])and all(v==0 for v in delta.values())\n else:assert all(v==0 for v in stats.values()) and all(v==0 for v in delta.values())\n\n if compat_expected:\n  q=timings['request_weight_residency'];assert q['enabled']and not q['scope_open']and q['active_bytes']==q['global_used_bytes']==0 and q['calls']==q['ends']and q['limit_bytes']==4294967296\n  if name=='Qwen3-1.7B':assert q['reason']==1 and q['last_count']==197 and q['last_bytes']==3440902144 and q['coverage_cache_hits']>0 and q['coverage_fallbacks']==0 and 0<q['last_coverage_graphs']<=256\n  else:assert q['reason']==7 and q['admitted']==0 and q['fallback']==q['calls']\n else:assert 'request_weight_residency'not in timings\n assert ('primary_core_isolated_library'in call['backend'])==core_expected\n before=timings['primary_storage_before'];after=timings['primary_storage_after']\n for key,oldkey in [('core_library_decode_encoded','decode_encoded'),('core_library_prefill_encoded','prefill_encoded'),('core_library_head_encoded','head_encoded')]:\n  assert type(before[key])is int and type(after[key])is int and 0<=before[key]<=after[key]\n  core_delta=after[key]-before[key]\n  assert core_delta==(delta[oldkey]if core_expected else 0)\n  if not core_expected:assert before[key]==after[key]==0\n  if name=='Qwen3-1.7B':assert core_delta==0\n\n row=dict(model_id=name,call=call,states=states(name,layers));records.append(row);save();return row\n",
+        "after": "def infer(name,prompt,image,limit,layers):\n call=json.loads(garnet.infer_json(prompt,image,limit,name));(w/('last-native-call-'+mode+'.json')).write_text(json.dumps(call,indent=2));assert call['status']=='ok'\n assert 'primary_bf16_blocks'not in call['backend']and 'lazy_resident_defaults'not in call['backend']\n if mode!='quiet':\n  assert type(call['timings']['counter_trace_request_id'])is int and call['timings']['counter_trace_request_id']>0 and garnet.counter_trace_request_id()==0\n else:assert 'counter_trace_request_id'not in call['timings']\n row=dict(model_id=name,call=call,states=states(name,layers));records.append(row);save();return row\n",
+        "count": 1
+      },
+      {
+        "before": "primary_expected=expected,vector_prefill_expected=vector_expected,lazy_defaults_expected=bool(expected),selective_defaults_expected=selective_expected,raw_text_retirement_expected=compat_expected,cached_metadata_expected=compat_expected,",
+        "after": "legacy_original_storage_domain=True,",
+        "count": 1
+      }
+    ],
+    "inverse_exact": true,
+    "all_original_state_hashes_prompts_profiles_and_comparisons_retained": true
+  },
+  "vision_grid_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/vision_grid_guard.py",
+    "seed_sha256": "102b05e1b5721dc3e218212ae681d5088d0e26715e590fa8f5fb327a1f316a6f",
+    "current_sha256": "7df91ca13d11a976d3e26bdfd265bfdd050c018be6f3ae6d286d3ed6c1abea51",
+    "operations": [],
+    "inverse_exact": true,
+    "all_original_state_hashes_prompts_profiles_and_comparisons_retained": true
+  },
+  "current-counter_fault_model_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-gpu-counter-profile/counter_fault_model_guard.py",
+    "seed_sha256": "e7ff059ab5e52f1588eaec14f65214aff7b4ac6065a26f2f4fb0073a74c6143c",
+    "current_path": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile-current/counter_fault_model_guard.py",
+    "current_sha256": "2ec29fde40ec24859101aaf4727ef9e6974ecf37a00a5208894c33fe9dfb1927",
+    "path_replacement_only": true
+  },
+  "legacy-counter_fault_model_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-gpu-counter-profile/counter_fault_model_guard.py",
+    "seed_sha256": "e7ff059ab5e52f1588eaec14f65214aff7b4ac6065a26f2f4fb0073a74c6143c",
+    "current_path": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile-legacy/counter_fault_model_guard.py",
+    "current_sha256": "67e4b3694f97f0932bf07e95c4511e98eff9a5cf7a836b563600a37aedaf89c5",
+    "path_replacement_only": true
+  }
+}

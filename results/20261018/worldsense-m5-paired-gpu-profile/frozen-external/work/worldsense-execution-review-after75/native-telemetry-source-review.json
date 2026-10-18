@@ -1,0 +1,10 @@
+{
+  "scope": "Read-only WS75 source review; no source/build/timing change",
+  "facts": [
+    "MetalContext::MemoryStats creates/obtains the default Metal device and calls task_info(TASK_VM_INFO) on every snapshot. This source observation is not a measured cost.",
+    "The serving path takes a memory snapshot after decode_seconds is captured, then makes three separate per-graph lazy-default getter aggregation passes before total_seconds is captured.",
+    "Per-token prepare/encode/gpu/wait and fused-head property getters remain in the old and new serving paths; no measured isolated overhead or native-batching benefit is established.",
+    "Five prior README keyword matches require inspection; matches alone do not establish a prior batching experiment."
+  ],
+  "decision": "No optimization selected. Preserve all telemetry and original timing boundaries; inspect original prior methods and graph/context execution before designing a distinct experiment."
+}

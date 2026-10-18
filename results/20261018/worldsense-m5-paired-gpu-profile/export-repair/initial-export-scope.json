@@ -1,0 +1,69 @@
+{
+  "experiment": "WS-M5-76",
+  "utc": "2026-10-18T18:42:35.720488+00:00",
+  "decision": "diagnostic-complete",
+  "promotion": false,
+  "full_goal_active": true,
+  "model_calls": 16,
+  "Skill_requests": 8,
+  "selected_commands": 48,
+  "custom_compute_intervals": 30864,
+  "native_CTest_pass": 79,
+  "full_learned_checks": 25,
+  "role_info": {
+    "legacy-quiet": {
+      "family": "legacy",
+      "original74_role": null
+    },
+    "legacy-trace": {
+      "family": "legacy",
+      "original74_role": null
+    },
+    "legacy-fault": {
+      "family": "legacy",
+      "original74_role": null
+    },
+    "current-quiet": {
+      "family": "current",
+      "original74_role": "on"
+    },
+    "current-trace": {
+      "family": "current",
+      "original74_role": "on"
+    },
+    "current-fault": {
+      "family": "current",
+      "original74_role": "fault"
+    },
+    "current-raw": {
+      "family": "current",
+      "original74_role": "off"
+    },
+    "current-primary": {
+      "family": "current",
+      "original74_role": "primary"
+    },
+    "current-compat": {
+      "family": "current",
+      "original74_role": "compat56"
+    },
+    "current-compatfault": {
+      "family": "current",
+      "original74_role": "compat56-fault"
+    }
+  },
+  "source_reconstructions": {
+    "current": {
+      "files": 1723,
+      "overlays": 18
+    },
+    "legacy": {
+      "files": 1708,
+      "overlays": 11
+    }
+  },
+  "external_input_resolutions": 2308,
+  "actual_dependency_files": 1920,
+  "all_timings_ineligible_for_speed": true,
+  "scope": "Complete first/followup and both worker orders retained. Reconstructed traced legacy differs from deployedWS10. Recorded custom-pass labels/counts are not complete GPU operation/dispatch/ISA identity. Overlap/rawunits/MPS omissions/posthoc residual analysis explicit. No acceptance, isolated causality or global optimum claim."
+}

@@ -1,0 +1,820 @@
+{
+  "utc": "2026-10-18T18:17:37.265835+00:00",
+  "workers": 4,
+  "Skill_requests": 8,
+  "model_calls": 16,
+  "selected_commands": 48,
+  "compute_intervals": 30864,
+  "windows_with_overlap": 48,
+  "raw_files": {
+    "legacy-1": "c7a6ab8e09a6296cee5143c124367a13baaeac94f0a775acfe6f2b66ab53bc2f",
+    "current-1": "b1c4814ae3aed9dfb796e3cedf4b6c37e0abcdfe85b42462fde0ba6b6ee56c9f",
+    "current-2": "30f6d03f1cd9304358c84ce12a5151e48dd7fc4d7f1306d99adcd5046c080f6e",
+    "legacy-2": "f6d9a66c986b7af17fdafd7765880bf2d7acab53d1b524b6f1d77499edfb49d7"
+  },
+  "all_first_followup_windows_and_both_worker_orders_retained": true,
+  "no_pooled_acceptance_or_performance_promotion": true,
+  "limits": "Timestamp durations retain raw units; GPU-span milliseconds are separate. Per-encoder intervals overlap; sums/merged unions/span/gaps remain separate. Shape ranks cover only steps4/16/28 and may omit MPS encoders. Separate medians are not summed. Mirrored order does not establish causality, significance, clocks, bandwidth, ISA, registers, occupancy or physical residency. Reconstructed traced legacy differs from deployed WS10 binary. No throughput eligibility.",
+  "top_families": [
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 84373457,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3288696656501137
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 42293747,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.16485196801857366
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 38109043,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1485408880384717
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 32335667,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12603750483832155
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 19533208,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07613626147894031
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 35743380,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3415455093444522
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 18330954,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.175161247221156
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 15816916,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.15113838230963092
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12549002,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.11991186283598668
+    },
+    {
+      "label": "legacy-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6395578,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.06111288147797363
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 75796885,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.32674652656970116
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 38029879,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.16393986202884223
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 33704120,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14529230510051167
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 30937208,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.13336465285828528
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 17484123,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07537086069391141
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 35766088,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.34239223715249906
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 18401588,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.17616019069456468
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 15297083,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1464404625486987
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12623447,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12084548522348888
+    },
+    {
+      "label": "legacy-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6367369,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.06095544239239894
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 55444668,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.31815393249911184
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 28096000,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1612211455120454
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 24833256,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1424987891199414
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 22767708,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1306462117185279
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 13296591,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07629881949121416
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 34719669,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3430195556404067
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 17882164,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.17667023119283995
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 14637625,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1446151927062124
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12244083,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12096774050133537
+    },
+    {
+      "label": "current-1",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6275508,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.062000071647509584
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 59948080,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.31962797886555316
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 30329419,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1617087802501182
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 26997497,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14394381605780926
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 24667583,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.13152130473216622
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 14310129,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07629798334784599
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 34520383,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.34250466037309096
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 17630378,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.174925250080198
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 14762166,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14646739731135633
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12214457,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12118951421908394
+    },
+    {
+      "label": "current-1",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6230791,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.06182072068292846
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 61433259,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3159100599577107
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 30784914,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.15830617137751016
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 27356669,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14067700598519844
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 23439334,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1205327786583617
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 14627420,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.075219013356049
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 34994453,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3417431222450223
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 17988083,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.17566508748179624
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 14708124,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1436341987722153
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12277420,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.11989682604593023
+    },
+    {
+      "label": "current-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6252545,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.06106008430186072
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 62616542,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3191800414414608
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 31506959,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1606028081096271
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 27501417,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1401850555362654
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 23807042,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12135343807645266
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 14922786,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07606704716945326
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 34126209,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.34022781784741296
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 17587045,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.17533743471870122
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 14489376,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1444546266024063
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12175786,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12138884519394114
+    },
+    {
+      "label": "current-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6180580,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.06161848350724698
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 79493333,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.32331310003123387
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 39769374,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.16174890533576633
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 36310620,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1476815560904475
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 31107084,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12651787742969584
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 18521084,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07532844400899488
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 36204466,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.33960311558866674
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 18650421,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.174943640340954
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 15436167,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14479347398597076
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 13027414,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12219902324932551
+    },
+    {
+      "label": "legacy-2",
+      "phase": "first",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6543874,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.06138248243793102
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2560:9216:raw",
+      "passes": 192,
+      "duration_sum_raw": 84313798,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3266755330675635
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 2,
+      "normalized_family": "bf16:1:9216:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 42072413,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1630104238005467
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2560:8192:raw",
+      "passes": 96,
+      "duration_sum_raw": 37290368,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14448229274033664
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2560:248320:raw",
+      "passes": 3,
+      "duration_sum_raw": 33406042,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.12943239228800266
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3.5-4B",
+      "rank": 5,
+      "normalized_family": "bf16:1:4096:2560:raw",
+      "passes": 96,
+      "duration_sum_raw": 19538119,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.07570084127229673
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 1,
+      "normalized_family": "bf16:1:2048:6144:raw",
+      "passes": 168,
+      "duration_sum_raw": 34494668,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.3416292786408794
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 2,
+      "normalized_family": "bf16:1:6144:2048:raw",
+      "passes": 84,
+      "duration_sum_raw": 17724754,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.1755429251589562
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 3,
+      "normalized_family": "bf16:1:2048:151936:raw",
+      "passes": 3,
+      "duration_sum_raw": 14583500,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.14443248403084397
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 4,
+      "normalized_family": "bf16:1:2048:2048:raw",
+      "passes": 168,
+      "duration_sum_raw": 12075421,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.11959289956102567
+    },
+    {
+      "label": "legacy-2",
+      "phase": "followup",
+      "model": "Qwen3-1.7B",
+      "rank": 5,
+      "normalized_family": "bf16:1:2048:1024:raw",
+      "passes": 168,
+      "duration_sum_raw": 6137127,
+      "fraction_of_three_selected_steps_interval_duration_sum": 0.060781053754089306
+    }
+  ]
+}

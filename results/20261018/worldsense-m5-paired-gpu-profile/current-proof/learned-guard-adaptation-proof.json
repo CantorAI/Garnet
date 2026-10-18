@@ -1,0 +1,160 @@
+{
+  "build_corpus.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/build_corpus.py",
+    "seed_sha256": "a9ffec33d039dd3a3d093ed672813eb74ea51181b65f02e08d9e3296d059f7f1",
+    "current_sha256": "39e594bbb689c6edc2e9c4cb2b47da4372927492983974fc3e010cddce88905e",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/build_direct_corpus.py",
+    "seed_sha256": "5ed7ffc092ad695a1f01b1a21c807d7f47f716741342d84aa9696eed2d6b786c",
+    "current_sha256": "0a56d1f8de7ddf1e925e8dc1dd66b7dc8bcd0426c1d26fc976ae37c934b8755f",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/make_resident_fixtures.py",
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/resident_controller.py",
+    "seed_sha256": "2367871159cb42ab53ca59b67c29aa3e6de5def6c787553bb5756395c5381e3e",
+    "current_sha256": "82f8dd50f19cd210d151a37ec1c2c7b961548928cc42bded536b148a9f8c926e",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/resident_guard.py",
+    "seed_sha256": "d7932edd8854f74eb5f344505d5005234cfa9b240af8cf174d3bc91ba9e967a5",
+    "current_sha256": "d7932edd8854f74eb5f344505d5005234cfa9b240af8cf174d3bc91ba9e967a5",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/linear_guard.py",
+    "seed_sha256": "85d97e600698f34e81458c32910f8d76fb2d6ab299420b9625da63a65387db2d",
+    "current_sha256": "9456d24d288d0a1d12d3d576d050bfdd51fee3fbb1381134b679c079e29e031b",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/vision_grid_guard.py",
+    "seed_sha256": "102b05e1b5721dc3e218212ae681d5088d0e26715e590fa8f5fb327a1f316a6f",
+    "current_sha256": "fc5cddbb8e025305daefa498d79843e791b9483cb69f7097609f4c8152bf94b1",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/api_state_guard.py",
+    "seed_sha256": "37b4d34d7f10d369bec76f96ca068150b96a5cf22c78b10af7af5f96c13e9d44",
+    "current_sha256": "059b295b254fa70eb9a5105d6b003f82e541100a0dcd5f54bfe6ec3687a8684c",
+    "operations": [
+      {
+        "before": "['off','primary','on','compat56'];expected=",
+        "after": "['off','primary','on','quiet','compat56'];expected=",
+        "count": 1
+      },
+      {
+        "before": "vector_expected=mode in ['on','compat56']",
+        "after": "vector_expected=mode in ['on','quiet','compat56']",
+        "count": 1
+      },
+      {
+        "before": "selective_expected=mode in ['primary','on']",
+        "after": "selective_expected=mode in ['primary','on','quiet']",
+        "count": 1
+      },
+      {
+        "before": "import garnet,metal_serving",
+        "after": "import garnet,metal_serving\nassert hasattr(garnet,\"counter_trace_step\")==hasattr(garnet,\"counter_trace_request_id\")== (mode!=\"quiet\")",
+        "count": 1
+      },
+      {
+        "before": "assert call['status']=='ok'\n",
+        "after": "assert call['status']=='ok'\n if mode!='quiet':\n  assert type(call['timings']['counter_trace_request_id'])is int and call['timings']['counter_trace_request_id']>0 and garnet.counter_trace_request_id()==0\n else:assert 'counter_trace_request_id'not in call['timings']\n",
+        "count": 1
+      }
+    ],
+    "inverse_exact": true
+  },
+  "primary_corpus_test.cpp": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/primary_corpus_test.cpp",
+    "seed_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "current_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "direct_float_corpus_test.cpp": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/direct_float_corpus_test.cpp",
+    "seed_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+    "current_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "request_session_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/request_session_guard.py",
+    "seed_sha256": "7e90fb65fd14b07b7357c45be8b42a38fa45716c9907b2e492c17cbc0c1e0f6d",
+    "current_sha256": "31226627e6b719a03fd85aefcfd6e43a001ebeeaeb501c008bc47fac4c5d884b",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "request_full_session_guard.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/request_full_session_guard.py",
+    "seed_sha256": "e03649870f873bc918339d29d31963b2828b9a0e4cf0339d38797b65565964cc",
+    "current_sha256": "17eeaa6277eddbe29f43781d963a76b3165fa563aaf546014d9a5c89f09f8436",
+    "operations": [],
+    "inverse_exact": true
+  },
+  "full_correctness.py": {
+    "seed": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/full_correctness.py",
+    "seed_sha256": "76210934d518ab1554ece00d71b447882871d81eb0dad7da336e3b3e9ebac278",
+    "current_sha256": "d0166315f7de7a798df38a8c5cc27b6de4aad6e02ef6cec9882c35008bb96504",
+    "operations": [
+      {
+        "before": "len(manifest)==1721",
+        "after": "len(manifest)==1723",
+        "count": 1
+      },
+      {
+        "before": "assert load(w/'native-independent-audit.json')['native_tests_pass']==54",
+        "after": "assert load(w.parent/'worldsense-paired-gpu-profile/compatibility-native-independent-audit.json')['combined_native_CTest_count']==79",
+        "count": 1
+      },
+      {
+        "before": "for mode in ['off','primary','on','compat56']:run",
+        "after": "for mode in ['off','primary','on','quiet','compat56']:run",
+        "count": 1
+      },
+      {
+        "before": "with(w/name).open('w')as f:p=subprocess.run(command,stdout=f,stderr=subprocess.STDOUT)",
+        "after": "with(w/name).open('w')as f:p=subprocess.run(command,stdout=f,stderr=subprocess.STDOUT,env=dict(__import__('os').environ,GARNET_METAL_COUNTER_TRACE='1',GARNET_METAL_COUNTER_TRACE_FILE=str(w/(name+'.counters.jsonl'))))",
+        "count": 1
+      },
+      {
+        "before": "def verify():assert len(manifest)==1723 and all(sha(s/k)==v for k,v in manifest.items())and all(sha(Path(k))==v for k,v in inputs.items())",
+        "after": "def verify():\n assert len(manifest)==1723 and all(sha(s/k)==v for k,v in manifest.items())and all(sha(Path(k))==v for k,v in inputs.items())\n assert all(str(Path(k).resolve())==v['resolved']and str(Path(k).readlink())==v['target']and sha(Path(k)/'libgarnet.dylib')==v['library_sha256']for k,v in frozen['build_aliases'].items())\n assert len(frozen['legacy_source'])==1708 and all(sha(Path(frozen['legacy_root'])/k)==v for k,v in frozen['legacy_source'].items())",
+        "count": 1
+      },
+      {
+        "before": " verify();(w/'api-correctness-result.json')",
+        "after": " for mode in ['quiet','trace','fault']:\n  run([str(n/'xlang3'),'-B',str(w.parent/'worldsense-paired-gpu-profile-legacy/api_state_guard.py'),mode],'legacy-api-state-guard-'+mode+'.log')\n  run([str(n/'xlang3'),'-B',str(w.parent/'worldsense-paired-gpu-profile-legacy/vision_grid_guard.py'),mode],'legacy-vision-grid-'+mode+'.log')\n for family in ['current','legacy']:run([str(n/'xlang3'),'-B',str(w.parent/('worldsense-paired-gpu-profile-'+family)/'counter_fault_model_guard.py')],family+'-counter-fault-model-recovery.log')\n verify();(w/'api-correctness-result.json')",
+        "count": 1
+      },
+      {
+        "before": "source1721_and_explicit_inputs_unchanged",
+        "after": "source1723_and_explicit_inputs_unchanged",
+        "count": 1
+      },
+      {
+        "before": "WS74 full learned controller PASS",
+        "after": "WS76 full learned controller PASS",
+        "count": 1
+      }
+    ],
+    "inverse_exact": true
+  }
+}

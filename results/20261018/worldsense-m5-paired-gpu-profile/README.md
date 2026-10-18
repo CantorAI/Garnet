@@ -1,0 +1,147 @@
+# WS-M5-76 — Paired legacy/current GPU-pass diagnostic
+
+WS-M5-76: paired legacy/current GPU-pass diagnostic
+Decision: diagnostic capture and independent proof PASS. No optimization accepted.
+Keep selected WS10. Full Qwen3.5-4B optimization remains ACTIVE.
+Canonical evidence is prepared for independent source/raw-data reanalysis before publication.
+
+Purpose and exact comparison
+WS26 already profiled native/host/GPU per-token intervals; WS62 already captured
+both4B andtext custom compute passes. WS62 had no actual matching selected-legacy
+capture. WS76 adds a common-observer legacy/current comparison, not missing text
+coverage or an unchanged speed retry. CURRENT means the WS74 minimal selective-
+defaults profile, not WS75's rejected raw-wide-vocabulary variant. WS74 and75
+remain valid rejections; no favorable diagnostic result overrides either.
+
+Legacy immutable selected-source closure1706files becomes1708; current published
+WS74/e15c3f4325682098bd4c7b4a17da62254e1e36c5 closure1721becomes1723.
+Seven changed-or-added diagnostic paths each. Every existing edit independently
+inverts to its seed. Original graph/session/xModels/image/CUDA/engine/tests and
+all shader arithmetic strings remain. Both use identical bounded WS62counter
+helper/test, with the prospectively declared dedicated test-fault macro rename.
+Legacy gains a diagnostic actual-program getter/retained MAIN string, an explicit
+observer memory/setup asymmetry. Its rebuilt traced DLL is not the deployed
+WS10binary. No compilerISA/register/occupancy equivalence is claimed.
+
+The initial six builds cover legacyquiet/trace/fault and currentONquiet/trace/
+fault. Four additional currentRAW/PRIMARY/COMPAT56/COMPAT56FAULT builds retain
+ALLoriginal compatibility proof routes. Current captured profile enables only
+PRIMARY/WIDE/LAZY, VECTOR/PREFILL_ISOLATION/FULL and graph-local selective
+retirement; direct/K32/cached/request-residency/CORE areOFF. Captured libraries
+have all test-fault hooksOFF. Legacy keeps original selected flags plus tracing.
+Original model weights/precision/prompts/limits/stops/prefix/image policy remain.
+No camera, external CPython image prep or inference, or CUDA removal.
+
+Native and full learned proof before actual capture
+All10builds and79CTest cases pass. Complete original186projection records
+match across all10roles and original74 under the unchanged FP64bounds. Seven
+current roles additionally preserve20records/432804FP32words. Actual assembled
+MAIN/prefill/COREprograms match each original role; legacyMAIN equals original
+rawMAIN and has no separateprefill program. Both quiet preprocessors erase
+native label work. Bounded timestamp/dependency/scope/nesting/thread/selection/
+Abort/invalid/overflow/unavailable/error/retry transactions pass independently.
+
+One initial design-setup manifest assertion was retained before source/model
+execution: a historical1722file starting manifest did not describe selected1706;
+resolved to the published legacy reconstruction recipe. One independent native
+auditor stopped on CTest summary wording after native terminal0. Original frozen
+auditor/failure remain. An inverse-exact post-terminal parser-only v2 checks EACH
+original test name Passed and exacttotal; same outputs pass, no native rerun or
+math/reference/gate/data relaxation. Its identity is explicitly post-native.
+
+Before the first learned call, both source closures, all19model assets,10libs,
+original and additional guards/oracles/fixtures, all outer drivers/verifiers and
+exact corpus command/source/staticlibrary/executable recipes were frozen.
+Four explicit build aliases preserve original proof mode names, with canonical
+paths, targets and library identities checked before/after. No fake loaded IDs.
+
+Full learned controller44452exit0:25subprocess checks, original16plus9supplemental.
+Independent auditor52064exit0 on its FIRST execution. Each original FIVE GPU
+readers checks ALL201packed matrices/4,200,857,600FP32words.245rawHOST buffers
+check1,724,383,232words; direct546weights/334,609,152words. Categories overlap,
+not unique sums.446matrix corpus/original11,850,481,664bytes and retained packed+
+raw9,850,930,176bytes unchanged.64private resident steps; trainedlinear/inactive/
+invalid/shared-owner/close/rebuild/late-session/host-private/vision grids/embedding
+hashes/prefix/capacity/errors/original4GiBcompatibility controls pass.
+Five currentAPI modes/25calls and three legacyAPI modes/15calls match ALL32VLM
+and28text layer-state bits and original tokens/prompts/profiles. Both sources
+propagate an actual learned counter-resolution error, clear request scope and
+recover all28text states/tokens exactly afterreset. Native image preparation.
+The short correctness API limits reach selectedstep4:32completed sampled commands,
+19,728intervals, exact native request/model/step and aligned ordered labels. This
+is not a claim that short tests reached modelsteps16/28; actual capture does.
+
+Prospective actual WorldSense/Galaxy capture
+All preparation/controller/admission/analysis/verifier drivers and both source/
+model/library closures plus1,920actual build/SDK/host dependency files frozen
+BEFORE dispatch. Original74native admission function byte-exact;10existing actual
+APIcalls preflight both source-specific routes without new inference.
+Controller64451exit0. Four fresh owned Cantor workers in order LEGACY1,CURRENT1,
+CURRENT2,LEGACY2; two identical fixed-car Skill requests each, first andfollowup.
+8parent Skill requests/16model calls. Original capacity2048,VLM64/text16 chunks,
+image65536/sharedvision/bounded64token textprefix2entries/64MiB/inputcaps/stops/
+thresholds retained. Every image freshly prepared/encoded natively, no image or
+answer cache/speculation. Temporary owned launchd plists; original normalplist
+unchanged. No consumed edits/builds/competingGPU/hash sweeps/archive copies during
+requests; bounded observation only. All owned PIDs verified stopped before trace
+copies/full post-run hashes. First/followup/worker order retained without retry.
+
+Independent actual audit17969exit0 FIRST execution: all original complete Skill/
+image/prompt/config/token/text goldens and actual native routes pass. Every
+predeclared step4/16/28 is reached:48commands,30,864compute intervals,749custom
+passes per VLM command and537per text command. Request/model/PID/context/command/
+step identities complete. Entire ordered RECORDED CUSTOM-PASS LABEL sequences match across the
+pair after explicitly normalizing only raw/primary storage suffixes. All frozen
+source/model/runtime/lib/driver and1,920dependency identities unchanged.
+No extra custom-compute-pass-count explanation for the observed differences
+was found. Equal recorded labels do not establish identical GPU operations,
+dispatch geometry, ISA, instruction counts or a hardware cause.
+
+Observed sampled command GPU spans, FOLLOWUP only, milliseconds atsteps4/16/28
+Pair/model             Legacy                         Current
+1 / Qwen3.5-4B         80.065 /82.776 /78.448          61.040 /65.104 /68.124
+2 / Qwen3.5-4B         82.984 /85.493 /96.841          62.164 /63.400 /77.981
+1 / Qwen3-1.7B         37.030 /35.762 /39.399          36.016 /35.572 /35.780
+2 / Qwen3-1.7B         35.610 /35.762 /35.970          36.032 /35.523 /35.604
+All FIRST calls also remain in raw JSON/CSV, without selection. All12matched4B
+windows(first+followup/bothorders) have shorter current command spans. Text is
+mixed bystep/order. These are sparse instrumented command spans, not a full-
+request throughput gain, significance test, independent speed confirmation,
+or basis to promote the previously rejected profile.
+
+ALL48windows show overlapping encoder timestamp intervals. Preserve raw-duration
+sum, mergedunion, overlap, sampledspan/gaps separately. Raw hardware units stay
+raw; original commandGPUmilliseconds are separate. Family MLPprojection sums
+are approximately48-49%for4B and51-52%fortext of the THREE SELECTED STEPS' summed
+custom interval durations. They are not end-to-end fractions or speed predictions;
+MPS-owned encoders/uncovered work may be absent. Separate medians are nonadditive.
+No clock/bandwidth/thermal/VM/physical-residency/register/occupancy/causal claim.
+
+Posthoc retained-call review, explicitly AFTER capture
+For ALL16calls retained(total-TTFT)-decode_seconds as an arithmetic residual,
+not pureCPU or isolated telemetry cost. Legacy1textfollowup has26.861ms even
+without the new memory-snapshot/graph-stat loops; current1followup0.716ms,
+current2followup0.682ms,legacy2followup0.283ms. First-call residuals also vary.
+Thus earlier single-cohort residuals do not establish the new getters/snapshots
+as their sole cause. Their individual cost remains unmeasured. No extra calls,
+metric changes, favorable retry or acceptance claim from this posthoc review.
+
+Artifacts and practical limits
+Working evidence: work/worldsense-paired-gpu-profile and its capture subfolder;
+full proof: sibling worldsense-paired-gpu-profile-current/legacy folders.
+Raw workerJSON/complete counterJSONL/first-followup per-window CSVs/shape ranks/
+bothorder comparisons/source inverse manifests/build commands/SDK identities/
+all failures and audits retained. Canonical independent archive/publication next.
+Fixed recorded-frame Skills exclude live decode/scheduling, event persistence,
+shared-world-state writes/dedup, retrieval/ranking, navigation and independent
+camera fusion; the copied car view remains correlated. This M5/24GiB/4B goal
+is separate from the unmet original M4mini/smallmodel/vLLM handover.
+
+Normal selectedWS10 restored and independently rechecked: CantorPID76907,
+four video files online, no camera, valid normal benchmarkPOST404, librarySHA
+ dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72.
+Garnetfeature/qwen35-metal remains clean at publishedWS75commit
+530a4ff8cb696fb48f54e79c05b0666f4e3aff0e. No accepted-source integration/promotion.
+Full goal ACTIVE. After canonical closure, review measured host/ownership/codegen
+paths and previous methods before selecting a DISTINCT optimization. No successor
+optimization design/source/timing result exists yet.

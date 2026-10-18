@@ -1,0 +1,309 @@
+{
+  "commands": {
+    "legacy-quiet": {
+      "program": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/program_source_probe.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-quiet/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-quiet/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-quiet",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy-quiet-program-probe"
+        ],
+        "source_sha256": "473b6b490b47e308c6f6fb0b40a087b2378dfc8411c2b9a2deda377360bc9292",
+        "library_sha256": "353581da640e69df2ee6f5116b91c56732a7e62862d1b97821d9fbbbfd306731",
+        "executable_sha256": "8e1116164f3383850227da5b0f3b51961a07fdecec9843bafc4af605deb3b250",
+        "no_GPU_or_model_dispatch": true
+      },
+      "projection": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy_projection_test.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-quiet/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-quiet/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-quiet",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy-quiet-projection-probe"
+        ],
+        "source_sha256": "c4a6518f8e028362dd773ac17c0eef8ef1848704c3800ea31ecee0aebcfdc19a",
+        "library_sha256": "353581da640e69df2ee6f5116b91c56732a7e62862d1b97821d9fbbbfd306731",
+        "executable_sha256": "5f5a50f3ca547768625851dc7697061e84d5036b2f80e6ed24759136d598d2f5",
+        "no_GPU_or_model_dispatch": true
+      }
+    },
+    "legacy-trace": {
+      "program": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/program_source_probe.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-trace/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-trace/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-trace",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy-trace-program-probe"
+        ],
+        "source_sha256": "473b6b490b47e308c6f6fb0b40a087b2378dfc8411c2b9a2deda377360bc9292",
+        "library_sha256": "1c95199435ddfbb50f2197185aaf91b11fc2beebc0c0d4a846d6c6b647cd49b9",
+        "executable_sha256": "04e6d1f368eef6092415df9691f1bee57aedba5b1927df095ad72e608c4517d2",
+        "no_GPU_or_model_dispatch": true
+      },
+      "projection": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy_projection_test.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-trace/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-trace/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-trace",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy-trace-projection-probe"
+        ],
+        "source_sha256": "c4a6518f8e028362dd773ac17c0eef8ef1848704c3800ea31ecee0aebcfdc19a",
+        "library_sha256": "1c95199435ddfbb50f2197185aaf91b11fc2beebc0c0d4a846d6c6b647cd49b9",
+        "executable_sha256": "aaa95ccd24c2817e220e148a548a7faba175abb31781df45d5b5514865961c96",
+        "no_GPU_or_model_dispatch": true
+      }
+    },
+    "legacy-fault": {
+      "program": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/program_source_probe.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-fault/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-fault/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-fault",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy-fault-program-probe"
+        ],
+        "source_sha256": "473b6b490b47e308c6f6fb0b40a087b2378dfc8411c2b9a2deda377360bc9292",
+        "library_sha256": "bdea342e7e90b4ce5440ecb8ebb6c7eb99c449018be30341e0f81ea38fbb2066",
+        "executable_sha256": "20c09ce7f34a8cfe7f7bb617e9b0b85d8ad7e91981c3d835d67db1164ed4423e",
+        "no_GPU_or_model_dispatch": true
+      },
+      "projection": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy_projection_test.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-fault/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-fault/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-legacy-fault",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/legacy-fault-projection-probe"
+        ],
+        "source_sha256": "c4a6518f8e028362dd773ac17c0eef8ef1848704c3800ea31ecee0aebcfdc19a",
+        "library_sha256": "bdea342e7e90b4ce5440ecb8ebb6c7eb99c449018be30341e0f81ea38fbb2066",
+        "executable_sha256": "832a98f9a76f1611c19799577d4a6e243c221beeefb94cded8b21b3cae6598c8",
+        "no_GPU_or_model_dispatch": true
+      }
+    },
+    "current-quiet": {
+      "program": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-current/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/program_source_probe.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-quiet/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-quiet/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-quiet",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/current-quiet-program-probe"
+        ],
+        "source_sha256": "473b6b490b47e308c6f6fb0b40a087b2378dfc8411c2b9a2deda377360bc9292",
+        "library_sha256": "ec1da3d3368724591faaa4efe98c6266b0ff8a317f23208a567b86aff9b360e2",
+        "executable_sha256": "a502080ed5b01f97e6191c0dcd4b82e47413abeb5681d98bf1c5da5298f8a288",
+        "no_GPU_or_model_dispatch": true
+      }
+    },
+    "current-trace": {
+      "program": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-current/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/program_source_probe.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-trace/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-trace/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-trace",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/current-trace-program-probe"
+        ],
+        "source_sha256": "473b6b490b47e308c6f6fb0b40a087b2378dfc8411c2b9a2deda377360bc9292",
+        "library_sha256": "cf272a653730e3e6c68115783ba3dc09202d888daa3841eadf2dd7d85d893d5a",
+        "executable_sha256": "4cc34032e0b0ef2641c2d06b03e89a5a1230106bc52e2b259797d62a15a7871b",
+        "no_GPU_or_model_dispatch": true
+      }
+    },
+    "current-fault": {
+      "program": {
+        "command": [
+          "/usr/bin/c++",
+          "-std=c++17",
+          "-O3",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-I",
+          "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-current/source/src/backends/metal",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/program_source_probe.cpp",
+          "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-fault/libgarnet.dylib\"",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-fault/libgarnet.dylib",
+          "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-fault",
+          "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+          "-o",
+          "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-paired-gpu-profile/current-fault-program-probe"
+        ],
+        "source_sha256": "473b6b490b47e308c6f6fb0b40a087b2378dfc8411c2b9a2deda377360bc9292",
+        "library_sha256": "e1c1226da5340c31caa1b3f0e6bfd5acdb527fc182c61a68a965eb7c233ecbf9",
+        "executable_sha256": "1d5b18e988c5cc89dbc732e2ac7f0243719407504b3be3c3975454e2867d1ed0",
+        "no_GPU_or_model_dispatch": true
+      }
+    }
+  },
+  "preprocessing": {
+    "legacy": {
+      "command": [
+        "/usr/bin/c++",
+        "-x",
+        "objective-c++",
+        "-E",
+        "-P",
+        "-DGARNET_METAL_ATTENTION_PREFIX=1",
+        "-DGARNET_METAL_BODY_SHAPE=1",
+        "-DGARNET_METAL_DENSE_PREFIX_CACHE=1",
+        "-DGARNET_METAL_LINEAR_CHUNK_CONV=1",
+        "-DGARNET_METAL_LINEAR_CHUNK_DELTA=1",
+        "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1",
+        "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=1",
+        "-DGARNET_METAL_QWEN35_4B_WIDE_PREFILL=1",
+        "-DGARNET_METAL_RESIDENT_KV_INPLACE=1",
+        "-I/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal",
+        "-I/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/third_party",
+        "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
+        "-O3",
+        "-DNDEBUG",
+        "-std=gnu++17",
+        "-arch",
+        "arm64",
+        "-isysroot",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+        "-fPIC",
+        "-fobjc-arc",
+        "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/src/backends/metal/metal_context.mm"
+      ],
+      "flags_sha256": "d250b69c74f1eafcfd9710ec32c8ad8c1d28e20b6b71695f1ef2e053500f4bbe",
+      "preprocessed_source_sha256": "f975419289bd2c83e834a17074d2548b3194d822d27064771deaf8784bcdb4fd",
+      "projection_sha256": "4d2bc429ad5b0f0b14f88014183b95e8746eccb83b3191cc95d5553c62c31591",
+      "diagnostic_label_arguments_and_wrapper_absent": true,
+      "original_encoder_call_present": true,
+      "scope": "Preprocessing only; no GPU ISA or timing equivalence claim"
+    },
+    "current": {
+      "command": [
+        "/usr/bin/c++",
+        "-x",
+        "objective-c++",
+        "-E",
+        "-P",
+        "-DGARNET_METAL_ATTENTION_PREFIX=1",
+        "-DGARNET_METAL_BODY_SHAPE=1",
+        "-DGARNET_METAL_DENSE_PREFIX_CACHE=1",
+        "-DGARNET_METAL_LAZY_RESIDENT_DEFAULTS=1",
+        "-DGARNET_METAL_LINEAR_CHUNK_CONV=1",
+        "-DGARNET_METAL_LINEAR_CHUNK_DELTA=1",
+        "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1",
+        "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=1",
+        "-DGARNET_METAL_PRIMARY_BF16_BLOCKS=1",
+        "-DGARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY=1",
+        "-DGARNET_METAL_PRIMARY_ONLY_LAZY_DEFAULTS=1",
+        "-DGARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY=1",
+        "-DGARNET_METAL_PRIMARY_VECTOR_PREFILL=1",
+        "-DGARNET_METAL_QWEN35_4B_WIDE_PREFILL=1",
+        "-DGARNET_METAL_RESIDENT_KV_INPLACE=1",
+        "-DGARNET_METAL_WIDE_PRIMARY_STORAGE=1",
+        "-I/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-current/source/src/backends/metal",
+        "-I/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-current/source/third_party",
+        "-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
+        "-O3",
+        "-DNDEBUG",
+        "-std=gnu++17",
+        "-arch",
+        "arm64",
+        "-isysroot",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+        "-fPIC",
+        "-fobjc-arc",
+        "/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-current/source/src/backends/metal/metal_context.mm"
+      ],
+      "flags_sha256": "a4315efe21702ba7833cfbe6ca4e5328854a4d9c6c558c5ea8ddb5d384312d6d",
+      "preprocessed_source_sha256": "ccbc11b68132d22ef7567c9bb46f09bedd48a8277b468f79ecc4fdc2445ba964",
+      "projection_sha256": "34e00c0f7f75a223c187816f4402b99dd4a4ccfe5e806a267e4b99f88a974ad4",
+      "diagnostic_label_arguments_and_wrapper_absent": true,
+      "original_encoder_call_present": true,
+      "scope": "Preprocessing only; no GPU ISA or timing equivalence claim"
+    }
+  },
+  "legacy_reference_source": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/legacy_projection_test.cpp",
+  "legacy_reference_sha256": "c4a6518f8e028362dd773ac17c0eef8ef1848704c3800ea31ecee0aebcfdc19a",
+  "original_legacy_reference_source_exact": true
+}

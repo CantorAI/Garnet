@@ -1,0 +1,168 @@
+{
+  "utc": "2026-10-18T18:46:10.334342+00:00",
+  "initial_audit_terminal_session": 53022,
+  "initial_audit_terminal_exit_code": 1,
+  "initial_manifest_files": 572,
+  "initial_verifier": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws76.py",
+  "initial_verifier_sha256": "18691ad20a628e4ad0b64934c5f1f0af0c1f6699ae998664fe7ef24e7116eb05",
+  "revised_verifier": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws76_v2.py",
+  "revised_verifier_sha256": "568fdc19de7f6eaae96c7919428a4cc4600a7747ac278dc35c25111b45d926a9",
+  "reason": "Initial exporter omitted actual CORE-source dumps for initial current profiles; original recorded build files exist. Copy all21 actual current MAIN/prefill/CORE outputs. Reference README copies renamed .snapshot.txt to prevent duplicate experiment-index entries.",
+  "added_recorded_native_outputs": [
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-quiet/main_shader_program.metal",
+      "archive": "native/current-quiet/main_shader_program.metal",
+      "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+      "bytes": 63741
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-quiet/prefill_shader_program.metal",
+      "archive": "native/current-quiet/prefill_shader_program.metal",
+      "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+      "bytes": 21709
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-quiet/primary_core_shader_program.metal",
+      "archive": "native/current-quiet/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-trace/main_shader_program.metal",
+      "archive": "native/current-trace/main_shader_program.metal",
+      "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+      "bytes": 63741
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-trace/prefill_shader_program.metal",
+      "archive": "native/current-trace/prefill_shader_program.metal",
+      "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+      "bytes": 21709
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-trace/primary_core_shader_program.metal",
+      "archive": "native/current-trace/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-fault/main_shader_program.metal",
+      "archive": "native/current-fault/main_shader_program.metal",
+      "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+      "bytes": 63741
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-fault/prefill_shader_program.metal",
+      "archive": "native/current-fault/prefill_shader_program.metal",
+      "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+      "bytes": 21709
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-fault/primary_core_shader_program.metal",
+      "archive": "native/current-fault/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-raw/main_shader_program.metal",
+      "archive": "native/current-raw/main_shader_program.metal",
+      "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+      "bytes": 63741
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-raw/prefill_shader_program.metal",
+      "archive": "native/current-raw/prefill_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-raw/primary_core_shader_program.metal",
+      "archive": "native/current-raw/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-primary/main_shader_program.metal",
+      "archive": "native/current-primary/main_shader_program.metal",
+      "sha256": "2b29178d6b2f3ec30db757766dd1274845711eccf573e78497ee1f8828afdb81",
+      "bytes": 76642
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-primary/prefill_shader_program.metal",
+      "archive": "native/current-primary/prefill_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-primary/primary_core_shader_program.metal",
+      "archive": "native/current-primary/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-compat/main_shader_program.metal",
+      "archive": "native/current-compat/main_shader_program.metal",
+      "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+      "bytes": 63741
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-compat/prefill_shader_program.metal",
+      "archive": "native/current-compat/prefill_shader_program.metal",
+      "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+      "bytes": 21709
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-compat/primary_core_shader_program.metal",
+      "archive": "native/current-compat/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-compatfault/main_shader_program.metal",
+      "archive": "native/current-compatfault/main_shader_program.metal",
+      "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+      "bytes": 63741
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-compatfault/prefill_shader_program.metal",
+      "archive": "native/current-compatfault/prefill_shader_program.metal",
+      "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+      "bytes": 21709
+    },
+    {
+      "original": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-compatfault/primary_core_shader_program.metal",
+      "archive": "native/current-compatfault/primary_core_shader_program.metal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "renamed_reference_READMEs": {
+    "frozen-external/repository/results/20261016/worldsense-m5-decode-step-profile/README.md": "frozen-external/repository/results/20261016/worldsense-m5-decode-step-profile/README.md.snapshot.txt",
+    "frozen-external/repository/results/20261018/worldsense-m5-gpu-pass-profile/README.md": "frozen-external/repository/results/20261018/worldsense-m5-gpu-pass-profile/README.md.snapshot.txt",
+    "frozen-external/repository/results/20261018/worldsense-m5-primary-core-isolation/README.md": "frozen-external/repository/results/20261018/worldsense-m5-primary-core-isolation/README.md.snapshot.txt",
+    "frozen-external/repository/results/20261018/worldsense-m5-validated-text-worker/README.md": "frozen-external/repository/results/20261018/worldsense-m5-validated-text-worker/README.md.snapshot.txt"
+  },
+  "archiver_operations": [
+    {
+      "before": "  for name in ['primary_core_projection_words.bin','primary_core_projection_words.bin.summary.json']:copy(build/name,d/'native'/role/name)",
+      "after": "  for name in ['primary_core_projection_words.bin','primary_core_projection_words.bin.summary.json','main_shader_program.metal','prefill_shader_program.metal','primary_core_shader_program.metal']:copy(build/name,d/'native'/role/name)"
+    },
+    {
+      "before": "  target=d/'frozen-external/repository'/p.relative_to(repo);copy(p,target);bundled=str(target.relative_to(d));kind='archive-file';all_bundled[digest]=bundled",
+      "after": "  target=d/'frozen-external/repository'/p.relative_to(repo)\n  if target.name=='README.md':target=target.with_name('README.md.snapshot.txt')\n  copy(p,target);bundled=str(target.relative_to(d));kind='archive-file';all_bundled[digest]=bundled"
+    }
+  ],
+  "verifier_operations": [
+    {
+      "before": "actual=(d/'main'/('actual-'+role+'.'+kind+'.metal')).read_bytes();old=batch(",
+      "after": "actual=(d/'native'/role/({'main':'main_shader_program.metal','prefill':'prefill_shader_program.metal','core':'primary_core_shader_program.metal'}[kind])).read_bytes();old=batch("
+    },
+    {
+      "before": "sources={};reconstructions={}",
+      "after": "\nexport_repair=load(d/'export-repair/repair.json');initial=load(d/'export-repair/initial-file-manifest.json')\nassert export_repair['initial_audit_terminal_exit_code']==1 and export_repair['no_inference_or_timing_rerun']and export_repair['only_export_paths_and_missing_recorded_outputs_changed']\nassert 'actual-current-quiet.core.metal'in(d/'export-repair/first-canonical-audit-failure.log').read_text()\nfor path,value in initial.items():\n if path in ['work/archive_ws76.py','external-input-resolution.json','export-scope.json']:continue\n assert manifest[export_repair['renamed_reference_READMEs'].get(path,path)]==value\nold_resolution=load(d/'export-repair/initial-external-input-resolution.json');new_resolution=load(d/'external-input-resolution.json')\nfor key,value in old_resolution.items():\n expected=dict(value);expected['bundled']=export_repair['renamed_reference_READMEs'].get(value['bundled'],value['bundled']);assert new_resolution[key]==expected\nassert set(old_resolution)==set(new_resolution)\nfor row in export_repair['added_recorded_native_outputs']:assert sha(d/row['archive'])==row['sha256']and(d/row['archive']).stat().st_size==row['bytes']\nfirst=(d/'work/verify_archive_ws76.py').read_text();second=(d/'work/verify_archive_ws76_v2.py').read_text()\nfor operation in reversed(export_repair['verifier_operations']):assert second.count(operation['after'])==1;second=second.replace(operation['after'],operation['before'])\nassert second==first\ninitial_archive=(d/'export-repair/initial-archive_ws76.py').read_text();current_archive=(d/'work/archive_ws76.py').read_text()\nfor operation in reversed(export_repair['archiver_operations']):assert current_archive.count(operation['after'])==1;current_archive=current_archive.replace(operation['after'],operation['before'])\nassert current_archive==initial_archive\n\nsources={};reconstructions={}"
+    }
+  ],
+  "no_inference_or_timing_rerun": true,
+  "only_export_paths_and_missing_recorded_outputs_changed": true,
+  "all_initial_raw_calls_word_streams_clocks_model_data_numeric_gates_unchanged": true
+}

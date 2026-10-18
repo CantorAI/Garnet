@@ -1,0 +1,88 @@
+{
+  "utc": "2026-10-18T17:18:17.057402+00:00",
+  "published75": "530a4ff8cb696fb48f54e79c05b0666f4e3aff0e",
+  "previous_goal_turn": "progress: full75canonical561SHA/562files audit, original201pluscandidate200/rawhead proof, researchdocs publication and normalWS10 verification completed",
+  "jobs_active": false,
+  "inference_or_timing_run": false,
+  "source_mutation": false,
+  "changed_or_added_75_vs_WS10": [
+    "cmake/GarnetMetal.cmake",
+    "cmake/MetalWorldSense4BPrimary.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_32_contract.h",
+    "src/backends/metal/primary_block_codec.h",
+    "src/backends/metal/primary_block_shader.h",
+    "src/backends/metal/primary_isolation_shader.h",
+    "src/backends/metal/primary_vector_prefill_shader.h",
+    "src/backends/metal/primary_wide_vocab_policy.h",
+    "src/backends/metal/weight_residency_budget.h",
+    "src/backends/metal/wide_checkpoint_policy.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/inventory_test.cpp",
+    "test2026/metal/matrix_metadata_test.cpp",
+    "test2026/metal/memory_stats_test.mm",
+    "test2026/metal/primary_core_isolation_test.cpp",
+    "test2026/metal/primary_projection_test.cpp",
+    "test2026/metal/primary_storage_test.cpp",
+    "test2026/metal/raw_wide_vocab_test.cpp",
+    "test2026/metal/request_residency_test.cpp"
+  ],
+  "changed_count": 26,
+  "session_from_prepared_timestamp_through_encode_submit_wait_catch_byte_exact": true,
+  "matched_session_block_sha256": "fb9fe60b789b544ba2c1390686ceba3e62077b45e158d7638a66b86f38b5aea7",
+  "matched_session_block_bytes": 5665,
+  "scope": "SOURCE block only under corresponding compilation context, not preprocessed whole-object/operation-stream/ISA/runtime identity. Per graph EncodeResident and MetalContext branches remain to audit. Additional RetireResidentDefaults happens before prepared timestamp. Request-residency blocks compiled OFF in75ON and selectedWS10 profile; this is a source/record inference, not an isolated cost proof.",
+  "retained_phase_medians": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "decode_seconds": 1.2992829584982246,
+        "prefill_seconds": 1.3574849369906588,
+        "decode_interval": 1.2996144795033615,
+        "post_decode_residual": 0.0003315210051368922,
+        "decode_gpu_ms": 1260.5313749663765,
+        "prefill_gpu_ms": 1131.2113957974361
+      },
+      "Qwen3.5-4B": {
+        "decode_seconds": 7.164974895989872,
+        "prefill_seconds": 3.3757692290091654,
+        "decode_interval": 7.16527599998517,
+        "post_decode_residual": 0.00030110399529803544,
+        "decode_gpu_ms": 7084.465499952785,
+        "prefill_gpu_ms": 3166.9608333322685
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "decode_seconds": 1.2588191459944937,
+        "prefill_seconds": 1.6526312915084418,
+        "decode_interval": 1.3197707704821369,
+        "post_decode_residual": 0.017650187481194735,
+        "decode_gpu_ms": 1228.5874582157703,
+        "prefill_gpu_ms": 1321.2649791821605
+      },
+      "Qwen3.5-4B": {
+        "decode_seconds": 7.965675500003272,
+        "prefill_seconds": 3.6879555414780043,
+        "decode_interval": 7.967260541481664,
+        "post_decode_residual": 0.0008931869670050219,
+        "decode_gpu_ms": 7862.0047290751245,
+        "prefill_gpu_ms": 3416.6383541887626
+      }
+    }
+  },
+  "input_hashes": {
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/production-speed/posthoc-screen-phase-diagnostics.json": "9138a1ad1ec8befc89c095fcf9f3a0f4572c7a2d28aec5064f9d177a3b4a2e71",
+    "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source/src/backends/metal/decoder_session.cpp": "0be3e4a446a7a79c43772777f31aeaa34a067491ab0efb99420356735c17fae7",
+    "/Users/shawn/CantorAI/out/research/worldsense-raw-wide-vocab/source/src/backends/metal/decoder_session.cpp": "c28da0f9a418db2b5a1711ba547673e1f5070560f49276596b4d619de1bdd8fb",
+    "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source/runtime/metal_serving.py": "54ca4135f475ad5754b7d841f78ac83a6937d4645c28b8e1e4b5ec594f5eb9f3",
+    "/Users/shawn/CantorAI/out/research/worldsense-raw-wide-vocab/source/runtime/metal_serving.py": "0b62d535837239a102e21d8dee9e82bef2e76e972d612731e55944cf67e084d0"
+  },
+  "next": "Read Graph EncodeResident/Encode/MaterializeDefault and raw BF16 prepare/encode/Begin/SubmitAndWait source paths. Also inspect exact native memory_stats_json and post-loop lazy-stat getter aggregation, plus existing batched-profile/telemetry methods. Retained75text postdecode residual median17.650ms versus0.332ms control is descriptive, not a cost attribution; per-call intervals/spans overlap and medians are nonadditive. Review26/62actual capturedsource/profile scope before any distinct diagnostic/optimization;62alreadycoverspacked4B/rawtext.",
+  "retained_text_postdecode_residual_note": "Candidate text GPU span and innerdecode medians are lower in this pair while derivedrate is slightlylower; do not exclude post-loop accounting or call all75residuals under1ms. Those under1ms descriptions apply to earlier74, not all75calls. No isolated cause/speedup established."
+}

@@ -1,0 +1,24 @@
+{
+  "utc": "2026-10-18T18:51:37.173463+00:00",
+  "initial_audit_terminal_session": 58254,
+  "initial_audit_terminal_exit_code": 1,
+  "reason": "Original learned snapshot pins all actual target libraries and an explicit before/after-checked build-alias table, not every alias/libgarnet.dylib path as a separate external key. Auditor now resolves ONLY the four declared DLL aliases to existing frozen canonical target records.",
+  "setup_failure_preserved": "Initial repair matcher also matched new_resolution; assertion stopped before creating v3. Original driver/log retained; matcher anchored to complete assignment line.",
+  "verifier_operations": [
+    {
+      "before": "\nresolution=load(d/'external-input-resolution.json')",
+      "after": "\nraw_resolution=load(d/'external-input-resolution.json')\ndeclared_aliases=load(d/'main/learned-build-aliases.json')\nalias_prefix='/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-'\nexpected_aliases={alias_prefix+left:alias_prefix+right for left,right in [('off','raw'),('on','trace'),('compat56','compat'),('compat56-fault','compatfault')]}\nassert set(declared_aliases)==set(expected_aliases)\nfor name,info in declared_aliases.items():assert info['target']==info['resolved']==expected_aliases[name]\nclass CanonicalResolution(dict):\n def __missing__(self,key):\n  # The original snapshot pins actual target libraries plus an explicit alias\n  # table. An alias lookup returns that EXISTING target record without adding\n  # an alias key or claiming it was separately frozen as an external input.\n  for alias,info in declared_aliases.items():\n   if key==str(Path(alias)/'libgarnet.dylib'):\n    target=str(Path(info['target'])/'libgarnet.dylib');record=dict.__getitem__(self,target)\n    assert record['sha256']==info['library_sha256'];return record\n  raise KeyError(key)\nresolution=CanonicalResolution(raw_resolution)"
+    },
+    {
+      "before": "sources={};reconstructions={}",
+      "after": "\nidentity_repair=load(d/'identity-repair/repair.json');initial=load(d/'identity-repair/initial-file-manifest.json')\nassert identity_repair['initial_audit_terminal_exit_code']==1 and identity_repair['only_alias_resolution_to_existing_frozen_targets']and identity_repair['no_inference_or_timing_rerun']\nassert all(manifest[k]==v for k,v in initial.items())\nassert 'current-off/libgarnet.dylib'in(d/'identity-repair/second-canonical-audit-failure.log').read_text()\nold=(d/'work/verify_archive_ws76_v2.py').read_text();new=(d/'work/verify_archive_ws76_v3.py').read_text()\nfor operation in reversed(identity_repair['verifier_operations']):assert new.count(operation['after'])==1;new=new.replace(operation['after'],operation['before'])\nassert new==old\n\nsources={};reconstructions={}"
+    }
+  ],
+  "initial_verifier_sha256": "568fdc19de7f6eaae96c7919428a4cc4600a7747ac278dc35c25111b45d926a9",
+  "revised_verifier_sha256": "3657c941513e425a27f2c9785fddcb83f1b31df4caf8db74690bddab0165de46",
+  "only_alias_resolution_to_existing_frozen_targets": true,
+  "no_new_external_identity_added": true,
+  "no_original_archive_entry_changed": true,
+  "no_numeric_word_state_token_golden_metric_gate_change": true,
+  "no_inference_or_timing_rerun": true
+}
