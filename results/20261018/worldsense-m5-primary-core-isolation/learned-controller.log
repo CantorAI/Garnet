@@ -1,0 +1,40 @@
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+START corpus-GPU-bits.log
+PASS corpus-GPU-bits.log
+START core-library-corpus.log
+PASS core-library-corpus.log
+START direct-upload-corpus.log
+PASS direct-upload-corpus.log
+START trained-resident-controller.log
+PASS trained-resident-controller.log
+START trained-linear-off.log
+PASS trained-linear-off.log
+START trained-linear-on.log
+PASS trained-linear-on.log
+START trained-linear-fault.log
+PASS trained-linear-fault.log
+START trained-linear-compat56.log
+PASS trained-linear-compat56.log
+START vision-grid-off.log
+PASS vision-grid-off.log
+START vision-grid-on.log
+PASS vision-grid-on.log
+START vision-grid-compat56.log
+PASS vision-grid-compat56.log
+START api-state-guard-off.log
+PASS api-state-guard-off.log
+START api-state-guard-primary.log
+PASS api-state-guard-primary.log
+START api-state-guard-on.log
+PASS api-state-guard-on.log
+START api-state-guard-compat56.log
+PASS api-state-guard-compat56.log
+START request_session_guard.log
+PASS request_session_guard.log
+START request_full_session_guard.log
+PASS request_full_session_guard.log
+WS70 full learned controller PASS; independent audit required
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 17836
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

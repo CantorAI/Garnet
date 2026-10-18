@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T11:57:41.907370+00:00
+Generated UTC: 2026-10-18T13:07:39.197740+00:00
 
-Base HEAD at generation: `b600cf8de6e99e11d35f6727bc3c3cacfc1d5418`. Reports indexed: **260**.
+Base HEAD at generation: `4bcce222f7dfd7712fbceb548b87894ec8b64312`. Reports indexed: **261**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -250,6 +250,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261018/worldsense-m5-direct-interleaved-prefill](../../../results/20261018/worldsense-m5-direct-interleaved-prefill/README.md) | WS-M5-64 — Direct interleaved BF16 prefill: rejected |
 | [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |
 | [results/20261018/worldsense-m5-packed-request-residency](../../../results/20261018/worldsense-m5-packed-request-residency/README.md) | worldsense-m5-packed-request-residency |
+| [results/20261018/worldsense-m5-primary-core-isolation](../../../results/20261018/worldsense-m5-primary-core-isolation/README.md) | worldsense-m5-primary-core-isolation |
 | [results/20261018/worldsense-m5-primary-simd-metadata](../../../results/20261018/worldsense-m5-primary-simd-metadata/README.md) | worldsense-m5-primary-simd-metadata |
 | [results/20261018/worldsense-m5-sole-dual-decode](../../../results/20261018/worldsense-m5-sole-dual-decode/README.md) | worldsense-m5-sole-dual-decode |
 | [results/20261018/worldsense-m5-sole-interleaved-mlp](../../../results/20261018/worldsense-m5-sole-interleaved-mlp/README.md) | WS-M5-63 — Sole interleaved text MLP weights: rejected |

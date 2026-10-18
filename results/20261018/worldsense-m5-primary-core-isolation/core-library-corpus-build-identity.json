@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-core-isolation/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-core-isolation/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-core-isolation/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-core-isolation/core_library_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-core-isolation/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-core-isolation-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-core-isolation-on/core_library_corpus_test"
+  ],
+  "source_sha256": "912f0ef74ed20530c6740fa1850aeffef44869056063d0be065cef0920047a83",
+  "library_sha256": "f7ffe5055eb67e19cbda0c4c6f40817810ada37bec103bc9f9fc8ba8e9189d7e",
+  "executable_sha256": "39fb60abc013efd5d531f747d539cd264cf9b5dd4b2c1de3c81f05b35577634b"
+}

@@ -1,0 +1,80 @@
+{
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#ifdef GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY\n#include \"primary_isolation_shader.h\"",
+      "after": "#if defined(GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY) || defined(GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY)\n#include \"primary_isolation_shader.h\"",
+      "count": 1
+    },
+    {
+      "before": "vectorDecode{0},vectorHead{0};};",
+      "after": "vectorDecode{0},vectorHead{0},coreDecode{0},corePrefill{0},coreHead{0};};",
+      "count": 1
+    },
+    {
+      "before": "primaryCounters.vectorHead.load()};",
+      "after": "primaryCounters.vectorHead.load(),primaryCounters.coreDecode.load(),primaryCounters.corePrefill.load(),primaryCounters.coreHead.load()};",
+      "count": 1
+    },
+    {
+      "before": "    id<MTLLibrary> vectorPrefillLibrary=nil;",
+      "after": "    id<MTLLibrary> vectorPrefillLibrary=nil;\n#ifdef GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY\n    id<MTLLibrary> primaryCoreLibrary=nil;\n    std::string primaryCoreProgram;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "#ifndef GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY\n        source=[source stringByAppendingString:[NSString stringWithUTF8String:kPrimaryBlockShader]];",
+      "after": "#if !defined(GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY) && !defined(GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY)\n        source=[source stringByAppendingString:[NSString stringWithUTF8String:kPrimaryBlockShader]];",
+      "count": 1
+    },
+    {
+      "before": "        id<MTLLibrary> primaryLibrary=library;",
+      "after": "        id<MTLLibrary> primaryLibrary=library;\n#ifdef GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY\n        NSString* coreSource=[[NSString stringWithUTF8String:kPrimaryIsolatedPreamble] stringByAppendingString:[NSString stringWithUTF8String:kPrimaryBlockShader]];\n        auto coreLibrary=[impl_->device newLibraryWithSource:coreSource options:compileOptions error:&error];\n        if(!coreLibrary)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));\n        impl_->kernels->primaryCoreLibrary=coreLibrary;\n        impl_->kernels->primaryCoreProgram=coreSource.UTF8String;\n        primaryLibrary=coreLibrary;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "#ifdef GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY\n        auto sourceLibrary=primary?impl_->kernels->vectorPrefillLibrary:impl_->kernels->library;\n        auto function=[sourceLibrary newFunctionWithName:functionName constantValues:constants error:&error];\n#else",
+      "after": "#ifdef GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY\n        auto sourceLibrary=primary?impl_->kernels->vectorPrefillLibrary:impl_->kernels->library;\n        auto function=[sourceLibrary newFunctionWithName:functionName constantValues:constants error:&error];\n#elif defined(GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY)\n        auto sourceLibrary=primary?impl_->kernels->primaryCoreLibrary:impl_->kernels->library;\n        auto function=[sourceLibrary newFunctionWithName:functionName constantValues:constants error:&error];\n#else",
+      "count": 1
+    },
+    {
+      "before": "        if(primary){[encoder setBuffer:w->primaryMetadata offset:0 atIndex:4];if(a.rows>2)primaryCounters.prefill.fetch_add(1);else if(o.columns>=100000){primaryCounters.head.fetch_add(1);primaryCounters.vectorHead.fetch_add(1);}else{primaryCounters.decode.fetch_add(1);primaryCounters.vectorDecode.fetch_add(1);}}",
+      "after": "        if(primary){[encoder setBuffer:w->primaryMetadata offset:0 atIndex:4];if(a.rows>2)primaryCounters.prefill.fetch_add(1);else if(o.columns>=100000){primaryCounters.head.fetch_add(1);primaryCounters.vectorHead.fetch_add(1);}else{primaryCounters.decode.fetch_add(1);primaryCounters.vectorDecode.fetch_add(1);}}\n#ifdef GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY\n        if(primary){if(a.rows>2)primaryCounters.corePrefill.fetch_add(1);else if(o.columns>=100000)primaryCounters.coreHead.fetch_add(1);else primaryCounters.coreDecode.fetch_add(1);}\n#endif",
+      "count": 1
+    },
+    {
+      "before": " return {impl_->kernels->mainProgram,impl_->kernels->prefillProgram};\n}\n}",
+      "after": " return {impl_->kernels->mainProgram,impl_->kernels->prefillProgram};\n}\nstd::string MetalContext::PrimaryCoreProgramSource() const {\n if(!impl_->kernels)throw std::logic_error(\"Core program source requires ready kernels\");\n#ifdef GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY\n return impl_->kernels->primaryCoreProgram;\n#else\n return {};\n#endif\n}\n}",
+      "count": 1
+    }
+  ],
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "vectorDecodeEncoded=0,vectorHeadEncoded=0;",
+      "after": "vectorDecodeEncoded=0,vectorHeadEncoded=0,coreLibraryDecodeEncoded=0,coreLibraryPrefillEncoded=0,coreLibraryHeadEncoded=0;",
+      "count": 1
+    },
+    {
+      "before": "    std::vector<std::string> ShaderProgramSources() const;",
+      "after": "    std::vector<std::string> ShaderProgramSources() const;\n    std::string PrimaryCoreProgramSource() const;",
+      "count": 1
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "{\"vector_head_encoded\",p.vectorHeadEncoded}}.dump();",
+      "after": "{\"vector_head_encoded\",p.vectorHeadEncoded},{\"core_library_decode_encoded\",p.coreLibraryDecodeEncoded},{\"core_library_prefill_encoded\",p.coreLibraryPrefillEncoded},{\"core_library_head_encoded\",p.coreLibraryHeadEncoded}}.dump();",
+      "count": 1
+    },
+    {
+      "before": "        info+=\"; primary_full_isolated_library\";\n#endif",
+      "after": "        info+=\"; primary_full_isolated_library\";\n#endif\n#ifdef GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY\n        info+=\"; primary_core_isolated_library\";\n#endif",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY \"Isolate unchanged ordinary primary kernels from raw MAIN without vector prefill\" OFF)\nif(GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY)\n if(NOT GARNET_METAL_PRIMARY_BF16_BLOCKS OR NOT GARNET_METAL_WIDE_PRIMARY_STORAGE OR NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS OR NOT GARNET_METAL_BODY_SHAPE)\n  message(FATAL_ERROR \"Primary core isolation requires primary/wide/lazy/body-shape\")\n endif()\n if(GARNET_METAL_PRIMARY_VECTOR_PREFILL OR GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY OR GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY OR GARNET_METAL_REQUEST_SCOPE_WEIGHT_RESIDENCY)\n  message(FATAL_ERROR \"Primary core isolation excludes vector/full/prefill isolation and raw request residency\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY=1)\nendif()\nadd_executable(garnet_primary_core_isolation_test test2026/metal/primary_core_isolation_test.cpp)\ntarget_link_libraries(garnet_primary_core_isolation_test PRIVATE garnet_metal)\ntarget_include_directories(garnet_primary_core_isolation_test PRIVATE third_party)\nadd_test(NAME metal_primary_core_isolation_reference COMMAND garnet_primary_core_isolation_test \"${CMAKE_CURRENT_BINARY_DIR}/primary_core_projection_words.bin\")\n",
+      "append": true
+    }
+  ]
+}
