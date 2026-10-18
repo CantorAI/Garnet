@@ -1,0 +1,48 @@
+{
+  "OFF_main_exact54": true,
+  "other_main_exact54_after_removing_one_exact_new_fragment": true,
+  "all_four_prefill_programs_exact54": true,
+  "programs": {
+    "off": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4"
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "primary": {
+      "main": {
+        "bytes": 78624,
+        "sha256": "67f6dec227b5760f0aa9b029c62a65d889f90be5d0caa9f93f58bb6d90e807ef"
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "on": {
+      "main": {
+        "bytes": 65723,
+        "sha256": "ea8d10b482056989ce8c3a2246807e4ffaed000f76a26f176eb80772affdf40e"
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f"
+      }
+    },
+    "fault": {
+      "main": {
+        "bytes": 65723,
+        "sha256": "ea8d10b482056989ce8c3a2246807e4ffaed000f76a26f176eb80772affdf40e"
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f"
+      }
+    }
+  },
+  "scope": "Actual constructor-produced MSL source. Not GPU ISA/register allocation identity or throughput."
+}

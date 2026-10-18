@@ -1,0 +1,22 @@
+loading initial cache file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-dense-prefetch/build-profile/MetalWorldSense4BPrefix.cmake
+-- The CXX compiler identification is AppleClang 21.0.0.21000334
+-- The OBJCXX compiler identification is AppleClang 21.0.0.21000334
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting OBJCXX compiler ABI info
+-- Detecting OBJCXX compiler ABI info - done
+-- Check for working OBJCXX compiler: /usr/bin/c++ - skipped
+-- Found JPEG: /opt/homebrew/lib/libjpeg.dylib (found version "80")
+-- Found ZLIB: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libz.tbd (found version "1.2.12")
+-- Found PNG: /opt/homebrew/lib/libpng.dylib (found version "1.6.59")
+-- Configuring incomplete, errors occurred!
+CMake Error at cmake/GarnetMetal.cmake:392 (message):
+  Wide primary storage profile requires primary weights and global lazy
+  defaults
+Call Stack (most recent call first):
+  CMakeLists.txt:15 (include)
+
+

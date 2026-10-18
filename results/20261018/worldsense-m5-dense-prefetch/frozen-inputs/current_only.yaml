@@ -1,0 +1,40 @@
+skills:
+  - enabled: true
+    event:
+      enabled: true
+      evaluation: current
+      filter_outputs_event: false
+      identity:
+        episode: recording-run-4b-1
+        family: car_presence
+        scope: test-site:macbook/car-fixture
+      verify_with_vlm: true
+    filter:
+      interval_seconds: 90
+      mode: interval
+    id: current_vehicle_shared_episode
+    name: current vehicle shared episode
+    search:
+      enabled: true
+      focus: Describe visible subjects and the setting.
+    vlm:
+      output_language: en
+      prompt: A passenger vehicle is visible in this current image.
+  - enabled: true
+    event:
+      enabled: true
+      evaluation: current
+      filter_outputs_event: false
+      verify_with_vlm: true
+    filter:
+      interval_seconds: 90
+      mode: interval
+    id: current_absent_elephant
+    name: current absent elephant
+    search:
+      enabled: true
+      focus: Describe visible subjects and the setting.
+    vlm:
+      output_language: en
+      prompt: An elephant is visible in this current image.
+version: 2

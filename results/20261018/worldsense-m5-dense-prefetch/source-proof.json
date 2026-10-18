@@ -1,0 +1,70 @@
+{
+  "utc": "2026-10-18T02:25:58.559290+00:00",
+  "original_shader_literals_body_and_tests_unchanged": true,
+  "raw_shader_literal_blocks": 3,
+  "source_files": 1720,
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/dense_prefetch_shader.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/dense_prefetch_test.cpp"
+  ],
+  "new_MSL_per_output_product_accumulation_and_SIMD_order_inverse_pass": true,
+  "new_lookahead_bounds_and_target_admission_source_review_pass": true,
+  "original_numeric_bounds_and_93shape186output_scope_retained": true,
+  "ten_method_flags_four_roles": {
+    "off": {
+      "PRIMARY_BF16_BLOCKS": "OFF",
+      "WIDE_PRIMARY_STORAGE": "OFF",
+      "LAZY_RESIDENT_DEFAULTS": "OFF",
+      "DENSE_PREFETCH": "OFF",
+      "PRIMARY_VECTOR_PREFILL": "OFF",
+      "PRIMARY_PREFILL_ISOLATED_LIBRARY": "OFF",
+      "DIRECT_FLOAT_WEIGHT_UPLOAD": "OFF",
+      "PRIMARY_VECTOR_PREFILL_K32_ONLY": "OFF",
+      "CACHED_MATRIX_METADATA": "OFF",
+      "PRIMARY_FULL_ISOLATED_LIBRARY": "OFF"
+    },
+    "primary": {
+      "PRIMARY_BF16_BLOCKS": "ON",
+      "WIDE_PRIMARY_STORAGE": "ON",
+      "LAZY_RESIDENT_DEFAULTS": "ON",
+      "DENSE_PREFETCH": "ON",
+      "PRIMARY_VECTOR_PREFILL": "OFF",
+      "PRIMARY_PREFILL_ISOLATED_LIBRARY": "OFF",
+      "DIRECT_FLOAT_WEIGHT_UPLOAD": "OFF",
+      "PRIMARY_VECTOR_PREFILL_K32_ONLY": "OFF",
+      "CACHED_MATRIX_METADATA": "OFF",
+      "PRIMARY_FULL_ISOLATED_LIBRARY": "OFF"
+    },
+    "on": {
+      "PRIMARY_BF16_BLOCKS": "ON",
+      "WIDE_PRIMARY_STORAGE": "ON",
+      "LAZY_RESIDENT_DEFAULTS": "ON",
+      "DENSE_PREFETCH": "ON",
+      "PRIMARY_VECTOR_PREFILL": "ON",
+      "PRIMARY_PREFILL_ISOLATED_LIBRARY": "ON",
+      "DIRECT_FLOAT_WEIGHT_UPLOAD": "ON",
+      "PRIMARY_VECTOR_PREFILL_K32_ONLY": "ON",
+      "CACHED_MATRIX_METADATA": "ON",
+      "PRIMARY_FULL_ISOLATED_LIBRARY": "ON"
+    },
+    "fault": {
+      "PRIMARY_BF16_BLOCKS": "ON",
+      "WIDE_PRIMARY_STORAGE": "ON",
+      "LAZY_RESIDENT_DEFAULTS": "ON",
+      "DENSE_PREFETCH": "ON",
+      "PRIMARY_VECTOR_PREFILL": "ON",
+      "PRIMARY_PREFILL_ISOLATED_LIBRARY": "ON",
+      "DIRECT_FLOAT_WEIGHT_UPLOAD": "ON",
+      "PRIMARY_VECTOR_PREFILL_K32_ONLY": "ON",
+      "CACHED_MATRIX_METADATA": "ON",
+      "PRIMARY_FULL_ISOLATED_LIBRARY": "ON"
+    }
+  },
+  "CUDA_xModel_graph_session_and_all_other_source_exact54": true,
+  "no_GPU_or_performance_claim": true
+}

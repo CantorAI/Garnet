@@ -1,0 +1,16 @@
+{
+  "stage_calls": {
+    "resource": 8,
+    "production-speed": 20,
+    "functional-correctness-only": 4
+  },
+  "returned_model_calls": 32,
+  "native_requests": 16,
+  "worker_attempts": 5,
+  "scope": "Every returned WorldSense frame/query model call, first/warm/failure, once. The candidate-only functional cohort is retained separately and ineligible for speed. Native correctness calls remain raw JSON, not performance samples.",
+  "decode": "(generated-1)/(total-TTFT), includes host/stop/possible extraEOS/snapshot costs, not pureGPU.",
+  "memory": "Single native Cantor process post-decode snapshots, not peaks/freeRAM/unique physical residency or UI/server total. Actual process PID is parsed from the cohort launchd snapshot. LegacyWS10 missing memory stays unavailable, never zero. No extra native text child/IPC gateway in60.",
+  "parent_wall": "One native Skill request row only; do not sum parent wall across model phases.",
+  "initialization": "First request preserved separately; old ready API lacks separate worker/model-load decomposition. No hardware-cold claim.",
+  "confirmation": "Resource/screen exports are not independent confirmation or proof of isolated mechanism causality."
+}

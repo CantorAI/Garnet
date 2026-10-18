@@ -1,0 +1,183 @@
+{
+  "wide-scope-proof.json": {
+    "original_sha256": "0a68a067ba20f8c86f4d1d66bcc2f407d3485ada032a108d2d2f583351db435f",
+    "scope": "Immutable WS54 source proof. Wide-admission and loader bodies are byte-identical; new dense decode source/scope and fresh native/full model execution separately proved.",
+    "original_proof": {
+      "wide_admission_scope_verified": true,
+      "full_context_recovered_by_only_library_composition_and_lookup_inverse": true,
+      "minimal_BF16Params_and_six_function_constants_exact": true,
+      "all_other_source_including_tests_shaders_codec_graph_session_Model_wrapper_CUDA_exact_WS53": true,
+      "same_existing_library_members": true,
+      "dynamic_primary_specialization_uses_secondary_raw_uses_main": true,
+      "source_files": 1718,
+      "source_delta_from_WS53": 4,
+      "canonical_overlays": 10,
+      "scope": "Source identity/route proof only; full native/model/actual program and WorldSense correctness/performance remain required."
+    }
+  },
+  "independent-direct-upload-proof.json": {
+    "original_sha256": "731b21557a22206c6b6e50505e8681429cfe93c99972d0523f5d34cd678e6b13",
+    "scope": "Immutable WS54 source proof. Wide-admission and loader bodies are byte-identical; new dense decode source/scope and fresh native/full model execution separately proved.",
+    "original_proof": {
+      "entire_compiled_graph_and_loader_exact_WS53": true,
+      "raw_and_storage_control_programs_byte_exact_WS53": true,
+      "candidate_MAIN_byte_exact_WS53_raw": true,
+      "all_primary_kernel_bodies_and_prefill_fragment_unchanged": true,
+      "dynamic_primary_specialization_uses_secondary_raw_uses_main": true,
+      "CPU_getter_outside_conversion_loops": true,
+      "host_K32_ONLY_retains_original_K64_kernel": true,
+      "direct_native_all65536_patterns_and_bounds_lifetime_pass": true,
+      "scope": "Source/actual library composition/native correctness only; no performance claim.",
+      "all546_learned_vision_norm_depthwise_patch_candidates_FP32_words_exact": true,
+      "direct_learned_words": 334609152
+    }
+  },
+  "cpu-loop-proof.json": {
+    "original_sha256": "d37a094e1612157bd9b40c1a5a4eacb556134d7b0cad75c1bdd9fc93bf8d4def",
+    "scope": "Immutable WS54 source proof. Wide-admission and loader bodies are byte-identical; new dense decode source/scope and fresh native/full model execution separately proved.",
+    "original_proof": {
+      "object_sha256": "1e373a14a369518169f3cacab28be44ce57fe4459ac953cc89e82d1b2a08ca1a",
+      "disassembly_command": [
+        "xcrun",
+        "llvm-objdump",
+        "--disassemble",
+        "--demangle",
+        "--no-show-raw-insn",
+        "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-isolated-primary-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+      ],
+      "relocation_command": [
+        "xcrun",
+        "llvm-objdump",
+        "--reloc",
+        "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-isolated-primary-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+      ],
+      "rowBytes_calls_in_function": 1,
+      "rowBytes_call_outside_all_backward_branch_intervals": true,
+      "rowBytes_call_address": 24008,
+      "backward_branch_intervals": [
+        {
+          "start": 24040,
+          "end": 24072
+        },
+        {
+          "start": 24040,
+          "end": 24092
+        },
+        {
+          "start": 24040,
+          "end": 24108
+        },
+        {
+          "start": 24188,
+          "end": 24220
+        },
+        {
+          "start": 24188,
+          "end": 24240
+        },
+        {
+          "start": 24188,
+          "end": 24260
+        },
+        {
+          "start": 24188,
+          "end": 24280
+        },
+        {
+          "start": 24188,
+          "end": 24300
+        },
+        {
+          "start": 24188,
+          "end": 24320
+        },
+        {
+          "start": 24188,
+          "end": 24336
+        },
+        {
+          "start": 24356,
+          "end": 24372
+        },
+        {
+          "start": 24344,
+          "end": 24392
+        },
+        {
+          "start": 24396,
+          "end": 24512
+        },
+        {
+          "start": 24528,
+          "end": 24592
+        },
+        {
+          "start": 24480,
+          "end": 24600
+        },
+        {
+          "start": 24624,
+          "end": 24640
+        },
+        {
+          "start": 24480,
+          "end": 24652
+        },
+        {
+          "start": 24668,
+          "end": 24684
+        },
+        {
+          "start": 24480,
+          "end": 24688
+        },
+        {
+          "start": 24864,
+          "end": 24880
+        },
+        {
+          "start": 24712,
+          "end": 24900
+        },
+        {
+          "start": 24396,
+          "end": 24904
+        }
+      ],
+      "branch_families_checked": [
+        "b",
+        "b.cond",
+        "cbz",
+        "cbnz",
+        "tbz",
+        "tbnz"
+      ],
+      "vector_shift_instructions": [
+        "    5e90:      \tshll.4s\tv0, v0, #16",
+        "    5ea4:      \tshll.4s\tv0, v0, #16",
+        "    5eb8:      \tshll.4s\tv0, v0, #16",
+        "    5ecc:      \tshll.4s\tv0, v0, #16",
+        "    5ee0:      \tshll.4s\tv0, v0, #16",
+        "    5ef4:      \tshll.4s\tv0, v0, #16",
+        "    5f08:      \tshll.4s\tv0, v0, #16",
+        "    5fd8:      \tshll.4s\tv4, v0, #16",
+        "    5fdc:      \tshll2.4s\tv0, v0, #16",
+        "    5fe0:      \tshll.4s\tv5, v1, #16",
+        "    5fe4:      \tshll2.4s\tv1, v1, #16",
+        "    5fe8:      \tshll.4s\tv6, v2, #16",
+        "    5fec:      \tshll2.4s\tv2, v2, #16",
+        "    5ff0:      \tshll.4s\tv7, v3, #16",
+        "    5ff4:      \tshll2.4s\tv3, v3, #16",
+        "    6034:      \tshll.4s\tv0, v0, #16",
+        "    6094:      \tshll.4s\tv0, v0, #16",
+        "    60a8:      \tshll.4s\tv0, v0, #16",
+        "    60bc:      \tshll.4s\tv0, v0, #16",
+        "    60d0:      \tshll.4s\tv0, v0, #16",
+        "    60e4:      \tshll.4s\tv0, v0, #16",
+        "    60f8:      \tshll.4s\tv0, v0, #16",
+        "    610c:      \tshll.4s\tv0, v0, #16"
+      ],
+      "scope": "Existing built CPU object, not a timing/performance claim. One getter remains before conversion loops. Native bit tests and WorldSense metrics required."
+    }
+  }
+}

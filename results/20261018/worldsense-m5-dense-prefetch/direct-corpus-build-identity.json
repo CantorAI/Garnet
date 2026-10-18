@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-dense-prefetch/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-dense-prefetch/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-dense-prefetch/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-dense-prefetch/direct_float_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-dense-prefetch/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-dense-prefetch-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-dense-prefetch-on/direct_float_corpus_test"
+  ],
+  "source_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+  "library_sha256": "d9938fa628956a22aff51f3f6e1bb7445403d89c7d365cbfb10a33f168339bc1",
+  "executable_sha256": "11633ff39a767ffbf039b93789eceb982b905109e6b627bec2466d5631bb5f90"
+}

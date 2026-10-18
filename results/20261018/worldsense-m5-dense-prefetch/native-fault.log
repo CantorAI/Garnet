@@ -1,0 +1,21 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-dense-prefetch-fault
+    Start 1: metal_inventory_reference
+1/8 Test #1: metal_inventory_reference ............   Passed    0.03 sec
+    Start 2: metal_memory_stats_reference
+2/8 Test #2: metal_memory_stats_reference .........   Passed    0.03 sec
+    Start 3: metal_prefix_copy_reference
+3/8 Test #3: metal_prefix_copy_reference ..........   Passed    0.05 sec
+    Start 4: metal_mps_matmul_reference
+4/8 Test #4: metal_mps_matmul_reference ...........   Passed    0.62 sec
+    Start 5: metal_matrix_metadata_reference
+5/8 Test #5: metal_matrix_metadata_reference ......   Passed    0.03 sec
+    Start 6: metal_primary_storage_reference
+6/8 Test #6: metal_primary_storage_reference ......   Passed    0.07 sec
+    Start 7: metal_primary_projection_reference
+7/8 Test #7: metal_primary_projection_reference ...   Passed    1.48 sec
+    Start 8: metal_dense_prefetch_reference
+8/8 Test #8: metal_dense_prefetch_reference .......   Passed    1.28 sec
+
+100% tests passed out of 8
+
+Total Test time (real) =   3.61 sec

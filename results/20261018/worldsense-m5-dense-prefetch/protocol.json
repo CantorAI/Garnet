@@ -1,0 +1,57 @@
+{
+  "experiment": "WS-M5-60",
+  "declared_utc": "2026-10-18T02:21:45.529160+00:00",
+  "design_sha256": "726c751d270ebed28ecf21a168375cb8c31c94de81ad6096ccace8517b8b06fc",
+  "canonical_base": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "seed": "Immutable WS54,59a882e9765d4c1f61cd6bc117aa620dd06abd16",
+  "hypothesis": "One-iteration native raw dense load lookahead, original per-output FP32 arithmetic/reduction order and128thread geometry",
+  "new_flag": "GARNET_METAL_DENSE_PREFETCH",
+  "matched_contrast_flags": [
+    "GARNET_METAL_PRIMARY_VECTOR_PREFILL",
+    "GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY",
+    "GARNET_METAL_DIRECT_FLOAT_WEIGHT_UPLOAD",
+    "GARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY",
+    "GARNET_METAL_CACHED_MATRIX_METADATA",
+    "GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY"
+  ],
+  "gates": {
+    "resource_calls": 8,
+    "minimum_Metal_reduction": 0.1,
+    "minimum_sampled_process_footprint_reduction": 0.05,
+    "matched_primary_speed_calls": 20,
+    "matched_primary_minimum_VLM_TTFT_reduction": 0.05,
+    "matched_primary_maximum_memory_increase": 0.02,
+    "raw_control_speed_calls": 20,
+    "actual_WS10_speed_calls": 20,
+    "maximum_each_model_TTFT_total_Skillwall_regression": 0.02,
+    "minimum_derived_decode_gain": -0.02,
+    "full_confirmation_calls": 48,
+    "both_pairs_independently_pass": true,
+    "canonical_repeat_complete_correctness": true,
+    "actual_production_calls": 48,
+    "normal_app_smoke_required": true
+  },
+  "no_unchanged_retry_after_valid_failure": true,
+  "matched_scope": "Shared201packed/245rawpartition andglobalretirement; differentcache/prefill/directupload",
+  "stage_order": [
+    "full_native_correctness",
+    "actualWorldSense_functional_correctness_only",
+    "resource",
+    "production-speed",
+    "primary-speed",
+    "speed",
+    "confirmation",
+    "canonicalintegration_reproof_production48_normalapp"
+  ],
+  "proof_expected": {
+    "packed_matrices": 201,
+    "raw_matrices": 245,
+    "each_packed_GPU_reader_words": 4200857600,
+    "raw_host_words": 1724383232,
+    "retained_weight_bytes": 9850930176
+  },
+  "no_Garnet_source_copy_or_edit_yet": true,
+  "no_model_or_performance_measurement_yet": true,
+  "no_camera": true,
+  "no_external_CPython_inference": true
+}

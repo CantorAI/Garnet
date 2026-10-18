@@ -1,0 +1,6 @@
+{
+  "stage": "CPU-only independent archive audit",
+  "exception": "KeyError: call",
+  "reason": "Bundled original native oracle stores generated_token_ids at top level, not under call. Native model guard already uses the correct original schema.",
+  "no_new_inference_or_performance_retry": true
+}
