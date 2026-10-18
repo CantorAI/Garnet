@@ -1,0 +1,2248 @@
+{
+  "utc": "2026-10-18T04:54:50.857411+00:00",
+  "windows": [
+    {
+      "request": 1,
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "decode_step": 4,
+      "custom_passes": 749,
+      "sum_interval_duration_raw": 62916925,
+      "union_interval_duration_raw": 62546342,
+      "overlap_raw": 370583,
+      "span_between_first_last_sample_raw": 66098667,
+      "gap_within_sample_span_raw": 3552325,
+      "original_command_gpu_span_ms": 66.09870833926834,
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 64,
+          "duration_raw": 20434123,
+          "fraction_of_sampled_interval_duration_sum": 0.3247794293824754
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 32,
+          "duration_raw": 10062126,
+          "fraction_of_sampled_interval_duration_sum": 0.15992717380895521
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 32,
+          "duration_raw": 9051920,
+          "fraction_of_sampled_interval_duration_sum": 0.14387098543039095
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 1,
+          "duration_raw": 7645291,
+          "fraction_of_sampled_interval_duration_sum": 0.12151406000849532
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 32,
+          "duration_raw": 4883086,
+          "fraction_of_sampled_interval_duration_sum": 0.07761164424357993
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 24,
+          "duration_raw": 3489334,
+          "fraction_of_sampled_interval_duration_sum": 0.05545938553099981
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 8,
+          "duration_raw": 1644042,
+          "fraction_of_sampled_interval_duration_sum": 0.026130361583945813
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 16,
+          "duration_raw": 930249,
+          "fraction_of_sampled_interval_duration_sum": 0.014785353861460966
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 8,
+          "duration_raw": 836834,
+          "fraction_of_sampled_interval_duration_sum": 0.013300618235872145
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 24,
+          "duration_raw": 802122,
+          "fraction_of_sampled_interval_duration_sum": 0.012748906593893456
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 65,
+          "duration_raw": 620169,
+          "fraction_of_sampled_interval_duration_sum": 0.009856950256230736
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 48,
+          "duration_raw": 409869,
+          "fraction_of_sampled_interval_duration_sum": 0.006514447424123159
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 64,
+          "duration_raw": 378088,
+          "fraction_of_sampled_interval_duration_sum": 0.0060093210213309056
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 24,
+          "duration_raw": 368544,
+          "fraction_of_sampled_interval_duration_sum": 0.005857628928940822
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 88,
+          "duration_raw": 238663,
+          "fraction_of_sampled_interval_duration_sum": 0.003793303630144035
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 217875,
+          "fraction_of_sampled_interval_duration_sum": 0.003462899688756245
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 24,
+          "duration_raw": 164376,
+          "fraction_of_sampled_interval_duration_sum": 0.0026125879483143845
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 24,
+          "duration_raw": 148875,
+          "fraction_of_sampled_interval_duration_sum": 0.002366215449976298
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 32,
+          "duration_raw": 100213,
+          "fraction_of_sampled_interval_duration_sum": 0.0015927828640703594
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 24,
+          "duration_raw": 98791,
+          "fraction_of_sampled_interval_duration_sum": 0.0015701816323668075
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 32,
+          "duration_raw": 92666,
+          "fraction_of_sampled_interval_duration_sum": 0.0014728310387069933
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 48,
+          "duration_raw": 90254,
+          "fraction_of_sampled_interval_duration_sum": 0.0014344947722731204
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 8,
+          "duration_raw": 75708,
+          "fraction_of_sampled_interval_duration_sum": 0.0012033010195587276
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 16,
+          "duration_raw": 68748,
+          "fraction_of_sampled_interval_duration_sum": 0.0010926789572122287
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 8,
+          "duration_raw": 60542,
+          "fraction_of_sampled_interval_duration_sum": 0.0009622530026697903
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 2,
+          "duration_raw": 4417,
+          "fraction_of_sampled_interval_duration_sum": 7.020368525639166e-05
+        }
+      ]
+    },
+    {
+      "request": 1,
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "decode_step": 16,
+      "custom_passes": 749,
+      "sum_interval_duration_raw": 59835467,
+      "union_interval_duration_raw": 59429006,
+      "overlap_raw": 406461,
+      "span_between_first_last_sample_raw": 62170625,
+      "gap_within_sample_span_raw": 2741619,
+      "original_command_gpu_span_ms": 62.170624994905666,
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 64,
+          "duration_raw": 18887747,
+          "fraction_of_sampled_interval_duration_sum": 0.3156613952724728
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 32,
+          "duration_raw": 9654000,
+          "fraction_of_sampled_interval_duration_sum": 0.1613424359168117
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 32,
+          "duration_raw": 8465956,
+          "fraction_of_sampled_interval_duration_sum": 0.14148725537648096
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 1,
+          "duration_raw": 8042167,
+          "fraction_of_sampled_interval_duration_sum": 0.1344046834296455
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 32,
+          "duration_raw": 4499458,
+          "fraction_of_sampled_interval_duration_sum": 0.07519717360942466
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 24,
+          "duration_raw": 3377457,
+          "fraction_of_sampled_interval_duration_sum": 0.056445736439225916
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 8,
+          "duration_raw": 1577207,
+          "fraction_of_sampled_interval_duration_sum": 0.026359065602345848
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 16,
+          "duration_raw": 848585,
+          "fraction_of_sampled_interval_duration_sum": 0.014181973377094224
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 8,
+          "duration_raw": 812249,
+          "fraction_of_sampled_interval_duration_sum": 0.01357470812419664
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 24,
+          "duration_raw": 773169,
+          "fraction_of_sampled_interval_duration_sum": 0.012921583782407849
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 65,
+          "duration_raw": 573461,
+          "fraction_of_sampled_interval_duration_sum": 0.009583964640904365
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 48,
+          "duration_raw": 446163,
+          "fraction_of_sampled_interval_duration_sum": 0.007456497331256728
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 24,
+          "duration_raw": 413333,
+          "fraction_of_sampled_interval_duration_sum": 0.006907826089165478
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 88,
+          "duration_raw": 218418,
+          "fraction_of_sampled_interval_duration_sum": 0.0036503099407580457
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 218167,
+          "fraction_of_sampled_interval_duration_sum": 0.0036461151042741923
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 64,
+          "duration_raw": 177589,
+          "fraction_of_sampled_interval_duration_sum": 0.0029679554435498934
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 24,
+          "duration_raw": 161456,
+          "fraction_of_sampled_interval_duration_sum": 0.0026983327463626213
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 24,
+          "duration_raw": 141543,
+          "fraction_of_sampled_interval_duration_sum": 0.0023655368144782757
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 24,
+          "duration_raw": 96960,
+          "fraction_of_sampled_interval_duration_sum": 0.0016204436074677916
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 32,
+          "duration_raw": 94292,
+          "fraction_of_sampled_interval_duration_sum": 0.0015758546682689049
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 32,
+          "duration_raw": 88296,
+          "fraction_of_sampled_interval_duration_sum": 0.0014756465425430707
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 48,
+          "duration_raw": 87585,
+          "fraction_of_sampled_interval_duration_sum": 0.0014637639579214783
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 16,
+          "duration_raw": 61332,
+          "fraction_of_sampled_interval_duration_sum": 0.0010250108017039459
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 8,
+          "duration_raw": 60001,
+          "fraction_of_sampled_interval_duration_sum": 0.0010027664695923574
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 8,
+          "duration_raw": 54543,
+          "fraction_of_sampled_interval_duration_sum": 0.0009115496666884876
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 2,
+          "duration_raw": 4333,
+          "fraction_of_sampled_interval_duration_sum": 7.24152449583121e-05
+        }
+      ]
+    },
+    {
+      "request": 1,
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "decode_step": 28,
+      "custom_passes": 749,
+      "sum_interval_duration_raw": 59429939,
+      "union_interval_duration_raw": 59041771,
+      "overlap_raw": 388168,
+      "span_between_first_last_sample_raw": 62543042,
+      "gap_within_sample_span_raw": 3501271,
+      "original_command_gpu_span_ms": 62.543041683966294,
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 64,
+          "duration_raw": 18956875,
+          "fraction_of_sampled_interval_duration_sum": 0.31897853706361706
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 32,
+          "duration_raw": 9664541,
+          "fraction_of_sampled_interval_duration_sum": 0.16262074574904073
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 32,
+          "duration_raw": 8444750,
+          "fraction_of_sampled_interval_duration_sum": 0.14209588874052184
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 1,
+          "duration_raw": 7713542,
+          "fraction_of_sampled_interval_duration_sum": 0.1297921911042177
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 32,
+          "duration_raw": 4495168,
+          "fraction_of_sampled_interval_duration_sum": 0.07563810556830623
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 24,
+          "duration_raw": 3242333,
+          "fraction_of_sampled_interval_duration_sum": 0.05455723250868556
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 8,
+          "duration_raw": 1622834,
+          "fraction_of_sampled_interval_duration_sum": 0.027306674502896595
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 16,
+          "duration_raw": 857458,
+          "fraction_of_sampled_interval_duration_sum": 0.01442804778917912
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 8,
+          "duration_raw": 841582,
+          "fraction_of_sampled_interval_duration_sum": 0.014160909705796603
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 24,
+          "duration_raw": 762001,
+          "fraction_of_sampled_interval_duration_sum": 0.012821837155175273
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 65,
+          "duration_raw": 580041,
+          "fraction_of_sampled_interval_duration_sum": 0.009760080689297023
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 24,
+          "duration_raw": 402000,
+          "fraction_of_sampled_interval_duration_sum": 0.006764267417471184
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 48,
+          "duration_raw": 371285,
+          "fraction_of_sampled_interval_duration_sum": 0.006247440368397484
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 217583,
+          "fraction_of_sampled_interval_duration_sum": 0.0036611681529742104
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 88,
+          "duration_raw": 210660,
+          "fraction_of_sampled_interval_duration_sum": 0.0035446780451852725
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 64,
+          "duration_raw": 180295,
+          "fraction_of_sampled_interval_duration_sum": 0.0030337402836640975
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 24,
+          "duration_raw": 160621,
+          "fraction_of_sampled_interval_duration_sum": 0.0027026950170687537
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 24,
+          "duration_raw": 138292,
+          "fraction_of_sampled_interval_duration_sum": 0.0023269752977535447
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 32,
+          "duration_raw": 116086,
+          "fraction_of_sampled_interval_duration_sum": 0.0019533252423496513
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 24,
+          "duration_raw": 96793,
+          "fraction_of_sampled_interval_duration_sum": 0.0016286908859186276
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 32,
+          "duration_raw": 88375,
+          "fraction_of_sampled_interval_duration_sum": 0.0014870451070124774
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 48,
+          "duration_raw": 87492,
+          "fraction_of_sampled_interval_duration_sum": 0.0014721872758442509
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 8,
+          "duration_raw": 60916,
+          "fraction_of_sampled_interval_duration_sum": 0.001025005258713121
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 16,
+          "duration_raw": 60251,
+          "fraction_of_sampled_interval_duration_sum": 0.001013815612363324
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 8,
+          "duration_raw": 53874,
+          "fraction_of_sampled_interval_duration_sum": 0.0009065127931563247
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 2,
+          "duration_raw": 4291,
+          "fraction_of_sampled_interval_duration_sum": 7.220266539395236e-05
+        }
+      ]
+    },
+    {
+      "request": 2,
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "decode_step": 4,
+      "custom_passes": 537,
+      "sum_interval_duration_raw": 34286160,
+      "union_interval_duration_raw": 34250994,
+      "overlap_raw": 35166,
+      "span_between_first_last_sample_raw": 37648541,
+      "gap_within_sample_span_raw": 3397547,
+      "original_command_gpu_span_ms": 37.648500001523644,
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 56,
+          "duration_raw": 11920538,
+          "fraction_of_sampled_interval_duration_sum": 0.3476778385214326
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 28,
+          "duration_raw": 6106374,
+          "fraction_of_sampled_interval_duration_sum": 0.17810025969662394
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 1,
+          "duration_raw": 4927042,
+          "fraction_of_sampled_interval_duration_sum": 0.14370352352086088
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 56,
+          "duration_raw": 4167625,
+          "fraction_of_sampled_interval_duration_sum": 0.12155414896273015
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 56,
+          "duration_raw": 2100957,
+          "fraction_of_sampled_interval_duration_sum": 0.06127711589749333
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 28,
+          "duration_raw": 1744375,
+          "fraction_of_sampled_interval_duration_sum": 0.0508769427664107
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 28,
+          "duration_raw": 1695668,
+          "fraction_of_sampled_interval_duration_sum": 0.04945634040090812
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 57,
+          "duration_raw": 466000,
+          "fraction_of_sampled_interval_duration_sum": 0.013591489977296962
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 28,
+          "duration_raw": 248664,
+          "fraction_of_sampled_interval_duration_sum": 0.0072526057161256905
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 56,
+          "duration_raw": 247457,
+          "fraction_of_sampled_interval_duration_sum": 0.0072174020071072405
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 185041,
+          "fraction_of_sampled_interval_duration_sum": 0.005396959006199586
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 28,
+          "duration_raw": 169165,
+          "fraction_of_sampled_interval_duration_sum": 0.004933915025771332
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 56,
+          "duration_raw": 141253,
+          "fraction_of_sampled_interval_duration_sum": 0.00411982560893375
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 28,
+          "duration_raw": 83292,
+          "fraction_of_sampled_interval_duration_sum": 0.002429318418860555
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 28,
+          "duration_raw": 77625,
+          "fraction_of_sampled_interval_duration_sum": 0.0022640330675701217
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 2,
+          "duration_raw": 5084,
+          "fraction_of_sampled_interval_duration_sum": 0.00014828140567505957
+        }
+      ]
+    },
+    {
+      "request": 2,
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "decode_step": 16,
+      "custom_passes": 537,
+      "sum_interval_duration_raw": 33677545,
+      "union_interval_duration_raw": 33653170,
+      "overlap_raw": 24375,
+      "span_between_first_last_sample_raw": 36051750,
+      "gap_within_sample_span_raw": 2398580,
+      "original_command_gpu_span_ms": 36.051750008482486,
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 56,
+          "duration_raw": 11558373,
+          "fraction_of_sampled_interval_duration_sum": 0.34320711322633524
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 28,
+          "duration_raw": 5954000,
+          "fraction_of_sampled_interval_duration_sum": 0.1767943595651049
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 1,
+          "duration_raw": 4934083,
+          "fraction_of_sampled_interval_duration_sum": 0.146509580790405
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 56,
+          "duration_raw": 4037627,
+          "fraction_of_sampled_interval_duration_sum": 0.11989077588642522
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 56,
+          "duration_raw": 2055043,
+          "fraction_of_sampled_interval_duration_sum": 0.061021164102074546
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 28,
+          "duration_raw": 1794375,
+          "fraction_of_sampled_interval_duration_sum": 0.05328105121676773
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 28,
+          "duration_raw": 1743039,
+          "fraction_of_sampled_interval_duration_sum": 0.051756712076251404
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 57,
+          "duration_raw": 454332,
+          "fraction_of_sampled_interval_duration_sum": 0.013490650817926306
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 56,
+          "duration_raw": 243999,
+          "fraction_of_sampled_interval_duration_sum": 0.007245154003951298
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 28,
+          "duration_raw": 236336,
+          "fraction_of_sampled_interval_duration_sum": 0.007017613665129094
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 180625,
+          "fraction_of_sampled_interval_duration_sum": 0.005363366005449626
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 28,
+          "duration_raw": 166833,
+          "fraction_of_sampled_interval_duration_sum": 0.0049538349662957915
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 56,
+          "duration_raw": 162922,
+          "fraction_of_sampled_interval_duration_sum": 0.004837704173507896
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 28,
+          "duration_raw": 82001,
+          "fraction_of_sampled_interval_duration_sum": 0.002434886509690656
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 28,
+          "duration_raw": 69124,
+          "fraction_of_sampled_interval_duration_sum": 0.0020525249094017987
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 2,
+          "duration_raw": 4833,
+          "fraction_of_sampled_interval_duration_sum": 0.0001435080852835324
+        }
+      ]
+    },
+    {
+      "request": 2,
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "decode_step": 28,
+      "custom_passes": 537,
+      "sum_interval_duration_raw": 37902677,
+      "union_interval_duration_raw": 37853592,
+      "overlap_raw": 49085,
+      "span_between_first_last_sample_raw": 39776459,
+      "gap_within_sample_span_raw": 1922867,
+      "original_command_gpu_span_ms": 39.77649999433197,
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 56,
+          "duration_raw": 12882376,
+          "fraction_of_sampled_interval_duration_sum": 0.3398803730934361
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 28,
+          "duration_raw": 6649914,
+          "fraction_of_sampled_interval_duration_sum": 0.17544707989886835
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 1,
+          "duration_raw": 5500625,
+          "fraction_of_sampled_interval_duration_sum": 0.14512497362653304
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 56,
+          "duration_raw": 4619588,
+          "fraction_of_sampled_interval_duration_sum": 0.12188025663728184
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 56,
+          "duration_raw": 2280791,
+          "fraction_of_sampled_interval_duration_sum": 0.06017493170733033
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 28,
+          "duration_raw": 2129457,
+          "fraction_of_sampled_interval_duration_sum": 0.05618223219431177
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 28,
+          "duration_raw": 2100080,
+          "fraction_of_sampled_interval_duration_sum": 0.0554071682060874
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 57,
+          "duration_raw": 506628,
+          "fraction_of_sampled_interval_duration_sum": 0.013366549280938653
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 28,
+          "duration_raw": 267589,
+          "fraction_of_sampled_interval_duration_sum": 0.007059897114918823
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 56,
+          "duration_raw": 263587,
+          "fraction_of_sampled_interval_duration_sum": 0.006954310905269303
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 186750,
+          "fraction_of_sampled_interval_duration_sum": 0.004927092616703564
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 28,
+          "duration_raw": 182166,
+          "fraction_of_sampled_interval_duration_sum": 0.004806151291108013
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 56,
+          "duration_raw": 159917,
+          "fraction_of_sampled_interval_duration_sum": 0.00421914789818144
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 28,
+          "duration_raw": 87832,
+          "fraction_of_sampled_interval_duration_sum": 0.00231730333981423
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 28,
+          "duration_raw": 78711,
+          "fraction_of_sampled_interval_duration_sum": 0.0020766607065775327
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 2,
+          "duration_raw": 6666,
+          "fraction_of_sampled_interval_duration_sum": 0.00017587148263960352
+        }
+      ]
+    },
+    {
+      "request": 3,
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "decode_step": 4,
+      "custom_passes": 749,
+      "sum_interval_duration_raw": 59143787,
+      "union_interval_duration_raw": 58750952,
+      "overlap_raw": 392835,
+      "span_between_first_last_sample_raw": 61819208,
+      "gap_within_sample_span_raw": 3068256,
+      "original_command_gpu_span_ms": 61.819208349334076,
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 64,
+          "duration_raw": 18999793,
+          "fraction_of_sampled_interval_duration_sum": 0.32124748792294955
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 32,
+          "duration_raw": 9644707,
+          "fraction_of_sampled_interval_duration_sum": 0.1630721921814036
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 32,
+          "duration_raw": 8455001,
+          "fraction_of_sampled_interval_duration_sum": 0.1429567065091723
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 1,
+          "duration_raw": 7596542,
+          "fraction_of_sampled_interval_duration_sum": 0.1284419274673771
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 32,
+          "duration_raw": 4501124,
+          "fraction_of_sampled_interval_duration_sum": 0.07610476481663239
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 24,
+          "duration_raw": 3204672,
+          "fraction_of_sampled_interval_duration_sum": 0.05418442346277218
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 8,
+          "duration_raw": 1531167,
+          "fraction_of_sampled_interval_duration_sum": 0.0258888900705665
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 16,
+          "duration_raw": 860165,
+          "fraction_of_sampled_interval_duration_sum": 0.014543623998916403
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 8,
+          "duration_raw": 792793,
+          "fraction_of_sampled_interval_duration_sum": 0.01340450181183021
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 24,
+          "duration_raw": 763795,
+          "fraction_of_sampled_interval_duration_sum": 0.01291420517255684
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 65,
+          "duration_raw": 581335,
+          "fraction_of_sampled_interval_duration_sum": 0.00982918121222099
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 24,
+          "duration_raw": 390208,
+          "fraction_of_sampled_interval_duration_sum": 0.006597616077577176
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 48,
+          "duration_raw": 367710,
+          "fraction_of_sampled_interval_duration_sum": 0.006217221092048096
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 218333,
+          "fraction_of_sampled_interval_duration_sum": 0.0036915627333772186
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 88,
+          "duration_raw": 214168,
+          "fraction_of_sampled_interval_duration_sum": 0.003621141135247224
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 64,
+          "duration_raw": 175954,
+          "fraction_of_sampled_interval_duration_sum": 0.002975020858911182
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 24,
+          "duration_raw": 159123,
+          "fraction_of_sampled_interval_duration_sum": 0.002690443207500392
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 24,
+          "duration_raw": 138829,
+          "fraction_of_sampled_interval_duration_sum": 0.0023473133365639913
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 24,
+          "duration_raw": 98167,
+          "fraction_of_sampled_interval_duration_sum": 0.001659802406633177
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 32,
+          "duration_raw": 96413,
+          "fraction_of_sampled_interval_duration_sum": 0.0016301458680689487
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 48,
+          "duration_raw": 88415,
+          "fraction_of_sampled_interval_duration_sum": 0.001494916110123283
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 32,
+          "duration_raw": 86957,
+          "fraction_of_sampled_interval_duration_sum": 0.0014702643237911024
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 8,
+          "duration_raw": 60415,
+          "fraction_of_sampled_interval_duration_sum": 0.0010214936016863445
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 16,
+          "duration_raw": 58793,
+          "fraction_of_sampled_interval_duration_sum": 0.0009940689120904618
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 8,
+          "duration_raw": 54707,
+          "fraction_of_sampled_interval_duration_sum": 0.0009249830417521285
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 2,
+          "duration_raw": 4501,
+          "fraction_of_sampled_interval_duration_sum": 7.610266823123788e-05
+        }
+      ]
+    },
+    {
+      "request": 3,
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "decode_step": 16,
+      "custom_passes": 749,
+      "sum_interval_duration_raw": 68477550,
+      "union_interval_duration_raw": 68027384,
+      "overlap_raw": 450166,
+      "span_between_first_last_sample_raw": 70530042,
+      "gap_within_sample_span_raw": 2502658,
+      "original_command_gpu_span_ms": 70.5300833506044,
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 64,
+          "duration_raw": 22059044,
+          "fraction_of_sampled_interval_duration_sum": 0.32213541518351635
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 32,
+          "duration_raw": 10781915,
+          "fraction_of_sampled_interval_duration_sum": 0.15745182180145173
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 32,
+          "duration_raw": 10049288,
+          "fraction_of_sampled_interval_duration_sum": 0.14675303073781115
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 1,
+          "duration_raw": 8792333,
+          "fraction_of_sampled_interval_duration_sum": 0.12839730685458225
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 32,
+          "duration_raw": 5226047,
+          "fraction_of_sampled_interval_duration_sum": 0.07631766907548532
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 24,
+          "duration_raw": 3992877,
+          "fraction_of_sampled_interval_duration_sum": 0.05830928530591413
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 8,
+          "duration_raw": 1755000,
+          "fraction_of_sampled_interval_duration_sum": 0.02562883748031289
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 8,
+          "duration_raw": 952459,
+          "fraction_of_sampled_interval_duration_sum": 0.013909069468752897
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 24,
+          "duration_raw": 873295,
+          "fraction_of_sampled_interval_duration_sum": 0.012753011753487092
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 16,
+          "duration_raw": 688544,
+          "fraction_of_sampled_interval_duration_sum": 0.010055032634783224
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 65,
+          "duration_raw": 633998,
+          "fraction_of_sampled_interval_duration_sum": 0.00925847960389938
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 48,
+          "duration_raw": 473910,
+          "fraction_of_sampled_interval_duration_sum": 0.006920662319256457
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 64,
+          "duration_raw": 427419,
+          "fraction_of_sampled_interval_duration_sum": 0.006241739080910459
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 24,
+          "duration_raw": 401792,
+          "fraction_of_sampled_interval_duration_sum": 0.005867499640393093
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 237875,
+          "fraction_of_sampled_interval_duration_sum": 0.003473766219731868
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 88,
+          "duration_raw": 217583,
+          "fraction_of_sampled_interval_duration_sum": 0.003177435524489413
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 24,
+          "duration_raw": 173043,
+          "fraction_of_sampled_interval_duration_sum": 0.002527003375558851
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 24,
+          "duration_raw": 153999,
+          "fraction_of_sampled_interval_duration_sum": 0.002248897631413507
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 24,
+          "duration_raw": 107501,
+          "fraction_of_sampled_interval_duration_sum": 0.0015698721697841118
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 32,
+          "duration_raw": 98542,
+          "fraction_of_sampled_interval_duration_sum": 0.0014390409703618193
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 32,
+          "duration_raw": 95586,
+          "fraction_of_sampled_interval_duration_sum": 0.0013958735381157767
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 48,
+          "duration_raw": 93670,
+          "fraction_of_sampled_interval_duration_sum": 0.0013678935651173269
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 8,
+          "duration_raw": 68834,
+          "fraction_of_sampled_interval_duration_sum": 0.0010052053556238504
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 16,
+          "duration_raw": 63372,
+          "fraction_of_sampled_interval_duration_sum": 0.0009254419879215889
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 8,
+          "duration_raw": 55000,
+          "fraction_of_sampled_interval_duration_sum": 0.0008031829409784666
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 2,
+          "duration_raw": 4624,
+          "fraction_of_sampled_interval_duration_sum": 6.752578034698964e-05
+        }
+      ]
+    },
+    {
+      "request": 3,
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "decode_step": 28,
+      "custom_passes": 749,
+      "sum_interval_duration_raw": 62480895,
+      "union_interval_duration_raw": 62008059,
+      "overlap_raw": 472836,
+      "span_between_first_last_sample_raw": 65428417,
+      "gap_within_sample_span_raw": 3420358,
+      "original_command_gpu_span_ms": 65.4284166812431,
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 64,
+          "duration_raw": 19437042,
+          "fraction_of_sampled_interval_duration_sum": 0.3110877653080994
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 32,
+          "duration_raw": 9924833,
+          "fraction_of_sampled_interval_duration_sum": 0.15884588400982413
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 1,
+          "duration_raw": 9173417,
+          "fraction_of_sampled_interval_duration_sum": 0.14681955180059442
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 32,
+          "duration_raw": 8703211,
+          "fraction_of_sampled_interval_duration_sum": 0.13929395537627942
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 32,
+          "duration_raw": 4642165,
+          "fraction_of_sampled_interval_duration_sum": 0.0742973512143192
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 24,
+          "duration_raw": 3312251,
+          "fraction_of_sampled_interval_duration_sum": 0.0530122207756467
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 8,
+          "duration_raw": 1641207,
+          "fraction_of_sampled_interval_duration_sum": 0.026267341400919433
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 16,
+          "duration_raw": 926959,
+          "fraction_of_sampled_interval_duration_sum": 0.014835879031502349
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 8,
+          "duration_raw": 845874,
+          "fraction_of_sampled_interval_duration_sum": 0.013538122333234823
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 24,
+          "duration_raw": 805667,
+          "fraction_of_sampled_interval_duration_sum": 0.01289461362549304
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 65,
+          "duration_raw": 592255,
+          "fraction_of_sampled_interval_duration_sum": 0.009478977533852549
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 48,
+          "duration_raw": 415172,
+          "fraction_of_sampled_interval_duration_sum": 0.006644783177321644
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 24,
+          "duration_raw": 404122,
+          "fraction_of_sampled_interval_duration_sum": 0.006467929116572354
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 32,
+          "duration_raw": 247083,
+          "fraction_of_sampled_interval_duration_sum": 0.003954536822815998
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 236625,
+          "fraction_of_sampled_interval_duration_sum": 0.0037871576583530056
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 88,
+          "duration_raw": 219550,
+          "fraction_of_sampled_interval_duration_sum": 0.00351387412104132
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 64,
+          "duration_raw": 181753,
+          "fraction_of_sampled_interval_duration_sum": 0.0029089372039244957
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 24,
+          "duration_raw": 160585,
+          "fraction_of_sampled_interval_duration_sum": 0.002570145642119883
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 24,
+          "duration_raw": 142040,
+          "fraction_of_sampled_interval_duration_sum": 0.002273334913016211
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 24,
+          "duration_raw": 106002,
+          "fraction_of_sampled_interval_duration_sum": 0.0016965506015878934
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 32,
+          "duration_raw": 89084,
+          "fraction_of_sampled_interval_duration_sum": 0.0014257798323791618
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 48,
+          "duration_raw": 88003,
+          "fraction_of_sampled_interval_duration_sum": 0.0014084785437212448
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 16,
+          "duration_raw": 62789,
+          "fraction_of_sampled_interval_duration_sum": 0.0010049311873653538
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 8,
+          "duration_raw": 61416,
+          "fraction_of_sampled_interval_duration_sum": 0.0009829564701337905
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 8,
+          "duration_raw": 56332,
+          "fraction_of_sampled_interval_duration_sum": 0.0009015875972967417
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 2,
+          "duration_raw": 5458,
+          "fraction_of_sampled_interval_duration_sum": 8.735470258548634e-05
+        }
+      ]
+    },
+    {
+      "request": 4,
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "decode_step": 4,
+      "custom_passes": 537,
+      "sum_interval_duration_raw": 33481486,
+      "union_interval_duration_raw": 33444069,
+      "overlap_raw": 37417,
+      "span_between_first_last_sample_raw": 35183083,
+      "gap_within_sample_span_raw": 1739014,
+      "original_command_gpu_span_ms": 35.18304164754227,
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 56,
+          "duration_raw": 11413333,
+          "fraction_of_sampled_interval_duration_sum": 0.3408848997920821
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 28,
+          "duration_raw": 5884331,
+          "fraction_of_sampled_interval_duration_sum": 0.17574880039673269
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 1,
+          "duration_raw": 5019375,
+          "fraction_of_sampled_interval_duration_sum": 0.1499149410513022
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 56,
+          "duration_raw": 4052581,
+          "fraction_of_sampled_interval_duration_sum": 0.12103946043494007
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 56,
+          "duration_raw": 2021124,
+          "fraction_of_sampled_interval_duration_sum": 0.06036542105687902
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 28,
+          "duration_raw": 1752041,
+          "fraction_of_sampled_interval_duration_sum": 0.05232865112378823
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 28,
+          "duration_raw": 1706249,
+          "fraction_of_sampled_interval_duration_sum": 0.05096096989243548
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 57,
+          "duration_raw": 470415,
+          "fraction_of_sampled_interval_duration_sum": 0.014050003634844642
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 28,
+          "duration_raw": 250706,
+          "fraction_of_sampled_interval_duration_sum": 0.007487899431942776
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 56,
+          "duration_raw": 250376,
+          "fraction_of_sampled_interval_duration_sum": 0.00747804323858266
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 179458,
+          "fraction_of_sampled_interval_duration_sum": 0.005359917418241233
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 28,
+          "duration_raw": 175254,
+          "fraction_of_sampled_interval_duration_sum": 0.005234355488283883
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 56,
+          "duration_raw": 145166,
+          "fraction_of_sampled_interval_duration_sum": 0.004335709591862201
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 28,
+          "duration_raw": 82871,
+          "fraction_of_sampled_interval_duration_sum": 0.0024751290907458526
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 28,
+          "duration_raw": 72497,
+          "fraction_of_sampled_interval_duration_sum": 0.0021652862122069493
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 2,
+          "duration_raw": 5709,
+          "fraction_of_sampled_interval_duration_sum": 0.0001705121451299981
+        }
+      ]
+    },
+    {
+      "request": 4,
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "decode_step": 16,
+      "custom_passes": 537,
+      "sum_interval_duration_raw": 41145178,
+      "union_interval_duration_raw": 41100094,
+      "overlap_raw": 45084,
+      "span_between_first_last_sample_raw": 43472083,
+      "gap_within_sample_span_raw": 2371989,
+      "original_command_gpu_span_ms": 43.472083314554766,
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 56,
+          "duration_raw": 14103131,
+          "fraction_of_sampled_interval_duration_sum": 0.34276509874377015
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 28,
+          "duration_raw": 7328292,
+          "fraction_of_sampled_interval_duration_sum": 0.1781081613014288
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 1,
+          "duration_raw": 6014292,
+          "fraction_of_sampled_interval_duration_sum": 0.14617246278531107
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 56,
+          "duration_raw": 4965252,
+          "fraction_of_sampled_interval_duration_sum": 0.12067640101107352
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 56,
+          "duration_raw": 2504460,
+          "fraction_of_sampled_interval_duration_sum": 0.06086885807129088
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 28,
+          "duration_raw": 2182956,
+          "fraction_of_sampled_interval_duration_sum": 0.05305496551746598
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 28,
+          "duration_raw": 2158248,
+          "fraction_of_sampled_interval_duration_sum": 0.052454457725277064
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 57,
+          "duration_raw": 544082,
+          "fraction_of_sampled_interval_duration_sum": 0.01322346934554518
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 28,
+          "duration_raw": 299125,
+          "fraction_of_sampled_interval_duration_sum": 0.007269989207483803
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 56,
+          "duration_raw": 288249,
+          "fraction_of_sampled_interval_duration_sum": 0.007005656896173836
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 28,
+          "duration_raw": 198335,
+          "fraction_of_sampled_interval_duration_sum": 0.00482037044535328
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 185041,
+          "fraction_of_sampled_interval_duration_sum": 0.004497270615769362
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 56,
+          "duration_raw": 183167,
+          "fraction_of_sampled_interval_duration_sum": 0.004451724573897821
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 28,
+          "duration_raw": 96254,
+          "fraction_of_sampled_interval_duration_sum": 0.0023393749809515955
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 28,
+          "duration_raw": 88418,
+          "fraction_of_sampled_interval_duration_sum": 0.0021489273907139253
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 2,
+          "duration_raw": 5876,
+          "fraction_of_sampled_interval_duration_sum": 0.00014281138849368935
+        }
+      ]
+    },
+    {
+      "request": 4,
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "decode_step": 28,
+      "custom_passes": 537,
+      "sum_interval_duration_raw": 34127006,
+      "union_interval_duration_raw": 34084757,
+      "overlap_raw": 42249,
+      "span_between_first_last_sample_raw": 36293292,
+      "gap_within_sample_span_raw": 2208535,
+      "original_command_gpu_span_ms": 36.2932916614227,
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 56,
+          "duration_raw": 11612040,
+          "fraction_of_sampled_interval_duration_sum": 0.340259558661548
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 28,
+          "duration_raw": 5962165,
+          "fraction_of_sampled_interval_duration_sum": 0.17470518802616322
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 1,
+          "duration_raw": 4881541,
+          "fraction_of_sampled_interval_duration_sum": 0.14304041204200568
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 56,
+          "duration_raw": 4163499,
+          "fraction_of_sampled_interval_duration_sum": 0.12200012506224543
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 56,
+          "duration_raw": 2082879,
+          "fraction_of_sampled_interval_duration_sum": 0.06103315948665406
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 28,
+          "duration_raw": 1917624,
+          "fraction_of_sampled_interval_duration_sum": 0.05619080677631082
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 28,
+          "duration_raw": 1864961,
+          "fraction_of_sampled_interval_duration_sum": 0.05464765939326761
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 57,
+          "duration_raw": 461338,
+          "fraction_of_sampled_interval_duration_sum": 0.013518267614803361
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 56,
+          "duration_raw": 246667,
+          "fraction_of_sampled_interval_duration_sum": 0.007227912111598656
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 28,
+          "duration_raw": 244459,
+          "fraction_of_sampled_interval_duration_sum": 0.007163212618182796
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 1,
+          "duration_raw": 185292,
+          "fraction_of_sampled_interval_duration_sum": 0.005429483031708085
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 28,
+          "duration_raw": 174164,
+          "fraction_of_sampled_interval_duration_sum": 0.005103406961630329
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 56,
+          "duration_raw": 170417,
+          "fraction_of_sampled_interval_duration_sum": 0.0049936112180482516
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 28,
+          "duration_raw": 81709,
+          "fraction_of_sampled_interval_duration_sum": 0.0023942621863752124
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 28,
+          "duration_raw": 73709,
+          "fraction_of_sampled_interval_duration_sum": 0.002159843731969924
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 2,
+          "duration_raw": 4542,
+          "fraction_of_sampled_interval_duration_sum": 0.00013309107748860243
+        }
+      ]
+    }
+  ],
+  "first_and_warm_separate_aggregates": [
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": false,
+      "selected_steps": [
+        4,
+        16,
+        28
+      ],
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 168,
+          "duration_raw": 37128504,
+          "fraction_of_sampled_interval_duration_sum": 0.3414000097651877
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 84,
+          "duration_raw": 19174788,
+          "fraction_of_sampled_interval_duration_sum": 0.1763139395663613
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 3,
+          "duration_raw": 15915208,
+          "fraction_of_sampled_interval_duration_sum": 0.14634180161460297
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 168,
+          "duration_raw": 13181332,
+          "fraction_of_sampled_interval_duration_sum": 0.12120356030283852
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 168,
+          "duration_raw": 6608463,
+          "fraction_of_sampled_interval_duration_sum": 0.060765425203581636
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 84,
+          "duration_raw": 5852621,
+          "fraction_of_sampled_interval_duration_sum": 0.05381538848298177
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 84,
+          "duration_raw": 5729458,
+          "fraction_of_sampled_interval_duration_sum": 0.052682893368104264
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 171,
+          "duration_raw": 1475835,
+          "fraction_of_sampled_interval_duration_sum": 0.013570438588417291
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 84,
+          "duration_raw": 794290,
+          "fraction_of_sampled_interval_duration_sum": 0.007303569617466702
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 168,
+          "duration_raw": 785292,
+          "fraction_of_sampled_interval_duration_sum": 0.007220832179732417
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 3,
+          "duration_raw": 549791,
+          "fraction_of_sampled_interval_duration_sum": 0.005055378820779105
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 84,
+          "duration_raw": 547753,
+          "fraction_of_sampled_interval_duration_sum": 0.005036639223301614
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 168,
+          "duration_raw": 498750,
+          "fraction_of_sampled_interval_duration_sum": 0.004586052130470632
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 84,
+          "duration_raw": 260834,
+          "fraction_of_sampled_interval_duration_sum": 0.0023983926243592514
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 84,
+          "duration_raw": 234624,
+          "fraction_of_sampled_interval_duration_sum": 0.002157389263277276
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 6,
+          "duration_raw": 16127,
+          "fraction_of_sampled_interval_duration_sum": 0.00014828924853754362
+        }
+      ]
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "warmup": true,
+      "selected_steps": [
+        4,
+        16,
+        28
+      ],
+      "ranks": [
+        {
+          "op": "bf16:1:2048:6144:raw",
+          "passes": 168,
+          "duration_raw": 36361287,
+          "fraction_of_sampled_interval_duration_sum": 0.34346396195914203
+        },
+        {
+          "op": "bf16:1:6144:2048:raw",
+          "passes": 84,
+          "duration_raw": 18710288,
+          "fraction_of_sampled_interval_duration_sum": 0.17673493366383297
+        },
+        {
+          "op": "bf16:1:2048:151936:raw",
+          "passes": 3,
+          "duration_raw": 15361750,
+          "fraction_of_sampled_interval_duration_sum": 0.1451050816112711
+        },
+        {
+          "op": "bf16:1:2048:2048:raw",
+          "passes": 168,
+          "duration_raw": 12824840,
+          "fraction_of_sampled_interval_duration_sum": 0.12114176150838894
+        },
+        {
+          "op": "bf16:1:2048:1024:raw",
+          "passes": 168,
+          "duration_raw": 6436791,
+          "fraction_of_sampled_interval_duration_sum": 0.060801086033146955
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 84,
+          "duration_raw": 5668207,
+          "fraction_of_sampled_interval_duration_sum": 0.05354114207851176
+        },
+        {
+          "op": "state:9:1:2048",
+          "passes": 84,
+          "duration_raw": 5538787,
+          "fraction_of_sampled_interval_duration_sum": 0.0523186576830405
+        },
+        {
+          "op": "pointwise:0:1:2048",
+          "passes": 171,
+          "duration_raw": 1426960,
+          "fraction_of_sampled_interval_duration_sum": 0.013478877553405008
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 168,
+          "duration_raw": 755043,
+          "fraction_of_sampled_interval_duration_sum": 0.007132037439420571
+        },
+        {
+          "op": "state:6:1:2048",
+          "passes": 84,
+          "duration_raw": 752589,
+          "fraction_of_sampled_interval_duration_sum": 0.007108857276335372
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 3,
+          "duration_raw": 552416,
+          "fraction_of_sampled_interval_duration_sum": 0.005218049295384441
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 84,
+          "duration_raw": 518164,
+          "fraction_of_sampled_interval_duration_sum": 0.00489450938259135
+        },
+        {
+          "op": "pointwise:2:1:2048",
+          "passes": 168,
+          "duration_raw": 464092,
+          "fraction_of_sampled_interval_duration_sum": 0.004383752341701826
+        },
+        {
+          "op": "pointwise:1:1:6144",
+          "passes": 84,
+          "duration_raw": 253125,
+          "fraction_of_sampled_interval_duration_sum": 0.002390985648305238
+        },
+        {
+          "op": "pointwise:3:1:2048",
+          "passes": 84,
+          "duration_raw": 225460,
+          "fraction_of_sampled_interval_duration_sum": 0.002129665676116144
+        },
+        {
+          "op": "state:15:1:2048",
+          "passes": 6,
+          "duration_raw": 16583,
+          "fraction_of_sampled_interval_duration_sum": 0.00015664084940581044
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": false,
+      "selected_steps": [
+        4,
+        16,
+        28
+      ],
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 192,
+          "duration_raw": 60495879,
+          "fraction_of_sampled_interval_duration_sum": 0.3182281363219344
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 96,
+          "duration_raw": 30351455,
+          "fraction_of_sampled_interval_duration_sum": 0.15965859359294635
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 96,
+          "duration_raw": 27207500,
+          "fraction_of_sampled_interval_duration_sum": 0.1431203606278542
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 3,
+          "duration_raw": 25562292,
+          "fraction_of_sampled_interval_duration_sum": 0.13446602773185745
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 96,
+          "duration_raw": 14369336,
+          "fraction_of_sampled_interval_duration_sum": 0.07558741340817082
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 72,
+          "duration_raw": 10509800,
+          "fraction_of_sampled_interval_duration_sum": 0.05528499002578781
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 24,
+          "duration_raw": 4927374,
+          "fraction_of_sampled_interval_duration_sum": 0.02591960098606312
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 24,
+          "duration_raw": 2591126,
+          "fraction_of_sampled_interval_duration_sum": 0.013630171370107849
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 48,
+          "duration_raw": 2475668,
+          "fraction_of_sampled_interval_duration_sum": 0.013022824476884628
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 72,
+          "duration_raw": 2442757,
+          "fraction_of_sampled_interval_duration_sum": 0.01284970183832455
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 195,
+          "duration_raw": 1807588,
+          "fraction_of_sampled_interval_duration_sum": 0.009508504876470888
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 144,
+          "duration_raw": 1256792,
+          "fraction_of_sampled_interval_duration_sum": 0.006611137527306886
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 72,
+          "duration_raw": 1196122,
+          "fraction_of_sampled_interval_duration_sum": 0.006291993457499226
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 192,
+          "duration_raw": 785126,
+          "fraction_of_sampled_interval_duration_sum": 0.004130019893716977
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 3,
+          "duration_raw": 692833,
+          "fraction_of_sampled_interval_duration_sum": 0.0036445284871773624
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 264,
+          "duration_raw": 651301,
+          "fraction_of_sampled_interval_duration_sum": 0.0034260565651854104
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 72,
+          "duration_raw": 492751,
+          "fraction_of_sampled_interval_duration_sum": 0.0025920316390603978
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 96,
+          "duration_raw": 442038,
+          "fraction_of_sampled_interval_duration_sum": 0.002325264650233039
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 72,
+          "duration_raw": 434868,
+          "fraction_of_sampled_interval_duration_sum": 0.002287548102012816
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 72,
+          "duration_raw": 311670,
+          "fraction_of_sampled_interval_duration_sum": 0.001639486273890777
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 96,
+          "duration_raw": 271627,
+          "fraction_of_sampled_interval_duration_sum": 0.0014288469795557162
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 144,
+          "duration_raw": 270088,
+          "fraction_of_sampled_interval_duration_sum": 0.0014207513355235092
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 24,
+          "duration_raw": 190665,
+          "fraction_of_sampled_interval_duration_sum": 0.0010029603439900695
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 48,
+          "duration_raw": 184954,
+          "fraction_of_sampled_interval_duration_sum": 0.0009729186136015488
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 24,
+          "duration_raw": 166039,
+          "fraction_of_sampled_interval_duration_sum": 0.0008734195188197474
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 6,
+          "duration_raw": 14583,
+          "fraction_of_sampled_interval_duration_sum": 7.671135602447844e-05
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "warmup": true,
+      "selected_steps": [
+        4,
+        16,
+        28
+      ],
+      "ranks": [
+        {
+          "op": "bf16:1:2560:9216:primary",
+          "passes": 192,
+          "duration_raw": 58278745,
+          "fraction_of_sampled_interval_duration_sum": 0.3198924104226112
+        },
+        {
+          "op": "bf16:1:9216:2560:primary",
+          "passes": 96,
+          "duration_raw": 29380667,
+          "fraction_of_sampled_interval_duration_sum": 0.16127067229148584
+        },
+        {
+          "op": "bf16:1:2560:8192:primary",
+          "passes": 96,
+          "duration_raw": 25962626,
+          "fraction_of_sampled_interval_duration_sum": 0.14250902300728605
+        },
+        {
+          "op": "bf16:1:2560:248320:primary",
+          "passes": 3,
+          "duration_raw": 23401000,
+          "fraction_of_sampled_interval_duration_sum": 0.12844824122927706
+        },
+        {
+          "op": "bf16:1:4096:2560:primary",
+          "passes": 96,
+          "duration_raw": 13877712,
+          "fraction_of_sampled_interval_duration_sum": 0.07617485144593962
+        },
+        {
+          "op": "bf16:1:2560:4096:primary",
+          "passes": 72,
+          "duration_raw": 10109124,
+          "fraction_of_sampled_interval_duration_sum": 0.05548904739834512
+        },
+        {
+          "op": "state:8:1:32768",
+          "passes": 24,
+          "duration_raw": 4844083,
+          "fraction_of_sampled_interval_duration_sum": 0.02658920309895475
+        },
+        {
+          "op": "bf16:1:2560:1024:primary",
+          "passes": 48,
+          "duration_raw": 2636292,
+          "fraction_of_sampled_interval_duration_sum": 0.014470623937729724
+        },
+        {
+          "op": "state:9:1:4096",
+          "passes": 24,
+          "duration_raw": 2490665,
+          "fraction_of_sampled_interval_duration_sum": 0.01367127638739017
+        },
+        {
+          "op": "state:16:1:4096",
+          "passes": 72,
+          "duration_raw": 2337292,
+          "fraction_of_sampled_interval_duration_sum": 0.012829410992660974
+        },
+        {
+          "op": "pointwise:0:1:2560",
+          "passes": 195,
+          "duration_raw": 1773671,
+          "fraction_of_sampled_interval_duration_sum": 0.009735691657167346
+        },
+        {
+          "op": "bf16:1:2560:32:raw",
+          "passes": 144,
+          "duration_raw": 1227317,
+          "fraction_of_sampled_interval_duration_sum": 0.006736750996999813
+        },
+        {
+          "op": "state:2:1:32768",
+          "passes": 72,
+          "duration_raw": 1183877,
+          "fraction_of_sampled_interval_duration_sum": 0.006498308554411899
+        },
+        {
+          "op": "pointwise:2:1:2560",
+          "passes": 192,
+          "duration_raw": 735972,
+          "fraction_of_sampled_interval_duration_sum": 0.004039755095679394
+        },
+        {
+          "op": "state:15:1:4096",
+          "passes": 264,
+          "duration_raw": 667741,
+          "fraction_of_sampled_interval_duration_sum": 0.003665234692819909
+        },
+        {
+          "op": "EncodeArgmax",
+          "passes": 3,
+          "duration_raw": 653625,
+          "fraction_of_sampled_interval_duration_sum": 0.0035877518769918473
+        },
+        {
+          "op": "state:3:1:12352",
+          "passes": 72,
+          "duration_raw": 486453,
+          "fraction_of_sampled_interval_duration_sum": 0.002670143681496753
+        },
+        {
+          "op": "state:0:1:40960",
+          "passes": 72,
+          "duration_raw": 428710,
+          "fraction_of_sampled_interval_duration_sum": 0.002353191978864295
+        },
+        {
+          "op": "pointwise:1:1:9216",
+          "passes": 96,
+          "duration_raw": 310591,
+          "fraction_of_sampled_interval_duration_sum": 0.0017048360194710649
+        },
+        {
+          "op": "state:4:1:4096",
+          "passes": 72,
+          "duration_raw": 292544,
+          "fraction_of_sampled_interval_duration_sum": 0.0016057759190708785
+        },
+        {
+          "op": "pointwise:3:1:2560",
+          "passes": 96,
+          "duration_raw": 269337,
+          "fraction_of_sampled_interval_duration_sum": 0.0014783925451036194
+        },
+        {
+          "op": "state:15:1:32",
+          "passes": 144,
+          "duration_raw": 265331,
+          "fraction_of_sampled_interval_duration_sum": 0.0014564035850436012
+        },
+        {
+          "op": "state:6:1:4096",
+          "passes": 24,
+          "duration_raw": 196625,
+          "fraction_of_sampled_interval_duration_sum": 0.0010792759040941242
+        },
+        {
+          "op": "state:20:1:2097152",
+          "passes": 48,
+          "duration_raw": 190331,
+          "fraction_of_sampled_interval_duration_sum": 0.0010447280971501017
+        },
+        {
+          "op": "state:6:1:1024",
+          "passes": 24,
+          "duration_raw": 168959,
+          "fraction_of_sampled_interval_duration_sum": 0.0009274170501199702
+        },
+        {
+          "op": "state:15:1:2560",
+          "passes": 6,
+          "duration_raw": 13041,
+          "fraction_of_sampled_interval_duration_sum": 7.158213383492168e-05
+        }
+      ]
+    }
+  ],
+  "scope": "Raw timestamp units remain raw, no guessed conversion to milliseconds. Ranks are shares of the sum of sampled custom-encoder intervals only; MPS-owned passes may be absent, intervals may overlap, and unobserved gaps are not attributed. First/warm separate; three prespecified steps per reached call, one fixed car Skill, no significance, intrinsic kernel speed, full decode distribution or optimization acceptance claim."
+}

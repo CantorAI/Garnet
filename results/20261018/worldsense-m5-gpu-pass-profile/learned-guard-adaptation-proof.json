@@ -1,0 +1,52 @@
+{
+  "build_corpus.py": {
+    "seed_sha256": "46c881ad634eefe8429ba00c41be99c1a861254006fbf077c919f15934be8da8",
+    "current_sha256": "6d21af492741ef45a9fdc13f6479b6152631b4df89a0c9f8fc37a13b5cff86a6",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed_sha256": "50b65a948c7d026f1aa2426d7122597760480751e233bafe8f170377a1928730",
+    "current_sha256": "24469fdc7933ca8a82871a437ed8b6ddd82a8624ef482f7c5fcaacce287adeea",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed_sha256": "5d59518d4148de6071773df62d9ab55e66a10a15a044502d1534f99f2fc019f1",
+    "current_sha256": "f95bcf5342760719f5960016719c2543e95bc5092221b7f69e41a05021288a11",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed_sha256": "0be0ec087e7e1864580b697c0151ad0bd7b54425a11f4f5122d84bf979b498e8",
+    "current_sha256": "0be0ec087e7e1864580b697c0151ad0bd7b54425a11f4f5122d84bf979b498e8",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed_sha256": "014c7fd62a37dd36559c4163ba52c8cfb10bda9c06951321207f3cffafd2694b",
+    "current_sha256": "b1fe75be0603f2b6f8fff723c1b4491d11bb19fe00e9440a590eaeea3b202031",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed_sha256": "c9afbd4550636647dc161e1c662fdf47d93128028b96eec7bfb8be1c3be33967",
+    "current_sha256": "1f6c650db7c6727fcb4501c240892729a7309fd0076d3adac15bb26f094e9e9d",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed_sha256": "11d6547f542307697a5348360272d459930cc198fad7a01bd29c3c919f88cf17",
+    "current_sha256": "56ac35b488d57f350f06f9e770fe0a59972b1dfdba8c303492f30e0d1dbed0d2",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "full_correctness.py": {
+    "seed_sha256": "fe043f0914647d43442f3e77fe788c526cee70011b277657104da60e69bb4cdc",
+    "current_sha256": "f566a7174f040ed08cde89ec05dd058d76e66094dd5189afd0a5ef73bfd34706",
+    "original_numeric_golden_assertions_inverse_exact": true
+  },
+  "verify_correctness_terminal.py": {
+    "seed_sha256": "0a72a69760d88760ce33227f58f5ae36b931d6c837ab4378e2f9abbfed14437e",
+    "current_sha256": "5d2a9fede8bdc53e028a19af98aaacab9f9ce5853f57ec464ad6d5273f0ceb26",
+    "original_numeric_golden_assertions_inverse_exact": true
+  }
+}

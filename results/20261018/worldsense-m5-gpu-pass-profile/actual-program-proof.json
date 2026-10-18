@@ -1,0 +1,66 @@
+{
+  "all_five_actual_MAIN_and_prefill_sources_exact_seed": true,
+  "programs": {
+    "off": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+        "exact_WS54": true
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exact_WS54": true
+      }
+    },
+    "primary": {
+      "main": {
+        "bytes": 76642,
+        "sha256": "2b29178d6b2f3ec30db757766dd1274845711eccf573e78497ee1f8828afdb81",
+        "exact_WS54": true
+      },
+      "prefill": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exact_WS54": true
+      }
+    },
+    "on": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+        "exact_WS54": true
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+        "exact_WS54": true
+      }
+    },
+    "quiet": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+        "exact_WS54": true
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+        "exact_WS54": true
+      }
+    },
+    "fault": {
+      "main": {
+        "bytes": 63741,
+        "sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+        "exact_WS54": true
+      },
+      "prefill": {
+        "bytes": 21709,
+        "sha256": "a60d6e14e90f2095c976c09c6be8d3834c959c6a1ca13a42a2fe19f2e7ab419f",
+        "exact_WS54": true
+      }
+    }
+  },
+  "scope": "Actual constructor MSL source, not GPU ISA/performance identity."
+}

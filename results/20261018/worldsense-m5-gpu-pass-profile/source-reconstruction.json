@@ -1,0 +1,21 @@
+{
+  "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "source_manifest": "correctness-source-manifest.json",
+  "overlay_files": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/gpu_pass_counter_trace.inc",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_isolation_shader.h",
+    "src/backends/metal/primary_vector_prefill_shader.h",
+    "src/backends/metal/wide_checkpoint_policy.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/gpu_pass_counter_test.cpp",
+    "test2026/metal/primary_storage_test.cpp"
+  ],
+  "full_closure_files": 1720,
+  "reconstruction": "Write only manifest-listed files into an empty directory, from source/ overlay if listed, otherwise git base:path. Build commands/flags are recorded; no portable binary identity or speed guarantee."
+}

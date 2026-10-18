@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T04:14:05.928982+00:00
+Generated UTC: 2026-10-18T05:16:18.551090+00:00
 
-Base HEAD at generation: `78dbca72dda1d51553aa0eed7e932bab94b0f6c7`. Reports indexed: **252**.
+Base HEAD at generation: `392507dc01088200f68401f7acbc2a1e7ac706f6`. Reports indexed: **253**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -246,6 +246,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |
 | [results/20261017/worldsense-m5-wide-storage](../../../results/20261017/worldsense-m5-wide-storage/README.md) | WS-M5-44 — Wide-checkpoint storage rejected by text decoding |
 | [results/20261018/worldsense-m5-dense-prefetch](../../../results/20261018/worldsense-m5-dense-prefetch/README.md) | WS-M5-60 — Ordered raw dense load lookahead rejected |
+| [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |
 | [results/20261018/worldsense-m5-thread-qos](../../../results/20261018/worldsense-m5-thread-qos/README.md) | WS-M5-59 — Scoped native text-worker QoS rejected |
 | [results/20261018/worldsense-m5-validated-text-worker](../../../results/20261018/worldsense-m5-validated-text-worker/README.md) | WS-M5-61 — Pinned WS10 native text worker rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |

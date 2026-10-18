@@ -1,0 +1,26 @@
+loading initial cache file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-gpu-counter-profile/build-profile/MetalWorldSense4BPrefix.cmake
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-gpu-counter-profile-off
+[  6%] Built target garnet_native_image
+[ 10%] Building OBJCXX object CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o
+[ 13%] Linking OBJCXX static library libgarnet_metal.a
+[ 13%] Built target garnet_metal
+[ 20%] Linking OBJCXX executable garnet_memory_stats_test
+[ 20%] Linking CXX executable garnet_inventory_test
+[ 27%] Built target garnet_inventory_test
+[ 27%] Built target garnet_memory_stats_test
+[ 34%] Linking CXX executable garnet_metal_matmul_test
+[ 34%] Linking CXX executable garnet_prefix_copy_test
+[ 41%] Built target garnet_prefix_copy_test
+[ 41%] Built target garnet_metal_matmul_test
+[ 44%] Linking CXX executable garnet_matrix_metadata_test
+[ 48%] Linking CXX shared library libgarnet.dylib
+[ 51%] Built target garnet_matrix_metadata_test
+[ 55%] Linking CXX executable garnet_primary_storage_test
+[ 82%] Built target garnet
+[ 86%] Linking CXX executable garnet_primary_projection_test
+[ 89%] Built target garnet_primary_storage_test
+[ 93%] Linking CXX executable garnet_gpu_pass_counter_test
+[ 96%] Built target garnet_primary_projection_test
+[100%] Built target garnet_gpu_pass_counter_test

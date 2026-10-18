@@ -1,0 +1,62 @@
+{
+  "utc": "2026-10-18T04:54:21.541166+00:00",
+  "four_actualWorldSense_Galaxy_native_calls_exact": true,
+  "pid": 40391,
+  "requests": {
+    "1": {
+      "model": "Qwen3.5-4B",
+      "phase": "phase1",
+      "warmup": true,
+      "repetition": 0,
+      "decode_steps": 94,
+      "expected_sampled_steps": [
+        4,
+        16,
+        28
+      ]
+    },
+    "2": {
+      "model": "Qwen3-1.7B",
+      "phase": "phase3",
+      "warmup": true,
+      "repetition": 0,
+      "decode_steps": 35,
+      "expected_sampled_steps": [
+        4,
+        16,
+        28
+      ]
+    },
+    "3": {
+      "model": "Qwen3.5-4B",
+      "phase": "phase1",
+      "warmup": false,
+      "repetition": 1,
+      "decode_steps": 94,
+      "expected_sampled_steps": [
+        4,
+        16,
+        28
+      ]
+    },
+    "4": {
+      "model": "Qwen3-1.7B",
+      "phase": "phase3",
+      "warmup": false,
+      "repetition": 1,
+      "decode_steps": 35,
+      "expected_sampled_steps": [
+        4,
+        16,
+        28
+      ]
+    }
+  },
+  "counter_commands": 12,
+  "counter_samples": 7716,
+  "all_reached_predeclared_steps_and_native_scopes_join_exactly": true,
+  "all_source_model_runtime_library_driver_and_host_identities_unchanged": true,
+  "WS10_normal_fourfiles_noCam_benchmark404_restored": true,
+  "speed_eligibility": false,
+  "scope": "Candidate-only bounded hardware-counter diagnostic. No throughput gain, complete GPU decomposition or promotion."
+}
