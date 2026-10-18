@@ -1,0 +1,152 @@
+{
+  "executor": "XLang3",
+  "cases": [
+    {
+      "image": "orientation-1.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "39626be9df65c612eec82e29addb307ba74b26daed6325b676b2e0d0779eac48",
+      "seconds": 0.0003258330107200891
+    },
+    {
+      "image": "orientation-2.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "2be2d3da709b7178e1cd58cb94490729e79cf20a67debc4f26413e906bad1ff8",
+      "seconds": 0.00032216598629020154
+    },
+    {
+      "image": "orientation-3.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "5ac36ee8d1430f0562db45bb892eee3828560f1f51875e8f5d297dbf43fc9851",
+      "seconds": 0.00029404202359728515
+    },
+    {
+      "image": "orientation-4.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "b008b8181f198a43da745482aeff3e464db8249d594d4f81fa10bf30fb6fa69d",
+      "seconds": 0.000262040994130075
+    },
+    {
+      "image": "orientation-5.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "9d752d887433d5d44378e06b900678cacbe859ef0973829f5c3e812f248ef240",
+      "seconds": 0.0003202080260962248
+    },
+    {
+      "image": "orientation-6.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "6fc4f92f3dd34a351a24a91a93556e4dc1eacdc75605d013763248d4529821fa",
+      "seconds": 0.00037033401895314455
+    },
+    {
+      "image": "orientation-7.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "da29be514fc5dd3d015ce437f661cef9263c9b292e823edbe3709da4455c1bbb",
+      "seconds": 0.0003183750086463988
+    },
+    {
+      "image": "orientation-8.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "9cb2d081d23b142f54df79e90440df4744544424af717f1d0f9ac0818011fc72",
+      "seconds": 0.0002962500147987157
+    },
+    {
+      "image": "rgb.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "bf6d70f763eeb4869b556530237758c9c49ed5fe15f1be655ec6842be6e7eb32",
+      "seconds": 0.0006407500186469406
+    },
+    {
+      "image": "gray.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "a8bffd48443608fbffe44e5166c327d5dfea906c5cb9369ba2663095b87229ed",
+      "seconds": 0.0002715839946176857
+    },
+    {
+      "image": "gray.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "7b319bbe649dc43d446f74524b48ada11bbdd69d1348df8fd420e2f9ccb11ebe",
+      "seconds": 0.00029908298165537417
+    },
+    {
+      "image": "cmyk.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "98cd6b76131ffce434498b3bf1c8d75c80b9b3130029864ad3ff801a92a91f85",
+      "seconds": 0.0003173339937347919
+    },
+    {
+      "image": "alpha.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "bf6d70f763eeb4869b556530237758c9c49ed5fe15f1be655ec6842be6e7eb32",
+      "seconds": 0.00034504200448282063
+    },
+    {
+      "image": "palette.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "36102e63916bf6ef5c091e8302b02c51f492dcf7c75680a5de98b38a7bf1eaf8",
+      "seconds": 0.00030683301156386733
+    },
+    {
+      "image": "progressive.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "a9261a2a8dd56134cf45b1bc6c8d4ba6c44648e08e813dbf0cde660ff8bf4702",
+      "seconds": 0.0003302499826531857
+    },
+    {
+      "image": "tiny.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "f5aa44aff4d60611d46f03196b2aafbb91cea0649fab761bd284f5719a8f5770",
+      "seconds": 0.00021733398898504674
+    },
+    {
+      "image": "wide.jpg",
+      "bitwise_equal": true,
+      "fp32_values": 18432,
+      "sha256": "fbdf50b31335798f5ad643383925c19bb07e8421b80c0dcaccffce03e2c56734",
+      "seconds": 0.0006948749942239374
+    },
+    {
+      "image": "orientation.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "d895299f4983535be23de82befb4815a9cc3ff7affb0a764846d19fca71e2aa8",
+      "seconds": 0.00028287500026635826
+    },
+    {
+      "image": "gray16.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "1fbc8ff79667c20c4a1fc23d05be685e50b4f5c8352adb76a299301d10f28b62",
+      "seconds": 0.00027258400223217905
+    },
+    {
+      "image": "variable-alpha.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "bf6d70f763eeb4869b556530237758c9c49ed5fe15f1be655ec6842be6e7eb32",
+      "seconds": 0.00032662501325830817
+    },
+    {
+      "image": "orientation-after-idat.png",
+      "bitwise_equal": true,
+      "fp32_values": 24576,
+      "sha256": "d895299f4983535be23de82befb4815a9cc3ff7affb0a764846d19fca71e2aa8",
+      "seconds": 0.0003718750085681677
+    }
+  ]
+}
