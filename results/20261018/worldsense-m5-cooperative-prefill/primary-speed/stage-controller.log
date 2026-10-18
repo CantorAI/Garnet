@@ -1,0 +1,50 @@
+START control-1 2026-10-18T09:22:31Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-18T09:24:16Z
+FINISH candidate-1 exit 0
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 89278
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+RESTORED VALIDATED WS10 AND NORMAL NONBENCHMARK SERVER
+Build/SDK/host dependency identity unchanged 1881 primary-speed
+{
+  "matched_primary": true,
+  "matched_memory_preserved": false,
+  "sampled_max_footprint_bytes": {
+    "control-1": 16081630936,
+    "candidate-1": 16564467848
+  },
+  "minimum_VLM_TTFT_gain": 0.05,
+  "observed_VLM_TTFT_gain": -0.34768355774875936,
+  "status": "rejected",
+  "passed": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": 0.7567844235150858,
+      "total_change": 0.5218766507937349,
+      "decode_gain": -0.1319239107893614
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": 0.34768355774875936,
+      "total_change": 0.4937074646335362,
+      "decode_gain": -0.380452268993936
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": 16870899712,
+    "candidate-1": 16870899712
+  },
+  "sampled_metal_reduction": 0.0,
+  "native_skill_wall_p50": {
+    "control-1": 12.267279042003793,
+    "candidate-1": 18.39155504151131
+  },
+  "native_skill_wall_gain": -0.4992367075484043,
+  "scope": "Primary-STORAGE-control/policy screen: shared primaryformat; lifetimes/metadata/prefill/directupload differ;5%VLMwarmTTFT improvement and2%model/wall/memory preservation required. Not isolated GPU timing or confirmed causal evidence. Warm metrics separate from first; memory maxima sampled after decode over all returned calls, not peaks. Native Skill wall includes complete native request; memory snapshots count Metal resources, not free RAM or a peak."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 89373
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

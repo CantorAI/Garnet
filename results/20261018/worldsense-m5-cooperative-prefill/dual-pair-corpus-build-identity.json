@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-cooperative-prefill/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-cooperative-prefill/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-cooperative-prefill/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-cooperative-prefill/dual_pair_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-cooperative-prefill/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-cooperative-prefill-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-cooperative-prefill-on/dual_pair_corpus_test"
+  ],
+  "source_sha256": "d8f2b07c9e449a1f368afd38297c5e9c9ef417f22ec6c383dbfa5b219ed141d2",
+  "library_sha256": "737287c85e38b2de6e8a0ae9f724ce2a9f6c7975630c5b5e474470354111a31b",
+  "executable_sha256": "bfd3fa12d88d0cecc77e8741e26ec4f01515094b3c024c7eeb74ec5577f0feae"
+}

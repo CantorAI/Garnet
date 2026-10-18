@@ -1,0 +1,54 @@
+{
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#include \"direct_interleaved_prefill_shader.h\"",
+      "after": "#include \"direct_interleaved_prefill_shader.h\"\n#ifdef GARNET_METAL_SOLE_COOPERATIVE_PREFILL\n#include \"cooperative_sole_prefill_shader.h\"\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        impl_->kernels->soleProgram+=kDirectInterleavedPrefillShader;",
+      "after": "#ifdef GARNET_METAL_SOLE_COOPERATIVE_PREFILL\n        impl_->kernels->soleProgram+=kCooperativeSolePrefillShader;\n#else\n        impl_->kernels->soleProgram+=kDirectInterleavedPrefillShader;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "",
+      "after": "\nnamespace Garnet {\nstd::vector<MetalSolePrefillPipelineInfo> MetalContext::SolePrefillPipelineInfo()const{\n std::vector<MetalSolePrefillPipelineInfo> result;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n @autoreleasepool {\n bool cooperative=false;\n#ifdef GARNET_METAL_SOLE_COOPERATIVE_PREFILL\n cooperative=true;\n#endif\n auto add=[&](const char* name,id<MTLComputePipelineState> pipeline){result.push_back({name,uint64_t(pipeline.threadExecutionWidth),uint64_t(pipeline.maxTotalThreadsPerThreadgroup),uint64_t(pipeline.staticThreadgroupMemoryLength),uint64_t(impl_->device.maxThreadgroupMemoryLength),cooperative});};\n add(\"base32x32\",impl_->kernels->soleGemm);add(\"wide16_64x64\",impl_->kernels->soleGemm16);add(\"wide32_64x32\",impl_->kernels->soleGemm32);add(\"wordprobe\",impl_->kernels->soleTileRead);\n }\n#endif\n return result;\n}\n}\n",
+      "count": 1,
+      "append": true
+    }
+  ],
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "class MetalContext {",
+      "after": "struct MetalSolePrefillPipelineInfo {\n std::string name;uint64_t threadWidth=0,maxThreads=0,staticThreadgroupBytes=0,deviceMaxThreadgroupBytes=0;bool cooperative=false;\n};\nclass MetalContext {",
+      "count": 1
+    },
+    {
+      "before": "    std::string SoleShaderProgramSource() const;",
+      "after": "    std::string SoleShaderProgramSource() const;\n    std::vector<MetalSolePrefillPipelineInfo> SolePrefillPipelineInfo() const;",
+      "count": 1
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "        info+=\"; sole_dual_projection_decode\";\n#endif",
+      "after": "        info+=\"; sole_dual_projection_decode\";\n#endif\n#ifdef GARNET_METAL_SOLE_COOPERATIVE_PREFILL\n        info+=\"; sole_cooperative_prefill\";\n#endif",
+      "count": 1
+    }
+  ],
+  "test2026/metal/sole_interleaved_test.cpp": [
+    {
+      "before": " MetalContext gpu;std::ofstream shader(std::string(argv[1])+\".metal\");shader<<gpu.SoleShaderProgramSource();",
+      "after": " MetalContext gpu;std::ofstream shader(std::string(argv[1])+\".metal\");shader<<gpu.SoleShaderProgramSource();\n std::ofstream capabilities(std::string(argv[1])+\".prefill-pipelines.tsv\");\n for(const auto& p:gpu.SolePrefillPipelineInfo())capabilities<<p.name<<\"\\t\"<<p.cooperative<<\"\\t\"<<p.threadWidth<<\"\\t\"<<p.maxThreads<<\"\\t\"<<p.staticThreadgroupBytes<<\"\\t\"<<p.deviceMaxThreadgroupBytes<<\"\\n\";\n need(bool(capabilities),\"Cannot save actual prefill pipeline capabilities\");",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_SOLE_COOPERATIVE_PREFILL \"Cooperative physical-order sole BF16 prefill loads with padded logical right tiles\" OFF)\nif(GARNET_METAL_SOLE_COOPERATIVE_PREFILL)\n if(NOT GARNET_METAL_SOLE_INTERLEAVED_MLP OR NOT GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL)\n  message(FATAL_ERROR \"Cooperative sole prefill requires sole MLP storage and direct prefill\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_SOLE_COOPERATIVE_PREFILL=1)\nendif()\n",
+      "count": 1,
+      "append": true
+    }
+  ]
+}

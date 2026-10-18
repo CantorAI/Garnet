@@ -1,0 +1,216 @@
+{
+  "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+  "serving_configuration": {
+    "text_prefix_cache": true,
+    "capacity": 256,
+    "image_pixels": 65536,
+    "prefill_chunk": 16,
+    "requested_output_limit": 8,
+    "share_vision_weights": false
+  },
+  "image_preprocess_backend": "",
+  "image_preprocess_seconds": 0,
+  "status": "ok",
+  "text": "{\"matched\": true, \"reason\":",
+  "model_id": "Qwen3-1.7B",
+  "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; sole_interleaved_mlp; sole_direct_interleaved_prefill",
+  "generated_tokens": 8,
+  "timings": {
+    "initialization_memory": {
+      "before": {
+        "metal_allocated_bytes": 1341341696,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 2576957440,
+        "task_info_status": 0,
+        "task_internal_bytes": 129564672,
+        "task_physical_footprint_bytes": 2712031144,
+        "task_resident_bytes": 151011328,
+        "task_virtual_bytes": 448785694720
+      },
+      "other_model_ids_at_start": [],
+      "after_decoder_ready": {
+        "metal_allocated_bytes": 5023252480,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 1388085248,
+        "task_info_status": 0,
+        "task_internal_bytes": 3665625088,
+        "task_physical_footprint_bytes": 5059106360,
+        "task_resident_bytes": 3761274880,
+        "task_virtual_bytes": 454509985792
+      }
+    },
+    "memory_before_request": {
+      "metal_allocated_bytes": 5160419328,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 1344864256,
+      "task_info_status": 0,
+      "task_internal_bytes": 3778412544,
+      "task_physical_footprint_bytes": 5293922376,
+      "task_resident_bytes": 3875602432,
+      "task_virtual_bytes": 454652559360
+    },
+    "reset_seconds": 0.0031380000000353903,
+    "memory_after_input": {
+      "metal_allocated_bytes": 5160419328,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 1344864256,
+      "task_info_status": 0,
+      "task_internal_bytes": 3778412544,
+      "task_physical_footprint_bytes": 5293922376,
+      "task_resident_bytes": 3875602432,
+      "task_virtual_bytes": 454652559360
+    },
+    "prefix_cache_hit": true,
+    "prefix_cache_restored_tokens": 64,
+    "prefix_cache_captured_tokens": 0,
+    "prefix_cache_restore_seconds": 0.00030399998649954796,
+    "prefix_cache_capture_seconds": 0,
+    "executed_prefill_tokens": 73,
+    "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+    "memory_after_prefill": {
+      "metal_allocated_bytes": 5160550400,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 1344864256,
+      "task_info_status": 0,
+      "task_internal_bytes": 3778412544,
+      "task_physical_footprint_bytes": 5326215240,
+      "task_resident_bytes": 3875602432,
+      "task_virtual_bytes": 454652690432
+    },
+    "prefill_seconds": 0.397515791002661,
+    "prefill_compile_ms": 0,
+    "prefill_profile": {
+      "prepare_ms": 0.472375,
+      "encode_ms": 1.9674579999999997,
+      "gpu_ms": 364.4027083355468,
+      "wait_ms": 393.381875
+    },
+    "input_tokens": 137,
+    "prefill_chunk_plan": [
+      16,
+      16,
+      16,
+      16,
+      16
+    ],
+    "host_input_seconds": 0.0007479999912902713,
+    "decode_seconds": 0.22213466701214202,
+    "memory_after_decode": {
+      "metal_allocated_bytes": 5160419328,
+      "metal_recommended_working_set_bytes": 19069665280,
+      "metal_registry_id": 4294968354,
+      "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+      "task_compressed_bytes": 1344864256,
+      "task_info_status": 0,
+      "task_internal_bytes": 3778412544,
+      "task_physical_footprint_bytes": 5326084168,
+      "task_resident_bytes": 3875602432,
+      "task_virtual_bytes": 454652559360
+    },
+    "lazy_default_retired_bytes": 239009792,
+    "lazy_default_rehydrated_bytes": 0,
+    "lazy_default_planned_slots": 168,
+    "decode_profile": {
+      "prepare_ms": 0.562165,
+      "encode_ms": 1.7245009999999996,
+      "gpu_ms": 217.4825417168904,
+      "wait_ms": 219.428666
+    },
+    "decode_fused_head_dispatches": 0,
+    "prefix_cache_native_bytes": 14680064,
+    "prefix_cache_native_entries": 1,
+    "prefix_restore_native_bytes": 14680064,
+    "prefix_capture_native_bytes": 0,
+    "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-cooperative-prefill/source/runtime/metal_serving.py",
+    "dual_projection_before": {
+      "encoded_pairs": 0,
+      "represented_projections": 0
+    },
+    "dual_projection_after": {
+      "encoded_pairs": 0,
+      "represented_projections": 0
+    },
+    "dual_projection_delta": {
+      "encoded_pairs": 0,
+      "represented_projections": 0
+    },
+    "sole_storage_before": {
+      "active_weights": 84,
+      "allocated_bytes": 2113929216,
+      "decode_encoded": 1176,
+      "prefill_encoded": 1176,
+      "restore_encoded": 0,
+      "scratch_bytes": 0,
+      "uploads": 84
+    },
+    "sole_storage_after": {
+      "active_weights": 84,
+      "allocated_bytes": 2113929216,
+      "decode_encoded": 1764,
+      "prefill_encoded": 1596,
+      "restore_encoded": 0,
+      "scratch_bytes": 0,
+      "uploads": 84
+    },
+    "sole_encoded_delta": {
+      "decode_encoded": 588,
+      "restore_encoded": 0,
+      "prefill_encoded": 420
+    },
+    "primary_storage_before": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 6000,
+      "head_encoded": 32,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 800,
+      "uploads": 201,
+      "vector_decode_encoded": 6000,
+      "vector_head_encoded": 32
+    },
+    "primary_storage_after": {
+      "active_weights": 0,
+      "allocated_bytes": 0,
+      "decode_encoded": 6000,
+      "head_encoded": 32,
+      "metadata_bytes": 0,
+      "original_bytes": 0,
+      "payload_bytes": 0,
+      "prefill_encoded": 800,
+      "uploads": 201,
+      "vector_decode_encoded": 6000,
+      "vector_head_encoded": 32
+    },
+    "primary_encoded_delta": {
+      "decode_encoded": 0,
+      "prefill_encoded": 0,
+      "head_encoded": 0,
+      "vector_decode_encoded": 0,
+      "vector_head_encoded": 0
+    }
+  },
+  "generated_token_ids": [
+    4913,
+    36734,
+    788,
+    830,
+    11,
+    330,
+    19895,
+    788
+  ],
+  "ttft_seconds": 0.4014479999896139,
+  "total_seconds": 0.6240922499855515
+}

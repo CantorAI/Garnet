@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T08:45:41.533564+00:00
+Generated UTC: 2026-10-18T09:32:25.253788+00:00
 
-Base HEAD at generation: `b4c46771465a620966971fb421295eb3d528df58`. Reports indexed: **257**.
+Base HEAD at generation: `a13a77a5880103fed1c2ef44b5354ba22a2acb63`. Reports indexed: **258**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -245,6 +245,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-wide-cached-prefill](../../../results/20261017/worldsense-m5-wide-cached-prefill/README.md) | WS-M5-53 — Wide 4B storage with cached metadata rejected on text decoding |
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |
 | [results/20261017/worldsense-m5-wide-storage](../../../results/20261017/worldsense-m5-wide-storage/README.md) | WS-M5-44 — Wide-checkpoint storage rejected by text decoding |
+| [results/20261018/worldsense-m5-cooperative-prefill](../../../results/20261018/worldsense-m5-cooperative-prefill/README.md) | worldsense-m5-cooperative-prefill |
 | [results/20261018/worldsense-m5-dense-prefetch](../../../results/20261018/worldsense-m5-dense-prefetch/README.md) | WS-M5-60 — Ordered raw dense load lookahead rejected |
 | [results/20261018/worldsense-m5-direct-interleaved-prefill](../../../results/20261018/worldsense-m5-direct-interleaved-prefill/README.md) | WS-M5-64 — Direct interleaved BF16 prefill: rejected |
 | [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |

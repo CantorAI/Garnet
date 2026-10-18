@@ -1,0 +1,21 @@
+from pathlib import Path
+import ast
+p=Path(__file__).resolve().parent
+oldslug='worldsense-sole-dual-decode';slug='worldsense-cooperative-prefill'
+t=(p/'admission_ws66.py').read_text().replace(oldslug,slug)
+a="'-DGARNET_METAL_SOLE_DUAL_PROJECTION_DECODE=ON',";assert t.count(a)==1;t=t.replace(a,a+"'-DGARNET_METAL_SOLE_COOPERATIVE_PREFILL=ON',")
+a='results={}';assert t.count(a)==1;t=t.replace(a,"cases.extend([('cooperative-direct',['-DGARNET_METAL_SOLE_DUAL_PROJECTION_DECODE=OFF','-DGARNET_METAL_SOLE_INTERLEAVED_MLP=ON','-DGARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL=OFF'],'Cooperative sole prefill requires sole MLP storage and direct prefill'),('cooperative-storage',['-DGARNET_METAL_SOLE_DUAL_PROJECTION_DECODE=OFF','-DGARNET_METAL_SOLE_INTERLEAVED_MLP=OFF','-DGARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL=OFF'],'Cooperative sole prefill requires sole MLP storage and direct prefill')])\n"+a)
+t=t.replace('twentythree_expected_config_rejections=len(results)==23','twentyfive_expected_config_rejections=len(results)==25').replace('Six original/seventeen new','Six original/nineteen new');ast.parse(t);(p/'admission_ws67.py').write_text(t)
+t=(p/'prepare_worldsense_ws66.py').read_text().replace(oldslug,slug).replace('twentythree_expected_config_rejections','twentyfive_expected_config_rejections')
+a=" if ('sole_dual_projection_decode'in call['backend'])!=enabled:return False";assert t.count(a)==1;t=t.replace(a,a+"\n if ('sole_cooperative_prefill'in call['backend'])!=enabled:return False")
+t=t.replace("'sole_dual_projection_decode','native_text_worker']","'sole_dual_projection_decode','sole_cooperative_prefill','native_text_worker']")
+a="'GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE':('OFF','ON'),";assert t.count(a)==1;t=t.replace(a,a+"'GARNET_METAL_SOLE_COOPERATIVE_PREFILL':('OFF','ON'),")
+a="'GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL','GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE']}";assert t.count(a)==1;t=t.replace(a,"'GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL','GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE','GARNET_METAL_SOLE_COOPERATIVE_PREFILL']}")
+t=t.replace("['off','primary','on','fault','restore','direct64']","['off','primary','on','fault','restore','direct64','dual66']").replace('for six builds','for seven builds').replace('WS66 source/twelveflagRAWcontrast/nineflagPRIMARYcontrast','WS67 source/thirteenflagRAWcontrast/tenflagPRIMARYcontrast').replace('WS66 sole paired text decode with unchanged separate outputs/SiLU. RAWcandidate12flags/PRIMARYcandidate9flags. New guarded graph/context inverse exact and all original shader strings/tests unchanged. Faults only separate correctness build','WS67 cooperative padded sole prefill. RAWcandidate13flags/PRIMARYcandidate10flags. New explicit integer/sharedlayout normalization preserves old FP32 arithmetic/order; graph/runtime/decode unchanged66, native report-only extension. Faults only separate correctness build');ast.parse(t);(p/'prepare_worldsense_ws67.py').write_text(t)
+t=(p/'audit_routes_ws66.py').read_text().replace(oldslug,slug).replace("'sole_dual_projection_decode']","'sole_dual_projection_decode','sole_cooperative_prefill']");ast.parse(t);(p/'audit_routes_ws67.py').write_text(t)
+for name in ['prepare_functional','verify_functional','prepare_resource','verify_resource','prepare_actual_speed']:
+ t=(p/(name+'_ws66.py')).read_text().replace(oldslug,slug).replace('ws66.py','ws67.py').replace('WS66','WS67').replace('==1723','==1724').replace("['off','primary','on','fault','restore','direct64']","['off','primary','on','fault','restore','direct64','dual66']").replace('all_six_builds_FP32_words_identical','all_seven_builds_FP32_words_identical').replace('all_six_builds_complete_FP32_words_identical','all_seven_builds_complete_FP32_words_identical').replace('twentythree_expected_config_rejections','twentyfive_expected_config_rejections')
+ if name=='prepare_resource':
+  t=t.replace("['original_shader_literals_and_all_original_eight_tests_unchanged']","['all_original_nine_native_mathematics_limits_and_complete_records_unchanged']").replace("['all_existing_graph_context_bytes_inverse_exact_outside_new_guarded_blocks']","['existing_context_test_report_only_changes_inverse_exact']")
+ ast.parse(t);(p/(name+'_ws67.py')).write_text(t)
+print('Future WS67 original-gate pipeline helpers prepared;25config cases/13RAW10PRIMARYflags; no dispatch')
