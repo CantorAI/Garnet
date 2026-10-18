@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws65.py", line 64, in <module>
+    log=(d/('native-'+role+'.log')).read_text();assert '100% tests passed, 0 tests failed out of 9'in log
+AssertionError

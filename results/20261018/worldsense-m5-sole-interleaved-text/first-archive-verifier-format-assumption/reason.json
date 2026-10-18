@@ -1,0 +1,6 @@
+{
+  "utc": "2026-10-18T07:31:59.672332+00:00",
+  "scope": "Archive-only verifier text-format assumption, not inference/build/test failure.",
+  "failure": "Verifier expected CTest summary: 100% tests passed, 0 tests failed out of 9. Actual captured CTest: 100% tests passed out of 9.",
+  "repair": "Require actual captured summary plus exactly nine individual Passed records with indices1..9. Preserve native result zero for allsix. No source/data/math/oracle/threshold/timing change or new inference."
+}

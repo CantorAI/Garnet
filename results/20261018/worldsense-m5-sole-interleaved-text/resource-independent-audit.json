@@ -1,0 +1,169 @@
+{
+  "utc": "2026-10-18T07:18:01.313040+00:00",
+  "observed_terminal_session": 52735,
+  "exit_code": 0,
+  "original8_exact_native_calls_pass": true,
+  "source_drivers_dependencies_unchanged": true,
+  "recomputed_snapshot_maxima": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18055444712
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 16870899712,
+      "task_physical_footprint_bytes": 16079729576
+    }
+  },
+  "recomputed_reductions": {
+    "metal_allocated_bytes": 0.22975803290656727,
+    "task_physical_footprint_bytes": 0.10942489467938177
+  },
+  "actual_native_layout_records": [
+    {
+      "label": "control-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "control-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "control-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "control-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 197,
+        "allocated_bytes": 3440902144,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 197
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 197,
+        "allocated_bytes": 3440902144,
+        "decode_encoded": 6896,
+        "prefill_encoded": 2548,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 197
+      },
+      "sole_delta": {
+        "decode_encoded": 6896,
+        "prefill_encoded": 2548,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 197,
+        "allocated_bytes": 3440902144,
+        "decode_encoded": 6896,
+        "prefill_encoded": 2548,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 197
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 197,
+        "allocated_bytes": 3440902144,
+        "decode_encoded": 13792,
+        "prefill_encoded": 4312,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 197
+      },
+      "sole_delta": {
+        "decode_encoded": 6896,
+        "prefill_encoded": 1764,
+        "restore_encoded": 0
+      }
+    }
+  ],
+  "original_resource_thresholds_pass": true,
+  "no_speed_or_promotion_claim": true
+}

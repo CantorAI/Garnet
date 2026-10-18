@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T06:54:37.209027+00:00
+Generated UTC: 2026-10-18T07:34:10.231497+00:00
 
-Base HEAD at generation: `40780f3cb39d334c400820903d30d15526c51945`. Reports indexed: **255**.
+Base HEAD at generation: `a6924be03a4b36a3472677d17f0d16a4f8bdfb5a`. Reports indexed: **256**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -249,6 +249,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261018/worldsense-m5-direct-interleaved-prefill](../../../results/20261018/worldsense-m5-direct-interleaved-prefill/README.md) | WS-M5-64 — Direct interleaved BF16 prefill: rejected |
 | [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |
 | [results/20261018/worldsense-m5-sole-interleaved-mlp](../../../results/20261018/worldsense-m5-sole-interleaved-mlp/README.md) | WS-M5-63 — Sole interleaved text MLP weights: rejected |
+| [results/20261018/worldsense-m5-sole-interleaved-text](../../../results/20261018/worldsense-m5-sole-interleaved-text/README.md) | worldsense-m5-sole-interleaved-text |
 | [results/20261018/worldsense-m5-thread-qos](../../../results/20261018/worldsense-m5-thread-qos/README.md) | WS-M5-59 — Scoped native text-worker QoS rejected |
 | [results/20261018/worldsense-m5-validated-text-worker](../../../results/20261018/worldsense-m5-validated-text-worker/README.md) | WS-M5-61 — Pinned WS10 native text worker rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |

@@ -1,0 +1,199 @@
+{
+  "build_corpus.py": {
+    "seed_sha256": "18b02e990f0c57035d6cb71cddde6715ba89bb8f24b99a0efaa1cae0385e8312",
+    "current_sha256": "eda45b5b455c24614e98cf72df2d2c5e97874bfa80a9d3036a0d0ae2ad6cb565",
+    "operations": [],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed_sha256": "815b91c5731a8cf94634d44fadab23b9eafdc262c564eda540ab394ac811f89f",
+    "current_sha256": "100c48326ce6c6356978c661d83a2dba910d45f984b9a7396b5034df90e22620",
+    "operations": [],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "operations": [],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed_sha256": "ac8fa19a761e0123e7fa9f8a27daa90796a3ce50fa876c0f095a06c65561a034",
+    "current_sha256": "dbfeffd8576d7657d817b863a8a873d2a9c4b8b98e237f84becc73e064b70c8c",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed_sha256": "9e5a0b6c76dc168eafbf2636720b8a3faca17c5b3d3d96a384427e2104decb64",
+    "current_sha256": "85944bfe6f9f761414dee24dd8fc05e093a92098f4d52446af5088a23f90ff34",
+    "operations": [
+      {
+        "before": "endswith(('-on','-restore'))",
+        "after": "endswith(('-on','-restore','-direct64'))",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed_sha256": "d5363f77dc0c622644d4faf025a3f629d4c853183d1de7f7483b738fdd482bc2",
+    "current_sha256": "f59f9248c79ff41ae7549197fadb47aebca99630050b4631f45aa3e50628f294",
+    "operations": [],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed_sha256": "0ec9c908e02ee8becc2a919ff02fbb1f73a7e1ab457488466a1e81ba854033a5",
+    "current_sha256": "88d3c93550513a9013ba2e169c8bc256cc1b44a57a8c97d4481f1bb699d325a3",
+    "operations": [],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed_sha256": "f6d29f208d389f1a367b0fb5611731949d7e30b3de4a7110bbfe733e68c062d9",
+    "current_sha256": "3629316551b717c94869e48c368b43eb29ba4052730bbb5b475dfcc460c8280f",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "vector_expected=mode in ['on','restore'];direct_expected=mode=='on'",
+        "after": "vector_expected=mode in ['on','restore','direct64'];direct_expected=mode in ['on','direct64'];expanded_expected=mode=='on'",
+        "count": 1
+      },
+      {
+        "before": "assert ('sole_direct_interleaved_prefill'in call['backend'])==direct_expected",
+        "after": "assert ('sole_direct_interleaved_prefill'in call['backend'])==direct_expected\n assert ('sole_interleaved_text'in call['backend'])==expanded_expected",
+        "count": 1
+      },
+      {
+        "before": "assert sole['active_weights']==84 and sole['allocated_bytes']==84*2048*6144*2",
+        "after": "assert sole['active_weights']==(197 if expanded_expected else 84) and sole['allocated_bytes']==(3440902144 if expanded_expected else 2113929216)",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "full_correctness.py": {
+    "seed_sha256": "928d7be49e66043a9ec81dde9a4c9bea6e55e104033297800f9f1403facc088e",
+    "current_sha256": "46d33e25c4d7d4d4d494b6a3c306edb19b805dd89dd822fb79d59e7fb59cc3a7",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "{'off','primary','on','fault','restore'}",
+        "after": "{'off','primary','on','fault','restore','direct64'}",
+        "count": 1
+      },
+      {
+        "before": "['all_five_builds_FP32_words_identical']",
+        "after": "['all_six_builds_FP32_words_identical']",
+        "count": 2
+      },
+      {
+        "before": "['sole_interleaved_matrices']==84",
+        "after": "['sole_interleaved_matrices']==197",
+        "count": 1
+      },
+      {
+        "before": "['GPU_sole_original_FP32_words_checked']==1056964608",
+        "after": "['GPU_sole_original_FP32_words_checked']==1720451072",
+        "count": 1
+      },
+      {
+        "before": "{'32x32':1056964608,'64x64':1056964608,'64x32':1056964608}",
+        "after": "{'32x32':1720451072,'64x64':1720451072,'64x32':1720451072}",
+        "count": 1
+      },
+      {
+        "before": "native8tests",
+        "after": "native9tests",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "verify_correctness_terminal.py": {
+    "seed_sha256": "e575bccf978bb2d0bf5d41312a597c976bccfbde9aecbab44b62ae5b03ae738f",
+    "current_sha256": "596a9d67e5e3b246de873a5dea2d20a23b450f443bcad309388310f9a002ac53",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "['all_five_builds_FP32_words_identical']",
+        "after": "['all_six_builds_FP32_words_identical']",
+        "count": 1
+      },
+      {
+        "before": "['primary','on','restore']",
+        "after": "['primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "(mode in ['on','restore'])",
+        "after": "(mode in ['on','restore','direct64'])",
+        "count": 3
+      },
+      {
+        "before": "len(manifest)==1721",
+        "after": "len(manifest)==1722",
+        "count": 1
+      },
+      {
+        "before": "['sole_interleaved_matrices']==84",
+        "after": "['sole_interleaved_matrices']==197",
+        "count": 1
+      },
+      {
+        "before": "['GPU_sole_original_FP32_words_checked']==1056964608",
+        "after": "['GPU_sole_original_FP32_words_checked']==1720451072",
+        "count": 1
+      },
+      {
+        "before": "{'32x32':1056964608,'64x64':1056964608,'64x32':1056964608}",
+        "after": "{'32x32':1720451072,'64x64':1720451072,'64x32':1720451072}",
+        "count": 1
+      },
+      {
+        "before": "native8tests",
+        "after": "native9tests",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_inverse_exact": true
+  },
+  "primary_corpus_test.cpp": {
+    "seed_sha256": "b32f1b55e3838eb59bc95e8fdda26a7c526be640a2dad99de205f9e793df17d0",
+    "current_sha256": "a18a9b27d66d5b5a2d76aab928947a7f6fa1beac8ac55147e540bbe97c75701f",
+    "operations": [
+      {
+        "before": "((rows==6144&&inner==2048)||(rows==2048&&inner==6144))",
+        "after": "((rows==6144&&inner==2048)||(rows==2048&&inner==6144)||(inner==2048&&(rows==2048||rows==1024||rows==151936)))",
+        "count": 1
+      },
+      {
+        "before": "soleMatrices==84&&soleWordsChecked==1056964608ULL",
+        "after": "soleMatrices==197&&soleWordsChecked==1720451072ULL",
+        "count": 1
+      },
+      {
+        "before": "tile.second==1056964608ULL",
+        "after": "tile.second==1720451072ULL",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_inverse_exact": true
+  }
+}

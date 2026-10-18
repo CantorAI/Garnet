@@ -1,0 +1,32 @@
+{
+  "operations": [
+    {
+      "before": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n direct=true;\n#endif\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n enabled=true;\n#endif",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_TEXT\n enabled=true;direct=true;\n#endif",
+      "count": 1
+    },
+    {
+      "before": " for(size_t inner:{2048,6144}){\n size_t columns=inner==2048?6144:2048;size_t count=inner*columns;",
+      "after": " for(size_t columns:{2048,1024,151936}){\n size_t inner=2048;size_t count=inner*columns;",
+      "count": 1
+    },
+    {
+      "before": "prepared==(rows<=2)",
+      "after": "prepared==(rows<=2&&columns<100000)",
+      "count": 1
+    },
+    {
+      "before": "need(gpu.PrepareBF16BodyShape(a,bypass,one)&&gpu.PrepareBF16BodyShape(a,weight,two),\"Separate cache prepare failed\");",
+      "after": "need(gpu.PrepareBF16BodyShape(a,bypass,one)==(columns<100000)&&gpu.PrepareBF16BodyShape(a,weight,two)==(columns<100000),\"Separate cache/head admission failed\");",
+      "count": 1
+    },
+    {
+      "before": "need(cases==14&&records==28,\"Missing projection coverage\");",
+      "after": "need(cases==21&&records==42,\"Missing expanded text projection coverage\");",
+      "count": 1
+    }
+  ],
+  "seed_sha256": "674d722540f9419c59ddec0846396f227cba1fcf8ccd792781d196680c45ae3f",
+  "current_sha256": "3c1c086f87e57514cf5ef39f288d320a7e578235f5d7481bfe1e058313e8667e",
+  "original_FP64_bits_lifecycle_fault_limits_inverse_exact": true
+}
