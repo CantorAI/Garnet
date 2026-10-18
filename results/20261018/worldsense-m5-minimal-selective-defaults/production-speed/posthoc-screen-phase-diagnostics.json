@@ -1,0 +1,315 @@
+{
+  "utc": "2026-10-18T15:53:56.263371+00:00",
+  "scope": "Retained warm calls only, posthoc descriptive phase data; no new inference, exclusions, causal attribution or speed eligibility.",
+  "workers": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 1.22305333300028,
+            "prefill_seconds": 7.746496499981731,
+            "decode_interval": 1.2236055830144323,
+            "post_decode_residual": 0.0005522500141523778,
+            "decode_gpu_ms": 1176.224249851657,
+            "prefill_gpu_ms": 7077.074916625861,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 1.2590037920163013,
+            "prefill_seconds": 1.837120040989248,
+            "decode_interval": 1.2594242920167744,
+            "post_decode_residual": 0.00042050000047311187,
+            "decode_gpu_ms": 1230.2165417349897,
+            "prefill_gpu_ms": 1458.1857083830982,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 1.2611277500109281,
+            "prefill_seconds": 2.0346498750150204,
+            "decode_interval": 1.2614990420115646,
+            "post_decode_residual": 0.0003712920006364584,
+            "decode_gpu_ms": 1230.2249583008233,
+            "prefill_gpu_ms": 1512.8461249987595,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 1.1943189579760656,
+            "prefill_seconds": 1.4798947920207866,
+            "decode_interval": 1.1944969999894965,
+            "post_decode_residual": 0.00017804201343096793,
+            "decode_gpu_ms": 1167.6909166562837,
+            "prefill_gpu_ms": 1280.0294999906328,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          }
+        ],
+        "medians": {
+          "decode_seconds": 1.2410285625082906,
+          "prefill_seconds": 1.9358849580021342,
+          "decode_interval": 1.2415149375156034,
+          "post_decode_residual": 0.00039589600055478513,
+          "decode_gpu_ms": 1203.2203957933234,
+          "prefill_gpu_ms": 1485.5159166909289
+        }
+      },
+      "Qwen3.5-4B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 7.562205499998527,
+            "prefill_seconds": 11.203477958013536,
+            "decode_interval": 7.562711334001506,
+            "post_decode_residual": 0.0005058340029790998,
+            "decode_gpu_ms": 7318.5519165417645,
+            "prefill_gpu_ms": 9658.952791680349,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 7.114046208007494,
+            "prefill_seconds": 8.87272179199499,
+            "decode_interval": 7.114759000018239,
+            "post_decode_residual": 0.0007127920107450336,
+            "decode_gpu_ms": 7010.3512915666215,
+            "prefill_gpu_ms": 7429.122791654663,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 7.345084874978056,
+            "prefill_seconds": 3.6344602910103276,
+            "decode_interval": 7.345375042001251,
+            "post_decode_residual": 0.0002901670231949538,
+            "decode_gpu_ms": 7232.104333379539,
+            "prefill_gpu_ms": 3505.5532917031087,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 7.425854458997492,
+            "prefill_seconds": 3.645879124989733,
+            "decode_interval": 7.426512959005777,
+            "post_decode_residual": 0.0006585000082850456,
+            "decode_gpu_ms": 7337.045958265662,
+            "prefill_gpu_ms": 3448.574666719651,
+            "core_deltas": null,
+            "primary_encoded_delta": null
+          }
+        ],
+        "medians": {
+          "decode_seconds": 7.385469666987774,
+          "prefill_seconds": 6.259300458492362,
+          "decode_interval": 7.385944000503514,
+          "post_decode_residual": 0.0005821670056320727,
+          "decode_gpu_ms": 7275.328124960652,
+          "prefill_gpu_ms": 5467.338041678886
+        }
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 1.204005584004335,
+            "prefill_seconds": 1.4630313749948982,
+            "decode_interval": 1.2046284159878269,
+            "post_decode_residual": 0.0006228319834917784,
+            "decode_gpu_ms": 1174.788208300015,
+            "prefill_gpu_ms": 1140.2315833547618,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 1.2918347920058295,
+            "prefill_seconds": 1.735689666995313,
+            "decode_interval": 1.2962928749911953,
+            "post_decode_residual": 0.004458082985365763,
+            "decode_gpu_ms": 1256.132333423011,
+            "prefill_gpu_ms": 1504.6918332809582,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 1.337551083008293,
+            "prefill_seconds": 1.7369357499992475,
+            "decode_interval": 1.3383484170190059,
+            "post_decode_residual": 0.0007973340107128024,
+            "decode_gpu_ms": 1303.494374937145,
+            "prefill_gpu_ms": 1387.5694583402947,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 1.4998357500007842,
+            "prefill_seconds": 1.94184720798512,
+            "decode_interval": 1.5009137500019278,
+            "post_decode_residual": 0.0010780000011436641,
+            "decode_gpu_ms": 1444.5157501031645,
+            "prefill_gpu_ms": 1552.940541645512,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            }
+          }
+        ],
+        "medians": {
+          "decode_seconds": 1.3146929375070613,
+          "prefill_seconds": 1.7363127084972803,
+          "decode_interval": 1.3173206460051006,
+          "post_decode_residual": 0.0009376670059282333,
+          "decode_gpu_ms": 1279.813354180078,
+          "prefill_gpu_ms": 1446.1306458106264
+        }
+      },
+      "Qwen3.5-4B": {
+        "per_call": [
+          {
+            "repetition": 1,
+            "decode_seconds": 7.110147832980147,
+            "prefill_seconds": 3.667496709007537,
+            "decode_interval": 7.110947290988406,
+            "post_decode_residual": 0.0007994580082595348,
+            "decode_gpu_ms": 7012.209083302878,
+            "prefill_gpu_ms": 3002.0383749797475,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          },
+          {
+            "repetition": 2,
+            "decode_seconds": 7.514529249980114,
+            "prefill_seconds": 3.2336986669979524,
+            "decode_interval": 7.515342250961112,
+            "post_decode_residual": 0.0008130009809974581,
+            "decode_gpu_ms": 7411.484291660599,
+            "prefill_gpu_ms": 3145.7773750298657,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          },
+          {
+            "repetition": 3,
+            "decode_seconds": 7.67418249999173,
+            "prefill_seconds": 3.9158825410122517,
+            "decode_interval": 7.6751551250054035,
+            "post_decode_residual": 0.000972625013673678,
+            "decode_gpu_ms": 7550.382291519782,
+            "prefill_gpu_ms": 3610.3200416255277,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          },
+          {
+            "repetition": 4,
+            "decode_seconds": 7.819769458990777,
+            "prefill_seconds": 4.418603625003016,
+            "decode_interval": 7.82073674997082,
+            "post_decode_residual": 0.0009672909800428897,
+            "decode_gpu_ms": 7709.681541658938,
+            "prefill_gpu_ms": 4046.4357082964852,
+            "core_deltas": {
+              "core_library_decode_encoded": 0,
+              "core_library_prefill_encoded": 0,
+              "core_library_head_encoded": 0
+            },
+            "primary_encoded_delta": {
+              "decode_encoded": 18800,
+              "head_encoded": 95,
+              "prefill_encoded": 1400,
+              "vector_decode_encoded": 18800,
+              "vector_head_encoded": 95
+            }
+          }
+        ],
+        "medians": {
+          "decode_seconds": 7.594355874985922,
+          "prefill_seconds": 3.7916896250098944,
+          "decode_interval": 7.595248687983258,
+          "post_decode_residual": 0.0008901459805201739,
+          "decode_gpu_ms": 7480.9332915901905,
+          "prefill_gpu_ms": 3378.0487083276967
+        }
+      }
+    }
+  },
+  "limits": "Differences formed per call before medians. GPU/wait/encode spans overlap/include gaps and separate medians are nonadditive. Phase/counter data do not establish isolated library-boundary/compiler/driver-memory/counter cost. Derived decode includes host/stop/postloop/possible EOS/snapshots; not pureGPU. No cross-trial causal ratio or reclassification of rejection."
+}

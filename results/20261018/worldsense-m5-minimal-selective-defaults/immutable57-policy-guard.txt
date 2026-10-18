@@ -1,0 +1,7 @@
+#ifdef GARNET_METAL_PRIMARY_ONLY_LAZY_DEFAULTS
+        // Raw graphs retain their original default buffers. Eligibility is local
+        // to this graph's immutable weights, never the device's global owners.
+        if(std::none_of(slots_.begin(),slots_.end(),[](const auto& slot){return slot.bf16.PrimaryReady();})) {
+            lazyDefaultSlots_.clear();lazyDefaultPlanReady_=true;return;
+        }
+#endif

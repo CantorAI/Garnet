@@ -1,0 +1,73 @@
+{
+  "real197masters_global4GiB_contention_close_readmission_reset": true,
+  "graph_model_close_nested_scope_rejected_and_session_close": true,
+  "records": [
+    {
+      "case": "real_global_budget_contention",
+      "a": {
+        "enabled": true,
+        "calls": 1,
+        "admitted": 1,
+        "fallback": 0,
+        "ends": 0,
+        "last_bytes": 3440902144,
+        "last_count": 197,
+        "active_bytes": 3440902144,
+        "global_used_bytes": 3440902144,
+        "limit_bytes": 4294967296,
+        "attempted_bytes": 3440902144,
+        "attempted_count": 197,
+        "reason": 1,
+        "scope_open": true,
+        "coverage_cache_hits": 0,
+        "coverage_checks": 0,
+        "coverage_fallbacks": 0,
+        "last_coverage_graphs": 29
+      },
+      "b": {
+        "enabled": true,
+        "calls": 1,
+        "admitted": 0,
+        "fallback": 1,
+        "ends": 0,
+        "last_bytes": 0,
+        "last_count": 0,
+        "active_bytes": 0,
+        "global_used_bytes": 3440902144,
+        "limit_bytes": 4294967296,
+        "attempted_bytes": 3440902144,
+        "attempted_count": 197,
+        "reason": 5,
+        "scope_open": true,
+        "coverage_cache_hits": 0,
+        "coverage_checks": 0,
+        "coverage_fallbacks": 0,
+        "last_coverage_graphs": 0
+      }
+    },
+    {
+      "case": "closed_session_releases_budget",
+      "b": {
+        "enabled": true,
+        "calls": 2,
+        "admitted": 1,
+        "fallback": 1,
+        "ends": 1,
+        "last_bytes": 3440902144,
+        "last_count": 197,
+        "active_bytes": 3440902144,
+        "global_used_bytes": 3440902144,
+        "limit_bytes": 4294967296,
+        "attempted_bytes": 3440902144,
+        "attempted_count": 197,
+        "reason": 1,
+        "scope_open": true,
+        "coverage_cache_hits": 0,
+        "coverage_checks": 0,
+        "coverage_fallbacks": 0,
+        "last_coverage_graphs": 29
+      }
+    }
+  ],
+  "scope": "Actual raw text model native allocation admission/cleanup. No physical-residency or speed claim."
+}

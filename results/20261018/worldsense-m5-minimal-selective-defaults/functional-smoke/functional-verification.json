@@ -1,0 +1,143 @@
+{
+  "utc": "2026-10-18T15:44:25.733423+00:00",
+  "actualWorldSense_Galaxy_native_candidate_functional_pass": true,
+  "four_calls_exact": true,
+  "actual_FULL_vector_markers_core_zero_and_native_memory_pass": true,
+  "checks": [
+    {
+      "model": "Qwen3.5-4B",
+      "phase": "phase1",
+      "exact": true,
+      "core_deltas": {
+        "core_library_decode_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "core_library_head_encoded": 0
+      },
+      "primary_storage": {
+        "active_weights": 201,
+        "allocated_bytes": 6405324800,
+        "core_library_decode_encoded": 0,
+        "core_library_head_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "decode_encoded": 18800,
+        "head_encoded": 95,
+        "metadata_bytes": 32819200,
+        "original_bytes": 8401715200,
+        "payload_bytes": 6369344512,
+        "prefill_encoded": 1400,
+        "uploads": 201,
+        "vector_decode_encoded": 18800,
+        "vector_head_encoded": 95
+      },
+      "primary_encoded_delta": {
+        "decode_encoded": 18800,
+        "head_encoded": 95,
+        "prefill_encoded": 1400,
+        "vector_decode_encoded": 18800,
+        "vector_head_encoded": 95
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "phase": "phase3",
+      "exact": true,
+      "core_deltas": {
+        "core_library_decode_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "core_library_head_encoded": 0
+      },
+      "primary_storage": {
+        "active_weights": 201,
+        "allocated_bytes": 6405324800,
+        "core_library_decode_encoded": 0,
+        "core_library_head_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "decode_encoded": 18800,
+        "head_encoded": 95,
+        "metadata_bytes": 32819200,
+        "original_bytes": 8401715200,
+        "payload_bytes": 6369344512,
+        "prefill_encoded": 1400,
+        "uploads": 201,
+        "vector_decode_encoded": 18800,
+        "vector_head_encoded": 95
+      },
+      "primary_encoded_delta": {
+        "decode_encoded": 0,
+        "head_encoded": 0,
+        "prefill_encoded": 0,
+        "vector_decode_encoded": 0,
+        "vector_head_encoded": 0
+      }
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "phase": "phase1",
+      "exact": true,
+      "core_deltas": {
+        "core_library_decode_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "core_library_head_encoded": 0
+      },
+      "primary_storage": {
+        "active_weights": 201,
+        "allocated_bytes": 6405324800,
+        "core_library_decode_encoded": 0,
+        "core_library_head_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "decode_encoded": 37600,
+        "head_encoded": 190,
+        "metadata_bytes": 32819200,
+        "original_bytes": 8401715200,
+        "payload_bytes": 6369344512,
+        "prefill_encoded": 2800,
+        "uploads": 201,
+        "vector_decode_encoded": 37600,
+        "vector_head_encoded": 190
+      },
+      "primary_encoded_delta": {
+        "decode_encoded": 18800,
+        "head_encoded": 95,
+        "prefill_encoded": 1400,
+        "vector_decode_encoded": 18800,
+        "vector_head_encoded": 95
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "phase": "phase3",
+      "exact": true,
+      "core_deltas": {
+        "core_library_decode_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "core_library_head_encoded": 0
+      },
+      "primary_storage": {
+        "active_weights": 201,
+        "allocated_bytes": 6405324800,
+        "core_library_decode_encoded": 0,
+        "core_library_head_encoded": 0,
+        "core_library_prefill_encoded": 0,
+        "decode_encoded": 37600,
+        "head_encoded": 190,
+        "metadata_bytes": 32819200,
+        "original_bytes": 8401715200,
+        "payload_bytes": 6369344512,
+        "prefill_encoded": 2800,
+        "uploads": 201,
+        "vector_decode_encoded": 37600,
+        "vector_head_encoded": 190
+      },
+      "primary_encoded_delta": {
+        "decode_encoded": 0,
+        "head_encoded": 0,
+        "prefill_encoded": 0,
+        "vector_decode_encoded": 0,
+        "vector_head_encoded": 0
+      }
+    }
+  ],
+  "source_drivers_libraries_unchanged": true,
+  "speed_eligibility": false,
+  "scope": "Two fixed-frame candidate-only Skill requests. No control, speed comparison, causal attribution or promotion."
+}

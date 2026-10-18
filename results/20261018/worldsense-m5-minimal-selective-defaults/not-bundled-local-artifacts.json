@@ -1,0 +1,92 @@
+[
+  {
+    "path": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-minimal-selective-defaults/before-libgarnet.dylib",
+    "sha256": "dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72",
+    "bytes": 1413248,
+    "reason": "Local compiled artifact not bundled; recorded identity and rebuild commands require fresh validation, not binary/time reproducibility."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-off/libgarnet.dylib",
+    "sha256": "16f06f4a726245f8e569a29063dca066031c339ce5c4bc64e38e8dd32234ae87",
+    "bytes": 1599552,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-off/libgarnet_metal.a",
+    "sha256": "8ef606948163b644ce319dae342062ef808846b1f8d3c46990533b1da4ed2f67",
+    "bytes": 265376,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-primary/libgarnet.dylib",
+    "sha256": "652498f0391722e095852872ca1ad730a9d3c8ca65bbac1e8655f3ac810557af",
+    "bytes": 1617904,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-primary/libgarnet_metal.a",
+    "sha256": "d3f427990672f1778e9ea621e129a2e7a8a071ad4353f4a866cfe648fad7dc3d",
+    "bytes": 291440,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-on/libgarnet.dylib",
+    "sha256": "1be7e46d5102d72855e423ac67bb46dda136b64fa6e1777590524b3107b70ed4",
+    "bytes": 1634672,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-on/libgarnet_metal.a",
+    "sha256": "747405aaefbd733c6bdc6585157ebfe1a59d56613581527a91202a8245e37a6e",
+    "bytes": 305600,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-on/primary_corpus_test",
+    "sha256": "f620d70ef5371b0b34ee352ac52324d1b5226cd85ffbe3f60f00b8e8acec9837",
+    "bytes": 618832,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-fault/libgarnet.dylib",
+    "sha256": "82c5351dc56183208eac365153df4244bfcf980e9ee4805297fee229649e4fba",
+    "bytes": 1634896,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-fault/libgarnet_metal.a",
+    "sha256": "2eea4650a087639ef935b03c467d45bcdbd3d63f49411e9ed9ff0d0f258985c8",
+    "bytes": 306552,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-compat56/libgarnet.dylib",
+    "sha256": "a47c651956d5c25b19f50d593016e5b6fabbff626a2bb47f1ec721fd4a94099f",
+    "bytes": 1656096,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-compat56/libgarnet_metal.a",
+    "sha256": "07d00a4358c12462e9e234e20339a7da7cbfcea4906576a2a8e9639282ddc149",
+    "bytes": 331224,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-compat56/direct_float_corpus_test",
+    "sha256": "ce3904a926dd1e986c7b2f7a4928341df790653df9c371ee54586313c19aef69",
+    "bytes": 601480,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-compat56-fault/libgarnet.dylib",
+    "sha256": "83d018a33d1bd2a0ea43e3e0e5a36d6e287020a199161fc41948ecbab2ba4596",
+    "bytes": 1656496,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  },
+  {
+    "path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-minimal-selective-defaults-compat56-fault/libgarnet_metal.a",
+    "sha256": "41768802644463fb4dd9bfd4a249385ab0d676ed23a98e1ad0b34c265869443c",
+    "bytes": 333272,
+    "reason": "Locally compiled library/proof executable; reconstruct from source/flags and revalidate."
+  }
+]
