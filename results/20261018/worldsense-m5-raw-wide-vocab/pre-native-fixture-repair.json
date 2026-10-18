@@ -1,0 +1,16 @@
+{
+  "utc": "2026-10-18T16:26:33.263370+00:00",
+  "observed_initial_build_session": 95115,
+  "observed_initial_build_exit": 0,
+  "all_six_initial_builds_pass": true,
+  "no_native_model_or_timing_attempt_yet": true,
+  "path": "test2026/metal/raw_wide_vocab_test.cpp",
+  "before": "{std::vector<uint16_t> constant(4*128,0x3f80);auto packed=gpu.UploadBF16(constant.data(),constant.size()*2,4,128);if(packed.PrimaryReady())rejected([&]{gpu.RawBF16ReadGPUWords(packed,0,4);});}",
+  "after": "{std::vector<uint16_t> constant(260*128,0x3f80);auto packed=gpu.UploadBF16(constant.data(),constant.size()*2,260,128);\n#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS\n need(packed.PrimaryReady(),\"Packed-owner negative fixture did not pack\");rejected([&]{gpu.RawBF16ReadGPUWords(packed,0,4);});\n#else\n need(!packed.PrimaryReady(),\"Disabled primary unexpectedly packed fixture\");\n#endif\n }",
+  "before_sha256": "23fa8db76c40d807b91269b7440efe137a2b37fc903aa5a04bcbebfeb741a2ce",
+  "after_sha256": "9b805d7b2eb09db9891c9dc6e13d3bc1ddda0d1c88f495b355f82dbd38487a7a",
+  "original_shape_admission_preserved": true,
+  "only_new_fixture_coverage_changed": true,
+  "readback_policy_math_original_tests_source_unchanged": true,
+  "observation_scope": "Initial log already contained sixBUILD PASS at review; prior note stillconsuming wording was a cautious unverified assumption. Authoritative poll95115returned terminal0 before any edit. No consumed edits during live build."
+}

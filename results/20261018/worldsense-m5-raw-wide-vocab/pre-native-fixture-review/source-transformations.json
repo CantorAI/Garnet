@@ -1,0 +1,50 @@
+[
+  {
+    "path": "src/backends/metal/compiled_graph.cpp",
+    "before": "#include \"wide_checkpoint_policy.h\"\n",
+    "after": "#include \"wide_checkpoint_policy.h\"\n#ifdef GARNET_METAL_PRIMARY_RAW_WIDE_VOCAB\n#include \"primary_wide_vocab_policy.h\"\n#endif\n",
+    "append": false,
+    "seed_sha256": "cf55393822931a42339500ea5e3b0164a5164f194518b33a4c70bd870fe0640a",
+    "result_sha256": "d18220b3a3b049cc77d6bb38ec172b0395c15791d0330c42151f9959cc5768cf"
+  },
+  {
+    "path": "src/backends/metal/compiled_graph.cpp",
+    "before": "    allowPrimary=wideCheckpoint_;\n#endif\n",
+    "after": "    allowPrimary=wideCheckpoint_;\n#endif\n#ifdef GARNET_METAL_PRIMARY_RAW_WIDE_VOCAB\n    allowPrimary=allowPrimary&&WideVocabularyPolicy::AllowPrimary(name,size_t(entry->shape[0]),size_t(entry->shape[1]),wideCheckpoint_,true);\n#endif\n",
+    "append": false,
+    "seed_sha256": "cf55393822931a42339500ea5e3b0164a5164f194518b33a4c70bd870fe0640a",
+    "result_sha256": "e5a70277eb8e8e914673a3a3b1545011d008a37cd76158865c002dff6fd3bf2a"
+  },
+  {
+    "path": "src/backends/metal/metal_context.h",
+    "before": "    std::vector<uint32_t> RawBF16ReadWords(const MetalBF16Weight&,size_t start,size_t count);\n",
+    "after": "    std::vector<uint32_t> RawBF16ReadWords(const MetalBF16Weight&,size_t start,size_t count);\n    std::vector<uint32_t> RawBF16ReadGPUWords(const MetalBF16Weight&,size_t start,size_t count);\n    static std::string RawBF16ReadGPUProgramSource();\n",
+    "append": false,
+    "seed_sha256": "9a87ff963449ba11589386311b478d34b8019385aa008269d3de34ce9e2b9424",
+    "result_sha256": "a23cb8a1b8a04d9a7e275955be3c9383c943f54ddf76b08768526eaa21513656"
+  },
+  {
+    "path": "src/backends/metal/metal_context.mm",
+    "before": "",
+    "after": "\nnamespace Garnet {\nstd::string MetalContext::RawBF16ReadGPUProgramSource() {\n return R\"RAWGPU(#include <metal_stdlib>\nusing namespace metal;\nkernel void raw_bf16_expand_words(device const ushort* weight [[buffer(0)]],device uint* output [[buffer(1)]],\n constant ulong& start [[buffer(2)]],constant ulong& count [[buffer(3)]],uint id [[thread_position_in_grid]]) {\n if(ulong(id)<count)output[id]=uint(weight[start+ulong(id)])<<16;\n}\n)RAWGPU\";\n}\nstd::vector<uint32_t> MetalContext::RawBF16ReadGPUWords(const MetalBF16Weight& weight,size_t start,size_t count) {\n @autoreleasepool {\n  if(impl_->command||impl_->submitted.count)throw std::logic_error(\"Raw GPU readback requires closed drained batch\");\n  auto owner=weight.impl_;\n  if(!owner||weight.PrimaryReady()||!owner->buffer||owner->buffer.device!=impl_->device||owner->buffer.storageMode!=MTLStorageModeShared)\n   throw std::invalid_argument(\"Raw GPU readback requires original same-device shared BF16 owner\");\n  const size_t total=Elements(owner->rows,owner->columns);\n  if(!count||count>8*1024*1024||start>total||count>total-start||owner->buffer.length!=total*sizeof(uint16_t))\n   throw std::invalid_argument(\"Raw GPU readback range/length invalid\");\n  // Diagnostic only: no serving kernel/program change or retained decoded cache.\n  const auto program=RawBF16ReadGPUProgramSource();NSError* error=nil;\n  auto library=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:program.c_str()] options:nil error:&error];\n  if(!library){NSString* message=error.localizedDescription;throw std::runtime_error(message?std::string(message.UTF8String):\"Raw GPU readback shader failed\");}\n  auto function=[library newFunctionWithName:@\"raw_bf16_expand_words\"];\n  if(!function)throw std::runtime_error(\"Raw GPU readback function missing\");\n  auto pipeline=[impl_->device newComputePipelineStateWithFunction:function error:&error];\n  if(!pipeline||pipeline.maxTotalThreadsPerThreadgroup<256)throw std::runtime_error(\"Raw GPU readback pipeline unavailable\");\n  id<MTLBuffer> output=[impl_->device newBufferWithLength:count*4 options:MTLResourceStorageModeShared];\n  if(!output)throw std::runtime_error(\"Raw GPU readback allocation failed\");\n  auto command=[impl_->queue commandBuffer];if(!command)throw std::runtime_error(\"Raw GPU readback command failed\");\n  auto encoder=[command computeCommandEncoder];if(!encoder)throw std::runtime_error(\"Raw GPU readback encoder failed\");\n  const uint64_t offset=start,length=count;\n  [encoder setComputePipelineState:pipeline];[encoder setBuffer:owner->buffer offset:0 atIndex:0];[encoder setBuffer:output offset:0 atIndex:1];\n  [encoder setBytes:&offset length:sizeof(offset) atIndex:2];[encoder setBytes:&length length:sizeof(length) atIndex:3];\n  [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(256,1,1)];[encoder endEncoding];\n  [command commit];[command waitUntilCompleted];\n  if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error(\"Raw GPU readback execution failed\");\n  std::vector<uint32_t> result(count);std::memcpy(result.data(),output.contents,count*4);return result;\n }\n}\n}\n",
+    "append": true,
+    "seed_sha256": "61c1f19890673e7787d4395a14a470067ebfbe984dc04c041e87f8a53ccb5d08",
+    "result_sha256": "e123e14222c5633e38d015dfda0cd32bd905b743c57143391ff181ff6fcc3133"
+  },
+  {
+    "path": "src/entry/metal_main.cpp",
+    "before": "        return info;\n",
+    "after": "#ifdef GARNET_METAL_PRIMARY_RAW_WIDE_VOCAB\n        info+=\"; primary_raw_wide_vocab\";\n#endif\n        return info;\n",
+    "append": false,
+    "seed_sha256": "0ae2e361079552f94c17f5ddf2169132db36dc5d9af7c246440aa067186a90c8",
+    "result_sha256": "26cf06144b0c718549365ce8ed5f9fe4d36f2ed216023e4906960018ed42e5fd"
+  },
+  {
+    "path": "cmake/GarnetMetal.cmake",
+    "before": "",
+    "after": "\noption(GARNET_METAL_PRIMARY_RAW_WIDE_VOCAB \"Keep semantic wide-checkpoint vocabulary in original raw BF16\" OFF)\nif(GARNET_METAL_PRIMARY_RAW_WIDE_VOCAB)\n if(NOT GARNET_METAL_PRIMARY_BF16_BLOCKS OR NOT GARNET_METAL_WIDE_PRIMARY_STORAGE)\n  message(FATAL_ERROR \"Raw wide vocabulary requires primary weights and wide checkpoint storage\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PRIMARY_RAW_WIDE_VOCAB=1)\nendif()\nadd_executable(garnet_raw_wide_vocab_test test2026/metal/raw_wide_vocab_test.cpp)\ntarget_link_libraries(garnet_raw_wide_vocab_test PRIVATE garnet_metal)\ntarget_include_directories(garnet_raw_wide_vocab_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party)\nadd_test(NAME metal_raw_wide_vocab_reference COMMAND garnet_raw_wide_vocab_test raw_wide_vocab_words.bin)\n",
+    "append": true,
+    "seed_sha256": "49d8c442c5ebed42ef431584d1156bcdd3affb0422de898425a7fbc8050ce17a",
+    "result_sha256": "883184f8410abeccd322a1b5709abec43bb532231dfc2e2822bcc89194764fd9"
+  }
+]

@@ -1,0 +1,68 @@
+WS-M5-75: original raw BF16 for the wide vocabulary only
+Decision: VALID REJECTION. Keep WS10; full optimization remains ACTIVE.
+
+The candidate passed native, full learned-model, real WorldSense functional and resource checks. It failed the original speed-preservation gates: 4B total latency and derived generation rate, text TTFT and total latency, and whole Skill wall time. Favorable 4B TTFT and memory do not override those failures. No unchanged timing retry, matched PRIMARY/RAW comparison, mirrored confirmation, integration, or promotion followed. Canonical evidence prepared for independent source/data/metric reconstruction before publication.
+
+Prospective method and scope
+Design, retained-evidence/consumer audit and exact byte budget were saved before source/build/model execution. Immutable seed: WS74/e15c3f4325682098bd4c7b4a17da62254e1e36c5. Existing WS62 already traces packed4B/rawtext; its FOLLOWUP wide vocabulary head is13.4466% of sampled custom encoder interval-duration SUM at decode steps4/16/28. This is not an end-to-end fraction, complete GPU accounting, a predicted speedup or a root cause. WS74 post-decode host residual medians were under1ms while GPU spans grew; spans overlap and do not isolate a cause. Three raw embedded Metal literals and seven common shader/codec headers equal WS10 bytes, not a complete compiler/ISA identity proof.
+
+Prior41/42 restore NARROW<=2048 text vocabulary/attention and leave all4Bweights packed. They do not test this WIDE2560 vocabulary. Checked archived top-level role caches contain four narrow-policy ON records and no wide-vocabulary profile in their declared scope, not universal history proof. Metadata sharing, grouping2/8 and ushort/value16 folds were already rejected and not repeated. Private packed storage was considered and deferred before code: earlier raw-private trials lack repeated broad gains, and current AppleGPU documentation recommends Shared for CPU-populated frequentlyGPU-read buffers. Official links/retrieval hashes and limitations are in the audit; no private-buffer probe or benefit is claimed.
+
+Implementation and storage cost
+New defaultOFF PRIMARY_RAW_WIDE_VOCAB requires primary blocks and wide-checkpoint storage. A shared pure C++ exclusion recognizes canonical lm_head/embed_tokens roles, actual immutable wide-checkpoint eligibility, rows>65536 and hiddenwidth>2048. It combines with all original shape/dtype/finite/device/packing checks, then calls the original UploadBF16 allowPrimary=false raw path. Ordinary same-shape matrices stay eligible; narrow/missing/conflicting scope remains unchanged. F32 fallback and shared-record metadata/owner validation, Clear/rebuild behavior are preserved. No model-name/checkpoint-string/global-owner heuristic, second master, new weight format, floatPrefill force or precision/model-size change.
+
+Source1723files/sevenchanged-or-added paths: CMake, compiled_graph.cpp, metal_context.h/mm, metal_main.cpp, new policyheader and new native test. Every existing-file change independently inverts to74; other1716files exact. All production shader programs/literals/helpers/FP32 MAC/Korder/reductions/barriers/geometries, CPUcodec/payload/metadata, Model/session/runtime/xModels/images/CUDA/engine/originaltests unchanged. Added RawBF16ReadGPUWords is a correctness-only C++ API: same-device original shared raw owner, closed/drained/range/overflow/8Mword bounds, GPU ushort expansion, completed command/error checks and shared readback. Its tiny shader compiles lazily only when a proof calls it, outside production MAIN/prefill; actual source is saved. No model inference/image path or retained decoded cache. Compiled code/library size is included in identities; no serving diagnostic command is issued.
+
+Actual old201packed identities join original bit-exact CPUscan; its8byte metadata is explicitly recomputed at current4bytes/block. Totals reproduce6,402,163,712payload+metadata and32,819,200metadata. Unique head=model.language_model.embed_tokens.weight,248320x2560,635,699,200words: original1,271,398,400B versus packed964,132,352payload+4,966,400metadata=969,098,752B. Raw adds302,299,648logical bytes. Candidate200packed original7,130,316,800B/payload+metadata5,433,064,960B/metadata27,852,800B; total retained packed+raw10,153,229,824B.16KiB rounding reproduces old aggregate allocations but was only a future allocation estimate, not a footprint/peak/residency/speed prediction.
+
+Six roles: OFF; PRIMARY with primary/wide/lazy/selective and NEWflagOFF; ON adds vector prefill/prefill isolation/FULL and NEWrawhead; FAULT adds original primary faults; COMPAT56/FAULT retain original global-retirement/direct/K32/cached/raw-request/fault behavior with NEW/selective OFF. Candidate direct/K32/cached/raw-request/CORE OFF. RAWcandidate8flag whole-profile contrast; planned matchedPRIMARY4flag contrast not reached. Neither this pair nor cross-trial ratios isolate raw-head causality. Original14field PrimaryStats/five encoded deltas unchanged. Actualcandidate200owners/body-prefillpositive/head-vectorheadzero; text packed per-call work zero even with200globalVLMowners; text retirement/planned/rehydratedzero, VLM positive/zero normal rehydration. PRIMARY/COMPAT preserve201tuple/headpositive and compatibility. CORE counters zero. Markers/counters alone are not numerical/admission/GPU-duration evidence.
+
+Native and full learned proof before timing
+Initialsixbuild95115exit0. Static pre-native review found the NEW packed-owner rejection fixture used4rows, below original rows>256 admission, and would conditionally skip that case. Initialfixture/source/manifests/logs/plan were preserved. After authoritative terminal, only the new fixture changed4->260rows and now REQUIRES actual packing when primary support is enabled. No original test/admission/API/math/bound change or test/model run occurred before repair. Sixrebuild1572exit0. Native40244exit0 and independent audit firstexecution pass all60CTest(original9+new1 eachsixroles). Original186complete FP32projection streams and20records/432804words exact acrosssix/old56 under unchanged FP64bounds; actual production MAIN/prefill/emptyCORE programs exact74. New192puresemantic boundarycases, six complete rawGPUrecords/65847words/all65280finiteBF16patterns exact, plus invalid/range/closedbatch/same-deviceothercontext/owner cleanup proof. Diagnostic source saved separately. These bounded cases alone do not claim full learned head coverage.
+
+Preparation57482 built and pinned three exact source/compile-command/static-library/executable recipes, source1723/libs6/models19/fixtures/oracles/mathguards/controllers/outerverifiers BEFORE learned execution; generated outputs excluded. Full30500exit0 and independent6154exit0 pass17subprocesschecks. OriginalCOMPAT201 corpus remains unchanged: ALLFIVE original GPUreaders EACH4,200,857,600FP32words,245rawHOST1,724,383,232words. ADDITIONAL actualcandidate200 corpus uses the SAME pure name/shape/widescope predicate explicitly because its direct MetalContext uploads bypass Graph's loader filter; linking ONlibrary alone is not semantic admission. Each of its five original packed GPUreaders checks3,565,158,400words. The supplemental actualrawhead GPUreader checks ALL635,699,200words ONCE, plus246rawHOST2,360,082,432words. One packed-reader coverage set plus that same rawhead set covers the original4,200,857,600word family; the rawhead was not read five times or counted as packed. Coverage categories overlap, not unique sums. Direct compatibility546weights/334,609,152words preserved. Corpus selection446matrices/original11,850,481,664bytes unchanged; expected raw/packed owner counts/retainedbytes/source/generation/close accounting exact.
+
+All64private resident steps, trainedlinear/ordinary-resident/prefill/vision/grids/host-private/shared-source-close/late-session/rebuild/invalid/prefix/capacity/error/old4GiBraw-request/fault compatibility pass. Four API modes/20calls preserve original32VLM28text finite states/tokens/configuration/vision references. ActualGraph loader additionally proves200owners/headzero; this is not inferred solely from corpus factory behavior. Original12guard transformations invert to74 then original ancestors; supplemental corpus removes only declared admission/count additions to recover the ENTIRE unchanged original201proof. All mathematical references/per-word comparisons/bounds/controlflow remain; original coverage is retained in COMPAT and new representation coverage added. No failed build/native/model/timing attempt or unchanged performance retry occurred.
+
+Admission65717 rejects20configurations: original18 plus two new missing dependencies. Offline61763 rejects22,942malformed copied results;65positive applications reuse15actualAPIcalls acrossfive analyzers plus10legacycalls, not new inference samples. Strict14fields/originalfive delta consistency/COREzero/200vs201 tuple/rawheadzero/newcap/selective/globalowner/legacy checks. Allfive original numerical/golden/metric/threshold ASTs unchanged outside native_route.
+
+Actual WorldSense/Galaxy measurements
+Functional49232exit0/independent pass four calls/two identical fixed-car Skill requests, complete original interpreted semantics/tokens/text/prompt/config/frame/Skill/native-cpp image/routes/memory/source/library. Joint worker retains200VLMowners while text per-call packed work/default retirement stayzero. VLM retires1,152,909,312bytes over288slots/zero rehydration; headpacked delta0. Functional timings not speed eligible. Resource preparation29365 pins1,880compiler/SDK/host/proof dependency files and19existing outerhelpers, including originalCOMPAT201 AND supplementalcandidate200/rawhead compiler dependencies.
+
+Resource48907exit0/independent pass eight calls/twofreshworkers/onefirst+onefollowup each. Maximum post-decode snapshots, not peaks/free/unique/physical-residency RAM. Whole-profile reductions, not an isolated raw-head saving:
+{
+  "metal_allocated_bytes": 0.1299806414357053,
+  "task_physical_footprint_bytes": 0.06147040694758121
+}
+
+Original10%Metal/5%task-footprint gates pass. SampledMetal21,903,376,384->19,056,361,472B; sampledprocessfootprint18,058,262,880->16,948,214,112B. FreshWS10speed preparation44564, actualstage72424exit0 and independent28959exit0. Twentycalls/twofreshsequentialworkers/five identicalcarSkillrequests each; first retained separately, allfourfollowing samples permodel/worker retained. Warmmedians:
+
+Model | TTFT seconds, WS10 -> candidate | total seconds | derived tokens/s
+Qwen3.5-4B | 5.021736333496 -> 4.490360687487 | 12.150698708487 -> 12.546692042000 | 12.979431038942 -> 11.672779682805
+Qwen3-1.7B | 1.518835832991 -> 1.856477978508 | 2.832066062503 -> 3.242701854004 | 26.162000579814 -> 25.801752841017
+
+Within-current-pair changes:
+[
+  {
+    "model": "Qwen3-1.7B",
+    "ttft_change": 0.22230325238833082,
+    "total_change": 0.1449951316240614,
+    "decode_gain": -0.013769884978728997
+  },
+  {
+    "model": "Qwen3.5-4B",
+    "ttft_change": -0.10581512264288617,
+    "total_change": 0.03259016975188689,
+    "decode_gain": -0.10067092711667591
+  }
+]
+WholeSkill wall medians {"control-1": 14.84444110399636, "candidate-1": 15.731618187506683}seconds; gain=-0.05976493673928096.
+
+4B TTFT -10.581512%, total +3.259017%, deriveddecode -10.067093%. Text TTFT +22.230325%, total +14.499513%, deriveddecode -1.376988% (rate preserved). WholeSkill wall +5.976494%. 4Btotal/4Bdecode/textTTFT/texttotal/wholeSkill FAIL unchanged2%limits. VALID REJECT. No favorable subset, memory/correctness/pooled rescue, unchanged retry, later PRIMARY20/RAW20/mirrored48/canonicalintegration/rebuild/fullproof+48/appsmoke orpromotion. LegacyWS10memory/counters unavailable/null, never inventedzero or replaced by resource-denominator data.
+
+Independent audit recomputesall32actualpipelinecalls/16Skillrequests acrossfunctional/resource/speed, alloriginalgoldens/routes/metrics/rejection andsource1723/models19/libs/runtime/drivers/1,880deps/19outerhelpers unchanged.22memory snapshots available; legacy10 unavailable. Allfirst/warm/commands/failures/tradeoffs retained. No consumed edits, builds, competing investigationGPU, hashsweeps orarchive copies duringtiming; bounded observationsonly. Normalprofiles VLM64/text16/capacity2048/image65536/sharedvision/prefix64tokens2entries64MiB/model/stops/limits/Skillthresholds fixed. Shortproof512VLM/256text declared. FreshnativeC++/Metal/XLang3 imageprep/encoding EVERYrequest, no externalCPython image/model processing, image/answercache, speculation orcamera. CPython onlyorchestrates/audits.
+
+Interpretation and continuation
+Deriveddecode=(generated-1)/(total-TTFT) includeshost/stop/postloop/possibleEOS/snapshots, notpureGPU. GPU/wait/encode spansoverlap and separate mediansnonadditive. Firstnothardwarecold; no initialization split/significance/clock/thermal/VM/cache/ISA/register/occupancy/physicalresidency/isolatedcausality or historical-ratio claim. FixedframeSkill excludeslivevideo decode/scheduling, persisted events/sharedstates/dedup, retrieval/ranking, navigation andindependentcamera fusion; secondcarcorrelated. This M5/24GiB/4B investigation doesnot satisfy the separate unmetM4mini/smallmodel/vLLM handover.
+
+WS10restored aftereachstage, fourvideo filesonline/no camera/validnormalbenchmarkPOST404; speedrestorationPID68169. Privateauthenticationhelper neverinspected/read/copied/hashed/exported, onlyrunpy login/request. KeepWS10/fullgoalACTIVE. Next canonicalsource/word/guard/gate/CSV/metric/rejection reconstruction/audit/publication, then retainedper-call phases and exact prior decoder methods before a distinct design. No successor source/result is established here.

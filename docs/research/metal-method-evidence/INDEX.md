@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T16:00:02.315799+00:00
+Generated UTC: 2026-10-18T17:13:04.776538+00:00
 
-Base HEAD at generation: `3c763105149e7462a52d7d917e66d16f4f4cbd2a`. Reports indexed: **265**.
+Base HEAD at generation: `e15c3f4325682098bd4c7b4a17da62254e1e36c5`. Reports indexed: **266**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -256,6 +256,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261018/worldsense-m5-primary-decode-groups2](../../../results/20261018/worldsense-m5-primary-decode-groups2/README.md) | worldsense-m5-primary-decode-groups2 |
 | [results/20261018/worldsense-m5-primary-decode-groups8](../../../results/20261018/worldsense-m5-primary-decode-groups8/README.md) | worldsense-m5-primary-decode-groups8 |
 | [results/20261018/worldsense-m5-primary-simd-metadata](../../../results/20261018/worldsense-m5-primary-simd-metadata/README.md) | worldsense-m5-primary-simd-metadata |
+| [results/20261018/worldsense-m5-raw-wide-vocab](../../../results/20261018/worldsense-m5-raw-wide-vocab/README.md) | worldsense-m5-raw-wide-vocab |
 | [results/20261018/worldsense-m5-sole-dual-decode](../../../results/20261018/worldsense-m5-sole-dual-decode/README.md) | worldsense-m5-sole-dual-decode |
 | [results/20261018/worldsense-m5-sole-interleaved-mlp](../../../results/20261018/worldsense-m5-sole-interleaved-mlp/README.md) | WS-M5-63 — Sole interleaved text MLP weights: rejected |
 | [results/20261018/worldsense-m5-sole-interleaved-text](../../../results/20261018/worldsense-m5-sole-interleaved-text/README.md) | worldsense-m5-sole-interleaved-text |

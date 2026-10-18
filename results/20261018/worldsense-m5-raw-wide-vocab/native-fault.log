@@ -1,0 +1,25 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-raw-wide-vocab-fault
+      Start  1: metal_inventory_reference
+ 1/10 Test  #1: metal_inventory_reference ................   Passed    0.21 sec
+      Start  2: metal_memory_stats_reference
+ 2/10 Test  #2: metal_memory_stats_reference .............   Passed    0.20 sec
+      Start  3: metal_prefix_copy_reference
+ 3/10 Test  #3: metal_prefix_copy_reference ..............   Passed    0.22 sec
+      Start  4: metal_mps_matmul_reference
+ 4/10 Test  #4: metal_mps_matmul_reference ...............   Passed    0.84 sec
+      Start  5: metal_matrix_metadata_reference
+ 5/10 Test  #5: metal_matrix_metadata_reference ..........   Passed    0.25 sec
+      Start  6: metal_primary_storage_reference
+ 6/10 Test  #6: metal_primary_storage_reference ..........   Passed    0.25 sec
+      Start  7: metal_primary_projection_reference
+ 7/10 Test  #7: metal_primary_projection_reference .......   Passed    1.64 sec
+      Start  8: metal_request_residency_reference
+ 8/10 Test  #8: metal_request_residency_reference ........   Passed    0.21 sec
+      Start  9: metal_primary_core_isolation_reference
+ 9/10 Test  #9: metal_primary_core_isolation_reference ...   Passed    0.26 sec
+      Start 10: metal_raw_wide_vocab_reference
+10/10 Test #10: metal_raw_wide_vocab_reference ...........   Passed    0.23 sec
+
+100% tests passed out of 10
+
+Total Test time (real) =   4.31 sec

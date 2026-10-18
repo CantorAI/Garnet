@@ -1,0 +1,199 @@
+[
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-raw-wide-vocab-compat56/primary_corpus_test",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-blocks/matrix-selection.json",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/corpus-GPU-bits.json"
+    ],
+    "log": "corpus-GPU-bits.log",
+    "started_utc": "2026-10-18T16:39:57.324198+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:40:38.365235+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-raw-wide-vocab-on/raw_wide_corpus_test",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-blocks/matrix-selection.json",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/raw-wide-corpus-GPU-bits.json"
+    ],
+    "log": "raw-wide-corpus-GPU-bits.log",
+    "started_utc": "2026-10-18T16:40:38.365692+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:13.622766+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-raw-wide-vocab-compat56/direct_float_corpus_test",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/direct-upload-selection.json",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/direct-upload-corpus.json"
+    ],
+    "log": "direct-upload-corpus.log",
+    "started_utc": "2026-10-18T16:41:13.623227+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:20.542280+00:00"
+  },
+  {
+    "command": [
+      "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/resident_controller.py"
+    ],
+    "log": "trained-resident-controller.log",
+    "started_utc": "2026-10-18T16:41:20.542618+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:29.412988+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/linear_guard.py",
+      "off"
+    ],
+    "log": "trained-linear-off.log",
+    "started_utc": "2026-10-18T16:41:29.413228+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:31.957978+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/linear_guard.py",
+      "on"
+    ],
+    "log": "trained-linear-on.log",
+    "started_utc": "2026-10-18T16:41:31.958268+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:34.897607+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/linear_guard.py",
+      "fault"
+    ],
+    "log": "trained-linear-fault.log",
+    "started_utc": "2026-10-18T16:41:34.897886+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:37.977916+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/linear_guard.py",
+      "compat56"
+    ],
+    "log": "trained-linear-compat56.log",
+    "started_utc": "2026-10-18T16:41:37.978218+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:40.904783+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/vision_grid_guard.py",
+      "off"
+    ],
+    "log": "vision-grid-off.log",
+    "started_utc": "2026-10-18T16:41:40.905078+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:41:56.555830+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/vision_grid_guard.py",
+      "on"
+    ],
+    "log": "vision-grid-on.log",
+    "started_utc": "2026-10-18T16:41:56.556410+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:42:14.655576+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/vision_grid_guard.py",
+      "compat56"
+    ],
+    "log": "vision-grid-compat56.log",
+    "started_utc": "2026-10-18T16:42:14.656113+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:42:31.644918+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/api_state_guard.py",
+      "off"
+    ],
+    "log": "api-state-guard-off.log",
+    "started_utc": "2026-10-18T16:42:31.645578+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:43:13.991161+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/api_state_guard.py",
+      "primary"
+    ],
+    "log": "api-state-guard-primary.log",
+    "started_utc": "2026-10-18T16:43:13.993700+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:44:03.079200+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/api_state_guard.py",
+      "on"
+    ],
+    "log": "api-state-guard-on.log",
+    "started_utc": "2026-10-18T16:44:03.079895+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:44:50.149958+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/api_state_guard.py",
+      "compat56"
+    ],
+    "log": "api-state-guard-compat56.log",
+    "started_utc": "2026-10-18T16:44:50.150968+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:45:36.529343+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/request_session_guard.py"
+    ],
+    "log": "request_session_guard.log",
+    "started_utc": "2026-10-18T16:45:36.530264+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:45:36.905737+00:00"
+  },
+  {
+    "command": [
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "-B",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-raw-wide-vocab/request_full_session_guard.py"
+    ],
+    "log": "request_full_session_guard.log",
+    "started_utc": "2026-10-18T16:45:36.906101+00:00",
+    "returncode": 0,
+    "ended_utc": "2026-10-18T16:45:38.046714+00:00"
+  }
+]

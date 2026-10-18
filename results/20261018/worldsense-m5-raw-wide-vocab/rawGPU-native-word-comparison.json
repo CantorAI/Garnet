@@ -1,0 +1,86 @@
+{
+  "records": 6,
+  "words_per_build": 65847,
+  "all_six_complete_streams_equal": true,
+  "all_original_BF16_bit_references_exact": true,
+  "all65280finite_patterns_covered": true,
+  "bytes": 263484,
+  "sha256": "9fb3de3032491775cc80459022362d9557b8003b5ac4ccf8996d1620c4537f88",
+  "summaries": {
+    "off": {
+      "all_finite_BF16_patterns": 65280,
+      "complete_FP32_words": 65847,
+      "complete_records": 6,
+      "invalid_cases_rejected": 6,
+      "new_policy_enabled": false,
+      "no_model_or_speed_claim": true,
+      "original_HOST_words": 65536,
+      "owner_accounting_restored": true,
+      "pure_policy_boundary_cases": 192,
+      "same_device_other_context_pass": true
+    },
+    "primary": {
+      "all_finite_BF16_patterns": 65280,
+      "complete_FP32_words": 65847,
+      "complete_records": 6,
+      "invalid_cases_rejected": 7,
+      "new_policy_enabled": false,
+      "no_model_or_speed_claim": true,
+      "original_HOST_words": 65536,
+      "owner_accounting_restored": true,
+      "pure_policy_boundary_cases": 192,
+      "same_device_other_context_pass": true
+    },
+    "on": {
+      "all_finite_BF16_patterns": 65280,
+      "complete_FP32_words": 65847,
+      "complete_records": 6,
+      "invalid_cases_rejected": 7,
+      "new_policy_enabled": true,
+      "no_model_or_speed_claim": true,
+      "original_HOST_words": 65536,
+      "owner_accounting_restored": true,
+      "pure_policy_boundary_cases": 192,
+      "same_device_other_context_pass": true
+    },
+    "fault": {
+      "all_finite_BF16_patterns": 65280,
+      "complete_FP32_words": 65847,
+      "complete_records": 6,
+      "invalid_cases_rejected": 7,
+      "new_policy_enabled": true,
+      "no_model_or_speed_claim": true,
+      "original_HOST_words": 65536,
+      "owner_accounting_restored": true,
+      "pure_policy_boundary_cases": 192,
+      "same_device_other_context_pass": true
+    },
+    "compat56": {
+      "all_finite_BF16_patterns": 65280,
+      "complete_FP32_words": 65847,
+      "complete_records": 6,
+      "invalid_cases_rejected": 7,
+      "new_policy_enabled": false,
+      "no_model_or_speed_claim": true,
+      "original_HOST_words": 65536,
+      "owner_accounting_restored": true,
+      "pure_policy_boundary_cases": 192,
+      "same_device_other_context_pass": true
+    },
+    "compat56-fault": {
+      "all_finite_BF16_patterns": 65280,
+      "complete_FP32_words": 65847,
+      "complete_records": 6,
+      "invalid_cases_rejected": 7,
+      "new_policy_enabled": false,
+      "no_model_or_speed_claim": true,
+      "original_HOST_words": 65536,
+      "owner_accounting_restored": true,
+      "pure_policy_boundary_cases": 192,
+      "same_device_other_context_pass": true
+    }
+  },
+  "diagnostic_source_bytes": 338,
+  "diagnostic_source_sha256": "dd89e9e7bb76d136d97e31e90c3fd9308cf89f34a339cf519e625a383a50bc28",
+  "scope": "Pure192semantic cases plus bounded original raw GPU word proof; not an actual learned vocabulary/serving/speed result."
+}

@@ -1,0 +1,27 @@
+{
+  "base_commit": "f21c1a2584031ee9d1c129d1e58818f9d1c826d2",
+  "overlay_root": "source",
+  "source_manifest": "correctness-source-manifest.json",
+  "overlay_files": [
+    "cmake/GarnetMetal.cmake",
+    "test2026/metal/primary_storage_test.cpp",
+    "test2026/metal/primary_core_isolation_test.cpp",
+    "test2026/metal/request_residency_test.cpp",
+    "test2026/metal/raw_wide_vocab_test.cpp",
+    "runtime/metal_serving.py",
+    "src/entry/metal_main.cpp",
+    "src/backends/metal/decoder_session.h",
+    "src/backends/metal/wide_checkpoint_policy.h",
+    "src/backends/metal/compiled_graph.h",
+    "src/backends/metal/decoder_session.cpp",
+    "src/backends/metal/primary_isolation_shader.h",
+    "src/backends/metal/primary_wide_vocab_policy.h",
+    "src/backends/metal/weight_residency_budget.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_vector_prefill_shader.h",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/metal_context.h"
+  ],
+  "source_files": 1723,
+  "reconstruction": "Only manifest paths in empty directory, overlay if listed otherwise immutable git base:path. Rebuild from recorded commands/flags and revalidate; not a binary/time reproducibility claim."
+}
