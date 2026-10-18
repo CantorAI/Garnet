@@ -1,0 +1,75 @@
+{
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "coreLibraryHeadEncoded=0;",
+      "after": "coreLibraryHeadEncoded=0,decodeGroups8Encoded=0,headGroups8Encoded=0;",
+      "count": 1
+    }
+  ],
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#include \"primary_block_shader.h\"",
+      "after": "#include \"primary_block_shader.h\"\n#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n#include \"primary_decode_groups8_shader.h\"\n#endif",
+      "count": 1
+    },
+    {
+      "before": "corePrefill{0},coreHead{0};",
+      "after": "corePrefill{0},coreHead{0},groups8Decode{0},groups8Head{0};",
+      "count": 1
+    },
+    {
+      "before": "primaryCounters.coreHead.load()};",
+      "after": "primaryCounters.coreHead.load(),primaryCounters.groups8Decode.load(),primaryCounters.groups8Head.load()};",
+      "count": 1
+    },
+    {
+      "before": "        NSString* prefillSource=[[NSString stringWithUTF8String:kPrimaryIsolatedPreamble] stringByAppendingString:[NSString stringWithUTF8String:kPrimaryBlockShader]];",
+      "after": "#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        NSString* prefillSource=[[NSString stringWithUTF8String:kPrimaryIsolatedPreamble] stringByAppendingString:[NSString stringWithUTF8String:PrimaryDecodeGroups8Program().c_str()]];\n#else\n        NSString* prefillSource=[[NSString stringWithUTF8String:kPrimaryIsolatedPreamble] stringByAppendingString:[NSString stringWithUTF8String:kPrimaryBlockShader]];\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        if(!impl_->kernels->primaryDecode)throw std::runtime_error(\"Cannot create primary bf16_decode pipeline\");",
+      "after": "        if(!impl_->kernels->primaryDecode)throw std::runtime_error(\"Cannot create primary bf16_decode pipeline\");\n#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        if(impl_->kernels->primaryDecode.threadExecutionWidth!=32||impl_->kernels->primaryDecode.maxTotalThreadsPerThreadgroup<256)\n            throw std::runtime_error(\"Packed groups8 requires a 32-lane 256-thread decode pipeline\");\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        bool noTail=o.columns%(small?4:16)==0;",
+      "after": "        bool noTail=o.columns%(small?4:16)==0;\n#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        if(primary)noTail=o.columns%32==0;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        if(pipeline&&(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<(small?64:128)))pipeline=nil;",
+      "after": "        size_t requiredThreads=small?64:128;\n#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        if(primary)requiredThreads=256;\n#endif\n        if(pipeline&&(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<requiredThreads))pipeline=nil;",
+      "count": 1
+    },
+    {
+      "before": "        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)",
+      "after": "#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        if(primary&&a.rows<=2){threads=256;decodeColumns=32;}\n#endif\n        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)",
+      "count": 1
+    },
+    {
+      "before": "        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+decodeColumns-1)/decodeColumns,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];",
+      "after": "        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+decodeColumns-1)/decodeColumns,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];\n#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        if(primary&&a.rows<=2){if(o.columns>=100000)primaryCounters.groups8Head.fetch_add(1);else primaryCounters.groups8Decode.fetch_add(1);}\n#endif",
+      "count": 1
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "{\"core_library_head_encoded\",p.coreLibraryHeadEncoded}}.dump();",
+      "after": "{\"core_library_head_encoded\",p.coreLibraryHeadEncoded},{\"decode_groups8_encoded\",p.decodeGroups8Encoded},{\"head_groups8_encoded\",p.headGroups8Encoded}}.dump();",
+      "count": 1
+    },
+    {
+      "before": "        info+=\"; primary_core_isolated_library\";\n#endif",
+      "after": "        info+=\"; primary_core_isolated_library\";\n#endif\n#ifdef GARNET_METAL_PRIMARY_DECODE_GROUPS8\n        info+=\"; primary_decode_groups8\";\n#endif",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_PRIMARY_DECODE_GROUPS8 \"Use eight SIMD groups only for sole-primary generic/specialized decode and heads\" OFF)\nif(GARNET_METAL_PRIMARY_DECODE_GROUPS8)\n if(NOT GARNET_METAL_PRIMARY_BF16_BLOCKS OR NOT GARNET_METAL_WIDE_PRIMARY_STORAGE OR NOT GARNET_METAL_LAZY_RESIDENT_DEFAULTS OR NOT GARNET_METAL_BODY_SHAPE OR NOT GARNET_METAL_PRIMARY_VECTOR_PREFILL OR NOT GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY OR NOT GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY)\n  message(FATAL_ERROR \"Packed groups8 requires primary/wide/lazy/body-shape/vector/prefill-isolation/full-isolation\")\n endif()\n if(GARNET_METAL_PRIMARY_CORE_ISOLATED_LIBRARY OR GARNET_METAL_REQUEST_SCOPE_WEIGHT_RESIDENCY)\n  message(FATAL_ERROR \"Packed groups8 excludes CORE and raw request residency\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PRIMARY_DECODE_GROUPS8=1)\nendif()\nadd_executable(garnet_primary_decode_groups8_test test2026/metal/primary_decode_groups8_test.cpp)\ntarget_link_libraries(garnet_primary_decode_groups8_test PRIVATE garnet_metal)\ntarget_include_directories(garnet_primary_decode_groups8_test PRIVATE third_party)\nadd_test(NAME metal_primary_decode_groups8_reference COMMAND garnet_primary_decode_groups8_test \"${CMAKE_CURRENT_BINARY_DIR}/primary_decode_groups8_words.bin\")\n",
+      "append": true
+    }
+  ]
+}

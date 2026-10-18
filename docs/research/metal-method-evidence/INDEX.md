@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T13:43:05.897759+00:00
+Generated UTC: 2026-10-18T14:31:58.670782+00:00
 
-Base HEAD at generation: `80787c104fdafe7eb4671cc6c7b390bfcce2fb1f`. Reports indexed: **262**.
+Base HEAD at generation: `4c811ec4e305317efac622177d4623b1cf8c83a4`. Reports indexed: **263**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -252,6 +252,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261018/worldsense-m5-minimal-full-prefill](../../../results/20261018/worldsense-m5-minimal-full-prefill/README.md) | worldsense-m5-minimal-full-prefill |
 | [results/20261018/worldsense-m5-packed-request-residency](../../../results/20261018/worldsense-m5-packed-request-residency/README.md) | worldsense-m5-packed-request-residency |
 | [results/20261018/worldsense-m5-primary-core-isolation](../../../results/20261018/worldsense-m5-primary-core-isolation/README.md) | worldsense-m5-primary-core-isolation |
+| [results/20261018/worldsense-m5-primary-decode-groups8](../../../results/20261018/worldsense-m5-primary-decode-groups8/README.md) | worldsense-m5-primary-decode-groups8 |
 | [results/20261018/worldsense-m5-primary-simd-metadata](../../../results/20261018/worldsense-m5-primary-simd-metadata/README.md) | worldsense-m5-primary-simd-metadata |
 | [results/20261018/worldsense-m5-sole-dual-decode](../../../results/20261018/worldsense-m5-sole-dual-decode/README.md) | worldsense-m5-sole-dual-decode |
 | [results/20261018/worldsense-m5-sole-interleaved-mlp](../../../results/20261018/worldsense-m5-sole-interleaved-mlp/README.md) | WS-M5-63 — Sole interleaved text MLP weights: rejected |

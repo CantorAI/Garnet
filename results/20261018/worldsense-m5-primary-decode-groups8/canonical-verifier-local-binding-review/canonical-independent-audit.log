@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws72.py", line 71, in <module>
+    build=r/('out/build/garnet-metal-worldsense-primary-decode-groups8-'+role);data=(d/('native-'+role+'-primary_decode_groups8_words.bin')).read_bytes()
+NameError: name 'r' is not defined

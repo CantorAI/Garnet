@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-18T14:29:47.938640+00:00",
+  "observed_failed_exit_code": 1,
+  "error": "NameError r in unused local build binding before group word checks",
+  "before": " build=r/('out/build/garnet-metal-worldsense-primary-decode-groups8-'+role);",
+  "after": " ",
+  "scope": "First canonical audit exited1: an unused local build=r/... assignment copied from the standalone numerical verifier referenced r, which is intentionally absent in archive-only verification. All actual native word reads already use d/native-* archived files. Remove ONLY that unused assignment; no data path/assertion/source/native/model/metric/threshold change. Original failed verifier/generator/log retained. Recompute manifest after adding this erratum and fixed verification tools; reuse same32pipeline calls and all native/learned evidence, no inference/timing rerun.\n",
+  "source_model_native_data_metric_gate_bytes_unchanged": true,
+  "no_new_inference_or_timing": true
+}
