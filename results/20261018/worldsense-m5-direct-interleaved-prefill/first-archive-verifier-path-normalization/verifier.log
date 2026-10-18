@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws64.py", line 56, in <module>
+    assert text.replace('worldsense-sole-interleaved','worldsense-isolated-primary').encode()==original,name
+AssertionError: build_corpus.py

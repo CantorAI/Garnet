@@ -1,0 +1,16 @@
+{
+  "utc": "2026-10-18T06:00:19.286504+00:00",
+  "experiment": "WS-M5-64",
+  "state": "DESIGN_RECORDED_BEFORE_SOURCE",
+  "seed_files": 1720,
+  "seed_source": "/Users/shawn/CantorAI/out/research/worldsense-sole-interleaved/source",
+  "seed_evidence_commit": "40780f3cb39d334c400820903d30d15526c51945",
+  "read_only_audit_sha256": "5700230f94a9d9bb6f29499a87b34f2a050bc0f28a6e1739e825d7ac39e6aa9d",
+  "design_sha256": "4aba4fbe080af2a1297f1d7f121dddc8178ce2b7dad167d5ac901c9d16b87778",
+  "promotion": false,
+  "initial_design_sha256": "fb2156aa8d66974ce5c74ede68817e03e65e08d56d52b015dd9d479b16df41ea",
+  "pre_source_amendment": {
+    "utc": "2026-10-18T06:01:05.362785+00:00",
+    "change": "Add correctness-only soleON/directOFF RESTORE compatibility build; no source/build/model/timing yet, performance gates unchanged."
+  }
+}

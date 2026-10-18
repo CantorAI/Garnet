@@ -1,0 +1,16 @@
+{
+  "seed_files": 1720,
+  "current_files": 1721,
+  "changed_or_added": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/direct_interleaved_prefill_shader.h",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/sole_interleaved_test.cpp"
+  ],
+  "original_shader_literals_and_63_decode_graph_session_xModel_image_CUDA_original_tests_unchanged": true,
+  "all_three_prefill_arithmetic_bodies_inverse_exact": true,
+  "original63_native_numeric_tests_retained_and_extended": true
+}

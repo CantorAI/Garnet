@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-direct-interleaved-prefill/resident_guard.py", line 17, in <module>
+    lazy_enabled='lazy_resident_defaults'in garnet.backend_info();assert ('cached_matrix_metadata'in garnet.backend_info())==sys.argv[2].endswith('-on')
+                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError

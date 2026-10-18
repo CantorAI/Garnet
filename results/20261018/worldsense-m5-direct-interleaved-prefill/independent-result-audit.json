@@ -1,0 +1,64 @@
+{
+  "utc": "2026-10-18T06:42:11.262829+00:00",
+  "observed_speed_session": 25270,
+  "observed_exit_code": 0,
+  "decision": "valid-reject",
+  "promotion": false,
+  "all32_calls_and16_requests_exact_original_goldens_and_native_routes": true,
+  "all_source_library_runtime_driver_model_and1875dependencies_unchanged": true,
+  "source_files": 1721,
+  "learned_assets": 19,
+  "metrics": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 7.209786770996288,
+        "total": 8.506250896010897,
+        "decode_tps": 25.96001599570914
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 19.645849062508205,
+        "total": 29.586240041491692,
+        "decode_tps": 9.579801968317017
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 1.9298665829846868,
+        "total": 3.454885583007126,
+        "decode_tps": 23.74855842993233
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 4.960724396005389,
+        "total": 13.701858728993102,
+        "decode_tps": 10.613445566088842
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.7323268157182952,
+      "total_change": -0.5938415613125949,
+      "decode_gain": -0.08518706483625949
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.7474924916596072,
+      "total_change": -0.5368840815940911,
+      "decode_gain": 0.10789822182027997
+    }
+  ],
+  "whole_skill_wall": {
+    "control-1": 38.36589981200814,
+    "candidate-1": 17.28094024998427
+  },
+  "wall_gain": 0.5495755258012869,
+  "resource_passed": true,
+  "speed_passed": false,
+  "reason": "Text derived decode-8.518706% fails unchanged2% preservation despite improved TTFT/total/4B/wholeSkill.",
+  "no_later_stages_or_unchanged_retry": true
+}

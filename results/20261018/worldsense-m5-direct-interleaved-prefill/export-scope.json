@@ -1,0 +1,16 @@
+{
+  "stage_calls": {
+    "resource": 8,
+    "production-speed": 20,
+    "functional-correctness-only": 4
+  },
+  "calls": 32,
+  "Skill_requests": 16,
+  "memory_rows": 22,
+  "worker_attempts": 5,
+  "no_hidden_retries_or_later_stage": true,
+  "first": "All first/followups retained; first is not hardware-cold. No separate init/model-load measurement from old readiness.",
+  "decode": "(generated-1)/(total-TTFT), not pureGPUthroughput.",
+  "memory": "Postdecode native snapshots, not peaks/free/uniqueRAM. Legacy speed memory unavailable, not zero.",
+  "decision": "Valid rejection from original2%text TTFT/total/deriveddecode gates; no promotion."
+}

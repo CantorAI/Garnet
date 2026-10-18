@@ -1,0 +1,131 @@
+{
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "decodeEncoded=0,restoreEncoded=0,scratchBytes=0;",
+      "after": "decodeEncoded=0,restoreEncoded=0,scratchBytes=0,prefillEncoded=0;",
+      "count": 1
+    },
+    {
+      "before": "    std::string SoleShaderProgramSource() const;",
+      "after": "    std::string SoleShaderProgramSource() const;\n    std::vector<uint32_t> SoleInterleavedReadPrefillTileWords(const MetalBF16Weight&,size_t firstRow,size_t rows,size_t tileN,size_t tileK);",
+      "count": 1
+    }
+  ],
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#include \"sole_interleaved_mlp_shader.h\"",
+      "after": "#include \"sole_interleaved_mlp_shader.h\"\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n#include \"direct_interleaved_prefill_shader.h\"\n#endif",
+      "count": 1
+    },
+    {
+      "before": "restore{0},scratch{0};",
+      "after": "restore{0},scratch{0},prefill{0};",
+      "count": 1
+    },
+    {
+      "before": "    std::string soleProgram;",
+      "after": "    std::string soleProgram;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n    id<MTLComputePipelineState> soleGemm=nil,soleGemm16=nil,soleGemm32=nil,soleTileRead=nil;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        impl_->kernels->soleProgram=kSoleInterleavedMlpShader;\n        auto soleLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kSoleInterleavedMlpShader] options:compileOptions error:&error];",
+      "after": "        impl_->kernels->soleProgram=kSoleInterleavedMlpShader;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n        impl_->kernels->soleProgram+=kDirectInterleavedPrefillShader;\n#endif\n        auto soleLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:impl_->kernels->soleProgram.c_str()] options:compileOptions error:&error];",
+      "count": 1
+    },
+    {
+      "before": "        if(!decode||!restore||!read)throw std::runtime_error(\"Cannot create sole-layout pipelines\");",
+      "after": "        if(!decode||!restore||!read)throw std::runtime_error(\"Cannot create sole-layout pipelines\");\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n        auto gemm=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_direct_bf16_gemm\"] error:&error];\n        auto gemm16=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_direct_gemm_16_64_64\"] error:&error];\n        auto gemm32=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_direct_gemm_32_64_32\"] error:&error];\n        auto tile=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_direct_tile_read\"] error:&error];\n        if(!gemm||!gemm16||!gemm32||!tile)throw std::runtime_error(\"Cannot create direct sole-prefill pipelines\");\n        auto fits=[&](id<MTLComputePipelineState> p,size_t threads){return p.threadExecutionWidth==32&&p.maxTotalThreadsPerThreadgroup>=threads&&p.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength;};\n        if(fits(gemm,128)&&fits(gemm16,256)&&fits(gemm32,256)&&fits(tile,256)) {\n            impl_->kernels->soleGemm=gemm;impl_->kernels->soleGemm16=gemm16;\n            impl_->kernels->soleGemm32=gemm32;impl_->kernels->soleTileRead=tile;\n        }\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        bool soleAvailable=bool(impl_->kernels->soleDecode)&&bool(impl_->kernels->soleRestore)&&bool(impl_->kernels->soleRead);",
+      "after": "        bool soleAvailable=bool(impl_->kernels->soleDecode)&&bool(impl_->kernels->soleRestore)&&bool(impl_->kernels->soleRead);\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n        soleAvailable=soleAvailable&&bool(impl_->kernels->soleGemm)&&bool(impl_->kernels->soleGemm16)&&bool(impl_->kernels->soleGemm32)&&bool(impl_->kernels->soleTileRead);\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        if(w->soleInterleaved&&a.rows>2) {\n            if(primary||w->floatPrefill||w->visionPrefill||w->buffer.length!=kSoleScratchBytes)\n                throw std::logic_error(\"Invalid sole-layout prefill representation\");",
+      "after": "        if(w->soleInterleaved&&a.rows>2) {\n            if(primary||w->floatPrefill||w->visionPrefill||w->buffer.length!=kSoleScratchBytes)\n                throw std::logic_error(\"Invalid sole-layout prefill representation\");\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n            SoleMaybeFail(3);\n#endif\n            pipeline=wide?(a.rows>16?impl_->kernels->soleGemm32:impl_->kernels->soleGemm16):impl_->kernels->soleGemm;\n            if(!pipeline)throw std::logic_error(\"Converted sole weight has no matching direct-prefill reader\");\n            soleCounters.prefill.fetch_add(1);\n#else",
+      "count": 1
+    },
+    {
+      "before": "            storage=impl_->soleScratch;soleCounters.restore.fetch_add(1);",
+      "after": "            storage=impl_->soleScratch;soleCounters.restore.fetch_add(1);\n#endif",
+      "count": 1
+    },
+    {
+      "before": "soleCounters.restore.load(),soleCounters.scratch.load()};",
+      "after": "soleCounters.restore.load(),soleCounters.scratch.load(),soleCounters.prefill.load()};",
+      "count": 1
+    },
+    {
+      "before": "",
+      "after": "\nnamespace Garnet {\nstd::vector<uint32_t> MetalContext::SoleInterleavedReadPrefillTileWords(const MetalBF16Weight& value,size_t firstRow,size_t rows,size_t tileN,size_t tileK) {\n#ifndef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n (void)value;(void)firstRow;(void)rows;(void)tileN;(void)tileK;throw std::logic_error(\"Direct sole-prefill tile readback disabled\");\n#else\n @autoreleasepool {\n if(impl_->command||impl_->submitted.count)throw std::logic_error(\"Sole tile readback requires closed drained batch\");\n auto w=value.impl_;\n if(!w||!w->soleInterleaved||!w->buffer||w->buffer.device!=impl_->device||w->buffer.length!=kSoleScratchBytes)\n  throw std::invalid_argument(\"Sole tile readback requires same-device sole weight\");\n if(!((tileN==32&&tileK==32)||(tileN==64&&(tileK==32||tileK==64)))||!rows||firstRow%tileN||rows%tileN||w->columns%tileK||firstRow>w->rows||rows>w->rows-firstRow||rows>8*1024*1024/w->columns)\n  throw std::invalid_argument(\"Sole tile readback geometry/range invalid\");\n size_t count=rows*w->columns;auto output=[impl_->device newBufferWithLength:count*4 options:MTLResourceStorageModeShared];\n if(!output)throw std::runtime_error(\"Cannot allocate sole tile output\");\n auto command=[impl_->queue commandBuffer];auto encoder=[command computeCommandEncoder];\n if(!command||!encoder)throw std::runtime_error(\"Cannot create sole tile command\");\n uint64_t p[6]={w->rows,w->columns,firstRow,rows,tileN,tileK};\n [encoder setComputePipelineState:impl_->kernels->soleTileRead];[encoder setBuffer:w->buffer offset:0 atIndex:0];\n [encoder setBuffer:output offset:0 atIndex:1];[encoder setBytes:p length:sizeof(p) atIndex:2];\n [encoder dispatchThreadgroups:MTLSizeMake(rows/tileN,w->columns/tileK,1) threadsPerThreadgroup:MTLSizeMake(tileN==32?128:256,1,1)];[encoder endEncoding];\n [command commit];[command waitUntilCompleted];\n if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error(\"Sole tile command failed\");\n std::vector<uint32_t> result(count);std::memcpy(result.data(),output.contents,count*4);return result;\n }\n#endif\n}\n}\n",
+      "count": 1,
+      "append": true
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "{\"scratch_bytes\",p.scratchBytes}",
+      "after": "{\"scratch_bytes\",p.scratchBytes},{\"prefill_encoded\",p.prefillEncoded}",
+      "count": 1
+    },
+    {
+      "before": "        info+=\"; sole_interleaved_mlp\";\n#endif",
+      "after": "        info+=\"; sole_interleaved_mlp\";\n#endif\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n        info+=\"; sole_direct_interleaved_prefill\";\n#endif",
+      "count": 1
+    }
+  ],
+  "runtime/metal_serving.py": [
+    {
+      "before": "for key in ['decode_encoded','restore_encoded']",
+      "after": "for key in ['decode_encoded','restore_encoded','prefill_encoded']",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL \"Read sole BF16 weights directly in unchanged FP32 prefill tiles\" OFF)\nif(GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL)\n if(NOT GARNET_METAL_SOLE_INTERLEAVED_MLP)\n  message(FATAL_ERROR \"Direct sole prefill requires sole interleaved MLP storage\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL=1)\nendif()\n",
+      "count": 1,
+      "append": true
+    }
+  ],
+  "test2026/metal/sole_interleaved_test.cpp": [
+    {
+      "before": " bool enabled=false;",
+      "after": " bool enabled=false;bool direct=false;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL\n direct=true;\n#endif",
+      "count": 1
+    },
+    {
+      "before": " std::vector<float> saved;",
+      "after": " if(direct){\n for(auto geometry:std::vector<std::pair<size_t,size_t>>{{32,32},{64,64},{64,32}}){\n  size_t tileN=geometry.first,tileK=geometry.second,chunk=(8*1024*1024/inner/tileN)*tileN;\n  for(size_t first=0;first<columns;first+=chunk){size_t nr=std::min(chunk,columns-first);auto actual=gpu.SoleInterleavedReadPrefillTileWords(weight,first,nr,tileN,tileK);need(actual.size()==nr*inner,\"Native tile word count\");for(size_t j=0;j<actual.size();++j)need(actual[j]==uint32_t(raw[first*inner+j])<<16,\"Direct prefill tile original bits differ\");}\n }\n rejects([&]{gpu.SoleInterleavedReadPrefillTileWords(weight,1,32,32,32);},\"Unaligned tile row accepted\");\n rejects([&]{gpu.SoleInterleavedReadPrefillTileWords(weight,0,0,32,32);},\"Zero tile rows accepted\");\n rejects([&]{gpu.SoleInterleavedReadPrefillTileWords(weight,0,32,32,16);},\"Wrong tile geometry accepted\");\n need(MetalContext::SoleStats().scratchBytes==0,\"Direct tile readback allocated restore scratch\");\n }\n std::vector<float> saved;",
+      "count": 1
+    },
+    {
+      "before": "size_t(enabled&&rows>2),\"Wrong sole restore count\"",
+      "after": "size_t(enabled&&rows>2&&!direct),\"Wrong sole restore count\"",
+      "count": 1
+    },
+    {
+      "before": "  need(gpu.Download(a)==input,\"Projection input mutated\");",
+      "after": "  need(after.prefillEncoded-before.prefillEncoded==size_t(enabled&&rows>2&&direct),\"Wrong direct prefill count\");\n  if(direct)need(after.scratchBytes==0&&after.restoreEncoded==0,\"Direct prefill used restore/scratch\");\n  need(gpu.Download(a)==input,\"Projection input mutated\");",
+      "count": 1
+    },
+    {
+      "before": "  if(enabled)rejects([&]{gpu.SoleInterleavedReadWords(weight,0,1);},\"Active-batch readback accepted\");",
+      "after": "  if(enabled)rejects([&]{gpu.SoleInterleavedReadWords(weight,0,1);},\"Active-batch readback accepted\");\n  if(direct)rejects([&]{gpu.SoleInterleavedReadPrefillTileWords(weight,0,32,32,32);},\"Active-batch tile readback accepted\");",
+      "count": 1
+    },
+    {
+      "before": "\"Scratch fault not raised\"",
+      "after": "\"Prefill preparation/dispatch fault not raised\"",
+      "count": 1
+    },
+    {
+      "before": "\"Scratch fault recovery differs\"",
+      "after": "\"Prefill fault recovery differs\"",
+      "count": 1
+    }
+  ]
+}

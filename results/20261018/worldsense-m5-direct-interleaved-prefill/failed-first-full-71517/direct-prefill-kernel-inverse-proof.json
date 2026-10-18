@@ -1,0 +1,17 @@
+{
+  "bf16_gemm": {
+    "seed_sha256": "12d8d37251e87cf8962e001c84495b3b9b3277605e39e163a314c7ef3398bc9e",
+    "new_sha256": "6863f7c80e59f3f3d5929acaf97f6ca45977efa4fa09d3c75ef98bfb77a9f64f",
+    "only_function_name_and_weight_address_helper_changed": true
+  },
+  "gemm_16_64_64": {
+    "seed_sha256": "d9f7d3ecc91c6757e72799c9bd824065c9ff594f26701786ea765fa2a383e533",
+    "new_sha256": "c726f63728b72de367a43c6086fdc71165baef12056e54057c42ef8f4d6f28ca",
+    "only_function_name_and_weight_address_helper_changed": true
+  },
+  "gemm_32_64_32": {
+    "seed_sha256": "240508a566782d4c1e73fbfb8873d3f3d140dbe57b730d0e669faf0977890020",
+    "new_sha256": "b9fa469d76e7bc0479a37bc9fc02a6434aa686361abd5b634189d7604e5c0a52",
+    "only_function_name_and_weight_address_helper_changed": true
+  }
+}

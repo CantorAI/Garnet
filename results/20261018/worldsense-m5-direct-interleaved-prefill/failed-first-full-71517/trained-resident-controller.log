@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-direct-interleaved-prefill/resident_controller.py", line 11, in <module>
+    if p.returncode:raise RuntimeError(str(results[-1]))
+RuntimeError: {'mode': 'restore', 'fixture': 'fixture-1-8', 'returncode': 1, 'log': 'resident-restore-fixture-1-8.log'}

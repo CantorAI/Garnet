@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T05:55:06.099763+00:00
+Generated UTC: 2026-10-18T06:54:37.209027+00:00
 
-Base HEAD at generation: `a03d1a44b5584307d4d401fab513aee7fec745e5`. Reports indexed: **254**.
+Base HEAD at generation: `40780f3cb39d334c400820903d30d15526c51945`. Reports indexed: **255**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -246,6 +246,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |
 | [results/20261017/worldsense-m5-wide-storage](../../../results/20261017/worldsense-m5-wide-storage/README.md) | WS-M5-44 — Wide-checkpoint storage rejected by text decoding |
 | [results/20261018/worldsense-m5-dense-prefetch](../../../results/20261018/worldsense-m5-dense-prefetch/README.md) | WS-M5-60 — Ordered raw dense load lookahead rejected |
+| [results/20261018/worldsense-m5-direct-interleaved-prefill](../../../results/20261018/worldsense-m5-direct-interleaved-prefill/README.md) | WS-M5-64 — Direct interleaved BF16 prefill: rejected |
 | [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |
 | [results/20261018/worldsense-m5-sole-interleaved-mlp](../../../results/20261018/worldsense-m5-sole-interleaved-mlp/README.md) | WS-M5-63 — Sole interleaved text MLP weights: rejected |
 | [results/20261018/worldsense-m5-thread-qos](../../../results/20261018/worldsense-m5-thread-qos/README.md) | WS-M5-59 — Scoped native text-worker QoS rejected |
