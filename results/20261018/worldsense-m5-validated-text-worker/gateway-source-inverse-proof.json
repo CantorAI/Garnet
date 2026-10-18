@@ -1,0 +1,21 @@
+{
+  "parent_files": 1726,
+  "seed_files": 1723,
+  "validated_source_files": 1706,
+  "changed_files": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/validated_text_worker.py",
+    "runtime/validated_ws10/metal_serving.py",
+    "src/entry/metal_main.cpp",
+    "src/entry/native_text_worker.cpp",
+    "src/entry/validated_worker_host.mm"
+  ],
+  "all_MSL_codecs_math_graph_session_xModel_original_tests_CUDA_unchanged": true,
+  "old1706source_and_library_unchanged": true,
+  "original_parent_local_boundaries_inverse_exact": true,
+  "original_gateway_Infer_timing_process_memory_and_owned_Stop_Call_Serve_bodies_exact": true,
+  "standard_worker_script_exact58": true,
+  "WS10_serving_overlay_inverse_only_existing_clock_fields": true,
+  "nativehost_code_exact_probed_prototype": true,
+  "no_performance_claim": true
+}

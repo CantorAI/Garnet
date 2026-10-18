@@ -1,0 +1,16 @@
+{
+  "attempts": [
+    {
+      "exit": 0,
+      "log": "Sampling process 30634 for 1 second with 1 millisecond of run time between samples\nSampling completed, processing symbols...\nSample analysis of process 30634 written to file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/owner-death-active_infer/owned-child-active-stack-0.txt\n",
+      "stack_matches": [
+        "+                                       !   789 X::detail::invoke_instance_member<Garnet::MetalDecoderSession, X::Value, X::Value, X::Value, X::Value, X::Value, X::Value, long long, 0ul, 1ul, 2ul, 3ul, 4ul, 5ul>(X3CallContext*, X3PackageHost*, X::Value (Garnet::MetalDecoderSession::*)(X::Value, X::Value, X::Value, X::Value, X::Value, long long), X3Value const*, unsigned int, X3Value*, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul, 3ul, 4ul, 5ul>)  (in libgarnet.dylib) + 832  [0x1008e08b8]",
+        "+                                       !     780 Garnet::MetalDecoderSession::Run(X::Value, X::Value, X::Value, X::Value, X::Value, long long)  (in libgarnet.dylib) + 5072  [0x10092a000]",
+        "+                                       !     6 Garnet::MetalDecoderSession::Run(X::Value, X::Value, X::Value, X::Value, X::Value, long long)  (in libgarnet.dylib) + 4348  [0x100929d2c]",
+        "+                                       !     2 Garnet::MetalDecoderSession::Run(X::Value, X::Value, X::Value, X::Value, X::Value, long long)  (in libgarnet.dylib) + 2164  [0x1009294a4]",
+        "+                                       !     1 Garnet::MetalDecoderSession::Run(X::Value, X::Value, X::Value, X::Value, X::Value, long long)  (in libgarnet.dylib) + 3084  [0x10092983c]"
+      ]
+    }
+  ],
+  "actual_native_inference_stack_seen": true
+}

@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-fno-fast-math",
+    "-ffp-contract=off",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source/src/backends/metal",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/legacy_projection_test.cpp",
+    "-DLEGACY_LIBRARY_PATH=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-prefix-cache/libgarnet.dylib\"",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-prefix-cache/libgarnet.dylib",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+    "-Wl,-rpath,/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-prefix-cache",
+    "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+    "-o",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/legacy-projection-test"
+  ],
+  "source_sha256": "c4a6518f8e028362dd773ac17c0eef8ef1848704c3800ea31ecee0aebcfdc19a",
+  "library_sha256": "dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72",
+  "executable_sha256": "bdcfb8ecd79cd23009584fbed2934728f50cfbf09011e9c922034f65013e0a5b",
+  "original_93shape_186record_FP64_bounds_and_poison_input_tail_fallback_queued_Abort_checks_retained": true,
+  "removed_only_newer_PRIMARY_format_counter_assertions_unavailable_in_old_header": true,
+  "no_fake_counter_or_speed_claim": true
+}

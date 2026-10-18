@@ -1,0 +1,10 @@
+{
+  "pid": 26619,
+  "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+  "adapter_source": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/mock-adapter/metal_serving.py",
+  "native_package_status_and_error_callbacks_reach_preimported_adapter": true,
+  "checkpoint_or_tokenizer_or_image_or_actual_model_calls": 0,
+  "source_metal_serving_not_mutated": true,
+  "scope": "Fresh native XLang3 + exact validated WS10 Garnet DLL with an isolated mock callback module. No model/GPU inference, throughput, correctness or worker-lifecycle admission.",
+  "no_speed_claim": true
+}

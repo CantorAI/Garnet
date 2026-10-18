@@ -1,0 +1,111 @@
+{
+  "pid": 27001,
+  "parent_pid": 27000,
+  "nonce": "a9d93dacc74444d5946471010b3112ee",
+  "mode": "watch",
+  "support": {
+    "library_path": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/libgarnet_worker_host.dylib",
+    "parent_pid": 27000,
+    "pid": 27001,
+    "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+    "source_root": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host",
+    "steady_seconds": 182353.764753375,
+    "watch_parent_pid": 27000,
+    "watchdog_active": true
+  },
+  "legacy": {
+    "expected_original_source_root": "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source",
+    "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-prefix-cache/libgarnet.dylib",
+    "library_sha256": "dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72",
+    "loaded_garnet_images": 1,
+    "package_abi": 24,
+    "scope": "Unique loaded image and Load/ABI address checked on each query; immutable binary SHA validated once before model startup. Separate before/after source/library hashes remain required."
+  },
+  "memory": {
+    "metal_allocated_bytes": 65536,
+    "metal_recommended_working_set_bytes": 19069665280,
+    "metal_registry_id": 4294968354,
+    "scope": "Actual native current-process Metal and Mach task snapshot; not peak/free/unique physical RAM. Failure status is never converted to success.",
+    "task_compressed_bytes": 0,
+    "task_info_status": 0,
+    "task_internal_bytes": 21168128,
+    "task_physical_footprint_bytes": 21643792,
+    "task_resident_bytes": 38944768,
+    "task_virtual_bytes": 445940449280
+  },
+  "raw_primary": {
+    "active_weights": 0,
+    "allocated_bytes": 0,
+    "decode_encoded": 0,
+    "head_encoded": 0,
+    "metadata_bytes": 0,
+    "original_bytes": 0,
+    "payload_bytes": 0,
+    "prefill_encoded": 0,
+    "uploads": 0,
+    "vector_decode_encoded": 0,
+    "vector_head_encoded": 0
+  },
+  "raw_policy": {
+    "counter_origin": "Structural zeros only for packed-primary and lazy-retirement domains absent from the exact pinned WS10 implementation; not zero raw weights or invented OS counters.",
+    "lazy_default_planned_slots": 0,
+    "lazy_default_rehydrated_bytes": 0,
+    "lazy_default_retired_bytes": 0
+  },
+  "clock_containment": [
+    [
+      182353.744266625,
+      182353.744267083,
+      182353.744267291
+    ],
+    [
+      182353.744268416,
+      182353.74426875,
+      182353.744268916
+    ],
+    [
+      182353.744269625,
+      182353.744269708,
+      182353.744269833
+    ],
+    [
+      182353.744270208,
+      182353.744270291,
+      182353.744270416
+    ],
+    [
+      182353.74427075,
+      182353.744270833,
+      182353.744270916
+    ],
+    [
+      182353.744271291,
+      182353.744271333,
+      182353.744271416
+    ],
+    [
+      182353.744271791,
+      182353.744271875,
+      182353.744271916
+    ],
+    [
+      182353.74427225,
+      182353.744272333,
+      182353.744272416
+    ],
+    [
+      182353.74427275,
+      182353.744272791,
+      182353.744272916
+    ],
+    [
+      182353.74427325,
+      182353.744273291,
+      182353.744273375
+    ]
+  ],
+  "unloaded_backend_rejected": true,
+  "wrong_parent_rejected": true,
+  "model_calls": 0,
+  "scope": "Native C++ metadata/identity/clock/Mach/Metal/watchdog only. No model loading/inference, GPU kernel dispatch, worker routing or performance admission."
+}

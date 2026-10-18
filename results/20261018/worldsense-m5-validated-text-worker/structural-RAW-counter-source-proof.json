@@ -1,0 +1,24 @@
+{
+  "pinned_binary_sha256": "dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72",
+  "absent_format_headers": [
+    "src/backends/metal/primary_block_codec.h",
+    "src/backends/metal/primary_32_contract.h"
+  ],
+  "absent_counter_format_policy_tokens": [
+    "PrimaryStats",
+    "PrimaryCounters",
+    "primary_bf16_blocks",
+    "LazyDefaultRetiredBytes",
+    "lazy_resident_defaults"
+  ],
+  "checked_source_hashes": {
+    "src/backends/metal/metal_context.h": "fdb297343c9e70d0cc32ff32ad1044d1f8558fb40176a9aa3421f00da0e84cd7",
+    "src/backends/metal/metal_context.mm": "329ac5fa4a7c4146e2cab8d6ff5c9f9c8165d0f4e72dc94fd0abb452ccdb2ee3",
+    "src/backends/metal/compiled_graph.h": "096760880b0b789208565069c6691bafac9fa09eeaa61532e1d4be66a47702d3",
+    "src/backends/metal/compiled_graph.cpp": "8e878595c63be06522ec180a6be5c1d243cebd6b456094a2d88c654b35e7b7dd",
+    "src/entry/metal_main.cpp": "38993fd93131bff5c4af41af4ec2407e52a0224fd8d64eb4259eca9bd0501a08",
+    "runtime/metal_serving.py": "54ca4135f475ad5754b7d841f78ac83a6937d4645c28b8e1e4b5ec594f5eb9f3"
+  },
+  "logical_primary_and_lazy_domains_absent": true,
+  "scope": "Structural zero only in these absent logical domains for the exact pinned source/DLL. Raw weights and actual OS/Metal memory are nonzero/measured separately. No model timing or unsupported-statistic substitution."
+}

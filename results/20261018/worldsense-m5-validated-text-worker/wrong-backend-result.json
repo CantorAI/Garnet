@@ -1,0 +1,22 @@
+{
+  "all_four_identity_memory_logical_APIs_reject_unpinned_loaded_backend": true,
+  "errors": [
+    {
+      "api": "legacy_json",
+      "error": "A different native Garnet backend is loaded"
+    },
+    {
+      "api": "memory_stats_json",
+      "error": "A different native Garnet backend is loaded"
+    },
+    {
+      "api": "raw_primary_stats_json",
+      "error": "A different native Garnet backend is loaded"
+    },
+    {
+      "api": "raw_policies_json",
+      "error": "A different native Garnet backend is loaded"
+    }
+  ],
+  "no_model_inference": true
+}

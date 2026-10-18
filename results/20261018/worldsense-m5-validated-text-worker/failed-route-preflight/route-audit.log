@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/audit_routes_ws61.py", line 33, in <module>
+    for key in path[:-1]:target=target[key]
+TypeError: 'NoneType' object is not subscriptable

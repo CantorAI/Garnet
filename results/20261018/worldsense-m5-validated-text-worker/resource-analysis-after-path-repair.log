@@ -1,0 +1,19 @@
+{
+  "status": "resource_feasibility_pass_requires_fresh_speed_screen",
+  "passed": true,
+  "sampled_maximum_bytes": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18061031728
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 18754797568,
+      "task_physical_footprint_bytes": 16114825832
+    }
+  },
+  "reduction": {
+    "metal_allocated_bytes": 0.14374856007587844,
+    "task_physical_footprint_bytes": 0.10775718271857082
+  },
+  "scope": "Eight actual WorldSense/Galaxy calls over two fresh workers and one warmup+one followup each. Maximum post-decode snapshots, not peaks/free system RAM. No timing or speed promotion from this resource feasibility check."
+}

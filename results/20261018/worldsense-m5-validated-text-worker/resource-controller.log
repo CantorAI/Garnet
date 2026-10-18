@@ -1,0 +1,25 @@
+Build/SDK/host dependency identity unchanged 3632 pre-resource
+START control-1 2026-10-18T03:53:19Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-18T03:55:28Z
+FINISH candidate-1 exit 0
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 33413
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+RESTORED VALIDATED WS10 AND NORMAL NONBENCHMARK SERVER
+Build/SDK/host dependency identity unchanged 3632 resource
+Actual resource cohort stable owned-child identity, no hidden calls and frozen RAW child library PASS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/analyze_resource.py", line 96, in <module>
+    assert Path(c['timings']['serving_source']).resolve()==source/'runtime/metal_serving.py'
+AssertionError
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 33514
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/dispatch_prepared_resource_ws61.py", line 13, in <module>
+    subprocess.run([sys.executable,str(w/'analyze_resource.py')],check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/Applications/Xcode.app/Contents/Developer/usr/bin/python3', '/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/analyze_resource.py']' returned non-zero exit status 1.

@@ -1,0 +1,12 @@
+{
+  "status": "error",
+  "model_id": "ws61-missing",
+  "error_message": "WS61 no-model probe: inference deliberately unavailable",
+  "probe_marker": "ws61-isolated-native-adapter",
+  "adapter_source": "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/mock-adapter/metal_serving.py",
+  "calls": {
+    "status": 1,
+    "infer_rejection": 1,
+    "model_loads": 0
+  }
+}

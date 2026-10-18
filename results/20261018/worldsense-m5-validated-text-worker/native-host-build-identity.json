@@ -1,0 +1,37 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O2",
+    "-fobjc-arc",
+    "-fno-fast-math",
+    "-ffp-contract=off",
+    "-Wno-deprecated-declarations",
+    "-dynamiclib",
+    "-I",
+    "/Users/shawn/CantorAI/xlang3/sdk",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/worker_host.mm",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/native_worker_support.cpp",
+    "-DWORKER_HOST_ROOT=\"/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host\"",
+    "-DWORKER_LEGACY_LIBRARY=\"/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-prefix-cache/libgarnet.dylib\"",
+    "-DWORKER_LEGACY_SOURCE=\"/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source\"",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+    "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+    "-framework",
+    "Foundation",
+    "-framework",
+    "Metal",
+    "-o",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/libgarnet_worker_host.dylib"
+  ],
+  "sources": {
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/worker_host.mm": "16fc14cac12ba6752cf45c3e5f99824f64f8d125f5603a62d316d368eae9940c",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/native_worker_support.cpp": "bc8a3f43f205757c3e8f7e1824abc6d177651223d97335271e1718501b7d5f27",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-validated-text-worker/native-host/native_worker_support.h": "7900877b2b63c7638e68b7ffe650e91a63afd79e02d1cb625357e8eacd6f24df"
+  },
+  "library_sha256": "4e0566bc4a3b3c48c86ae25ccb1c7b5f87d5184b12f35fd98b33234455849e7b",
+  "no_Garnet_binary_or_source_change": true,
+  "no_model_or_GPU_inference": true
+}
