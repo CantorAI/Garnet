@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-interleaved/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-interleaved/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-interleaved/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-sole-interleaved/primary_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-interleaved/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-sole-interleaved-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-sole-interleaved-on/primary_corpus_test"
+  ],
+  "source_sha256": "0103ad578c1ad4b7c624a4487f203466eb4a2b12c47225cc0a5668e83a51232a",
+  "library_sha256": "33cce2d2402197949f3ef9d742eee14773d28c6027665ebd9ea5488a5004bfeb",
+  "executable_sha256": "bd9c92afd31614f47bce7c97e0ca5a01a58289afde9a96764d03b433f1e3789c"
+}

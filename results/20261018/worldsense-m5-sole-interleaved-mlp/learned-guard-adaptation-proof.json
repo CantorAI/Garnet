@@ -1,0 +1,142 @@
+{
+  "build_corpus.py": {
+    "seed_sha256": "46c881ad634eefe8429ba00c41be99c1a861254006fbf077c919f15934be8da8",
+    "current_sha256": "be75eb54435c6bc6d43206bf028ba3c60997ebcaaaf605a9409bc1412ddf75f0",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed_sha256": "50b65a948c7d026f1aa2426d7122597760480751e233bafe8f170377a1928730",
+    "current_sha256": "7f39ee5704de82013c0d8e4a11b3f1feea77587361a17a3b7a113224fbb4089f",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed_sha256": "5d59518d4148de6071773df62d9ab55e66a10a15a044502d1534f99f2fc019f1",
+    "current_sha256": "dd24e032ad6b4a8226626520fa7ca4074a10fc15b2a2f3aabbc73ffc90beb521",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed_sha256": "0be0ec087e7e1864580b697c0151ad0bd7b54425a11f4f5122d84bf979b498e8",
+    "current_sha256": "0be0ec087e7e1864580b697c0151ad0bd7b54425a11f4f5122d84bf979b498e8",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed_sha256": "014c7fd62a37dd36559c4163ba52c8cfb10bda9c06951321207f3cffafd2694b",
+    "current_sha256": "0378b8070cf6619257211e38128ada7d7914d24cd7d876f197ec31fadbed5940",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed_sha256": "c9afbd4550636647dc161e1c662fdf47d93128028b96eec7bfb8be1c3be33967",
+    "current_sha256": "44cd85870cd0b4432b42454c366a049e35ecf4c81292a1707aa37aafb2ccc42c",
+    "operations": [],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed_sha256": "11d6547f542307697a5348360272d459930cc198fad7a01bd29c3c919f88cf17",
+    "current_sha256": "902f7ae3752893a61c34417d1762a5ed7852dc916eaeffcccd14f7205026299b",
+    "operations": [
+      {
+        "before": " stats=timings['primary_storage_after'];delta=timings['primary_encoded_delta']",
+        "after": " stats=timings['primary_storage_after'];delta=timings['primary_encoded_delta']\n sole=timings['sole_storage_after'];sd=timings['sole_encoded_delta'];assert ('sole_interleaved_mlp'in call['backend'])==vector_expected\n if vector_expected and name=='Qwen3-1.7B':\n  assert sole['active_weights']==84 and sole['allocated_bytes']==84*2048*6144*2 and sole['scratch_bytes']>0\n  assert sd['decode_encoded']>0 and sd['restore_encoded']>=0\n  if not timings['prefix_cache_hit']:assert sd['restore_encoded']>0\n elif vector_expected:\n  assert all(v==0 for v in sole.values())and all(v==0 for v in sd.values())\n else:assert all(v==0 for v in sole.values())and all(v==0 for v in sd.values())\n",
+        "count": 1
+      }
+    ],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "full_correctness.py": {
+    "seed_sha256": "fe043f0914647d43442f3e77fe788c526cee70011b277657104da60e69bb4cdc",
+    "current_sha256": "9be40dd2bc199e70996eccb6f2d77f3cbd9ab2cf02bd76e746343164b7691dbd",
+    "operations": [
+      {
+        "before": "assert c['HOST_raw_FP32_words_checked']==1724383232",
+        "after": "assert c['HOST_raw_FP32_words_checked']==1724383232\n assert c['sole_interleaved_matrices']==84 and c['GPU_sole_original_FP32_words_checked']==1056964608",
+        "count": 1
+      },
+      {
+        "before": "assert json.loads((w/'native-word-comparison.json').read_text())['all_four_builds_FP32_words_identical']",
+        "after": "assert json.loads((w/'native-word-comparison.json').read_text())['all_four_builds_FP32_words_identical']\nassert json.loads((w/'sole-word-comparison.json').read_text())['all_four_builds_FP32_words_identical']",
+        "count": 1
+      }
+    ],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "verify_correctness_terminal.py": {
+    "seed_sha256": "0a72a69760d88760ce33227f58f5ae36b931d6c837ab4378e2f9abbfed14437e",
+    "current_sha256": "43b6d9f1629d82065439b6f9f0c76cce3674acd0e47e08f191422c4c6a44dc58",
+    "operations": [
+      {
+        "before": "len(manifest)==1718",
+        "after": "len(manifest)==1720",
+        "count": 1
+      },
+      {
+        "before": "assert t['HOST_raw_FP32_words_checked']==1724383232",
+        "after": "assert t['HOST_raw_FP32_words_checked']==1724383232\nassert t['sole_interleaved_matrices']==84 and t['GPU_sole_original_FP32_words_checked']==1056964608",
+        "count": 1
+      }
+    ],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  },
+  "primary_corpus_test.cpp": {
+    "seed_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "current_sha256": "0103ad578c1ad4b7c624a4487f203466eb4a2b12c47225cc0a5668e83a51232a",
+    "operations": [
+      {
+        "before": "uint64_t rawWordsChecked=0,wordsChecked=0,",
+        "after": "uint64_t soleWordsChecked=0,soleMatrices=0;uint64_t rawWordsChecked=0,wordsChecked=0,",
+        "count": 1
+      },
+      {
+        "before": "uint64_t rawChecked=0,checked=0;",
+        "after": "uint64_t rawChecked=0,checked=0,soleChecked=0;const auto soleBefore=MetalContext::SoleStats();",
+        "count": 1
+      },
+      {
+        "before": "info[0].representation==\"bf16\"",
+        "after": "info[0].representation==(((rows==6144&&inner==2048)||(rows==2048&&inner==6144))?\"sole_bf16_interleaved\":\"bf16\")",
+        "count": 1
+      },
+      {
+        "before": "rawChecked+=count;rawWordsChecked+=count;",
+        "after": "rawChecked+=count;rawWordsChecked+=count;if(info[0].representation==\"sole_bf16_interleaved\"){auto gpuActual=gpu.SoleInterleavedReadWords(w,start,count);need(gpuActual==actual,\"Sole GPU words differ from every original HOST/checkpoint word\");soleChecked+=count;soleWordsChecked+=count;}",
+        "count": 1
+      },
+      {
+        "before": "  rawBytes+=entry->dataSize;",
+        "after": "  if(soleChecked){need(!expected&&model==\"Qwen3-1.7B\"&&soleChecked==rows*inner,\"Unexpected sole learned matrix/domain\");++soleMatrices;}\n  rawBytes+=entry->dataSize;",
+        "count": 1
+      },
+      {
+        "before": "need(after.activeWeights==before.activeWeights&&after.allocatedBytes==before.allocatedBytes,\"Corpus weight owner leak\");",
+        "after": "need(after.activeWeights==before.activeWeights&&after.allocatedBytes==before.allocatedBytes,\"Corpus weight owner leak\");auto soleAfter=MetalContext::SoleStats();need(soleAfter.activeWeights==soleBefore.activeWeights-uint64_t(soleChecked>0)&&soleAfter.allocatedBytes==soleBefore.allocatedBytes-uint64_t(soleChecked>0)*entry->dataSize,\"Sole corpus owner leak\");",
+        "count": 1
+      },
+      {
+        "before": "{{\"HOST_raw_FP32_words_checked\",rawChecked},",
+        "after": "{{\"GPU_sole_original_FP32_words_checked\",soleChecked},{\"HOST_raw_FP32_words_checked\",rawChecked},",
+        "count": 1
+      },
+      {
+        "before": "save(argv[2],report);\n  std::cout",
+        "after": "report[\"totals\"][\"sole_interleaved_matrices\"]=soleMatrices;report[\"totals\"][\"GPU_sole_original_FP32_words_checked\"]=soleWordsChecked;save(argv[2],report);\n  std::cout",
+        "count": 1
+      },
+      {
+        "before": " report[\"status\"]=\"full_actual_two_original_and_three_prefill_tile_readers_GPU_bits_exact_not_inference_validated\";",
+        "after": " need(soleMatrices==84&&soleWordsChecked==1056964608ULL,\"Missing learned sole-layout GPU bit coverage\");\n report[\"status\"]=\"full_actual_two_original_and_three_prefill_tile_readers_GPU_bits_exact_not_inference_validated\";",
+        "count": 1
+      }
+    ],
+    "original_mathematical_word_state_token_golden_assertions_inverse_exact": true
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "class MetalContext {",
+      "after": "struct MetalSoleStats {\n uint64_t activeWeights=0,allocatedBytes=0,uploads=0,decodeEncoded=0,restoreEncoded=0,scratchBytes=0;\n};\nclass MetalContext {",
+      "count": 1
+    },
+    {
+      "before": "    static MetalPrimaryStats PrimaryStats();",
+      "after": "    static MetalPrimaryStats PrimaryStats();\n    static MetalSoleStats SoleStats();\n    std::vector<uint32_t> SoleInterleavedReadWords(const MetalBF16Weight&,size_t start,size_t count);\n    std::string SoleShaderProgramSource() const;\n#if defined(GARNET_METAL_SOLE_INTERLEAVED_MLP) && defined(GARNET_METAL_PRIMARY_TEST_FAULTS)\n    static void SoleTestFailAfter(int);\n    static void SoleTestUnavailable(bool);\n#endif",
+      "count": 1
+    }
+  ],
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#include \"exact_half_codec.h\"",
+      "after": "#include \"exact_half_codec.h\"\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n#include \"sole_interleaved_mlp_shader.h\"\n#include <atomic>\n#endif",
+      "count": 1
+    },
+    {
+      "before": "namespace Garnet {\n#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS",
+      "after": "namespace Garnet {\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\nnamespace {\nconstexpr size_t kSoleScratchBytes=2048ull*6144*2;\nstruct SoleCounters {std::atomic<uint64_t> weights{0},allocated{0},uploads{0},decode{0},restore{0},scratch{0};};\nSoleCounters soleCounters;\nstruct SoleWeightCharge {uint64_t bytes=0;~SoleWeightCharge(){if(bytes){soleCounters.weights.fetch_sub(1);soleCounters.allocated.fetch_sub(bytes);}}};\nstruct SoleScratchCharge {uint64_t bytes=0;~SoleScratchCharge(){if(bytes)soleCounters.scratch.fetch_sub(bytes);}};\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\nstd::atomic<int> soleFailure{0};std::atomic<bool> soleUnavailable{false};\nvoid SoleMaybeFail(int stage){int expected=stage;if(soleFailure.compare_exchange_strong(expected,0))throw std::runtime_error(\"Injected sole-layout allocation failure\");}\n#endif\n}\n#endif\n#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS",
+      "count": 1
+    },
+    {
+      "before": "    id<MTLBuffer> buffer;",
+      "after": "    id<MTLBuffer> buffer;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n    bool soleInterleaved=false;SoleWeightCharge soleCharge;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "    id<MTLLibrary> library;",
+      "after": "    id<MTLLibrary> library;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n    id<MTLLibrary> soleLibrary=nil;\n    id<MTLComputePipelineState> soleDecode=nil,soleRestore=nil,soleRead=nil;\n    std::map<std::array<size_t,5>,id<MTLComputePipelineState>> soleBodyShape;\n    std::string soleProgram;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "    double gpuMs=0;",
+      "after": "    double gpuMs=0;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n    id<MTLBuffer> soleScratch=nil;SoleScratchCharge soleScratchCharge;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        impl_->kernels->mainProgram=source.UTF8String;",
+      "after": "        impl_->kernels->mainProgram=source.UTF8String;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        // Independent library leaves existing raw/primary source strings intact.\n        impl_->kernels->soleProgram=kSoleInterleavedMlpShader;\n        auto soleLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kSoleInterleavedMlpShader] options:compileOptions error:&error];\n        if(!soleLibrary)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));\n        auto decode=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_bf16_decode\"] error:&error];\n        auto restore=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_bf16_restore\"] error:&error];\n        auto read=[impl_->device newComputePipelineStateWithFunction:[soleLibrary newFunctionWithName:@\"sole_bf16_read\"] error:&error];\n        if(!decode||!restore||!read)throw std::runtime_error(\"Cannot create sole-layout pipelines\");\n        if(decode.threadExecutionWidth==32&&decode.maxTotalThreadsPerThreadgroup>=128&&\n           decode.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength&&\n           restore.maxTotalThreadsPerThreadgroup>=128&&read.maxTotalThreadsPerThreadgroup>=128) {\n            impl_->kernels->soleLibrary=soleLibrary;impl_->kernels->soleDecode=decode;\n            impl_->kernels->soleRestore=restore;impl_->kernels->soleRead=read;\n        }\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        bool soleAvailable=bool(impl_->kernels->soleDecode)&&bool(impl_->kernels->soleRestore)&&bool(impl_->kernels->soleRead);\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n        soleAvailable=soleAvailable&&!soleUnavailable.load();\n#endif\n        if(soleAvailable&&!floatPrefill&&!visionPrefill&&\n           ((rows==6144&&columns==2048)||(rows==2048&&columns==6144))) {\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n            SoleMaybeFail(1);\n#endif\n            auto buffer=[impl_->device newBufferWithLength:bytes options:MTLResourceStorageModeShared];\n            if(!buffer||!buffer.contents)throw std::runtime_error(\"Sole BF16 weight allocation failed\");\n            auto dst=static_cast<char*>(buffer.contents);auto src=static_cast<const char*>(data);\n            for(size_t row=0;row<rows;++row)for(size_t k=0;k<columns;++k)\n                std::memcpy(dst+2*((row/4)*columns*4+k*4+row%4),src+2*(row*columns+k),2);\n            for(size_t row=0;row<rows;++row)for(size_t k=0;k<columns;++k)\n                if(std::memcmp(dst+2*((row/4)*columns*4+k*4+row%4),src+2*(row*columns+k),2))\n                    throw std::runtime_error(\"Sole BF16 original-bit roundtrip failed\");\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n            SoleMaybeFail(2);\n#endif\n            value->buffer=buffer;value->soleInterleaved=true;value->soleCharge.bytes=buffer.allocatedSize;\n            soleCounters.weights.fetch_add(1);soleCounters.allocated.fetch_add(buffer.allocatedSize);soleCounters.uploads.fetch_add(1);\n            return MetalBF16Weight(value);\n        }\n#endif\n        value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];",
+      "count": 1
+    },
+    {
+      "before": "        add(w->buffer,\"bf16\");if(w->exactHalf)",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        add(w->buffer,w->soleInterleaved?\"sole_bf16_interleaved\":\"bf16\");\n#else\n        add(w->buffer,\"bf16\");\n#endif\n        if(w->exactHalf)",
+      "count": 1
+    },
+    {
+      "before": "auto& selectedCache=primary?impl_->kernels->primaryBodyShape:cache;",
+      "after": "auto& selectedCache=primary?impl_->kernels->primaryBodyShape:\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n            w->soleInterleaved?impl_->kernels->soleBodyShape:\n#endif\n            cache;",
+      "count": 2
+    },
+    {
+      "before": "auto& selectedCache=cache;",
+      "after": "auto& selectedCache=\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n            w->soleInterleaved?impl_->kernels->soleBodyShape:\n#endif\n            cache;",
+      "count": 2
+    },
+    {
+      "before": "        if(primary)functionName=@\"primary_specialized_bf16_decode\";\n#endif",
+      "after": "        if(primary)functionName=@\"primary_specialized_bf16_decode\";\n#endif\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        if(w->soleInterleaved)functionName=@\"sole_specialized_bf16_decode\";\n#endif",
+      "count": 1
+    },
+    {
+      "before": "auto sourceLibrary=primary?impl_->kernels->vectorPrefillLibrary:impl_->kernels->library;",
+      "after": "auto sourceLibrary=primary?impl_->kernels->vectorPrefillLibrary:\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n            w->soleInterleaved?impl_->kernels->soleLibrary:\n#endif\n            impl_->kernels->library;",
+      "count": 1
+    },
+    {
+      "before": "auto function=[impl_->kernels->library newFunctionWithName:functionName constantValues:constants error:&error];",
+      "after": "auto sourceLibrary=impl_->kernels->library;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        if(w->soleInterleaved)sourceLibrary=impl_->kernels->soleLibrary;\n#endif\n        auto function=[sourceLibrary newFunctionWithName:functionName constantValues:constants error:&error];",
+      "count": 1
+    },
+    {
+      "before": "+impl_->kernels->primaryBodyShape.size()",
+      "after": "+impl_->kernels->primaryBodyShape.size()",
+      "count": 1
+    },
+    {
+      "before": "        ;\n#else\n    return 0;\n#endif\n}\nsize_t MetalContext::LastBodyShapeDispatches()",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        +impl_->kernels->soleBodyShape.size()\n#endif\n        ;\n#else\n    return 0;\n#endif\n}\nsize_t MetalContext::LastBodyShapeDispatches()",
+      "count": 1
+    },
+    {
+      "before": "#ifdef GARNET_METAL_BODY_SHAPE\n        if(a.rows<=2&&o.columns<100000) {",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        if(w->soleInterleaved&&a.rows<=2){pipeline=impl_->kernels->soleDecode;threads=128;decodeColumns=16;}\n#endif\n#ifdef GARNET_METAL_BODY_SHAPE\n        if(a.rows<=2&&o.columns<100000) {",
+      "count": 1
+    },
+    {
+      "before": "        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        if(w->soleInterleaved&&a.rows>2) {\n            if(primary||w->floatPrefill||w->visionPrefill||w->buffer.length!=kSoleScratchBytes)\n                throw std::logic_error(\"Invalid sole-layout prefill representation\");\n            if(!impl_->soleScratch) {\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n                SoleMaybeFail(3);\n#endif\n                auto scratch=[impl_->device newBufferWithLength:kSoleScratchBytes options:MTLResourceStorageModePrivate];\n                if(!scratch)throw std::runtime_error(\"Sole-layout prefill scratch allocation failed\");\n                impl_->soleScratch=scratch;impl_->soleScratchCharge.bytes=scratch.allocatedSize;\n                soleCounters.scratch.fetch_add(scratch.allocatedSize);\n            }\n            auto restore=[impl_->command computeCommandEncoder];\n            if(!restore)throw std::runtime_error(\"Cannot create sole-layout restore encoder\");\n            uint64_t dimensions[2]={w->rows,w->columns};\n            [restore setComputePipelineState:impl_->kernels->soleRestore];\n            [restore setBuffer:w->buffer offset:0 atIndex:0];[restore setBuffer:impl_->soleScratch offset:0 atIndex:1];\n            [restore setBytes:dimensions length:sizeof(dimensions) atIndex:2];\n            [restore dispatchThreads:MTLSizeMake(w->rows*w->columns,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[restore endEncoding];\n            storage=impl_->soleScratch;soleCounters.restore.fetch_add(1);\n        }\n        if(w->soleInterleaved&&a.rows<=2)soleCounters.decode.fetch_add(1);\n#endif\n        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)",
+      "count": 1
+    },
+    {
+      "before": "  for(size_t i=0;i<count;++i){uint16_t word;std::memcpy(&word,data+2*(start+i),2);output[i]=uint32_t(word)<<16;}",
+      "after": "  for(size_t i=0;i<count;++i){size_t at=start+i;\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n   if(owner->soleInterleaved){size_t row=at/owner->columns,k=at%owner->columns;at=(row/4)*owner->columns*4+k*4+row%4;}\n#endif\n   uint16_t word;std::memcpy(&word,data+2*at,2);output[i]=uint32_t(word)<<16;}",
+      "count": 1
+    },
+    {
+      "before": "",
+      "after": "\nnamespace Garnet {\nMetalSoleStats MetalContext::SoleStats() {\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n return {soleCounters.weights.load(),soleCounters.allocated.load(),soleCounters.uploads.load(),soleCounters.decode.load(),soleCounters.restore.load(),soleCounters.scratch.load()};\n#else\n return {};\n#endif\n}\nstd::string MetalContext::SoleShaderProgramSource() const {\n#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n return impl_->kernels->soleProgram;\n#else\n return {};\n#endif\n}\n#if defined(GARNET_METAL_SOLE_INTERLEAVED_MLP) && defined(GARNET_METAL_PRIMARY_TEST_FAULTS)\nvoid MetalContext::SoleTestFailAfter(int stage){if(stage<0||stage>3)throw std::invalid_argument(\"Invalid sole-layout failure stage\");soleFailure.store(stage);}\nvoid MetalContext::SoleTestUnavailable(bool flag){soleUnavailable.store(flag);}\n#endif\nstd::vector<uint32_t> MetalContext::SoleInterleavedReadWords(const MetalBF16Weight& value,size_t start,size_t count) {\n#ifndef GARNET_METAL_SOLE_INTERLEAVED_MLP\n (void)value;(void)start;(void)count;throw std::logic_error(\"Sole interleaved storage disabled\");\n#else\n @autoreleasepool {\n if(impl_->command||impl_->submitted.count)throw std::logic_error(\"Sole readback requires closed drained batch\");\n auto w=value.impl_;\n if(!w||!w->soleInterleaved||!w->buffer||w->buffer.device!=impl_->device||w->buffer.length!=kSoleScratchBytes)\n  throw std::invalid_argument(\"Sole readback requires same-device sole interleaved weight\");\n size_t total=Elements(w->rows,w->columns);\n if(!count||count>8*1024*1024||start>total||count>total-start)throw std::invalid_argument(\"Sole readback range invalid\");\n auto output=[impl_->device newBufferWithLength:count*4 options:MTLResourceStorageModeShared];\n if(!output)throw std::runtime_error(\"Cannot allocate sole readback output\");\n auto command=[impl_->queue commandBuffer];auto encoder=[command computeCommandEncoder];\n if(!command||!encoder)throw std::runtime_error(\"Cannot create sole readback command\");\n uint64_t p[4]={w->rows,w->columns,start,count};\n [encoder setComputePipelineState:impl_->kernels->soleRead];[encoder setBuffer:w->buffer offset:0 atIndex:0];\n [encoder setBuffer:output offset:0 atIndex:1];[encoder setBytes:p length:sizeof(p) atIndex:2];\n [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];\n [command commit];[command waitUntilCompleted];\n if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error(\"Sole readback command failed\");\n std::vector<uint32_t> result(count);std::memcpy(result.data(),output.contents,count*4);return result;\n }\n#endif\n}\n}\n",
+      "count": 1,
+      "append": true
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "    std::string PrimaryStatsJson() {",
+      "after": "    std::string SoleStatsJson() {\n        const auto p=MetalContext::SoleStats();\n        return nlohmann::json{{\"active_weights\",p.activeWeights},{\"allocated_bytes\",p.allocatedBytes},{\"uploads\",p.uploads},{\"decode_encoded\",p.decodeEncoded},{\"restore_encoded\",p.restoreEncoded},{\"scratch_bytes\",p.scratchBytes}}.dump();\n    }\n    std::string PrimaryStatsJson() {",
+      "count": 1
+    },
+    {
+      "before": "        APISET().AddFunc<0>(\"primary_storage_stats_json\",&GarnetMetalAPI::PrimaryStatsJson);",
+      "after": "        APISET().AddFunc<0>(\"primary_storage_stats_json\",&GarnetMetalAPI::PrimaryStatsJson);\n        APISET().AddFunc<0>(\"sole_interleaved_stats_json\",&GarnetMetalAPI::SoleStatsJson);",
+      "count": 1
+    },
+    {
+      "before": "        return info;",
+      "after": "#ifdef GARNET_METAL_SOLE_INTERLEAVED_MLP\n        info+=\"; sole_interleaved_mlp\";\n#endif\n        return info;",
+      "count": 1
+    }
+  ],
+  "runtime/metal_serving.py": [
+    {
+      "before": "            before=json.loads(garnet.primary_storage_stats_json())",
+      "after": "            before=json.loads(garnet.primary_storage_stats_json())\n            sole_before=json.loads(garnet.sole_interleaved_stats_json())",
+      "count": 1
+    },
+    {
+      "before": "            after=json.loads(garnet.primary_storage_stats_json())",
+      "after": "            after=json.loads(garnet.primary_storage_stats_json())\n            sole_after=json.loads(garnet.sole_interleaved_stats_json())",
+      "count": 1
+    },
+    {
+      "before": "                result['timings']['primary_storage_before']=before",
+      "after": "                result['timings']['sole_storage_before']=sole_before\n                result['timings']['sole_storage_after']=sole_after\n                result['timings']['sole_encoded_delta']={key:sole_after[key]-sole_before[key] for key in ['decode_encoded','restore_encoded']}\n                result['timings']['primary_storage_before']=before",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_SOLE_INTERLEAVED_MLP \"Sole interleaved raw text MLP weights with bounded exact prefill restore\" OFF)\nif(GARNET_METAL_SOLE_INTERLEAVED_MLP)\n if(NOT GARNET_METAL_BODY_SHAPE)\n  message(FATAL_ERROR \"Sole interleaved MLP requires body-shape support\")\n endif()\n foreach(policy GARNET_METAL_EXACT_HALF_PREFILL GARNET_METAL_GLOBAL_HALF_ALPHA GARNET_METAL_NATIVE_BFLOAT_BODY GARNET_METAL_CONSTANT_BF16_HEAD GARNET_METAL_SINGLE_CODER_HEAD GARNET_METAL_INTERLEAVED_BF16_BODY GARNET_METAL_COALESCED_BF16_BODY GARNET_METAL_FUSED_HEAD_ARGMAX GARNET_METAL_SCREENED_HEAD GARNET_METAL_FLOAT_DENSE_KEY_PREFILL GARNET_METAL_JOINED_PREFILL GARNET_METAL_JOINED_GLOBAL_MLP GARNET_METAL_MLP_PREFILL_GRAPH)\n  if(${policy})\n   message(FATAL_ERROR \"Sole interleaved MLP excludes row-major-only auxiliary policy: ${policy}\")\n  endif()\n endforeach()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_SOLE_INTERLEAVED_MLP=1)\nendif()\nadd_executable(garnet_sole_interleaved_test test2026/metal/sole_interleaved_test.cpp)\ntarget_link_libraries(garnet_sole_interleaved_test PRIVATE garnet_metal)\nadd_test(NAME metal_sole_interleaved_reference COMMAND garnet_sole_interleaved_test \"${CMAKE_CURRENT_BINARY_DIR}/sole_projection_words.bin\")\n",
+      "count": 1,
+      "append": true
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "utc": "2026-10-18T05:36:11.683574+00:00",
+  "actualWorldSense_Galaxy_native_candidate_functional_pass": true,
+  "four_calls_exact": true,
+  "actual_text_sole_decode_positive_VLMzero_and_native_memory_pass": true,
+  "checks": [
+    {
+      "model": "Qwen3.5-4B",
+      "phase": "phase1",
+      "exact": true,
+      "sole_storage": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 84
+      },
+      "sole_encoded_delta": {
+        "decode_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "phase": "phase3",
+      "exact": true,
+      "sole_storage": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 2940,
+        "restore_encoded": 1092,
+        "scratch_bytes": 25165824,
+        "uploads": 84
+      },
+      "sole_encoded_delta": {
+        "decode_encoded": 2940,
+        "restore_encoded": 1092
+      }
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "phase": "phase1",
+      "exact": true,
+      "sole_storage": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 2940,
+        "restore_encoded": 1092,
+        "scratch_bytes": 25165824,
+        "uploads": 84
+      },
+      "sole_encoded_delta": {
+        "decode_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "model": "Qwen3-1.7B",
+      "phase": "phase3",
+      "exact": true,
+      "sole_storage": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 5880,
+        "restore_encoded": 1848,
+        "scratch_bytes": 25165824,
+        "uploads": 84
+      },
+      "sole_encoded_delta": {
+        "decode_encoded": 2940,
+        "restore_encoded": 756
+      }
+    }
+  ],
+  "source_drivers_libraries_unchanged": true,
+  "speed_eligibility": false,
+  "scope": "Two fixed-frame candidate-only Skill requests. No control, speed comparison, causal attribution or promotion."
+}

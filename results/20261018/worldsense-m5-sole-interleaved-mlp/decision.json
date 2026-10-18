@@ -1,0 +1,66 @@
+{
+  "utc": "2026-10-18T05:50:36.295801+00:00",
+  "observed_speed_session": 14265,
+  "observed_exit_code": 0,
+  "decision": "valid-reject",
+  "promotion": false,
+  "all32_calls_and16_requests_exact_original_goldens_and_native_routes": true,
+  "all_source_library_runtime_driver_model_and1874dependencies_unchanged": true,
+  "source_files": 1720,
+  "learned_assets": 19,
+  "metrics": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 4.668329687512596,
+        "total": 5.925970958007383,
+        "decode_tps": 26.27730269844963
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 14.284340187499765,
+        "total": 22.76006341649918,
+        "decode_tps": 10.974319958140363
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 6.5580179169774055,
+        "total": 7.9534602709900355,
+        "decode_tps": 25.713306313648005
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 4.691132853491581,
+        "total": 12.723546604494913,
+        "decode_tps": 11.522185273467391
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": 0.4047889407895875,
+      "total_change": 0.342136221616651,
+      "decode_gain": -0.02146325257481252
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.6715891114384973,
+      "total_change": -0.44097051173981416,
+      "decode_gain": 0.04992248425567736
+    }
+  ],
+  "whole_skill_wall": {
+    "control-1": 27.884260374994483,
+    "candidate-1": 20.792476312504732
+  },
+  "wall_gain": 0.2543292871002376,
+  "resource_passed": true,
+  "speed_passed": false,
+  "reason": "Text TTFT+40.478894%, total+34.213622%, derived decode-2.146325% fail unchanged2% preservation gates.",
+  "no_later_stages_or_unchanged_retry": true,
+  "experiment": "WS-M5-63",
+  "scope": "Valid whole-profile rejection, no isolated causal inference or new deployment."
+}

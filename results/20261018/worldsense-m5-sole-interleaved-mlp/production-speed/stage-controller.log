@@ -1,0 +1,42 @@
+START control-1 2026-10-18T05:42:12Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-18T05:45:32Z
+FINISH candidate-1 exit 0
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 49819
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+RESTORED VALIDATED WS10 AND NORMAL NONBENCHMARK SERVER
+Build/SDK/host dependency identity unchanged 1874 production-speed
+{
+  "status": "rejected",
+  "passed": false,
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": 0.4047889407895875,
+      "total_change": 0.342136221616651,
+      "decode_gain": -0.02146325257481252
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.6715891114384973,
+      "total_change": -0.44097051173981416,
+      "decode_gain": 0.04992248425567736
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": null,
+    "candidate-1": 16896065536
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-1": 27.884260374994483,
+    "candidate-1": 20.792476312504732
+  },
+  "native_skill_wall_gain": 0.2543292871002376,
+  "scope": "Additional predeclared actualWS10screen, same correctness/budget/2%latency/decode/Skillwall gates. Oldcontrol memory API unavailable/null. Separate instrumented matched resource and confirmation memory gates remain required. First/warm separate; no promotion from this screen."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 49910
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

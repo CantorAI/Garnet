@@ -1,0 +1,12 @@
+loading initial cache file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-sole-interleaved/build-profile/MetalWorldSense4BPrefix.cmake
+-- Found JPEG: /opt/homebrew/lib/libjpeg.dylib (found version "80")
+-- Found ZLIB: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libz.tbd (found version "1.2.12")
+-- Found PNG: /opt/homebrew/lib/libpng.dylib (found version "1.6.59")
+-- Configuring incomplete, errors occurred!
+CMake Error at cmake/GarnetMetal.cmake:465 (message):
+  Sole interleaved MLP excludes row-major-only auxiliary policy:
+  GARNET_METAL_EXACT_HALF_PREFILL
+Call Stack (most recent call first):
+  CMakeLists.txt:15 (include)
+
+
