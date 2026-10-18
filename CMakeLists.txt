@@ -146,6 +146,13 @@ FILE(GLOB_RECURSE Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
 list(FILTER Cuda_SRC EXCLUDE REGEX ".*/test\\.cu$")
 FILE(GLOB_RECURSE Backend_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/*.cpp")
 
+# Metal and CPU-only builds select their explicit sources above and return.
+# The CUDA target must not collect the Metal module entry or graph executors,
+# which depend on Objective-C++/MPS, or its separately linked image frontend.
+list(FILTER Entry_SRC EXCLUDE REGEX "/metal_main\\.cpp$")
+list(FILTER Backend_SRC EXCLUDE REGEX "/metal/")
+list(FILTER Image_SRC EXCLUDE REGEX "/native_image\\.cpp$")
+
 # Family-specific kernels/plugins are optional load-on-demand libraries.
 option(GARNET_BUILD_GPT_OSS_OPS "Build the GPT-OSS operator extension" ON)
 if(GARNET_BUILD_GPT_OSS_OPS)
