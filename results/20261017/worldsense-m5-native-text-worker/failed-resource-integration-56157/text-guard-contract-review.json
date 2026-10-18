@@ -1,0 +1,5 @@
+{
+  "source_evidence": "Original54 Model.infer calls decoder.reset before tokenization/capacity validation.",
+  "change": "Correct unexecuted guard assumption: capacity error leaves original zero-reset state, then verify exact recovery; session malformed-input no-mutation guards remain separate and unchanged.",
+  "no_inference_or_performance_attempt": true
+}

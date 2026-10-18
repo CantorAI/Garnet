@@ -1,0 +1,38 @@
+{
+  "command": [
+    "/opt/homebrew/bin/cmake",
+    "-S",
+    "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+    "-B",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off",
+    "-C",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/build-profile/MetalWorldSense4BPrefix.cmake",
+    "-DGARNET_METAL=ON",
+    "-DGARNET_METAL_XMODEL=ON",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_OBJCXX_COMPILER=/usr/bin/c++",
+    "-DXLANG3_SDK_ROOT=/Users/shawn/CantorAI/xlang3/sdk",
+    "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+    "-DGARNET_METAL_PRIMARY_BF16_BLOCKS=OFF",
+    "-DGARNET_METAL_WIDE_PRIMARY_STORAGE=OFF",
+    "-DGARNET_METAL_LAZY_RESIDENT_DEFAULTS=OFF",
+    "-DGARNET_METAL_CACHED_MATRIX_METADATA=OFF",
+    "-DGARNET_METAL_PRIMARY_VECTOR_PREFILL=OFF",
+    "-DGARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY=OFF",
+    "-DGARNET_METAL_DIRECT_FLOAT_WEIGHT_UPLOAD=OFF",
+    "-DGARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY=OFF",
+    "-DGARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY=OFF"
+  ],
+  "flags_off": [
+    "GARNET_METAL_PRIMARY_BF16_BLOCKS",
+    "GARNET_METAL_WIDE_PRIMARY_STORAGE",
+    "GARNET_METAL_LAZY_RESIDENT_DEFAULTS",
+    "GARNET_METAL_CACHED_MATRIX_METADATA",
+    "GARNET_METAL_PRIMARY_VECTOR_PREFILL",
+    "GARNET_METAL_PRIMARY_PREFILL_ISOLATED_LIBRARY",
+    "GARNET_METAL_DIRECT_FLOAT_WEIGHT_UPLOAD",
+    "GARNET_METAL_PRIMARY_VECTOR_PREFILL_K32_ONLY",
+    "GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY"
+  ],
+  "scope": "Initial RAW support/clock build only; router feature not yet implemented or enabled."
+}

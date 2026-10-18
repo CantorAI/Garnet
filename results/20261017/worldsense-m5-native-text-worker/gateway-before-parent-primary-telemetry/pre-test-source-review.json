@@ -1,0 +1,11 @@
+{
+  "initial_all4builds_terminal": 91455,
+  "changes": [
+    "Close unrelated descriptors on native exec",
+    "Fail closed on control identity failure; retain recoverable application errors",
+    "Inference transport error requires explicit reload, no hidden retry",
+    "Require the same caller runtime as the stable SDK host wrapper"
+  ],
+  "source_and_initial_binaries_preserved": true,
+  "no_model_or_performance_attempt": true
+}

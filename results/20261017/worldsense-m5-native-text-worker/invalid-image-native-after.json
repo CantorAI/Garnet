@@ -1,0 +1,70 @@
+{
+  "serve": {
+    "ready": false,
+    "model_id": "bad-text",
+    "error_message": "failed to open /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/invalid-text-fixture\\vocab.json"
+  },
+  "info_before": {
+    "calls": 0,
+    "children": [
+      {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "birth_id": "35329183d3fc91b7ae2b8ac22d1fdd52e91132e111182fec93a16aacf15d3687",
+        "clock_epoch_metadata_enabled": true,
+        "infer_calls": 0,
+        "models": [],
+        "protocol": "garnet-native-text-v1",
+        "support": {
+          "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+          "parent_pid": 6214,
+          "pid": 6215,
+          "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+          "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+          "steady_seconds": 173288.754325541,
+          "watch_parent_pid": 6214,
+          "watchdog_active": true
+        }
+      }
+    ],
+    "enabled": true,
+    "parent_pid": 6214
+  },
+  "original_local_control": {
+    "status": "error",
+    "error_message": "Model is not loaded: bad-text",
+    "model_id": "bad-text"
+  },
+  "remote": {
+    "error_message": "Model is not loaded: bad-text",
+    "model_id": "bad-text",
+    "native_worker_call_index": 1,
+    "status": "error"
+  },
+  "info_after": {
+    "calls": 0,
+    "children": [
+      {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "birth_id": "35329183d3fc91b7ae2b8ac22d1fdd52e91132e111182fec93a16aacf15d3687",
+        "clock_epoch_metadata_enabled": true,
+        "infer_calls": 1,
+        "models": [],
+        "protocol": "garnet-native-text-v1",
+        "support": {
+          "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+          "parent_pid": 6214,
+          "pid": 6215,
+          "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+          "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+          "steady_seconds": 173288.785228958,
+          "watch_parent_pid": 6214,
+          "watchdog_active": true
+        }
+      }
+    ],
+    "enabled": true,
+    "parent_pid": 6214
+  },
+  "expected_native_CXX_boundary_outcome_pass": true,
+  "scope": "Exact default-invalid C++ image constructed inside native Garnet callback; no loaded model or performance inference."
+}

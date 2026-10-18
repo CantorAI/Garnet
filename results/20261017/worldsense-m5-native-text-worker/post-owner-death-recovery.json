@@ -1,0 +1,595 @@
+{
+  "serve": {
+    "ready": true,
+    "state": "ready",
+    "model_id": "Qwen3-1.7B"
+  },
+  "call": {
+    "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+    "generated_token_ids": [
+      4913,
+      36734,
+      788,
+      830,
+      11,
+      330,
+      19895,
+      788
+    ],
+    "generated_tokens": 8,
+    "image_preprocess_backend": "",
+    "image_preprocess_seconds": 0,
+    "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+    "model_id": "Qwen3-1.7B",
+    "native_first_token_monotonic": 173863.031325583,
+    "native_model_start_monotonic": 173862.26300375,
+    "native_worker_call_index": 1,
+    "serving_configuration": {
+      "capacity": 256,
+      "image_pixels": 65536,
+      "prefill_chunk": 16,
+      "requested_output_limit": 8,
+      "share_vision_weights": false,
+      "text_prefix_cache": true
+    },
+    "status": "ok",
+    "text": "{\"matched\": true, \"reason\":",
+    "timings": {
+      "decode_fused_head_dispatches": 0,
+      "decode_profile": {
+        "encode_ms": 2.493626,
+        "gpu_ms": 253.49937501596287,
+        "prepare_ms": 0.753875,
+        "wait_ms": 255.62258200000002
+      },
+      "decode_seconds": 0.2597005830029957,
+      "executed_prefill_tokens": 137,
+      "host_input_seconds": 0.0012235830072313547,
+      "initialization_memory": {
+        "after_decoder_ready": {
+          "metal_allocated_bytes": 3684204544,
+          "metal_recommended_working_set_bytes": 19069665280,
+          "metal_registry_id": 4294968354,
+          "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+          "task_compressed_bytes": 0,
+          "task_info_status": 0,
+          "task_internal_bytes": 3645538304,
+          "task_physical_footprint_bytes": 3648638264,
+          "task_resident_bytes": 3688398848,
+          "task_virtual_bytes": 453151703040
+        },
+        "before": {
+          "metal_allocated_bytes": 81920,
+          "metal_recommended_working_set_bytes": 19069665280,
+          "metal_registry_id": 4294968354,
+          "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+          "task_compressed_bytes": 0,
+          "task_info_status": 0,
+          "task_internal_bytes": 26214400,
+          "task_physical_footprint_bytes": 26690088,
+          "task_resident_bytes": 46481408,
+          "task_virtual_bytes": 445958242304
+        },
+        "other_model_ids_at_start": []
+      },
+      "input_tokens": 137,
+      "lazy_default_planned_slots": 0,
+      "lazy_default_rehydrated_bytes": 0,
+      "lazy_default_retired_bytes": 0,
+      "memory_after_decode": {
+        "cohort_process_count": 2,
+        "metal_allocated_bytes": 4060446720,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "pid": 7338,
+        "process_samples": [
+          {
+            "metal_allocated_bytes": 65536,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 7338,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "snapshot_monotonic": 173863.292305791,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 22118400,
+            "task_physical_footprint_bytes": 22594088,
+            "task_resident_bytes": 42385408,
+            "task_virtual_bytes": 445953818624
+          },
+          {
+            "birth_id": "1ec7aaab5c8c4075e5affba429eb62fb30ca7af4875f1b422433cba520e4aad0",
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 7340,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "snapshot_monotonic": 173863.292958875,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3655385088,
+            "task_physical_footprint_bytes": 3915337376,
+            "task_resident_bytes": 3699998720,
+            "task_virtual_bytes": 453530025984
+          }
+        ],
+        "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+        "snapshot_monotonic": 173863.292305791,
+        "task_compressed_bytes": 0,
+        "task_info_status": 0,
+        "task_internal_bytes": 3677503488,
+        "task_physical_footprint_bytes": 3937931464,
+        "task_resident_bytes": 3742384128,
+        "task_virtual_bytes": 899483844608
+      },
+      "memory_after_input": {
+        "metal_allocated_bytes": 3684204544,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 0,
+        "task_info_status": 0,
+        "task_internal_bytes": 3647045632,
+        "task_physical_footprint_bytes": 3650342488,
+        "task_resident_bytes": 3691151360,
+        "task_virtual_bytes": 453151703040
+      },
+      "memory_after_prefill": {
+        "metal_allocated_bytes": 4060512256,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 0,
+        "task_info_status": 0,
+        "task_internal_bytes": 3655254016,
+        "task_physical_footprint_bytes": 3912224416,
+        "task_resident_bytes": 3699736576,
+        "task_virtual_bytes": 453530157056
+      },
+      "memory_before_request": {
+        "metal_allocated_bytes": 3684204544,
+        "metal_recommended_working_set_bytes": 19069665280,
+        "metal_registry_id": 4294968354,
+        "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+        "task_compressed_bytes": 0,
+        "task_info_status": 0,
+        "task_internal_bytes": 3645816832,
+        "task_physical_footprint_bytes": 3648916792,
+        "task_resident_bytes": 3688677376,
+        "task_virtual_bytes": 453151703040
+      },
+      "native_gateway": {
+        "child": {
+          "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+          "birth_id": "1ec7aaab5c8c4075e5affba429eb62fb30ca7af4875f1b422433cba520e4aad0",
+          "clock_epoch_metadata_enabled": true,
+          "infer_calls": 1,
+          "models": [
+            "Qwen3-1.7B"
+          ],
+          "protocol": "garnet-native-text-v1",
+          "support": {
+            "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+            "parent_pid": 7338,
+            "pid": 7340,
+            "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+            "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+            "steady_seconds": 173863.293033083,
+            "watch_parent_pid": 7338,
+            "watchdog_active": true
+          }
+        },
+        "first_token_monotonic": 173863.031325583,
+        "gateway_started_monotonic": 173862.239731416,
+        "model_memory_after_decode": {
+          "metal_allocated_bytes": 4060381184,
+          "metal_recommended_working_set_bytes": 19069665280,
+          "metal_registry_id": 4294968354,
+          "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+          "task_compressed_bytes": 0,
+          "task_info_status": 0,
+          "task_internal_bytes": 3655385088,
+          "task_physical_footprint_bytes": 3915337376,
+          "task_resident_bytes": 3699998720,
+          "task_virtual_bytes": 453530025984
+        },
+        "model_started_monotonic": 173862.26300375,
+        "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker",
+        "parent_pid": 7338,
+        "parent_primary_encoded_delta": {
+          "decode_encoded": 0,
+          "head_encoded": 0,
+          "prefill_encoded": 0,
+          "vector_decode_encoded": 0,
+          "vector_head_encoded": 0
+        },
+        "parent_primary_storage_after": {
+          "active_weights": 0,
+          "allocated_bytes": 0,
+          "decode_encoded": 0,
+          "head_encoded": 0,
+          "metadata_bytes": 0,
+          "original_bytes": 0,
+          "payload_bytes": 0,
+          "prefill_encoded": 0,
+          "uploads": 0,
+          "vector_decode_encoded": 0,
+          "vector_head_encoded": 0
+        },
+        "parent_primary_storage_before": {
+          "active_weights": 0,
+          "allocated_bytes": 0,
+          "decode_encoded": 0,
+          "head_encoded": 0,
+          "metadata_bytes": 0,
+          "original_bytes": 0,
+          "payload_bytes": 0,
+          "prefill_encoded": 0,
+          "uploads": 0,
+          "vector_decode_encoded": 0,
+          "vector_head_encoded": 0
+        },
+        "process_count": 2,
+        "raw_model_total_seconds": 1.028708124998957,
+        "raw_model_ttft_seconds": 0.7683594579866622,
+        "route": "native_lrpc_raw_text",
+        "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+      },
+      "prefill_chunk_plan": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "prefill_compile_ms": 24.088829,
+      "prefill_profile": {
+        "encode_ms": 4.422541000000001,
+        "gpu_ms": 705.054125020979,
+        "prepare_ms": 0.9605840000000001,
+        "wait_ms": 725.377585
+      },
+      "prefill_seconds": 0.7635683749977034,
+      "prefix_cache_capture_seconds": 0.0024832919880282134,
+      "prefix_cache_captured_tokens": 64,
+      "prefix_cache_hit": false,
+      "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+      "prefix_cache_native_bytes": 14680064,
+      "prefix_cache_native_entries": 1,
+      "prefix_cache_restore_seconds": 0,
+      "prefix_cache_restored_tokens": 0,
+      "prefix_capture_native_bytes": 14680064,
+      "prefix_restore_native_bytes": 0,
+      "primary_encoded_delta": {
+        "decode_encoded": 0,
+        "head_encoded": 0,
+        "prefill_encoded": 0,
+        "vector_decode_encoded": 0,
+        "vector_head_encoded": 0
+      },
+      "primary_storage_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "head_encoded": 0,
+        "metadata_bytes": 0,
+        "original_bytes": 0,
+        "payload_bytes": 0,
+        "prefill_encoded": 0,
+        "uploads": 0,
+        "vector_decode_encoded": 0,
+        "vector_head_encoded": 0
+      },
+      "primary_storage_before": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "head_encoded": 0,
+        "metadata_bytes": 0,
+        "original_bytes": 0,
+        "payload_bytes": 0,
+        "prefill_encoded": 0,
+        "uploads": 0,
+        "vector_decode_encoded": 0,
+        "vector_head_encoded": 0
+      },
+      "reset_seconds": 0.0035298749862704426,
+      "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source/runtime/metal_serving.py"
+    },
+    "total_seconds": 1.0533828340121545,
+    "ttft_seconds": 0.7915941670071334
+  },
+  "state": {
+    "model_id": "Qwen3-1.7B",
+    "states": [
+      [
+        {
+          "values": 262144,
+          "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+        },
+        {
+          "values": 262144,
+          "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+        },
+        {
+          "values": 262144,
+          "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+        },
+        {
+          "values": 262144,
+          "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+        },
+        {
+          "values": 262144,
+          "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+        },
+        {
+          "values": 262144,
+          "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+        },
+        {
+          "values": 262144,
+          "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+        },
+        {
+          "values": 262144,
+          "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+        },
+        {
+          "values": 262144,
+          "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+        },
+        {
+          "values": 262144,
+          "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+        },
+        {
+          "values": 262144,
+          "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+        },
+        {
+          "values": 262144,
+          "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+        },
+        {
+          "values": 262144,
+          "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+        },
+        {
+          "values": 262144,
+          "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+        },
+        {
+          "values": 262144,
+          "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+        },
+        {
+          "values": 262144,
+          "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+        },
+        {
+          "values": 262144,
+          "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+        },
+        {
+          "values": 262144,
+          "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+        },
+        {
+          "values": 262144,
+          "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+        },
+        {
+          "values": 262144,
+          "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+        },
+        {
+          "values": 262144,
+          "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+        },
+        {
+          "values": 262144,
+          "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+        },
+        {
+          "values": 262144,
+          "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+        },
+        {
+          "values": 262144,
+          "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+        },
+        {
+          "values": 262144,
+          "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+        },
+        {
+          "values": 262144,
+          "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+        },
+        {
+          "values": 262144,
+          "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+        },
+        {
+          "values": 262144,
+          "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+        }
+      ],
+      [
+        {
+          "values": 262144,
+          "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+        },
+        {
+          "values": 262144,
+          "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+        }
+      ]
+    ],
+    "pid": 7340,
+    "birth_id": "1ec7aaab5c8c4075e5affba429eb62fb30ca7af4875f1b422433cba520e4aad0"
+  },
+  "exact_28layer_native_state_tokens_text_prompt_profile_after_active_owner_death_pass": true,
+  "scope": "Post-fault functional/numerical recovery only, no throughput claim."
+}

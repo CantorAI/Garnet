@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O2",
+    "-I",
+    "/Users/shawn/CantorAI/xlang3/sdk",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/invalid_image_sdk_probe.cpp",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+    "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+    "-o",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/invalid-image-sdk-probe"
+  ],
+  "source_sha256": "a5c977c7ac4cae518ff01ac45fb368e98f95e8c66c5b8f4d80cc1c16fc99af1a",
+  "executable_sha256": "70d3585c4aa7c93074c05de6581aeb6f686c72b8cc5c9758abc3aa130eca9ceb"
+}

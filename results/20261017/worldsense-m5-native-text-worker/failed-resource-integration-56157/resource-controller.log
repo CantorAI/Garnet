@@ -1,0 +1,27 @@
+Build/SDK/host dependency identity unchanged 1918 pre-resource
+START control-1 2026-10-18T00:35:38Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-18T00:37:51Z
+FINISH candidate-1 exit 1
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/controller.py", line 45, in <module>
+    if proc.returncode:raise RuntimeError(label+' failed; raw failure retained')
+RuntimeError: candidate-1 failed; raw failure retained
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 5136
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+RESTORED VALIDATED WS10 AND NORMAL NONBENCHMARK SERVER
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/controller.py", line 45, in <module>
+    if proc.returncode:raise RuntimeError(label+' failed; raw failure retained')
+RuntimeError: candidate-1 failed; raw failure retained
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 5248
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/dispatch_prepared_resource_ws58.py", line 10, in <module>
+    subprocess.run([sys.executable,str(w/'controller.py'),'control-1','candidate-1'],check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/Applications/Xcode.app/Contents/Developer/usr/bin/python3', '/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/controller.py', 'control-1', 'candidate-1']' returned non-zero exit status 1.

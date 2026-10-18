@@ -1,0 +1,41 @@
+{
+  "all_three_parent_death_cases_pass": true,
+  "records": [
+    {
+      "case": "bootstrap",
+      "parent_exit": -9,
+      "parent_pid": 7177,
+      "child_pid": 7178,
+      "birth_id": "d4965ac8970c9f2c5c432868f4375eb14f1a52b442354d297c1d3a0ef685fb7",
+      "child_before": "7178  7177 S    Sat Oct 17 17:53:02 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "child_after": "",
+      "observed_not_running_after_seconds": 0.005080957999999747,
+      "active_native_stack_required": false,
+      "scope": "Observed watchdog cleanup for owned child; orphan exit status unavailable after reparenting. Correctness injection only, not throughput."
+    },
+    {
+      "case": "loaded_idle",
+      "parent_exit": -9,
+      "parent_pid": 7185,
+      "child_pid": 7186,
+      "birth_id": "5d9e250cef1333441c5cbb59f918fd6d8bff58a0be4b84d716e4debf3fec6b98",
+      "child_before": "7186  7185 S    Sat Oct 17 17:53:02 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "child_after": "",
+      "observed_not_running_after_seconds": 0.03719591599999994,
+      "active_native_stack_required": false,
+      "scope": "Observed watchdog cleanup for owned child; orphan exit status unavailable after reparenting. Correctness injection only, not throughput."
+    },
+    {
+      "case": "active_infer",
+      "parent_exit": -9,
+      "parent_pid": 7194,
+      "child_pid": 7195,
+      "birth_id": "25091a6fda8232d9e59b8a26e540322931fe096a40d8ba1b6598ee0a5b149973",
+      "child_before": "7195  7194 S    Sat Oct 17 17:53:03 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "child_after": "",
+      "observed_not_running_after_seconds": 0.0779067919999985,
+      "active_native_stack_required": true,
+      "scope": "Observed watchdog cleanup for owned child; orphan exit status unavailable after reparenting. Correctness injection only, not throughput."
+    }
+  ]
+}

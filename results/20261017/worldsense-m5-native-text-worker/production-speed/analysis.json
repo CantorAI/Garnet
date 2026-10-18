@@ -1,0 +1,181 @@
+{
+  "status": "rejected",
+  "passed": false,
+  "checks": [
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "control-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase1",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    },
+    {
+      "worker": "candidate-1",
+      "phase": "phase3",
+      "exact": true,
+      "native_lazy_defaults_valid": true
+    }
+  ],
+  "metrics": {
+    "control-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 9.404946645488963,
+        "total": 10.643383541508229,
+        "decode_tps": 26.91351041833576
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 26.50269643800857,
+        "total": 37.49022664599761,
+        "decode_tps": 7.998915582632614
+      }
+    },
+    "candidate-1": {
+      "Qwen3-1.7B": {
+        "samples": 4,
+        "ttft": 2.1388562709908,
+        "total": 3.8557433124806266,
+        "decode_tps": 19.58596749061343
+      },
+      "Qwen3.5-4B": {
+        "samples": 4,
+        "ttft": 5.735749624989694,
+        "total": 15.348669562488794,
+        "decode_tps": 9.767711727624107
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "model": "Qwen3-1.7B",
+      "ttft_change": -0.7725817751431165,
+      "total_change": -0.637733311268585,
+      "decode_gain": -0.2722626225202561
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "ttft_change": -0.7835786393129482,
+      "total_change": -0.5905954448496942,
+      "decode_gain": 0.22112949270672821
+    }
+  ],
+  "sampled_max_post_request_metal_bytes": {
+    "control-1": null,
+    "candidate-1": 18754797568
+  },
+  "sampled_metal_reduction": null,
+  "native_skill_wall_p50": {
+    "control-1": 48.13854968751548,
+    "candidate-1": 19.366684958484257
+  },
+  "native_skill_wall_gain": 0.5976886490307596,
+  "scope": "Additional predeclared actualWS10screen, same correctness/budget/2%latency/decode/Skillwall gates. Oldcontrol memory API unavailable/null. Separate instrumented matched resource and confirmation memory gates remain required. First/warm separate; no promotion from this screen."
+}

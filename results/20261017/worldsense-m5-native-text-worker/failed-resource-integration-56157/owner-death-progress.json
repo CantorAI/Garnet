@@ -1,0 +1,38 @@
+[
+  {
+    "case": "bootstrap",
+    "parent_exit": -9,
+    "parent_pid": 3061,
+    "child_pid": 3062,
+    "birth_id": "885cb503437087c39c5849fdc544074c75863a2fe37104e660288c6ef6240d4e",
+    "child_before": "3062  3061 S    Sat Oct 17 17:31:58 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "child_after": "",
+    "observed_not_running_after_seconds": 0.035094499999999584,
+    "active_native_stack_required": false,
+    "scope": "Observed watchdog cleanup for owned child; orphan exit status unavailable after reparenting. Correctness injection only, not throughput."
+  },
+  {
+    "case": "loaded_idle",
+    "parent_exit": -9,
+    "parent_pid": 3070,
+    "child_pid": 3071,
+    "birth_id": "9ae4b6ad7574f359bc685f5a5da46f0fedbea398484149fac4518f9e9d92215a",
+    "child_before": "3071  3070 S    Sat Oct 17 17:31:58 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "child_after": "",
+    "observed_not_running_after_seconds": 0.05625512499999985,
+    "active_native_stack_required": false,
+    "scope": "Observed watchdog cleanup for owned child; orphan exit status unavailable after reparenting. Correctness injection only, not throughput."
+  },
+  {
+    "case": "active_infer",
+    "parent_exit": -9,
+    "parent_pid": 3080,
+    "child_pid": 3081,
+    "birth_id": "c57f9999f81e46c3e4ff184b90a54606c9c060b344ae731350dd1a8856162536",
+    "child_before": "3081  3080 S    Sat Oct 17 17:31:59 2026     /Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "child_after": "",
+    "observed_not_running_after_seconds": 0.144234333,
+    "active_native_stack_required": true,
+    "scope": "Observed watchdog cleanup for owned child; orphan exit status unavailable after reparenting. Correctness injection only, not throughput."
+  }
+]

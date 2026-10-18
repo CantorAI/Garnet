@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/text_model_guard.py", line 38, in <module>
+    t=call['timings'];g=t['native_gateway'];assert g['route']=='native_lrpc_raw_text'and g['child']['birth_id']==birth and g['child']['infer_calls']==j+1 and g['parent_pid']==os.getpid();assert 'native_text_worker'in g['parent_backend']and 'native_text_worker'not in call['backend'];assert call['serving_configuration']['text_prefix_cache']and t['prefix_cache_hit']==(j==2)
+                                                                                                                                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+AssertionError

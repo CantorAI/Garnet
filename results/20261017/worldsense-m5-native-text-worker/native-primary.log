@@ -1,0 +1,19 @@
+Test project /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-primary
+    Start 1: metal_inventory_reference
+1/7 Test #1: metal_inventory_reference ............   Passed    0.04 sec
+    Start 2: metal_memory_stats_reference
+2/7 Test #2: metal_memory_stats_reference .........   Passed    0.03 sec
+    Start 3: metal_prefix_copy_reference
+3/7 Test #3: metal_prefix_copy_reference ..........   Passed    0.05 sec
+    Start 4: metal_mps_matmul_reference
+4/7 Test #4: metal_mps_matmul_reference ...........   Passed    0.61 sec
+    Start 5: metal_matrix_metadata_reference
+5/7 Test #5: metal_matrix_metadata_reference ......   Passed    0.03 sec
+    Start 6: metal_primary_storage_reference
+6/7 Test #6: metal_primary_storage_reference ......   Passed    0.05 sec
+    Start 7: metal_primary_projection_reference
+7/7 Test #7: metal_primary_projection_reference ...   Passed    1.48 sec
+
+100% tests passed out of 7
+
+Total Test time (real) =   2.29 sec

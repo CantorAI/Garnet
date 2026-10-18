@@ -1,0 +1,9 @@
+WS58 telemetry refinement, declared before any performance cohort and before source edit.
+
+The implemented gateway keeps RAW child primary stats in each model response and fresh process-set memory in memory_after_decode. However, parent primary owner/allocation/encoded counters are not sampled during a remote request. Original design calls for parent counters to remain separately auditable; child zeros must not stand in for parent state.
+
+After current full correctness controller53837 is terminal, preserve its consumed source/driver/library versions and all completed results. Then add a native parent PrimaryStatsJson callback to the gateway. Sample before invoking local/remote inference, sample again after return, retain both raw snapshots and monotone encoded-counter deltas in timings.native_gateway. Reject negative/missing counters instead of fabricating zeros. Preserve child original stats separately. No math/precision/models/budgets/caches/CUDA/source shader/session edits. Time both new snapshots inside existing gateway boundary, including pre-inference snapshot in TTFT and after snapshot in total. Whole-process memory remains separately summed and conservatively labeled.
+
+For text remote calls assert all parent encoded deltas zero; for local VLM calls compare parent deltas with original per-model deltas, retaining original allocation/owner counts. Check both raw child zero packed stats and real parent snapshots. Existing source inverse must still pass. Rebuild allfour roles RAW-first and rerun original native/full-state/corpus/lifecycle plus new telemetry assertions before WorldSense timing; earlier successful correctness does not validate modified binaries.
+
+No speed result or performance rejection currently exists for WS58. This is a telemetry coverage correction, not a favorable performance retry. Both full source revisions/attempts remain reproducible. Preserve original promotion gates and selected WS10.

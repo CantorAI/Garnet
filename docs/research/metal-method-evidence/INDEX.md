@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-17T23:22:41.137802+00:00
+Generated UTC: 2026-10-18T01:24:41.970076+00:00
 
-Base HEAD at generation: `290f5742ba51c41197f24179cfee4876e96e789a`. Reports indexed: **248**.
+Base HEAD at generation: `91b1eaded0ce26ad4d03210615626f175f095a1c`. Reports indexed: **249**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -231,6 +231,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-isolated-primary](../../../results/20261017/worldsense-m5-isolated-primary/README.md) | WS-M5-54 — Full packed-kernel library isolation rejected on text decoding |
 | [results/20261017/worldsense-m5-isolated-vector-prefill](../../../results/20261017/worldsense-m5-isolated-vector-prefill/README.md) | WS-M5-48 — Isolated vector prefill library rejected by matched timing |
 | [results/20261017/worldsense-m5-k32-prefill](../../../results/20261017/worldsense-m5-k32-prefill/README.md) | WS-M5-51 — Hoisted upload and K32-only prefill rejected on text preservation |
+| [results/20261017/worldsense-m5-native-text-worker](../../../results/20261017/worldsense-m5-native-text-worker/README.md) | WS-M5-58 — Native RAW text-worker isolation rejected |
 | [results/20261017/worldsense-m5-packed-only-defaults](../../../results/20261017/worldsense-m5-packed-only-defaults/README.md) | WS-M5-57 — Packed-graph-only default retirement rejected at production-speed |
 | [results/20261017/worldsense-m5-primary-cached-lazy](../../../results/20261017/worldsense-m5-primary-cached-lazy/README.md) | WS-M5-52 — Primary, lazy defaults and cached metadata rejected on text preservation |
 | [results/20261017/worldsense-m5-primary-lazy](../../../results/20261017/worldsense-m5-primary-lazy/README.md) | WS-M5-45 — Joint primary weights and resident-default retirement rejected |

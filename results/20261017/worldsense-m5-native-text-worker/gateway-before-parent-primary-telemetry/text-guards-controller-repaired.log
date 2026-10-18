@@ -1,0 +1,12 @@
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+START actual native text guard on
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 735
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/text_guard_controller.py", line 13, in <module>
+    with(w/('text-model-guard-'+mode+'.log')).open('w')as log:subprocess.run([str(n/'xlang3'),'-B',str(w/'text_model_guard.py'),mode],stdout=log,stderr=subprocess.STDOUT,timeout=600,check=True)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3', '-B', '/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/text_model_guard.py', 'on']' returned non-zero exit status 1.

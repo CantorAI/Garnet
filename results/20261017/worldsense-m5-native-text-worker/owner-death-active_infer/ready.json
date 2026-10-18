@@ -1,0 +1,36 @@
+{
+  "parent_pid": 7194,
+  "case": "active_infer",
+  "status": {
+    "ready": true,
+    "state": "ready",
+    "model_id": "Qwen3-1.7B"
+  },
+  "identity": {
+    "calls": 0,
+    "children": [
+      {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "birth_id": "25091a6fda8232d9e59b8a26e540322931fe096a40d8ba1b6598ee0a5b149973",
+        "clock_epoch_metadata_enabled": true,
+        "infer_calls": 0,
+        "models": [
+          "Qwen3-1.7B"
+        ],
+        "protocol": "garnet-native-text-v1",
+        "support": {
+          "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+          "parent_pid": 7194,
+          "pid": 7195,
+          "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+          "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+          "steady_seconds": 173818.386567625,
+          "watch_parent_pid": 7194,
+          "watchdog_active": true
+        }
+      }
+    ],
+    "enabled": true,
+    "parent_pid": 7194
+  }
+}

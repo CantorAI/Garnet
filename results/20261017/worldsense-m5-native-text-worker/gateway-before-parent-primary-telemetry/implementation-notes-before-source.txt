@@ -1,0 +1,11 @@
+Pre-source implementation refinement (after native feasibility, before Garnet edits)
+
+Use existing native XLang3 LRPC and checked Value.Call + runtime_last_error. SDK Value::operator() discards status; the initial incorrect probe and repair are preserved. No XLang3 engine/SDK change. Corrected nativeCPP/nativeXLang3 owner/UTF8/clock/error/recovery/shutdown checks passed. No inference benchmark.
+
+The raw child is the OFF library built from the SAME WS58 source, not legacyWS10. Dense xModel source remains byte-equal WS10/54. Parent full and primary use raw child; OFF/no-worker resource control stays one process. Shared raw build first; no recursive worker-enabled child library. No56lease/57selectivepolicy.
+
+Reuse Garnet's already-existing memory_stats_json and primary_storage_stats_json in the raw child. Avoid duplicate Metal memory code/support module. Add only native process/loaded-library/clock identity and owned parent-death watchdog support to Garnet, available to raw bootstrap but inactive otherwise. No runtime engine edits. Native two-process explicit16/32MiB allocation probe observed process-local Metal counters; before allocation each owned process reported65536B, parent held16842752B unchanged while child held33619968B. Physical-footprint sum remains conservative, not unique physical RAM or residency.
+
+Model.infer already stores BOTH start and first event epochs. Return those exact existing variables under an opt-in clock flag, rather than reconstructing first from start+TTFT. No new clock reads, arithmetic/math/stop/budget/image/cache changes. Recover original inference AST by removing only declared result metadata/wrapper and module boolean. Parent gateway must count all new routing/IPC/snapshot cost and preserve child raw timing, actual first event, process components and conservative cohort totals. DefaultOFF control retains ordinary timing boundary; additional candidate gateway cost is counted and disclosed.
+
+No model timing or production behavior has been tested. Next source phase prepares native support and timing metadata, then integrates the owned native worker/router. Full original/new correctness and complete-process resource gates before WorldSense speed stages. All original thresholds/promotion sequence remain unchanged.

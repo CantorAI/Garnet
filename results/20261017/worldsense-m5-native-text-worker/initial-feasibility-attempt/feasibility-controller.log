@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/feasibility.py", line 21, in <module>
+    assert client.returncode==0,'Native client probe failed; retained logs'
+AssertionError: Native client probe failed; retained logs

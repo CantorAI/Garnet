@@ -1,0 +1,9 @@
+#include "xlang3/xlang3.h"
+#include "nlohmann/json.hpp"
+#include <chrono>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+static void require(bool x,const char*s){if(!x)throw std::runtime_error(s);}
+static X::Value call(const X::Value& fn,const std::vector<X::Value>& args={}){X::Value out;if(!fn.Call(args,out)){const char*e=x3_runtime_last_error(fn.runtime());throw std::runtime_error(e&&*e?e:"native call failed");}return out;}
+int main(int argc,char**argv){try{require(argc==4,"args");X::Runtime runtime;auto peer=runtime.ImportRemote("garnet_text_worker",argv[1]);auto info=nlohmann::json::parse(call(peer["info_json"]).ToString());require(info["birth_id"]==argv[3]&&info["support"]["pid"]==std::stoll(argv[2]),"wrong worker");require(info["models"].empty()&&info["support"]["watchdog_active"]==true,"worker startup/model ownership wrong");auto memory=nlohmann::json::parse(call(peer["memory_json"]).ToString());require(memory["task_info_status"]==0&&memory["metal_allocated_bytes"].get<uint64_t>()>=65536,"native memory telemetry unavailable");auto stats=nlohmann::json::parse(call(peer["primary_stats_json"]).ToString());require(stats["active_weights"]==0,"RAW child has primary weights");bool failed=false;try{call(peer["state_json"],{X::Value::String(runtime.host(),"missing")});}catch(const std::exception&e){failed=std::string(e.what()).find("model not ready")!=std::string::npos;}require(failed,"worker state error lost");auto after=nlohmann::json::parse(call(peer["info_json"]).ToString());require(after["birth_id"]==info["birth_id"]&&after["models"].empty(),"worker error did not recover");require(call(peer["stop"]).ToLongLong()!=0,"stop failed");std::cout<<"NATIVE_RAW_WORKER_LIBRARY_PID_BIRTH_MEMORY_ERROR_RECOVERY_STOP_PASS\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

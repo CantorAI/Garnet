@@ -1,0 +1,34 @@
+{
+  "parent_pid": 7177,
+  "case": "bootstrap",
+  "status": {
+    "ready": false,
+    "model_id": "invalid-text",
+    "error_message": "failed to open /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/invalid-text-fixture\\vocab.json"
+  },
+  "identity": {
+    "calls": 0,
+    "children": [
+      {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "birth_id": "d4965ac8970c9f2c5c432868f4375eb14f1a52b442354d297c1d3a0ef685fb7",
+        "clock_epoch_metadata_enabled": true,
+        "infer_calls": 0,
+        "models": [],
+        "protocol": "garnet-native-text-v1",
+        "support": {
+          "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+          "parent_pid": 7177,
+          "pid": 7178,
+          "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+          "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+          "steady_seconds": 173816.005031041,
+          "watch_parent_pid": 7177,
+          "watchdog_active": true
+        }
+      }
+    ],
+    "enabled": true,
+    "parent_pid": 7177
+  }
+}

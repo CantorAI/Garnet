@@ -1,0 +1,138 @@
+{
+  "all_cases_pass": true,
+  "records": [
+    {
+      "case": "spawn_identity_and_failed_model_load",
+      "status": {
+        "ready": false,
+        "model_id": "bad-text",
+        "error_message": "failed to open /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/invalid-text-fixture\\vocab.json"
+      },
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "1815c2f4c15324028b373c5705d9473f4d4e13ea383c05c3b9f26f7af62d035",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 0,
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+              "parent_pid": 2263,
+              "pid": 2264,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+              "steady_seconds": 172121.645613458,
+              "watch_parent_pid": 2263,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 2263
+      }
+    },
+    {
+      "case": "single_failed_infer_no_retry",
+      "response": {
+        "error_message": "Model is not loaded: bad-text",
+        "model_id": "bad-text",
+        "native_worker_call_index": 1,
+        "status": "error"
+      },
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "1815c2f4c15324028b373c5705d9473f4d4e13ea383c05c3b9f26f7af62d035",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 1,
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+              "parent_pid": 2263,
+              "pid": 2264,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+              "steady_seconds": 172121.646752166,
+              "watch_parent_pid": 2263,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 2263
+      }
+    },
+    {
+      "case": "state_error_recovery_close_serve_policy",
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "1815c2f4c15324028b373c5705d9473f4d4e13ea383c05c3b9f26f7af62d035",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 1,
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+              "parent_pid": 2263,
+              "pid": 2264,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+              "steady_seconds": 172121.669481291,
+              "watch_parent_pid": 2263,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 2263
+      }
+    },
+    {
+      "case": "owned_peer_exit_no_hidden_retry_explicit_restart",
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "a1632fa4e8056d78b999918c4244221be1139a9a605965bfd60087e7c58b32a",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 0,
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-native-text-worker-off/libgarnet.dylib",
+              "parent_pid": 2263,
+              "pid": 2265,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+              "steady_seconds": 172121.891682958,
+              "watch_parent_pid": 2263,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 2263
+      }
+    },
+    {
+      "case": "bounded_explicit_shutdown",
+      "info": {
+        "calls": 0,
+        "children": [],
+        "enabled": true,
+        "parent_pid": 2263
+      }
+    }
+  ],
+  "scope": "Native parent/RAW worker plumbing and failed setup only. No loaded model/output/state/performance proof."
+}

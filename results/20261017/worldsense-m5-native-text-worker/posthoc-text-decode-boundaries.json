@@ -1,0 +1,181 @@
+{
+  "utc": "2026-10-18T01:15:13.655555+00:00",
+  "scope": "Posthoc descriptive paired retained calls, no exclusions/causal attribution or new speed eligibility.",
+  "workers": {
+    "control-1": {
+      "per_call": [
+        {
+          "repetition": 1,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 6.104968291008845,
+          "total_seconds": 7.384944749996066,
+          "decode_interval": 1.2799764589872211,
+          "decode_phase_seconds": 1.2795979169895872,
+          "decode_profile": {
+            "encode_ms": 12.205204999999998,
+            "gpu_ms": 1230.0711249990854,
+            "prepare_ms": 3.0757520000000005,
+            "wait_ms": 1260.762084
+          }
+        },
+        {
+          "repetition": 2,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 9.882176499988418,
+          "total_seconds": 11.129240750015015,
+          "decode_interval": 1.2470642500265967,
+          "decode_phase_seconds": 1.2467373750114348,
+          "decode_profile": {
+            "encode_ms": 10.749707,
+            "gpu_ms": 1200.36558326683,
+            "prepare_ms": 2.9122120000000007,
+            "wait_ms": 1230.6476669999997
+          }
+        },
+        {
+          "repetition": 3,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 8.927716790989507,
+          "total_seconds": 10.157526333001442,
+          "decode_interval": 1.2298095420119353,
+          "decode_phase_seconds": 1.229509249998955,
+          "decode_profile": {
+            "encode_ms": 10.675749999999997,
+            "gpu_ms": 1181.7424582259264,
+            "prepare_ms": 2.7908739999999996,
+            "wait_ms": 1213.838334
+          }
+        },
+        {
+          "repetition": 4,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 10.245532125001773,
+          "total_seconds": 11.527745333005441,
+          "decode_interval": 1.2822132080036681,
+          "decode_phase_seconds": 1.2795519170176703,
+          "decode_profile": {
+            "encode_ms": 10.284543,
+            "gpu_ms": 1232.3117083287798,
+            "prepare_ms": 5.0686680000000015,
+            "wait_ms": 1261.9207480000002
+          }
+        }
+      ],
+      "medians": {
+        "generated_tokens": 35.0,
+        "ttft_seconds": 9.404946645488963,
+        "total_seconds": 10.643383541508229,
+        "decode_interval": 1.263520354506909,
+        "decode_phase_seconds": 1.2631446460145526,
+        "decode_profile": {
+          "encode_ms": 10.712728499999999,
+          "gpu_ms": 1215.2183541329578,
+          "prepare_ms": 2.993982000000001,
+          "wait_ms": 1245.7048754999998
+        }
+      }
+    },
+    "candidate-1": {
+      "per_call": [
+        {
+          "repetition": 1,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 3.241187625011662,
+          "total_seconds": 5.0530415840039495,
+          "decode_interval": 1.8118539589922875,
+          "decode_phase_seconds": 1.8086103340028785,
+          "decode_profile": {
+            "encode_ms": 16.667293000000004,
+            "gpu_ms": 1772.106166696176,
+            "prepare_ms": 4.323626000000001,
+            "wait_ms": 1783.3418740000004
+          },
+          "raw_decode_interval": 1.8097297919739503,
+          "gateway_extra_decode_interval": 0.0021241670183371753,
+          "gateway_extra_total": 0.0027106260240543634,
+          "gateway_extra_ttft": 0.0005864590057171881
+        },
+        {
+          "repetition": 2,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 1.9970782499876805,
+          "total_seconds": 3.735099374986021,
+          "decode_interval": 1.7380211249983404,
+          "decode_phase_seconds": 1.7329422080074437,
+          "decode_profile": {
+            "encode_ms": 18.492171,
+            "gpu_ms": 1693.9295416814275,
+            "prepare_ms": 4.989912999999999,
+            "wait_ms": 1705.3124169999999
+          },
+          "raw_decode_interval": 1.734653874009382,
+          "gateway_extra_decode_interval": 0.0033672509889584035,
+          "gateway_extra_total": 0.003848541993647814,
+          "gateway_extra_ttft": 0.00048129100468941033
+        },
+        {
+          "repetition": 3,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 2.2201652499788906,
+          "total_seconds": 3.920082040975103,
+          "decode_interval": 1.6999167909962125,
+          "decode_phase_seconds": 1.6965352080005687,
+          "decode_profile": {
+            "encode_ms": 18.815540000000002,
+            "gpu_ms": 1657.2982082725503,
+            "prepare_ms": 4.946916,
+            "wait_ms": 1668.660338
+          },
+          "raw_decode_interval": 1.697522167029092,
+          "gateway_extra_decode_interval": 0.002394623967120424,
+          "gateway_extra_total": 0.0029152489732950926,
+          "gateway_extra_ttft": 0.0005206250061746687
+        },
+        {
+          "repetition": 4,
+          "phase": "phase3",
+          "generated_tokens": 35,
+          "ttft_seconds": 2.0575472920027096,
+          "total_seconds": 3.79140458398615,
+          "decode_interval": 1.7338572919834405,
+          "decode_phase_seconds": 1.7306062080024276,
+          "decode_profile": {
+            "encode_ms": 17.993418999999996,
+            "gpu_ms": 1691.8901251046918,
+            "prepare_ms": 4.86229,
+            "wait_ms": 1703.7945390000004
+          },
+          "raw_decode_interval": 1.7315088749746792,
+          "gateway_extra_decode_interval": 0.0023484170087613165,
+          "gateway_extra_total": 0.003241458995034918,
+          "gateway_extra_ttft": 0.0008930419862736017
+        }
+      ],
+      "medians": {
+        "generated_tokens": 35.0,
+        "ttft_seconds": 2.1388562709908,
+        "total_seconds": 3.8557433124806266,
+        "decode_interval": 1.7359392084908905,
+        "decode_phase_seconds": 1.7317742080049356,
+        "raw_decode_interval": 1.7330813744920306,
+        "gateway_extra_decode_interval": 0.0023715204879408702,
+        "gateway_extra_total": 0.0030783539841650054,
+        "gateway_extra_ttft": 0.0005535420059459284,
+        "decode_profile": {
+          "encode_ms": 18.242794999999997,
+          "gpu_ms": 1692.9098333930597,
+          "prepare_ms": 4.904603,
+          "wait_ms": 1704.5534780000003
+        }
+      }
+    }
+  },
+  "limits": "Per-call differences computed before medians. GPU/wait/encode/prepare spans may overlap/include gaps; do not add separate medians or treat these as pure kernel costs. Raw model timing remains instrumented. Small IPC/snapshot boundary difference does not establish the cause of slower inner decode/GPU span. Thread QoS/clock/thermal/residency causes are unmeasured."
+}

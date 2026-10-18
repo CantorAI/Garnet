@@ -1,0 +1,15 @@
+{
+  "phase": "support_and_clock_metadata_only",
+  "source_files": 1720,
+  "changed": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/entry/metal_main.cpp",
+    "src/entry/native_worker_support.cpp",
+    "src/entry/native_worker_support.h"
+  ],
+  "all_MSL_codecs_math_xModel_session_original_tests_CUDA_unchanged": true,
+  "original_serving_expressions_exact_after_declared_metadata_inverse": true,
+  "gateway_not_implemented": true,
+  "no_model_or_performance_result": true
+}

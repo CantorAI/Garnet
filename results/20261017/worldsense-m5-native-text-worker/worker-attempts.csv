@@ -1,0 +1,7 @@
+stage,artifact,worker,valid,error,returned_items,assignments_restored,http_wall_seconds
+resource,candidate-1.json,candidate-1,True,,2,True,75.07311558397487
+resource,control-1.json,control-1,True,,2,True,120.69356470901403
+production-speed,production-speed/candidate-1.json,candidate-1,True,,5,True,133.0232082500006
+production-speed,production-speed/control-1.json,control-1,True,,5,True,272.6334804999933
+invalid-integration,failed-resource-integration-56157/candidate-1.json,candidate-1,False,XLangStream IPC marshal does not support this value yet,0,True,38.302846167003736
+invalid-integration,failed-resource-integration-56157/control-1.json,control-1,True,,2,True,123.0684367500071
