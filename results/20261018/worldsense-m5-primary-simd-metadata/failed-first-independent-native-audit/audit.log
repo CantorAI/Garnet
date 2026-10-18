@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_native_ws68.py", line 23, in <module>
+    text=(w/('native-'+role+'.log')).read_text();assert sorted(int(n)for n in re.findall(r'\d+/10 Test #\s*(\d+):.*Passed',text))==list(range(1,11))
+AssertionError

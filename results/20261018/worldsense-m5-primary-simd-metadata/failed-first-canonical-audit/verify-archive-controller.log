@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws68.py", line 100, in <module>
+    line=next(line for line in(d/row['log']).read_text().splitlines()if line.startswith('dual_projection_generic_resident_routes '));d=json.loads(line.split(' ',1)[1]);enabled=row['mode']=='compat67';assert d['enabled']==enabled and len(d['checks'])==34 and all(v==dict(encoded_pairs=int(enabled),represented_projections=2*int(enabled))for v in d['checks'])
+TypeError: unsupported operand type(s) for /: 'dict' and 'str'

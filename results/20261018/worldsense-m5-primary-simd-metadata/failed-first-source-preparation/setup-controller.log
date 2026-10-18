@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/setup_simd_metadata_ws68.py", line 36, in <module>
+    sc('primary_word(payload,metadata,column,k,p.inner)', 'primary_simd_prefill_word(payload,metadata,column,k,p.inner,tid%32)',3)
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/setup_simd_metadata_ws68.py", line 15, in sc
+    assert new.count(x)==count,(x,new.count(x));new=new.replace(x,y);shader_ops.append(dict(before=x,after=y,count=count))
+AssertionError: ('primary_word(payload,metadata,column,k,p.inner)', 4)

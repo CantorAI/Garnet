@@ -1,0 +1,50 @@
+{
+  "all_five_original_golden_numeric_metric_gate_AST_unchanged": true,
+  "files": {
+    "analyze_resource.py": true,
+    "speed/analyze.py": true,
+    "primary-speed/analyze.py": true,
+    "production-speed/analyze.py": true,
+    "confirmation/analyze.py": true
+  },
+  "only_native_admission_changed": true,
+  "full_route_mutation_audit_pending": false,
+  "driver_sha256": {
+    "analyze_resource.py": "caea79a025dafbfa64d2a42021d4aa6a8042a55a04a31a58e5fd5af16e69663c",
+    "speed/analyze.py": "49d39f230b749c82b0cf4fc9e70388c3583cfa4c48790246f224acf3e543d7b0",
+    "primary-speed/analyze.py": "1e3db6f8731789fb19348a4d64fec27046599179cb14f62ab514c7dfbf64672b",
+    "production-speed/analyze.py": "784827dda31fbdcd896bb8cf65b3e6eac7df3a25231190c811c2151ac833a455",
+    "confirmation/analyze.py": "fedd1b9004ae1235634c4d4210b69066f6d7f6b47f2ba9eab01c21d923d6d4a8"
+  },
+  "prospective_legacy_capability_check": "Before any actualWorldSense call, explicitly forbid unsupported isolated/duo/minimal/K32/wide-checkpoint markers in legacy control, in addition to original guards. Native body only; numeric/golden/metric/threshold AST unchanged.",
+  "full_route_mutation_audit_pass": true,
+  "utc": "2026-10-18T10:04:09.905794+00:00",
+  "native_route_audit": {
+    "analyze_resource.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3310,
+      "actual_legacy_WS10_calls": 0
+    },
+    "speed/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3310,
+      "actual_legacy_WS10_calls": 0
+    },
+    "primary-speed/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3310,
+      "actual_legacy_WS10_calls": 0
+    },
+    "production-speed/analyze.py": {
+      "actual_full_API_calls": 5,
+      "malformed_copied_fixtures_rejected": 1190,
+      "actual_legacy_WS10_calls": 10
+    },
+    "confirmation/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3310,
+      "actual_legacy_WS10_calls": 0
+    }
+  },
+  "scope": "Offline mutated copies of retained calls, no new inference/speed samples."
+}

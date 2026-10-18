@@ -1,0 +1,15 @@
+{
+  "seed_files": 1724,
+  "current_files": 1726,
+  "changed_or_added": [
+    "cmake/GarnetMetal.cmake",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/primary_simd_metadata_shader.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/primary_simd_metadata_test.cpp"
+  ],
+  "old_primary_shader_and_all_original_tests_and_CUDA_engine_runtime_graph_session_image_xModel_byte_exact": true,
+  "new_flag_defaultOFF": true,
+  "new_reader_no_serving_counters": true
+}

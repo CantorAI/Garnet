@@ -1,0 +1,14 @@
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Native10tests off exit 0
+Native10tests primary exit 0
+Native10tests on exit 0
+Native10tests fault exit 0
+Native10tests compat67 exit 0
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 93494
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-simd-metadata/native_controller.py", line 56, in <module>
+    assert all(sha(Path(k))==v for k,v in drivers.items())
+AssertionError

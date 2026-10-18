@@ -1,0 +1,23 @@
+{
+  "utc": "2026-10-18T09:38:00.683389+00:00",
+  "experiment": "WS-M5-68",
+  "design_sha256": "4724ae7e568d497e985a80f5a2b9e15482d21768b732aa0aa85a7d673f52ad57",
+  "audit_sha256": "298081757e5cd9af3d2e6ab11cd89d6c337bdb5d6e9705f6422bdf759098d444",
+  "source_implemented": true,
+  "no_build_or_model_dispatched": false,
+  "promotion": false,
+  "prior67": "valid-reject",
+  "API_review_before_source": true,
+  "all_original_five_learned_readers_role": "compat67",
+  "both_new_learned_readers_role": "on",
+  "source_files": 1726,
+  "five_builds_pass": true,
+  "build_session": 61913,
+  "build_exit_code": 0,
+  "no_model_or_speed_dispatched": true,
+  "rebuild_session": 16022,
+  "rebuild_exit_code": 0,
+  "first_native_session": 84645,
+  "first_native_exit_code": 1,
+  "fixture_repair": "New diagnostic finite domain fixed and nonfinite upload rejection explicitly required; original nine native tests, API, kernels and math unchanged."
+}

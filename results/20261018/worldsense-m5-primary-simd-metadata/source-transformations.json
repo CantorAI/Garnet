@@ -1,0 +1,52 @@
+{
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#include \"primary_block_shader.h\"",
+      "after": "#include \"primary_block_shader.h\"\n#ifdef GARNET_METAL_PRIMARY_SIMD_METADATA\n#include \"primary_simd_metadata_shader.h\"\n#define GARNET_PRIMARY_SELECTED_PROGRAM kPrimarySimdMetadataShader\n#else\n#define GARNET_PRIMARY_SELECTED_PROGRAM kPrimaryBlockShader\n#endif",
+      "count": 1
+    },
+    {
+      "before": "stringWithUTF8String:kPrimaryBlockShader",
+      "after": "stringWithUTF8String:GARNET_PRIMARY_SELECTED_PROGRAM",
+      "count": 2
+    },
+    {
+      "before": "primaryExpand,primaryExpandVector,primaryPrefillTileExpand;",
+      "after": "primaryExpand,primaryExpandVector,primaryPrefillTileExpand;\n#ifdef GARNET_METAL_PRIMARY_SIMD_METADATA\n    id<MTLComputePipelineState> primarySIMDMetadataExpand;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "        if(!impl_->kernels->primaryExpandVector)throw std::runtime_error(\"Cannot create primary vector readback pipeline\");",
+      "after": "        if(!impl_->kernels->primaryExpandVector)throw std::runtime_error(\"Cannot create primary vector readback pipeline\");\n#ifdef GARNET_METAL_PRIMARY_SIMD_METADATA\n        impl_->kernels->primarySIMDMetadataExpand=[impl_->device newComputePipelineStateWithFunction:[primaryLibrary newFunctionWithName:@\"primary_simd_metadata_expand\"] error:&error];\n        auto requireMetadataSIMD=[&](id<MTLComputePipelineState> pipeline,NSUInteger threads){\n          if(!pipeline||pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads||pipeline.staticThreadgroupMemoryLength>impl_->device.maxThreadgroupMemoryLength)\n            throw std::runtime_error(\"Unsupported primary metadata-sharing pipeline capabilities\");\n        };\n        requireMetadataSIMD(impl_->kernels->primaryDecode,128);requireMetadataSIMD(impl_->kernels->primaryGemm,128);\n        requireMetadataSIMD(impl_->kernels->primaryGemm16Wide,256);requireMetadataSIMD(impl_->kernels->primaryGemm32Wide,256);\n        requireMetadataSIMD(impl_->kernels->primarySIMDMetadataExpand,32);\n#endif",
+      "count": 1
+    },
+    {
+      "before": "",
+      "after": "\nnamespace Garnet {\nstd::vector<uint32_t> MetalContext::PrimaryReadSIMDMetadataWords(const MetalBF16Weight& weight,size_t start,size_t count,bool prefill){\n#ifndef GARNET_METAL_PRIMARY_SIMD_METADATA\n (void)weight;(void)start;(void)count;(void)prefill;throw std::logic_error(\"Primary SIMD metadata support disabled\");\n#else\n @autoreleasepool {\n  if(impl_->command||!weight.PrimaryReady()||!count||count>8*1024*1024)throw std::invalid_argument(\"Primary SIMD readback requires packed weight, closed batch and bounded count\");\n  auto w=weight.impl_;if(w->primaryPayload.device!=impl_->device||w->primaryMetadata.device!=impl_->device||start>w->rows*w->columns||count>w->rows*w->columns-start)throw std::invalid_argument(\"Primary SIMD readback device/range mismatch\");\n  id<MTLBuffer> output=[impl_->device newBufferWithLength:count*4 options:MTLResourceStorageModeShared];if(!output)throw std::runtime_error(\"Primary SIMD readback allocation failed\");\n  auto command=[impl_->queue commandBuffer];auto encoder=[command computeCommandEncoder];if(!encoder)throw std::runtime_error(\"Primary SIMD readback encoder failed\");\n  uint64_t inner=w->columns,offset=start,n=count,firstQuad=(start/inner)/4,lastQuad=((start+count-1)/inner)/4;uint32_t mode=prefill?1:0;\n  size_t groups=(lastQuad-firstQuad+1)*(inner/128);\n  [encoder setComputePipelineState:impl_->kernels->primarySIMDMetadataExpand];[encoder setBuffer:w->primaryPayload offset:0 atIndex:0];[encoder setBuffer:w->primaryMetadata offset:0 atIndex:1];[encoder setBuffer:output offset:0 atIndex:2];[encoder setBytes:&inner length:8 atIndex:3];[encoder setBytes:&offset length:8 atIndex:4];[encoder setBytes:&n length:8 atIndex:5];[encoder setBytes:&mode length:4 atIndex:6];[encoder setBytes:&firstQuad length:8 atIndex:7];\n  [encoder dispatchThreadgroups:MTLSizeMake(groups,1,1) threadsPerThreadgroup:MTLSizeMake(32,1,1)];[encoder endEncoding];[command commit];[command waitUntilCompleted];if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error(\"Primary SIMD readback GPU failed\");\n  std::vector<uint32_t> result(count);std::memcpy(result.data(),output.contents,count*4);return result;\n }\n#endif\n}\n}\n",
+      "append": true,
+      "count": 1
+    }
+  ],
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "    std::vector<uint32_t> PrimaryReadVectorWords(const MetalBF16Weight&,size_t start,size_t count);",
+      "after": "    std::vector<uint32_t> PrimaryReadVectorWords(const MetalBF16Weight&,size_t start,size_t count);\n    std::vector<uint32_t> PrimaryReadSIMDMetadataWords(const MetalBF16Weight&,size_t start,size_t count,bool prefill);",
+      "count": 1
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "        info+=\"; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata\";",
+      "after": "        info+=\"; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata\";\n#ifdef GARNET_METAL_PRIMARY_SIMD_METADATA\n        info+=\"; primary_simd_metadata\";\n#endif",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_PRIMARY_SIMD_METADATA \"Share proven-uniform primary block metadata across SIMD lanes\" OFF)\nif(GARNET_METAL_PRIMARY_SIMD_METADATA)\n if(NOT GARNET_METAL_PRIMARY_BF16_BLOCKS OR GARNET_METAL_PRIMARY_VECTOR_PREFILL OR GARNET_METAL_PRIMARY_FULL_ISOLATED_LIBRARY)\n  message(FATAL_ERROR \"Primary SIMD metadata requires primary blocks and ordinary primary prefill/library\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PRIMARY_SIMD_METADATA=1)\nendif()\nadd_executable(garnet_primary_simd_metadata_test test2026/metal/primary_simd_metadata_test.cpp)\ntarget_link_libraries(garnet_primary_simd_metadata_test PRIVATE garnet_metal)\nadd_test(NAME metal_primary_simd_metadata_reference COMMAND garnet_primary_simd_metadata_test \"${CMAKE_CURRENT_BINARY_DIR}/primary_simd_metadata_words.bin\")\n",
+      "append": true,
+      "count": 1
+    }
+  ]
+}

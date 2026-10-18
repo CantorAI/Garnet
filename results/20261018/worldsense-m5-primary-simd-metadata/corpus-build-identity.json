@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-simd-metadata/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-simd-metadata/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-simd-metadata/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-primary-simd-metadata/primary_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-primary-simd-metadata/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-simd-metadata-compat67/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-primary-simd-metadata-compat67/primary_corpus_test"
+  ],
+  "source_sha256": "b32f1b55e3838eb59bc95e8fdda26a7c526be640a2dad99de205f9e793df17d0",
+  "library_sha256": "f998ffd676810df0e320325d172fef5f3dbe1ed0d993337cf7b6b15f55e12281",
+  "executable_sha256": "742d65e95e07b4ae400b18c35f9465569b85f4aa1a0e3bb8474bd93d79f0e11a"
+}

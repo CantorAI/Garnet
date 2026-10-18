@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws68.py", line 120, in <module>
+    prior=batch([ref+':'+prefix+rel])[0];assert prior is not None
+TypeError: unsupported operand type(s) for +: 'dict' and 'str'

@@ -1,0 +1,1 @@
+Canonical-only auditor reused local d for a resident-route JSON record, shadowing the archive Path before the next row. Rename the local to route_data, preserve identical route assertions. No source/model/numerical/performance data/gate change or inference rerun.
