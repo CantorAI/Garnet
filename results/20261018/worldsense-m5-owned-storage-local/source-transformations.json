@@ -1,0 +1,38 @@
+[
+  {
+    "path": "src/backends/metal/metal_context.mm",
+    "before": "        id<MTLBuffer> storage=w->buffer;bool primary=false;\n#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS\n        primary=w->primaryCharged;if(primary)storage=w->primaryPayload;\n#endif\n",
+    "after": "#ifdef GARNET_METAL_OWNED_STORAGE_LOCAL\n        // w owns immutable strong buffer fields throughout this scope.\n        // Ordinary command buffers retain bound resources after Encode returns.\n        bool primary=false;\n#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS\n        primary=w->primaryCharged;\n        id<MTLBuffer> storage __attribute__((objc_externally_retained))=primary?w->primaryPayload:w->buffer;\n#else\n        id<MTLBuffer> storage __attribute__((objc_externally_retained))=w->buffer;\n#endif\n#else\n        id<MTLBuffer> storage=w->buffer;bool primary=false;\n#ifdef GARNET_METAL_PRIMARY_BF16_BLOCKS\n        primary=w->primaryCharged;if(primary)storage=w->primaryPayload;\n#endif\n#endif\n",
+    "count": 2,
+    "append": false,
+    "seed_sha256": "61c1f19890673e7787d4395a14a470067ebfbe984dc04c041e87f8a53ccb5d08",
+    "result_sha256": "7963a3d70caeeb15662bbf1338680b951e4fe60185a40011ad0e237e78685c73"
+  },
+  {
+    "path": "src/backends/metal/metal_context.mm",
+    "before": "",
+    "after": "\n#if defined(GARNET_METAL_OWNED_STORAGE_LOCAL) && !__has_attribute(objc_externally_retained)\n#error \"Owned storage locals require Clang objc_externally_retained support\"\n#endif\n",
+    "count": 1,
+    "append": true,
+    "seed_sha256": "61c1f19890673e7787d4395a14a470067ebfbe984dc04c041e87f8a53ccb5d08",
+    "result_sha256": "abf631060c4b42826e061e83407474cda3e88c7e0e9c14c0048b5e0384f1ec68"
+  },
+  {
+    "path": "src/entry/metal_main.cpp",
+    "before": "        return info;\n",
+    "after": "#ifdef GARNET_METAL_OWNED_STORAGE_LOCAL\n        info+=\"; owned_storage_local\";\n#endif\n        return info;\n",
+    "count": 1,
+    "append": false,
+    "seed_sha256": "0ae2e361079552f94c17f5ddf2169132db36dc5d9af7c246440aa067186a90c8",
+    "result_sha256": "aff567f07013dba6aee6367c13256951bdcea9ea09f67a2cc8cc5c54c30dba76"
+  },
+  {
+    "path": "cmake/GarnetMetal.cmake",
+    "before": "",
+    "after": "\noption(GARNET_METAL_OWNED_STORAGE_LOCAL \"Omit redundant selected-buffer local ARC operations while weight owns storage\" OFF)\nif(GARNET_METAL_OWNED_STORAGE_LOCAL)\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_OWNED_STORAGE_LOCAL=1)\nendif()\nadd_executable(garnet_owned_storage_local_test test2026/metal/owned_storage_local_test.cpp)\ntarget_link_libraries(garnet_owned_storage_local_test PRIVATE garnet_metal)\ntarget_include_directories(garnet_owned_storage_local_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party)\nadd_test(NAME metal_owned_storage_local_lifetime COMMAND garnet_owned_storage_local_test owned_storage_projection_words.bin)\n",
+    "count": 1,
+    "append": true,
+    "seed_sha256": "49d8c442c5ebed42ef431584d1156bcdd3affb0422de898425a7fbc8050ce17a",
+    "result_sha256": "24f2836b7f4a46938909ef22c682f66cd8de9d5c25388b8a8908e7bd3ebecb93"
+  }
+]

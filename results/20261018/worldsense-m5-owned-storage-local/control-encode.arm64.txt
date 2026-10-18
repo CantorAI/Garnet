@@ -1,0 +1,802 @@
+/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o:
+(__TEXT,__text) section
+__ZN6Garnet12MetalContext16EncodeBF16MatVecERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_:
+    5224:	ff 03 04 d1	sub	sp, sp, #0x100
+    5228:	fc 6f 0a a9	stp	x28, x27, [sp, #0xa0]
+    522c:	fa 67 0b a9	stp	x26, x25, [sp, #0xb0]
+    5230:	f8 5f 0c a9	stp	x24, x23, [sp, #0xc0]
+    5234:	f6 57 0d a9	stp	x22, x21, [sp, #0xd0]
+    5238:	f4 4f 0e a9	stp	x20, x19, [sp, #0xe0]
+    523c:	fd 7b 0f a9	stp	x29, x30, [sp, #0xf0]
+    5240:	fd c3 03 91	add	x29, sp, #0xf0
+    5244:	f6 03 03 aa	mov	x22, x3
+    5248:	f5 03 02 aa	mov	x21, x2
+    524c:	f9 03 01 aa	mov	x25, x1
+    5250:	f8 03 00 aa	mov	x24, x0
+    5254:	00 00 00 94	bl	_objc_autoreleasePoolPush
+    5258:	e0 07 00 f9	str	x0, [sp, #0x8]
+    525c:	08 03 40 f9	ldr	x8, [x24]
+    5260:	08 1d 40 f9	ldr	x8, [x8, #0x38]
+    5264:	c8 4f 00 b4	cbz	x8, 0x5c5c
+    5268:	28 03 40 f9	ldr	x8, [x25]
+    526c:	a9 02 40 f9	ldr	x9, [x21]
+    5270:	ca 02 40 f9	ldr	x10, [x22]
+    5274:	1f 01 00 f1	cmp	x8, #0x0
+    5278:	24 19 40 fa	ccmp	x9, #0x0, #0x4, ne
+    527c:	44 19 40 fa	ccmp	x10, #0x0, #0x4, ne
+    5280:	e0 4e 00 54	b.eq	0x5c5c
+    5284:	00 01 40 f9	ldr	x0, [x8]
+    5288:	00 00 00 94	bl	_objc_retain
+    528c:	f3 03 00 aa	mov	x19, x0
+    5290:	c8 02 40 f9	ldr	x8, [x22]
+    5294:	00 01 40 f9	ldr	x0, [x8]
+    5298:	00 00 00 94	bl	_objc_retain
+    529c:	f4 03 00 aa	mov	x20, x0
+    52a0:	a8 06 40 f9	ldr	x8, [x21, #0x8]
+    52a4:	a0 02 c0 3d	ldr	q0, [x21]
+    52a8:	e0 1f 80 3d	str	q0, [sp, #0x70]
+    52ac:	88 00 00 b4	cbz	x8, 0x52bc
+    52b0:	08 21 00 91	add	x8, x8, #0x8
+    52b4:	29 00 80 52	mov	w9, #0x1
+    52b8:		.long	0xf8290108
+    52bc:	17 00 66 9e	fmov	x23, d0
+    52c0:	e0 02 40 f9	ldr	x0, [x23]
+    52c4:	00 00 00 94	bl	_objc_retain
+    52c8:	e8 e2 40 39	ldrb	w8, [x23, #0x38]
+    52cc:	e8 17 00 b9	str	w8, [sp, #0x14]
+    52d0:	1f 05 00 71	cmp	w8, #0x1
+    52d4:	f6 0f 00 f9	str	x22, [sp, #0x18]
+    52d8:	21 01 00 54	b.ne	0x52fc
+    52dc:	f6 03 00 aa	mov	x22, x0
+    52e0:	e0 06 40 f9	ldr	x0, [x23, #0x8]
+    52e4:	00 00 00 94	bl	_objc_retain
+    52e8:	f5 03 00 aa	mov	x21, x0
+    52ec:	e0 03 16 aa	mov	x0, x22
+    52f0:	00 00 00 94	bl	_objc_release
+    52f4:	f5 13 00 f9	str	x21, [sp, #0x20]
+    52f8:	02 00 00 14	b	0x5300
+    52fc:	e0 13 00 f9	str	x0, [sp, #0x20]
+    5300:	e0 03 13 aa	mov	x0, x19
+    5304:	00 00 00 94	bl	_objc_msgSend$rows
+    5308:	f6 03 00 aa	mov	x22, x0
+    530c:	e0 03 13 aa	mov	x0, x19
+    5310:	00 00 00 94	bl	_objc_msgSend$device
+    5314:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    5318:	fa 03 00 aa	mov	x26, x0
+    531c:	08 03 40 f9	ldr	x8, [x24]
+    5320:	08 15 40 f9	ldr	x8, [x8, #0x28]
+    5324:	1f 00 08 eb	cmp	x0, x8
+    5328:	a1 05 00 54	b.ne	0x53dc
+    532c:	e0 03 14 aa	mov	x0, x20
+    5330:	00 00 00 94	bl	_objc_msgSend$device
+    5334:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    5338:	fb 03 00 aa	mov	x27, x0
+    533c:	08 03 40 f9	ldr	x8, [x24]
+    5340:	08 15 40 f9	ldr	x8, [x8, #0x28]
+    5344:	1f 00 08 eb	cmp	x0, x8
+    5348:	61 04 00 54	b.ne	0x53d4
+    534c:	e0 13 40 f9	ldr	x0, [sp, #0x20]
+    5350:	00 00 00 94	bl	_objc_msgSend$device
+    5354:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    5358:	fc 03 00 aa	mov	x28, x0
+    535c:	08 03 40 f9	ldr	x8, [x24]
+    5360:	08 15 40 f9	ldr	x8, [x8, #0x28]
+    5364:	1f 00 08 eb	cmp	x0, x8
+    5368:	21 03 00 54	b.ne	0x53cc
+    536c:	e0 03 13 aa	mov	x0, x19
+    5370:	00 00 00 94	bl	_objc_msgSend$columns
+    5374:	e8 36 40 f9	ldr	x8, [x23, #0x68]
+    5378:	1f 00 08 eb	cmp	x0, x8
+    537c:	81 02 00 54	b.ne	0x53cc
+    5380:	e0 03 14 aa	mov	x0, x20
+    5384:	00 00 00 94	bl	_objc_msgSend$rows
+    5388:	f5 03 00 aa	mov	x21, x0
+    538c:	e0 03 13 aa	mov	x0, x19
+    5390:	00 00 00 94	bl	_objc_msgSend$rows
+    5394:	bf 02 00 eb	cmp	x21, x0
+    5398:	a1 01 00 54	b.ne	0x53cc
+    539c:	e0 03 14 aa	mov	x0, x20
+    53a0:	00 00 00 94	bl	_objc_msgSend$columns
+    53a4:	e8 32 40 f9	ldr	x8, [x23, #0x60]
+    53a8:	1f 00 08 eb	cmp	x0, x8
+    53ac:	01 01 00 54	b.ne	0x53cc
+    53b0:	e8 66 41 39	ldrb	w8, [x23, #0x59]
+    53b4:	1f 05 00 71	cmp	w8, #0x1
+    53b8:	81 03 00 54	b.ne	0x5428
+    53bc:	e0 03 13 aa	mov	x0, x19
+    53c0:	00 00 00 94	bl	_objc_msgSend$rows
+    53c4:	1f 20 40 f1	cmp	x0, #0x8, lsl #12
+    53c8:	49 03 00 54	b.ls	0x5430
+    53cc:	e0 03 1c aa	mov	x0, x28
+    53d0:	00 00 00 94	bl	_objc_release
+    53d4:	e0 03 1b aa	mov	x0, x27
+    53d8:	00 00 00 94	bl	_objc_release
+    53dc:	e0 03 1a aa	mov	x0, x26
+    53e0:	00 00 00 94	bl	_objc_release
+    53e4:	00 02 80 52	mov	w0, #0x10
+    53e8:	00 00 00 94	bl	___cxa_allocate_exception
+    53ec:	f5 03 00 aa	mov	x21, x0
+    53f0:	01 00 00 90	adrp	x1, l_.str.143@PAGE
+    53f4:	21 00 00 91	add	x1, x1, l_.str.143@PAGEOFF
+    53f8:	00 00 00 94	bl	__ZNSt11logic_errorC2EPKc
+    53fc:	08 00 00 90	adrp	x8, __ZTVSt16invalid_argument@GOTPAGE
+    5400:	08 01 40 f9	ldr	x8, [x8, __ZTVSt16invalid_argument@GOTPAGEOFF]
+    5404:	08 41 00 91	add	x8, x8, #0x10
+    5408:	a8 02 00 f9	str	x8, [x21]
+    540c:	01 00 00 90	adrp	x1, __ZTISt16invalid_argument@GOTPAGE
+    5410:	21 00 40 f9	ldr	x1, [x1, __ZTISt16invalid_argument@GOTPAGEOFF]
+    5414:	02 00 00 90	adrp	x2, __ZNSt16invalid_argumentD1Ev@GOTPAGE
+    5418:	42 00 40 f9	ldr	x2, [x2, __ZNSt16invalid_argumentD1Ev@GOTPAGEOFF]
+    541c:	e0 03 15 aa	mov	x0, x21
+    5420:	00 00 00 94	bl	___cxa_throw
+    5424:	43 02 00 14	b	0x5d30
+    5428:	df 02 02 f1	cmp	x22, #0x80
+    542c:	08 fd ff 54	b.hi	0x53cc
+    5430:	e0 03 14 aa	mov	x0, x20
+    5434:	00 00 00 94	bl	_objc_msgSend$data
+    5438:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    543c:	f6 03 00 aa	mov	x22, x0
+    5440:	e0 03 13 aa	mov	x0, x19
+    5444:	00 00 00 94	bl	_objc_msgSend$data
+    5448:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    544c:	f5 03 00 aa	mov	x21, x0
+    5450:	00 00 00 94	bl	_objc_release
+    5454:	e0 03 16 aa	mov	x0, x22
+    5458:	00 00 00 94	bl	_objc_release
+    545c:	e0 03 1c aa	mov	x0, x28
+    5460:	00 00 00 94	bl	_objc_release
+    5464:	e0 03 1b aa	mov	x0, x27
+    5468:	00 00 00 94	bl	_objc_release
+    546c:	e0 03 1a aa	mov	x0, x26
+    5470:	00 00 00 94	bl	_objc_release
+    5474:	df 02 15 eb	cmp	x22, x21
+    5478:	60 fb ff 54	b.eq	0x53e4
+    547c:	28 03 40 f9	ldr	x8, [x25]
+    5480:	09 21 40 39	ldrb	w9, [x8, #0x8]
+    5484:	3f 05 00 71	cmp	w9, #0x1
+    5488:	f5 0f 40 f9	ldr	x21, [sp, #0x18]
+    548c:	20 01 00 54	b.eq	0x54b0
+    5490:	09 25 40 39	ldrb	w9, [x8, #0x9]
+    5494:	e9 40 00 36	tbz	w9, #0x0, 0x5cb0
+    5498:	09 03 40 f9	ldr	x9, [x24]
+    549c:	e8 23 00 f9	str	x8, [sp, #0x40]
+    54a0:	20 61 02 91	add	x0, x9, #0x98
+    54a4:	e1 03 01 91	add	x1, sp, #0x40
+    54a8:	00 00 00 94	bl	__ZNKSt3__112__hash_tableIPKN6Garnet11MetalMatrix4ImplENS_4hashIS5_EENS_8equal_toIS5_EENS_9allocatorIS5_EEE4findIS5_EENS_21__hash_const_iteratorIPNS_11__hash_nodeIS5_PvEEEERKT_
+    54ac:	20 40 00 b4	cbz	x0, 0x5cb0
+    54b0:	a8 02 40 f9	ldr	x8, [x21]
+    54b4:	09 25 40 39	ldrb	w9, [x8, #0x9]
+    54b8:	3f 05 00 71	cmp	w9, #0x1
+    54bc:	e1 00 00 54	b.ne	0x54d8
+    54c0:	09 03 40 f9	ldr	x9, [x24]
+    54c4:	e8 23 00 f9	str	x8, [sp, #0x40]
+    54c8:	20 61 02 91	add	x0, x9, #0x98
+    54cc:	e1 03 01 91	add	x1, sp, #0x40
+    54d0:	00 00 00 94	bl	__ZNKSt3__112__hash_tableIPKN6Garnet11MetalMatrix4ImplENS_4hashIS5_EENS_8equal_toIS5_EENS_9allocatorIS5_EEE4findIS5_EENS_21__hash_const_iteratorIPNS_11__hash_nodeIS5_PvEEEERKT_
+    54d4:	60 41 00 b4	cbz	x0, 0x5d00
+    54d8:	e8 66 41 39	ldrb	w8, [x23, #0x59]
+    54dc:	28 01 00 37	tbnz	w8, #0x0, 0x5500
+    54e0:	e0 03 13 aa	mov	x0, x19
+    54e4:	00 00 00 94	bl	_objc_msgSend$rows
+    54e8:	1f 80 02 f1	cmp	x0, #0xa0
+    54ec:	a1 00 00 54	b.ne	0x5500
+    54f0:	08 03 40 f9	ldr	x8, [x24]
+    54f4:	09 bd 40 f9	ldr	x9, [x8, #0x178]
+    54f8:	29 05 00 91	add	x9, x9, #0x1
+    54fc:	09 bd 00 f9	str	x9, [x8, #0x178]
+    5500:	e0 03 13 aa	mov	x0, x19
+    5504:	00 00 00 94	bl	_objc_msgSend$rows
+    5508:	08 03 40 f9	ldr	x8, [x24]
+    550c:	08 61 40 f9	ldr	x8, [x8, #0xc0]
+    5510:	09 27 80 52	mov	w9, #0x138
+    5514:	0a 28 80 52	mov	w10, #0x140
+    5518:	1f 40 00 f1	cmp	x0, #0x10
+    551c:	49 81 89 9a	csel	x9, x10, x9, hi
+    5520:	00 69 69 f8	ldr	x0, [x8, x9]
+    5524:	00 00 00 94	bl	_objc_retain
+    5528:	f9 03 00 aa	mov	x25, x0
+    552c:	e0 03 13 aa	mov	x0, x19
+    5530:	00 00 00 94	bl	_objc_msgSend$rows
+    5534:	1f 40 00 f1	cmp	x0, #0x10
+    5538:	03 03 00 54	b.lo	0x5598
+    553c:	e0 03 14 aa	mov	x0, x20
+    5540:	00 00 00 94	bl	_objc_msgSend$columns
+    5544:	16 00 80 52	mov	w22, #0x0
+    5548:	1f 00 01 f1	cmp	x0, #0x40
+    554c:	83 02 00 54	b.lo	0x559c
+    5550:	79 02 00 b4	cbz	x25, 0x559c
+    5554:	e0 03 19 aa	mov	x0, x25
+    5558:	00 00 00 94	bl	_objc_msgSend$threadExecutionWidth
+    555c:	1f 80 00 f1	cmp	x0, #0x20
+    5560:	c1 01 00 54	b.ne	0x5598
+    5564:	e0 03 19 aa	mov	x0, x25
+    5568:	00 00 00 94	bl	_objc_msgSend$maxTotalThreadsPerThreadgroup
+    556c:	1f 00 04 f1	cmp	x0, #0x100
+    5570:	43 01 00 54	b.lo	0x5598
+    5574:	e0 03 19 aa	mov	x0, x25
+    5578:	00 00 00 94	bl	_objc_msgSend$staticThreadgroupMemoryLength
+    557c:	f5 03 00 aa	mov	x21, x0
+    5580:	08 03 40 f9	ldr	x8, [x24]
+    5584:	00 15 40 f9	ldr	x0, [x8, #0x28]
+    5588:	00 00 00 94	bl	_objc_msgSend$maxThreadgroupMemoryLength
+    558c:	bf 02 00 eb	cmp	x21, x0
+    5590:	f6 87 9f 1a	cset	w22, ls
+    5594:	02 00 00 14	b	0x559c
+    5598:	16 00 80 52	mov	w22, #0x0
+    559c:	e0 03 13 aa	mov	x0, x19
+    55a0:	00 00 00 94	bl	_objc_msgSend$rows
+    55a4:	1f 08 00 f1	cmp	x0, #0x2
+    55a8:	e8 97 9f 1a	cset	w8, hi
+    55ac:	08 01 16 0a	and	w8, w8, w22
+    55b0:	e0 03 19 aa	mov	x0, x25
+    55b4:	e8 00 00 37	tbnz	w8, #0x0, 0x55d0
+    55b8:	08 24 80 52	mov	w8, #0x120
+    55bc:	09 26 80 52	mov	w9, #0x130
+    55c0:	28 81 88 9a	csel	x8, x9, x8, hi
+    55c4:	09 03 40 f9	ldr	x9, [x24]
+    55c8:	29 61 40 f9	ldr	x9, [x9, #0xc0]
+    55cc:	20 69 68 f8	ldr	x0, [x9, x8]
+    55d0:	00 00 00 94	bl	_objc_retain
+    55d4:	fa 03 00 aa	mov	x26, x0
+    55d8:	e8 17 40 b9	ldr	w8, [sp, #0x14]
+    55dc:	a8 03 00 34	cbz	w8, 0x5650
+    55e0:	e0 03 13 aa	mov	x0, x19
+    55e4:	00 00 00 94	bl	_objc_msgSend$rows
+    55e8:	1f 08 00 f1	cmp	x0, #0x2
+    55ec:	a8 00 00 54	b.hi	0x5600
+    55f0:	08 03 40 f9	ldr	x8, [x24]
+    55f4:	08 61 40 f9	ldr	x8, [x8, #0xc0]
+    55f8:	08 21 05 91	add	x8, x8, #0x148
+    55fc:	0f 00 00 14	b	0x5638
+    5600:	36 01 00 34	cbz	w22, 0x5624
+    5604:	e0 03 13 aa	mov	x0, x19
+    5608:	00 00 00 94	bl	_objc_msgSend$rows
+    560c:	08 03 40 f9	ldr	x8, [x24]
+    5610:	08 61 40 f9	ldr	x8, [x8, #0xc0]
+    5614:	1f 44 00 f1	cmp	x0, #0x11
+    5618:	e3 00 00 54	b.lo	0x5634
+    561c:	08 81 05 91	add	x8, x8, #0x160
+    5620:	06 00 00 14	b	0x5638
+    5624:	08 03 40 f9	ldr	x8, [x24]
+    5628:	08 61 40 f9	ldr	x8, [x8, #0xc0]
+    562c:	08 41 05 91	add	x8, x8, #0x150
+    5630:	02 00 00 14	b	0x5638
+    5634:	08 61 05 91	add	x8, x8, #0x158
+    5638:	00 01 40 f9	ldr	x0, [x8]
+    563c:	00 00 00 94	bl	_objc_retain
+    5640:	f5 03 00 aa	mov	x21, x0
+    5644:	e0 03 1a aa	mov	x0, x26
+    5648:	00 00 00 94	bl	_objc_release
+    564c:	fa 03 15 aa	mov	x26, x21
+    5650:	df 02 00 71	cmp	w22, #0x0
+    5654:	08 10 80 52	mov	w8, #0x80
+    5658:	09 20 80 52	mov	w9, #0x100
+    565c:	3c 11 88 9a	csel	x28, x9, x8, ne
+    5660:	36 01 00 34	cbz	w22, 0x5684
+    5664:	e0 03 13 aa	mov	x0, x19
+    5668:	00 00 00 94	bl	_objc_msgSend$rows
+    566c:	08 02 80 52	mov	w8, #0x10
+    5670:	09 04 80 52	mov	w9, #0x20
+    5674:	1f 40 00 f1	cmp	x0, #0x10
+    5678:	37 81 88 9a	csel	x23, x9, x8, hi
+    567c:	08 08 80 52	mov	w8, #0x40
+    5680:	03 00 00 14	b	0x568c
+    5684:	17 02 80 52	mov	w23, #0x10
+    5688:	08 04 80 52	mov	w8, #0x20
+    568c:	e8 03 00 f9	str	x8, [sp]
+    5690:	e0 03 13 aa	mov	x0, x19
+    5694:	00 00 00 94	bl	_objc_msgSend$rows
+    5698:	1f 08 00 f1	cmp	x0, #0x2
+    569c:	48 14 00 54	b.hi	0x5924
+    56a0:	e0 03 14 aa	mov	x0, x20
+    56a4:	00 00 00 94	bl	_objc_msgSend$columns
+    56a8:	e8 d3 90 52	mov	w8, #0x869f
+    56ac:	28 00 a0 72	movk	w8, #0x1, lsl #16
+    56b0:	08 05 00 91	add	x8, x8, #0x1
+    56b4:	1f 00 08 eb	cmp	x0, x8
+    56b8:	62 13 00 54	b.hs	0x5924
+    56bc:	e0 03 13 aa	mov	x0, x19
+    56c0:	00 00 00 94	bl	_objc_msgSend$rows
+    56c4:	e0 23 00 f9	str	x0, [sp, #0x40]
+    56c8:	e0 03 13 aa	mov	x0, x19
+    56cc:	00 00 00 94	bl	_objc_msgSend$columns
+    56d0:	e0 27 00 f9	str	x0, [sp, #0x48]
+    56d4:	e0 03 14 aa	mov	x0, x20
+    56d8:	00 00 00 94	bl	_objc_msgSend$columns
+    56dc:	e0 2b 00 f9	str	x0, [sp, #0x50]
+    56e0:	e0 03 13 aa	mov	x0, x19
+    56e4:	00 00 00 94	bl	_objc_msgSend$rowBytes
+    56e8:	08 fc 42 d3	lsr	x8, x0, #2
+    56ec:	e8 2f 00 f9	str	x8, [sp, #0x58]
+    56f0:	e0 03 14 aa	mov	x0, x20
+    56f4:	00 00 00 94	bl	_objc_msgSend$rowBytes
+    56f8:	08 fc 42 d3	lsr	x8, x0, #2
+    56fc:	e8 33 00 f9	str	x8, [sp, #0x60]
+    5700:	08 03 40 f9	ldr	x8, [x24]
+    5704:	16 61 40 f9	ldr	x22, [x8, #0xc0]
+    5708:	c0 02 01 91	add	x0, x22, #0x40
+    570c:	00 00 00 94	bl	__ZNSt3__119__shared_mutex_base11lock_sharedEv
+    5710:	08 03 40 f9	ldr	x8, [x24]
+    5714:	09 61 40 f9	ldr	x9, [x8, #0xc0]
+    5718:	ea 17 40 b9	ldr	w10, [sp, #0x14]
+    571c:	5f 01 00 71	cmp	w10, #0x0
+    5720:	0a 1d 80 52	mov	w10, #0xe8
+    5724:	0b 20 80 52	mov	w11, #0x100
+    5728:	6a 11 8a 9a	csel	x10, x11, x10, ne
+    572c:	2a 01 0a 8b	add	x10, x9, x10
+    5730:	49 8d 40 f8	ldr	x9, [x10, #0x8]!
+    5734:	e9 0e 00 b4	cbz	x9, 0x5910
+    5738:	e0 07 42 ad	ldp	q0, q1, [sp, #0x40]
+    573c:	e2 83 c5 3c	ldur	q2, [sp, #0x58]
+    5740:	0b 00 00 90	adrp	x11, lCPI66_0@PAGE
+    5744:	63 01 c0 3d	ldr	q3, [x11, lCPI66_0@PAGEOFF]
+    5748:	eb 03 01 91	add	x11, sp, #0x40
+    574c:	0c 00 00 90	adrp	x12, lCPI66_1@PAGE
+    5750:	84 01 40 fd	ldr	d4, [x12, lCPI66_1@PAGEOFF]
+    5754:	03 00 00 14	b	0x5760
+    5758:	29 01 40 f9	ldr	x9, [x9]
+    575c:	a9 0d 00 b4	cbz	x9, 0x5910
+    5760:	ec 03 09 aa	mov	x12, x9
+    5764:	85 0d c2 3c	ldr	q5, [x12, #0x20]!
+    5768:	06 8c e5 6e	cmeq.2d	v6, v0, v5
+    576c:	c7 58 20 6e	mvn.16b	v7, v6
+    5770:	e5 28 a1 0e	xtn.2s	v5, v7
+    5774:	e7 a8 b0 6e	umaxv.4s	s7, v7
+    5778:	ed 00 26 1e	fmov	w13, s7
+    577c:	8d 00 00 36	tbz	w13, #0x0, 0x578c
+    5780:	0d 00 80 d2	mov	x13, #0x0
+    5784:	a7 1c a5 4e	mov.16b	v7, v5
+    5788:	09 00 00 14	b	0x57ac
+    578c:	27 0d c0 3d	ldr	q7, [x9, #0x30]
+    5790:	30 8c e7 6e	cmeq.2d	v16, v1, v7
+    5794:	10 5a 20 6e	mvn.16b	v16, v16
+    5798:	11 aa b0 6e	umaxv.4s	s17, v16
+    579c:	2d 02 26 1e	fmov	w13, s17
+    57a0:	4d 03 00 36	tbz	w13, #0x0, 0x5808
+    57a4:	07 2a a1 0e	xtn.2s	v7, v16
+    57a8:	0d 02 80 52	mov	w13, #0x10
+    57ac:	e7 54 3f 0f	shl.2s	v7, v7, #0x1f
+    57b0:	e7 a8 a0 0e	cmlt.2s	v7, v7, #0
+    57b4:	e7 1c 24 0e	and.8b	v7, v7, v4
+    57b8:	e7 bc a7 0e	addp.2s	v7, v7, v7
+    57bc:	ee 00 26 1e	fmov	w14, s7
+    57c0:	ce 01 1e 32	orr	w14, w14, #0x4
+    57c4:	ce 01 c0 5a	rbit	w14, w14
+    57c8:	ce 11 c0 5a	clz	w14, w14
+    57cc:	ce 71 1d 53	lsl	w14, w14, #3
+    57d0:	ad 01 0e 8b	add	x13, x13, x14
+    57d4:	6e 69 6d f8	ldr	x14, [x11, x13]
+    57d8:	8d 69 6d f8	ldr	x13, [x12, x13]
+    57dc:	df 01 0d eb	cmp	x14, x13
+    57e0:	c3 fb ff 54	b.lo	0x5758
+    57e4:	66 1c 66 4e	bic.16b	v6, v3, v6
+    57e8:	c6 b8 f1 5e	addp.2d	d6, v6
+    57ec:	cd 00 26 1e	fmov	w13, s6
+    57f0:	bf 05 00 72	tst	w13, #0x3
+    57f4:	60 00 00 54	b.eq	0x5800
+    57f8:	0d 00 80 d2	mov	x13, #0x0
+    57fc:	1a 00 00 14	b	0x5864
+    5800:	27 0d c0 3d	ldr	q7, [x9, #0x30]
+    5804:	11 00 00 14	b	0x5848
+    5808:	25 81 c3 3c	ldur	q5, [x9, #0x38]
+    580c:	45 8c e5 6e	cmeq.2d	v5, v2, v5
+    5810:	65 1c 65 4e	bic.16b	v5, v3, v5
+    5814:	a5 b8 f1 5e	addp.2d	d5, v5
+    5818:	ad 00 26 1e	fmov	w13, s5
+    581c:	ad 01 1e 32	orr	w13, w13, #0x4
+    5820:	ad 01 c0 5a	rbit	w13, w13
+    5824:	ad 11 c0 5a	clz	w13, w13
+    5828:	ad 71 1d 53	lsl	w13, w13, #3
+    582c:	ad 61 00 91	add	x13, x13, #0x18
+    5830:	bf a1 00 71	cmp	w13, #0x28
+    5834:	a0 00 00 54	b.eq	0x5848
+    5838:	6e 69 6d f8	ldr	x14, [x11, x13]
+    583c:	8d 69 6d f8	ldr	x13, [x12, x13]
+    5840:	df 01 0d eb	cmp	x14, x13
+    5844:	a3 f8 ff 54	b.lo	0x5758
+    5848:	e5 8c e1 6e	cmeq.2d	v5, v7, v1
+    584c:	a5 58 20 6e	mvn.16b	v5, v5
+    5850:	a6 a8 b0 6e	umaxv.4s	s6, v5
+    5854:	cd 00 26 1e	fmov	w13, s6
+    5858:	8d 02 00 36	tbz	w13, #0x0, 0x58a8
+    585c:	a5 28 a1 0e	xtn.2s	v5, v5
+    5860:	0d 02 80 52	mov	w13, #0x10
+    5864:	a5 54 3f 0f	shl.2s	v5, v5, #0x1f
+    5868:	a5 a8 a0 0e	cmlt.2s	v5, v5, #0
+    586c:	a5 1c 24 0e	and.8b	v5, v5, v4
+    5870:	a5 bc a5 0e	addp.2s	v5, v5, v5
+    5874:	ae 00 26 1e	fmov	w14, s5
+    5878:	ce 01 1e 32	orr	w14, w14, #0x4
+    587c:	ce 01 c0 5a	rbit	w14, w14
+    5880:	ce 11 c0 5a	clz	w14, w14
+    5884:	ce 71 1d 53	lsl	w14, w14, #3
+    5888:	ad 01 0e 8b	add	x13, x13, x14
+    588c:	8c 69 6d f8	ldr	x12, [x12, x13]
+    5890:	6d 69 6d f8	ldr	x13, [x11, x13]
+    5894:	9f 01 0d eb	cmp	x12, x13
+    5898:	02 02 00 54	b.hs	0x58d8
+    589c:	29 05 40 f9	ldr	x9, [x9, #0x8]
+    58a0:	09 f6 ff b5	cbnz	x9, 0x5760
+    58a4:	1b 00 00 14	b	0x5910
+    58a8:	25 81 c3 3c	ldur	q5, [x9, #0x38]
+    58ac:	a5 8c e2 6e	cmeq.2d	v5, v5, v2
+    58b0:	65 1c 65 4e	bic.16b	v5, v3, v5
+    58b4:	a5 b8 f1 5e	addp.2d	d5, v5
+    58b8:	ad 00 26 1e	fmov	w13, s5
+    58bc:	ad 01 1e 32	orr	w13, w13, #0x4
+    58c0:	ad 01 c0 5a	rbit	w13, w13
+    58c4:	ad 11 c0 5a	clz	w13, w13
+    58c8:	ad 71 1d 53	lsl	w13, w13, #3
+    58cc:	ad 61 00 11	add	w13, w13, #0x18
+    58d0:	bf a1 00 71	cmp	w13, #0x28
+    58d4:	c1 fd ff 54	b.ne	0x588c
+    58d8:	3f 01 0a eb	cmp	x9, x10
+    58dc:	a0 01 00 54	b.eq	0x5910
+    58e0:	20 25 40 f9	ldr	x0, [x9, #0x48]
+    58e4:	60 01 00 b4	cbz	x0, 0x5910
+    58e8:	00 00 00 94	bl	_objc_retain
+    58ec:	f5 03 00 aa	mov	x21, x0
+    58f0:	e0 03 1a aa	mov	x0, x26
+    58f4:	00 00 00 94	bl	_objc_release
+    58f8:	08 03 40 f9	ldr	x8, [x24]
+    58fc:	09 35 40 f9	ldr	x9, [x8, #0x68]
+    5900:	29 05 00 91	add	x9, x9, #0x1
+    5904:	09 35 00 f9	str	x9, [x8, #0x68]
+    5908:	fa 03 15 aa	mov	x26, x21
+    590c:	04 00 00 14	b	0x591c
+    5910:	09 39 40 f9	ldr	x9, [x8, #0x70]
+    5914:	29 05 00 91	add	x9, x9, #0x1
+    5918:	09 39 00 f9	str	x9, [x8, #0x70]
+    591c:	c0 02 01 91	add	x0, x22, #0x40
+    5920:	00 00 00 94	bl	__ZNSt3__119__shared_mutex_base13unlock_sharedEv
+    5924:	e0 03 1a aa	mov	x0, x26
+    5928:	00 00 00 94	bl	_objc_msgSend$threadExecutionWidth
+    592c:	1f 80 00 f1	cmp	x0, #0x20
+    5930:	61 1a 00 54	b.ne	0x5c7c
+    5934:	e0 03 1a aa	mov	x0, x26
+    5938:	00 00 00 94	bl	_objc_msgSend$maxTotalThreadsPerThreadgroup
+    593c:	1f 00 1c eb	cmp	x0, x28
+    5940:	e3 19 00 54	b.lo	0x5c7c
+    5944:	e0 03 13 aa	mov	x0, x19
+    5948:	00 00 00 94	bl	_objc_msgSend$rows
+    594c:	e0 23 00 f9	str	x0, [sp, #0x40]
+    5950:	e0 03 13 aa	mov	x0, x19
+    5954:	00 00 00 94	bl	_objc_msgSend$columns
+    5958:	e0 27 00 f9	str	x0, [sp, #0x48]
+    595c:	e0 03 14 aa	mov	x0, x20
+    5960:	00 00 00 94	bl	_objc_msgSend$columns
+    5964:	e0 2b 00 f9	str	x0, [sp, #0x50]
+    5968:	e0 03 13 aa	mov	x0, x19
+    596c:	00 00 00 94	bl	_objc_msgSend$rowBytes
+    5970:	08 fc 42 d3	lsr	x8, x0, #2
+    5974:	e8 2f 00 f9	str	x8, [sp, #0x58]
+    5978:	e0 03 14 aa	mov	x0, x20
+    597c:	00 00 00 94	bl	_objc_msgSend$rowBytes
+    5980:	08 fc 42 d3	lsr	x8, x0, #2
+    5984:	e8 33 00 f9	str	x8, [sp, #0x60]
+    5988:	08 03 40 f9	ldr	x8, [x24]
+    598c:	00 1d 40 f9	ldr	x0, [x8, #0x38]
+    5990:	00 00 00 94	bl	_objc_msgSend$computeCommandEncoder
+    5994:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    5998:	fb 03 00 aa	mov	x27, x0
+    599c:	80 19 00 b4	cbz	x0, 0x5ccc
+    59a0:	e0 03 1b aa	mov	x0, x27
+    59a4:	e2 03 1a aa	mov	x2, x26
+    59a8:	00 00 00 94	bl	"_objc_msgSend$setComputePipelineState:"
+    59ac:	e0 03 13 aa	mov	x0, x19
+    59b0:	00 00 00 94	bl	_objc_msgSend$data
+    59b4:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    59b8:	f5 03 00 aa	mov	x21, x0
+    59bc:	e0 03 1b aa	mov	x0, x27
+    59c0:	e2 03 15 aa	mov	x2, x21
+    59c4:	03 00 80 d2	mov	x3, #0x0
+    59c8:	04 00 80 d2	mov	x4, #0x0
+    59cc:	00 00 00 94	bl	"_objc_msgSend$setBuffer:offset:atIndex:"
+    59d0:	e0 03 15 aa	mov	x0, x21
+    59d4:	00 00 00 94	bl	_objc_release
+    59d8:	e0 03 1b aa	mov	x0, x27
+    59dc:	e2 13 40 f9	ldr	x2, [sp, #0x20]
+    59e0:	03 00 80 d2	mov	x3, #0x0
+    59e4:	24 00 80 52	mov	w4, #0x1
+    59e8:	00 00 00 94	bl	"_objc_msgSend$setBuffer:offset:atIndex:"
+    59ec:	e8 17 40 b9	ldr	w8, [sp, #0x14]
+    59f0:	e8 03 00 34	cbz	w8, 0x5a6c
+    59f4:	e8 3b 40 f9	ldr	x8, [sp, #0x70]
+    59f8:	02 09 40 f9	ldr	x2, [x8, #0x10]
+    59fc:	e0 03 1b aa	mov	x0, x27
+    5a00:	03 00 80 d2	mov	x3, #0x0
+    5a04:	84 00 80 52	mov	w4, #0x4
+    5a08:	00 00 00 94	bl	"_objc_msgSend$setBuffer:offset:atIndex:"
+    5a0c:	e0 03 13 aa	mov	x0, x19
+    5a10:	00 00 00 94	bl	_objc_msgSend$rows
+    5a14:	1f 08 00 f1	cmp	x0, #0x2
+    5a18:	89 00 00 54	b.ls	0x5a28
+    5a1c:	08 00 00 90	adrp	x8, 4 ; 0x5000
+    5a20:	08 01 00 91	add	x8, x8, #0x0
+    5a24:	10 00 00 14	b	0x5a64
+    5a28:	e0 03 14 aa	mov	x0, x20
+    5a2c:	00 00 00 94	bl	_objc_msgSend$columns
+    5a30:	08 fc 45 d3	lsr	x8, x0, #5
+    5a34:	09 06 80 52	mov	w9, #0x30
+    5a38:	0a 08 80 52	mov	w10, #0x40
+    5a3c:	1f d1 30 f1	cmp	x8, #0xc34
+    5a40:	49 81 89 9a	csel	x9, x10, x9, hi
+    5a44:	0a 00 00 90	adrp	x10, __ZN6Garnet12_GLOBAL__N_115primaryCountersE@PAGE
+    5a48:	4a 01 00 91	add	x10, x10, __ZN6Garnet12_GLOBAL__N_115primaryCountersE@PAGEOFF
+    5a4c:	48 21 01 91	add	x8, x10, #0x48
+    5a50:	4b 41 01 91	add	x11, x10, #0x50
+    5a54:	68 81 88 9a	csel	x8, x11, x8, hi
+    5a58:	49 01 09 8b	add	x9, x10, x9
+    5a5c:	2a 00 80 52	mov	w10, #0x1
+    5a60:		.long	0xf8ea0129
+    5a64:	29 00 80 52	mov	w9, #0x1
+    5a68:		.long	0xf8e90108
+    5a6c:	e0 03 14 aa	mov	x0, x20
+    5a70:	00 00 00 94	bl	_objc_msgSend$data
+    5a74:	00 00 00 94	bl	_objc_claimAutoreleasedReturnValue
+    5a78:	f6 03 00 aa	mov	x22, x0
+    5a7c:	e0 03 1b aa	mov	x0, x27
+    5a80:	e2 03 16 aa	mov	x2, x22
+    5a84:	03 00 80 d2	mov	x3, #0x0
+    5a88:	44 00 80 52	mov	w4, #0x2
+    5a8c:	00 00 00 94	bl	"_objc_msgSend$setBuffer:offset:atIndex:"
+    5a90:	e0 03 16 aa	mov	x0, x22
+    5a94:	00 00 00 94	bl	_objc_release
+    5a98:	e2 03 01 91	add	x2, sp, #0x40
+    5a9c:	e0 03 1b aa	mov	x0, x27
+    5aa0:	03 05 80 52	mov	w3, #0x28
+    5aa4:	64 00 80 52	mov	w4, #0x3
+    5aa8:	00 00 00 94	bl	"_objc_msgSend$setBytes:length:atIndex:"
+    5aac:	e0 03 13 aa	mov	x0, x19
+    5ab0:	00 00 00 94	bl	_objc_msgSend$rows
+    5ab4:	1f 08 00 f1	cmp	x0, #0x2
+    5ab8:	e8 00 00 54	b.hi	0x5ad4
+    5abc:	e0 03 14 aa	mov	x0, x20
+    5ac0:	00 00 00 94	bl	_objc_msgSend$columns
+    5ac4:	08 3c 00 91	add	x8, x0, #0xf
+    5ac8:	08 fd 44 d3	lsr	x8, x8, #4
+    5acc:	29 00 80 52	mov	w9, #0x1
+    5ad0:	11 00 00 14	b	0x5b14
+    5ad4:	e0 03 14 aa	mov	x0, x20
+    5ad8:	00 00 00 94	bl	_objc_msgSend$columns
+    5adc:	f5 03 00 aa	mov	x21, x0
+    5ae0:	e0 03 14 aa	mov	x0, x20
+    5ae4:	00 00 00 94	bl	_objc_msgSend$rows
+    5ae8:	e9 03 40 f9	ldr	x9, [sp]
+    5aec:	28 01 15 8b	add	x8, x9, x21
+    5af0:	08 05 00 d1	sub	x8, x8, #0x1
+    5af4:	29 01 c0 da	rbit	x9, x9
+    5af8:	29 11 c0 da	clz	x9, x9
+    5afc:	08 25 c9 9a	lsr	x8, x8, x9
+    5b00:	e9 02 00 8b	add	x9, x23, x0
+    5b04:	29 05 00 d1	sub	x9, x9, #0x1
+    5b08:	ea 02 c0 da	rbit	x10, x23
+    5b0c:	4a 11 c0 da	clz	x10, x10
+    5b10:	29 25 ca 9a	lsr	x9, x9, x10
+    5b14:	a8 27 39 a9	stp	x8, x9, [x29, #-0x70]
+    5b18:	28 00 80 52	mov	w8, #0x1
+    5b1c:	a8 03 1a f8	stur	x8, [x29, #-0x60]
+    5b20:	fc 17 00 f9	str	x28, [sp, #0x28]
+    5b24:	00 0d 08 4e	dup.2d	v0, x8
+    5b28:	e0 03 83 3c	stur	q0, [sp, #0x30]
+    5b2c:	a2 c3 01 d1	sub	x2, x29, #0x70
+    5b30:	e3 a3 00 91	add	x3, sp, #0x28
+    5b34:	e0 03 1b aa	mov	x0, x27
+    5b38:	00 00 00 94	bl	"_objc_msgSend$dispatchThreadgroups:threadsPerThreadgroup:"
+    5b3c:	e0 03 1b aa	mov	x0, x27
+    5b40:	00 00 00 94	bl	_objc_msgSend$endEncoding
+    5b44:	e8 0f 40 f9	ldr	x8, [sp, #0x18]
+    5b48:	08 01 40 f9	ldr	x8, [x8]
+    5b4c:	09 20 80 52	mov	w9, #0x100
+    5b50:	09 11 00 79	strh	w9, [x8, #0x8]
+    5b54:	09 03 40 f9	ldr	x9, [x24]
+    5b58:	29 61 02 91	add	x9, x9, #0x98
+    5b5c:	e8 17 00 f9	str	x8, [sp, #0x28]
+    5b60:	a9 03 19 f8	stur	x9, [x29, #-0x70]
+    5b64:	a0 c3 01 d1	sub	x0, x29, #0x70
+    5b68:	e1 a3 00 91	add	x1, sp, #0x28
+    5b6c:	e2 a3 00 91	add	x2, sp, #0x28
+    5b70:	00 00 00 94	bl	__ZZNSt3__112__hash_tableIPKN6Garnet11MetalMatrix4ImplENS_4hashIS5_EENS_8equal_toIS5_EENS_9allocatorIS5_EEE16__emplace_uniqueB9nqe220106IJS5_EEENS_4pairINS_15__hash_iteratorIPNS_11__hash_nodeIS5_PvEEEEbEEDpOT_ENKUlRKS5_OS5_E_clESQ_SR_
+    5b74:	81 02 00 36	tbz	w1, #0x0, 0x5bc4
+    5b78:	15 03 40 f9	ldr	x21, [x24]
+    5b7c:	a9 02 02 91	add	x9, x21, #0x80
+    5b80:	a8 aa 48 a9	ldp	x8, x10, [x21, #0x88]
+    5b84:	e8 17 00 f9	str	x8, [sp, #0x28]
+    5b88:	eb a3 00 91	add	x11, sp, #0x28
+    5b8c:	ab 03 19 f8	stur	x11, [x29, #-0x70]
+    5b90:	eb 0f 40 f9	ldr	x11, [sp, #0x18]
+    5b94:	ab a7 39 a9	stp	x11, x9, [x29, #-0x68]
+    5b98:	1f 01 0a eb	cmp	x8, x10
+    5b9c:	82 05 00 54	b.hs	0x5c4c
+    5ba0:	69 05 40 f9	ldr	x9, [x11, #0x8]
+    5ba4:	60 01 c0 3d	ldr	q0, [x11]
+    5ba8:	00 01 80 3d	str	q0, [x8]
+    5bac:	89 00 00 b4	cbz	x9, 0x5bbc
+    5bb0:	29 21 00 91	add	x9, x9, #0x8
+    5bb4:	2a 00 80 52	mov	w10, #0x1
+    5bb8:		.long	0xf82a0129
+    5bbc:	08 41 00 91	add	x8, x8, #0x10
+    5bc0:	a8 46 00 f9	str	x8, [x21, #0x88]
+    5bc4:	e0 03 1b aa	mov	x0, x27
+    5bc8:	00 00 00 94	bl	_objc_release
+    5bcc:	e0 03 1a aa	mov	x0, x26
+    5bd0:	00 00 00 94	bl	_objc_release
+    5bd4:	e0 03 19 aa	mov	x0, x25
+    5bd8:	00 00 00 94	bl	_objc_release
+    5bdc:	e0 13 40 f9	ldr	x0, [sp, #0x20]
+    5be0:	00 00 00 94	bl	_objc_release
+    5be4:	f5 3f 40 f9	ldr	x21, [sp, #0x78]
+    5be8:	75 01 00 b4	cbz	x21, 0x5c14
+    5bec:	a8 22 00 91	add	x8, x21, #0x8
+    5bf0:	09 00 80 92	mov	x9, #-0x1
+    5bf4:		.long	0xf8e90108
+    5bf8:	e8 00 00 b5	cbnz	x8, 0x5c14
+    5bfc:	a8 02 40 f9	ldr	x8, [x21]
+    5c00:	08 09 40 f9	ldr	x8, [x8, #0x10]
+    5c04:	e0 03 15 aa	mov	x0, x21
+    5c08:	00 01 3f d6	blr	x8
+    5c0c:	e0 03 15 aa	mov	x0, x21
+    5c10:	00 00 00 94	bl	__ZNSt3__119__shared_weak_count14__release_weakEv
+    5c14:	e0 03 14 aa	mov	x0, x20
+    5c18:	00 00 00 94	bl	_objc_release
+    5c1c:	e0 03 13 aa	mov	x0, x19
+    5c20:	00 00 00 94	bl	_objc_release
+    5c24:	e0 07 40 f9	ldr	x0, [sp, #0x8]
+    5c28:	00 00 00 94	bl	_objc_autoreleasePoolPop
+    5c2c:	fd 7b 4f a9	ldp	x29, x30, [sp, #0xf0]
+    5c30:	f4 4f 4e a9	ldp	x20, x19, [sp, #0xe0]
+    5c34:	f6 57 4d a9	ldp	x22, x21, [sp, #0xd0]
+    5c38:	f8 5f 4c a9	ldp	x24, x23, [sp, #0xc0]
+    5c3c:	fa 67 4b a9	ldp	x26, x25, [sp, #0xb0]
+    5c40:	fc 6f 4a a9	ldp	x28, x27, [sp, #0xa0]
+    5c44:	ff 03 04 91	add	sp, sp, #0x100
+    5c48:	c0 03 5f d6	ret
+    5c4c:	a0 c3 01 d1	sub	x0, x29, #0x70
+    5c50:	00 00 00 94	bl	__ZZNSt3__16vectorINS_10shared_ptrIN6Garnet11MetalMatrix4ImplEEENS_9allocatorIS5_EEE12emplace_backIJRKS5_EEERS5_DpOT_ENKUlvE0_clEv
+    5c54:	e8 17 40 f9	ldr	x8, [sp, #0x28]
+    5c58:	da ff ff 17	b	0x5bc0
+    5c5c:	00 02 80 52	mov	w0, #0x10
+    5c60:	00 00 00 94	bl	___cxa_allocate_exception
+    5c64:	f3 03 00 aa	mov	x19, x0
+    5c68:	01 00 00 90	adrp	x1, l_.str.142@PAGE
+    5c6c:	21 00 00 91	add	x1, x1, l_.str.142@PAGEOFF
+    5c70:	00 00 00 94	bl	__ZNSt16invalid_argumentC1B9nqe220106EPKc
+    5c74:	e0 03 13 aa	mov	x0, x19
+    5c78:	00 00 00 94	bl	__ZN6Garnet12MetalContext16EncodeBF16MatVecERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_.cold.1
+    5c7c:	00 02 80 52	mov	w0, #0x10
+    5c80:	00 00 00 94	bl	___cxa_allocate_exception
+    5c84:	f5 03 00 aa	mov	x21, x0
+    5c88:	01 00 00 90	adrp	x1, l_.str.146@PAGE
+    5c8c:	21 00 00 91	add	x1, x1, l_.str.146@PAGEOFF
+    5c90:	00 00 00 94	bl	__ZNSt13runtime_errorC1EPKc
+    5c94:	01 00 00 90	adrp	x1, __ZTISt13runtime_error@GOTPAGE
+    5c98:	21 00 40 f9	ldr	x1, [x1, __ZTISt13runtime_error@GOTPAGEOFF]
+    5c9c:	02 00 00 90	adrp	x2, __ZNSt13runtime_errorD1Ev@GOTPAGE
+    5ca0:	42 00 40 f9	ldr	x2, [x2, __ZNSt13runtime_errorD1Ev@GOTPAGEOFF]
+    5ca4:	e0 03 15 aa	mov	x0, x21
+    5ca8:	00 00 00 94	bl	___cxa_throw
+    5cac:	21 00 00 14	b	0x5d30
+    5cb0:	00 02 80 52	mov	w0, #0x10
+    5cb4:	00 00 00 94	bl	___cxa_allocate_exception
+    5cb8:	f7 03 00 aa	mov	x23, x0
+    5cbc:	01 00 00 90	adrp	x1, l_.str.144@PAGE
+    5cc0:	21 00 00 91	add	x1, x1, l_.str.144@PAGEOFF
+    5cc4:	00 00 00 94	bl	__ZNSt11logic_errorC1EPKc
+    5cc8:	14 00 00 14	b	0x5d18
+    5ccc:	00 02 80 52	mov	w0, #0x10
+    5cd0:	00 00 00 94	bl	___cxa_allocate_exception
+    5cd4:	f5 03 00 aa	mov	x21, x0
+    5cd8:	01 00 00 90	adrp	x1, l_.str.147@PAGE
+    5cdc:	21 00 00 91	add	x1, x1, l_.str.147@PAGEOFF
+    5ce0:	00 00 00 94	bl	__ZNSt13runtime_errorC1EPKc
+    5ce4:	01 00 00 90	adrp	x1, __ZTISt13runtime_error@GOTPAGE
+    5ce8:	21 00 40 f9	ldr	x1, [x1, __ZTISt13runtime_error@GOTPAGEOFF]
+    5cec:	02 00 00 90	adrp	x2, __ZNSt13runtime_errorD1Ev@GOTPAGE
+    5cf0:	42 00 40 f9	ldr	x2, [x2, __ZNSt13runtime_errorD1Ev@GOTPAGEOFF]
+    5cf4:	e0 03 15 aa	mov	x0, x21
+    5cf8:	00 00 00 94	bl	___cxa_throw
+    5cfc:	0d 00 00 14	b	0x5d30
+    5d00:	00 02 80 52	mov	w0, #0x10
+    5d04:	00 00 00 94	bl	___cxa_allocate_exception
+    5d08:	f7 03 00 aa	mov	x23, x0
+    5d0c:	01 00 00 90	adrp	x1, l_.str.145@PAGE
+    5d10:	21 00 00 91	add	x1, x1, l_.str.145@PAGEOFF
+    5d14:	00 00 00 94	bl	__ZNSt11logic_errorC1EPKc
+    5d18:	01 00 00 90	adrp	x1, __ZTISt11logic_error@GOTPAGE
+    5d1c:	21 00 40 f9	ldr	x1, [x1, __ZTISt11logic_error@GOTPAGEOFF]
+    5d20:	02 00 00 90	adrp	x2, __ZNSt11logic_errorD1Ev@GOTPAGE
+    5d24:	42 00 40 f9	ldr	x2, [x2, __ZNSt11logic_errorD1Ev@GOTPAGEOFF]
+    5d28:	e0 03 17 aa	mov	x0, x23
+    5d2c:	00 00 00 94	bl	___cxa_throw
+    5d30:	20 00 20 d4	brk	#0x1
+    5d34:	00 00 00 94	bl	___clang_call_terminate
+    5d38:	f8 03 00 aa	mov	x24, x0
+    5d3c:	4b 00 00 14	b	0x5e68
+    5d40:	09 00 00 14	b	0x5d64
+    5d44:	f8 03 00 aa	mov	x24, x0
+    5d48:	e0 03 15 aa	mov	x0, x21
+    5d4c:	00 00 00 94	bl	___cxa_free_exception
+    5d50:	44 00 00 14	b	0x5e60
+    5d54:	f8 03 00 aa	mov	x24, x0
+    5d58:	44 00 00 14	b	0x5e68
+    5d5c:	f8 03 00 aa	mov	x24, x0
+    5d60:	46 00 00 14	b	0x5e78
+    5d64:	f8 03 00 aa	mov	x24, x0
+    5d68:	e0 03 17 aa	mov	x0, x23
+    5d6c:	00 00 00 94	bl	___cxa_free_exception
+    5d70:	42 00 00 14	b	0x5e78
+    5d74:	f8 03 00 aa	mov	x24, x0
+    5d78:	3c 00 00 14	b	0x5e68
+    5d7c:	38 00 00 14	b	0x5e5c
+    5d80:	f8 03 00 aa	mov	x24, x0
+    5d84:	e0 03 16 aa	mov	x0, x22
+    5d88:	00 00 00 94	bl	_objc_release
+    5d8c:	35 00 00 14	b	0x5e60
+    5d90:	f8 03 00 aa	mov	x24, x0
+    5d94:	e0 03 15 aa	mov	x0, x21
+    5d98:	00 00 00 94	bl	_objc_release
+    5d9c:	31 00 00 14	b	0x5e60
+    5da0:	f8 03 00 aa	mov	x24, x0
+    5da4:	31 00 00 14	b	0x5e68
+    5da8:	f8 03 00 aa	mov	x24, x0
+    5dac:	e0 03 15 aa	mov	x0, x21
+    5db0:	00 00 00 94	bl	___cxa_free_exception
+    5db4:	2d 00 00 14	b	0x5e68
+    5db8:	f8 03 00 aa	mov	x24, x0
+    5dbc:	2d 00 00 14	b	0x5e70
+    5dc0:	f8 03 00 aa	mov	x24, x0
+    5dc4:	2d 00 00 14	b	0x5e78
+    5dc8:	f8 03 00 aa	mov	x24, x0
+    5dcc:	e0 03 16 aa	mov	x0, x22
+    5dd0:	00 00 00 94	bl	_objc_release
+    5dd4:	1a 00 00 14	b	0x5e3c
+    5dd8:	f8 03 00 aa	mov	x24, x0
+    5ddc:	1a 00 00 14	b	0x5e44
+    5de0:	f8 03 00 aa	mov	x24, x0
+    5de4:	e0 03 1a aa	mov	x0, x26
+    5de8:	23 00 00 14	b	0x5e74
+    5dec:	f8 03 00 aa	mov	x24, x0
+    5df0:	e0 03 13 aa	mov	x0, x19
+    5df4:	00 00 00 94	bl	___cxa_free_exception
+    5df8:	e0 03 18 aa	mov	x0, x24
+    5dfc:	00 00 00 94	bl	__Unwind_Resume
+    5e00:	f8 03 00 aa	mov	x24, x0
+    5e04:	19 00 00 14	b	0x5e68
+    5e08:	f8 03 00 aa	mov	x24, x0
+    5e0c:	1b 00 00 14	b	0x5e78
+    5e10:	f8 03 00 aa	mov	x24, x0
+    5e14:	17 00 00 14	b	0x5e70
+    5e18:	f8 03 00 aa	mov	x24, x0
+    5e1c:	e0 03 15 aa	mov	x0, x21
+    5e20:	00 00 00 94	bl	___cxa_free_exception
+    5e24:	15 00 00 14	b	0x5e78
+    5e28:	f8 03 00 aa	mov	x24, x0
+    5e2c:	0f 00 00 14	b	0x5e68
+    5e30:	f8 03 00 aa	mov	x24, x0
+    5e34:	0d 00 00 14	b	0x5e68
+    5e38:	f8 03 00 aa	mov	x24, x0
+    5e3c:	e0 03 1c aa	mov	x0, x28
+    5e40:	00 00 00 94	bl	_objc_release
+    5e44:	e0 03 1b aa	mov	x0, x27
+    5e48:	00 00 00 94	bl	_objc_release
+    5e4c:	e0 03 1a aa	mov	x0, x26
+    5e50:	09 00 00 14	b	0x5e74
+    5e54:	f8 03 00 aa	mov	x24, x0
+    5e58:	08 00 00 14	b	0x5e78
+    5e5c:	f8 03 00 aa	mov	x24, x0
+    5e60:	e0 03 1b aa	mov	x0, x27
+    5e64:	00 00 00 94	bl	_objc_release
+    5e68:	e0 03 1a aa	mov	x0, x26
+    5e6c:	00 00 00 94	bl	_objc_release
+    5e70:	e0 03 19 aa	mov	x0, x25
+    5e74:	00 00 00 94	bl	_objc_release
+    5e78:	e0 13 40 f9	ldr	x0, [sp, #0x20]
+    5e7c:	00 00 00 94	bl	_objc_release
+    5e80:	e0 c3 01 91	add	x0, sp, #0x70
+    5e84:	00 00 00 94	bl	__ZNSt3__110shared_ptrIN6Garnet15MetalBF16Weight4ImplEED1B9nqe220106Ev
+    5e88:	e0 03 14 aa	mov	x0, x20
+    5e8c:	00 00 00 94	bl	_objc_release
+    5e90:	e0 03 13 aa	mov	x0, x19
+    5e94:	00 00 00 94	bl	_objc_release
+    5e98:	e0 03 18 aa	mov	x0, x24
+    5e9c:	00 00 00 94	bl	__Unwind_Resume

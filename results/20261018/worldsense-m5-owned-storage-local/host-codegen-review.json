@@ -1,0 +1,466 @@
+{
+  "utc": "2026-10-18T19:27:29.957295+00:00",
+  "build_observed_session": 93228,
+  "build_observed_terminal_exit_code": 0,
+  "all_eight_builds_pass": true,
+  "selected_local_ownership_removed_both_raw_and_packed": true,
+  "matched_pairs_differ_only_new_GARNET_flag": true,
+  "ordinary_weight_owner_copy_and_normal_cleanup_remain": true,
+  "details": {
+    "off": {
+      "prepare": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext20PrepareBF16BodyShapeERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-off/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "64cd7c92ca82404389eef1b114107085821156ece13d2da5af687726b27fb4b2",
+        "selection_window": [
+          "    3504:\t1c 00 66 9e\tfmov\tx28, d0",
+          "    3508:\t80 03 40 f9\tldr\tx0, [x28]",
+          "    350c:\t00 00 00 94\tbl\t_objc_retain",
+          "    3510:\tf5 03 00 aa\tmov\tx21, x0",
+          "    3514:\te0 03 13 aa\tmov\tx0, x19"
+        ],
+        "selection_static_retain_calls": 1,
+        "selection_static_release_calls": 0,
+        "owner_copy_and_atomic_increment_window": [
+          "    34d4:\tf3 03 00 aa\tmov\tx19, x0",
+          "    34d8:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    34dc:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    34e0:\t00 00 00 94\tbl\t_objc_retain",
+          "    34e4:\tf4 03 00 aa\tmov\tx20, x0",
+          "    34e8:\tb7 06 40 f9\tldr\tx23, [x21, #0x8]",
+          "    34ec:\ta0 02 c0 3d\tldr\tq0, [x21]",
+          "    34f0:\te0 23 80 3d\tstr\tq0, [sp, #0x80]",
+          "    34f4:\t97 00 00 b4\tcbz\tx23, 0x3504",
+          "    34f8:\te8 22 00 91\tadd\tx8, x23, #0x8",
+          "    34fc:\t29 00 80 52\tmov\tw9, #0x1",
+          "    3500:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    3724:\t78 01 00 37\ttbnz\tw24, #0x0, 0x3750",
+          "    3728:\te8 22 00 91\tadd\tx8, x23, #0x8",
+          "    372c:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    3730:\t\t.long\t0xf8e90108",
+          "    3734:\te8 00 00 b5\tcbnz\tx8, 0x3750",
+          "    3738:\te8 02 40 f9\tldr\tx8, [x23]",
+          "    373c:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    3740:\te0 03 17 aa\tmov\tx0, x23",
+          "    3744:\t00 01 3f d6\tblr\tx8",
+          "    3748:\te0 03 17 aa\tmov\tx0, x23",
+          "    374c:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 5,
+        "whole_function_static_release_call_sites": 25
+      },
+      "encode": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext16EncodeBF16MatVecERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-off/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "d137fd5a7d11352041e16d00e2e055d7ce69aa0fd59dcc974367e6e0b54b5fee",
+        "selection_window": [
+          "    3d34:\t17 00 66 9e\tfmov\tx23, d0",
+          "    3d38:\te0 02 40 f9\tldr\tx0, [x23]",
+          "    3d3c:\t00 00 00 94\tbl\t_objc_retain",
+          "    3d40:\te0 13 00 f9\tstr\tx0, [sp, #0x20]",
+          "    3d44:\te0 03 13 aa\tmov\tx0, x19"
+        ],
+        "selection_static_retain_calls": 1,
+        "selection_static_release_calls": 0,
+        "owner_copy_and_atomic_increment_window": [
+          "    3d04:\tf4 0f 00 f9\tstr\tx20, [sp, #0x18]",
+          "    3d08:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    3d0c:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    3d10:\t00 00 00 94\tbl\t_objc_retain",
+          "    3d14:\tf4 03 00 aa\tmov\tx20, x0",
+          "    3d18:\ta8 06 40 f9\tldr\tx8, [x21, #0x8]",
+          "    3d1c:\ta0 02 c0 3d\tldr\tq0, [x21]",
+          "    3d20:\te0 1f 80 3d\tstr\tq0, [sp, #0x70]",
+          "    3d24:\t88 00 00 b4\tcbz\tx8, 0x3d34",
+          "    3d28:\t08 21 00 91\tadd\tx8, x8, #0x8",
+          "    3d2c:\t29 00 80 52\tmov\tw9, #0x1",
+          "    3d30:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    4520:\t75 01 00 b4\tcbz\tx21, 0x454c",
+          "    4524:\ta8 22 00 91\tadd\tx8, x21, #0x8",
+          "    4528:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    452c:\t\t.long\t0xf8e90108",
+          "    4530:\te8 00 00 b5\tcbnz\tx8, 0x454c",
+          "    4534:\ta8 02 40 f9\tldr\tx8, [x21]",
+          "    4538:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    453c:\te0 03 15 aa\tmov\tx0, x21",
+          "    4540:\t00 01 3f d6\tblr\tx8",
+          "    4544:\te0 03 15 aa\tmov\tx0, x21",
+          "    4548:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 8,
+        "whole_function_static_release_call_sites": 28
+      }
+    },
+    "raw-borrow": {
+      "prepare": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext20PrepareBF16BodyShapeERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-raw-borrow/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "f04d8504d9cd7890e7578eca336790e9188c3154e90459baa548dc34c4cab9d3",
+        "selection_window": [
+          "    3504:\t1c 00 66 9e\tfmov\tx28, d0",
+          "    3508:\t9a 03 40 f9\tldr\tx26, [x28]",
+          "    350c:\te0 03 13 aa\tmov\tx0, x19"
+        ],
+        "selection_static_retain_calls": 0,
+        "selection_static_release_calls": 0,
+        "owner_copy_and_atomic_increment_window": [
+          "    34d4:\tf3 03 00 aa\tmov\tx19, x0",
+          "    34d8:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    34dc:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    34e0:\t00 00 00 94\tbl\t_objc_retain",
+          "    34e4:\tf4 03 00 aa\tmov\tx20, x0",
+          "    34e8:\t16 07 40 f9\tldr\tx22, [x24, #0x8]",
+          "    34ec:\t00 03 c0 3d\tldr\tq0, [x24]",
+          "    34f0:\te0 1f 80 3d\tstr\tq0, [sp, #0x70]",
+          "    34f4:\t96 00 00 b4\tcbz\tx22, 0x3504",
+          "    34f8:\tc8 22 00 91\tadd\tx8, x22, #0x8",
+          "    34fc:\t29 00 80 52\tmov\tw9, #0x1",
+          "    3500:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    3708:\t76 01 00 b4\tcbz\tx22, 0x3734",
+          "    370c:\tc8 22 00 91\tadd\tx8, x22, #0x8",
+          "    3710:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    3714:\t\t.long\t0xf8e90108",
+          "    3718:\te8 00 00 b5\tcbnz\tx8, 0x3734",
+          "    371c:\tc8 02 40 f9\tldr\tx8, [x22]",
+          "    3720:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    3724:\te0 03 16 aa\tmov\tx0, x22",
+          "    3728:\t00 01 3f d6\tblr\tx8",
+          "    372c:\te0 03 16 aa\tmov\tx0, x22",
+          "    3730:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 4,
+        "whole_function_static_release_call_sites": 23
+      },
+      "encode": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext16EncodeBF16MatVecERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-raw-borrow/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "1434dc63cb8ffce67cb3add2a5c2144dae1804820650a605359a721ef7825c09",
+        "selection_window": [
+          "    3d20:\t16 00 66 9e\tfmov\tx22, d0",
+          "    3d24:\tc8 02 40 f9\tldr\tx8, [x22]",
+          "    3d28:\te8 0f 00 f9\tstr\tx8, [sp, #0x18]",
+          "    3d2c:\te0 03 13 aa\tmov\tx0, x19"
+        ],
+        "selection_static_retain_calls": 0,
+        "selection_static_release_calls": 0,
+        "owner_copy_and_atomic_increment_window": [
+          "    3cf0:\tf4 13 00 f9\tstr\tx20, [sp, #0x20]",
+          "    3cf4:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    3cf8:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    3cfc:\t00 00 00 94\tbl\t_objc_retain",
+          "    3d00:\tf4 03 00 aa\tmov\tx20, x0",
+          "    3d04:\ta8 06 40 f9\tldr\tx8, [x21, #0x8]",
+          "    3d08:\ta0 02 c0 3d\tldr\tq0, [x21]",
+          "    3d0c:\te0 1f 80 3d\tstr\tq0, [sp, #0x70]",
+          "    3d10:\t88 00 00 b4\tcbz\tx8, 0x3d20",
+          "    3d14:\t08 21 00 91\tadd\tx8, x8, #0x8",
+          "    3d18:\t29 00 80 52\tmov\tw9, #0x1",
+          "    3d1c:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    44f8:\t75 01 00 b4\tcbz\tx21, 0x4524",
+          "    44fc:\ta8 22 00 91\tadd\tx8, x21, #0x8",
+          "    4500:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    4504:\t\t.long\t0xf8e90108",
+          "    4508:\te8 00 00 b5\tcbnz\tx8, 0x4524",
+          "    450c:\ta8 02 40 f9\tldr\tx8, [x21]",
+          "    4510:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    4514:\te0 03 15 aa\tmov\tx0, x21",
+          "    4518:\t00 01 3f d6\tblr\tx8",
+          "    451c:\te0 03 15 aa\tmov\tx0, x21",
+          "    4520:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 7,
+        "whole_function_static_release_call_sites": 25
+      }
+    },
+    "control": {
+      "prepare": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext20PrepareBF16BodyShapeERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "96033092bd671c2e52dfbe7e57a1120545aae89ed8203cb1efe51c1ddd878744",
+        "selection_window": [
+          "    49f8:\t14 00 66 9e\tfmov\tx20, d0",
+          "    49fc:\t80 02 40 f9\tldr\tx0, [x20]",
+          "    4a00:\t00 00 00 94\tbl\t_objc_retain",
+          "    4a04:\tf5 03 00 aa\tmov\tx21, x0",
+          "    4a08:\t9c e2 40 39\tldrb\tw28, [x20, #0x38]",
+          "    4a0c:\t9f 07 00 71\tcmp\tw28, #0x1",
+          "    4a10:\te1 00 00 54\tb.ne\t0x4a2c",
+          "    4a14:\t80 06 40 f9\tldr\tx0, [x20, #0x8]",
+          "    4a18:\t00 00 00 94\tbl\t_objc_retain",
+          "    4a1c:\tf9 03 00 aa\tmov\tx25, x0",
+          "    4a20:\te0 03 15 aa\tmov\tx0, x21",
+          "    4a24:\t00 00 00 94\tbl\t_objc_release",
+          "    4a28:\tf5 03 19 aa\tmov\tx21, x25",
+          "    4a2c:\te0 03 13 aa\tmov\tx0, x19",
+          "    4a30:\tfa 17 00 f9\tstr\tx26, [sp, #0x28]"
+        ],
+        "selection_static_retain_calls": 2,
+        "selection_static_release_calls": 1,
+        "owner_copy_and_atomic_increment_window": [
+          "    49c8:\tf3 03 00 aa\tmov\tx19, x0",
+          "    49cc:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    49d0:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    49d4:\t00 00 00 94\tbl\t_objc_retain",
+          "    49d8:\tfa 03 00 aa\tmov\tx26, x0",
+          "    49dc:\tb7 06 40 f9\tldr\tx23, [x21, #0x8]",
+          "    49e0:\ta0 02 c0 3d\tldr\tq0, [x21]",
+          "    49e4:\te0 27 80 3d\tstr\tq0, [sp, #0x90]",
+          "    49e8:\t97 00 00 b4\tcbz\tx23, 0x49f8",
+          "    49ec:\te8 22 00 91\tadd\tx8, x23, #0x8",
+          "    49f0:\t29 00 80 52\tmov\tw9, #0x1",
+          "    49f4:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    4c6c:\t74 01 00 37\ttbnz\tw20, #0x0, 0x4c98",
+          "    4c70:\te8 22 00 91\tadd\tx8, x23, #0x8",
+          "    4c74:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    4c78:\t\t.long\t0xf8e90108",
+          "    4c7c:\te8 00 00 b5\tcbnz\tx8, 0x4c98",
+          "    4c80:\te8 02 40 f9\tldr\tx8, [x23]",
+          "    4c84:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    4c88:\te0 03 17 aa\tmov\tx0, x23",
+          "    4c8c:\t00 01 3f d6\tblr\tx8",
+          "    4c90:\te0 03 17 aa\tmov\tx0, x23",
+          "    4c94:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 7,
+        "whole_function_static_release_call_sites": 28
+      },
+      "encode": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext16EncodeBF16MatVecERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "d53e84446a3cf1759f1a57533eaa598087d9b89568e3bd205828b4ec4449ab6d",
+        "selection_window": [
+          "    52bc:\t17 00 66 9e\tfmov\tx23, d0",
+          "    52c0:\te0 02 40 f9\tldr\tx0, [x23]",
+          "    52c4:\t00 00 00 94\tbl\t_objc_retain",
+          "    52c8:\te8 e2 40 39\tldrb\tw8, [x23, #0x38]",
+          "    52cc:\te8 17 00 b9\tstr\tw8, [sp, #0x14]",
+          "    52d0:\t1f 05 00 71\tcmp\tw8, #0x1",
+          "    52d4:\tf6 0f 00 f9\tstr\tx22, [sp, #0x18]",
+          "    52d8:\t21 01 00 54\tb.ne\t0x52fc",
+          "    52dc:\tf6 03 00 aa\tmov\tx22, x0",
+          "    52e0:\te0 06 40 f9\tldr\tx0, [x23, #0x8]",
+          "    52e4:\t00 00 00 94\tbl\t_objc_retain",
+          "    52e8:\tf5 03 00 aa\tmov\tx21, x0",
+          "    52ec:\te0 03 16 aa\tmov\tx0, x22",
+          "    52f0:\t00 00 00 94\tbl\t_objc_release",
+          "    52f4:\tf5 13 00 f9\tstr\tx21, [sp, #0x20]",
+          "    52f8:\t02 00 00 14\tb\t0x5300",
+          "    52fc:\te0 13 00 f9\tstr\tx0, [sp, #0x20]",
+          "    5300:\te0 03 13 aa\tmov\tx0, x19"
+        ],
+        "selection_static_retain_calls": 2,
+        "selection_static_release_calls": 1,
+        "owner_copy_and_atomic_increment_window": [
+          "    528c:\tf3 03 00 aa\tmov\tx19, x0",
+          "    5290:\tc8 02 40 f9\tldr\tx8, [x22]",
+          "    5294:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    5298:\t00 00 00 94\tbl\t_objc_retain",
+          "    529c:\tf4 03 00 aa\tmov\tx20, x0",
+          "    52a0:\ta8 06 40 f9\tldr\tx8, [x21, #0x8]",
+          "    52a4:\ta0 02 c0 3d\tldr\tq0, [x21]",
+          "    52a8:\te0 1f 80 3d\tstr\tq0, [sp, #0x70]",
+          "    52ac:\t88 00 00 b4\tcbz\tx8, 0x52bc",
+          "    52b0:\t08 21 00 91\tadd\tx8, x8, #0x8",
+          "    52b4:\t29 00 80 52\tmov\tw9, #0x1",
+          "    52b8:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    5be8:\t75 01 00 b4\tcbz\tx21, 0x5c14",
+          "    5bec:\ta8 22 00 91\tadd\tx8, x21, #0x8",
+          "    5bf0:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    5bf4:\t\t.long\t0xf8e90108",
+          "    5bf8:\te8 00 00 b5\tcbnz\tx8, 0x5c14",
+          "    5bfc:\ta8 02 40 f9\tldr\tx8, [x21]",
+          "    5c00:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    5c04:\te0 03 15 aa\tmov\tx0, x21",
+          "    5c08:\t00 01 3f d6\tblr\tx8",
+          "    5c0c:\te0 03 15 aa\tmov\tx0, x21",
+          "    5c10:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 8,
+        "whole_function_static_release_call_sites": 30
+      }
+    },
+    "on": {
+      "prepare": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext20PrepareBF16BodyShapeERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "09876190fd51926e26143058abc9095e4ea113601bf1ebbfc9fba624d33c6baf",
+        "selection_window": [
+          "    49f8:\t14 00 66 9e\tfmov\tx20, d0",
+          "    49fc:\t9c e2 40 39\tldrb\tw28, [x20, #0x38]",
+          "    4a00:\t9f 03 00 71\tcmp\tw28, #0x0",
+          "    4a04:\t08 01 80 52\tmov\tw8, #0x8",
+          "    4a08:\t1b 11 9f 9a\tcsel\tx27, x8, xzr, ne",
+          "    4a0c:\t9a 6a 7b f8\tldr\tx26, [x20, x27]",
+          "    4a10:\te0 03 13 aa\tmov\tx0, x19",
+          "    4a14:\tf9 0f 00 f9\tstr\tx25, [sp, #0x18]"
+        ],
+        "selection_static_retain_calls": 0,
+        "selection_static_release_calls": 0,
+        "owner_copy_and_atomic_increment_window": [
+          "    49c8:\tf3 03 00 aa\tmov\tx19, x0",
+          "    49cc:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    49d0:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    49d4:\t00 00 00 94\tbl\t_objc_retain",
+          "    49d8:\tf9 03 00 aa\tmov\tx25, x0",
+          "    49dc:\t16 07 40 f9\tldr\tx22, [x24, #0x8]",
+          "    49e0:\t00 03 c0 3d\tldr\tq0, [x24]",
+          "    49e4:\te0 23 80 3d\tstr\tq0, [sp, #0x80]",
+          "    49e8:\t96 00 00 b4\tcbz\tx22, 0x49f8",
+          "    49ec:\tc8 22 00 91\tadd\tx8, x22, #0x8",
+          "    49f0:\t29 00 80 52\tmov\tw9, #0x1",
+          "    49f4:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    4c3c:\t76 01 00 b4\tcbz\tx22, 0x4c68",
+          "    4c40:\tc8 22 00 91\tadd\tx8, x22, #0x8",
+          "    4c44:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    4c48:\t\t.long\t0xf8e90108",
+          "    4c4c:\te8 00 00 b5\tcbnz\tx8, 0x4c68",
+          "    4c50:\tc8 02 40 f9\tldr\tx8, [x22]",
+          "    4c54:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    4c58:\te0 03 16 aa\tmov\tx0, x22",
+          "    4c5c:\t00 01 3f d6\tblr\tx8",
+          "    4c60:\te0 03 16 aa\tmov\tx0, x22",
+          "    4c64:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 5,
+        "whole_function_static_release_call_sites": 25
+      },
+      "encode": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump",
+          "--macho",
+          "--disassemble",
+          "--dis-symname",
+          "__ZN6Garnet12MetalContext16EncodeBF16MatVecERKNS_11MetalMatrixERKNS_15MetalBF16WeightES3_",
+          "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o"
+        ],
+        "disassembly_sha256": "55c93f101d4b0c9196330e764005052833cb1376bf16877d0b4283f64492ba94",
+        "selection_window": [
+          "    5288:\t16 00 66 9e\tfmov\tx22, d0",
+          "    528c:\tc8 e2 40 39\tldrb\tw8, [x22, #0x38]",
+          "    5290:\te8 1f 00 b9\tstr\tw8, [sp, #0x1c]",
+          "    5294:\t1f 01 00 71\tcmp\tw8, #0x0",
+          "    5298:\t08 01 80 52\tmov\tw8, #0x8",
+          "    529c:\t08 11 9f 9a\tcsel\tx8, x8, xzr, ne",
+          "    52a0:\tc8 6a 68 f8\tldr\tx8, [x22, x8]",
+          "    52a4:\te8 0b 00 f9\tstr\tx8, [sp, #0x10]",
+          "    52a8:\te0 03 13 aa\tmov\tx0, x19"
+        ],
+        "selection_static_retain_calls": 0,
+        "selection_static_release_calls": 0,
+        "owner_copy_and_atomic_increment_window": [
+          "    5258:\tf4 13 00 f9\tstr\tx20, [sp, #0x20]",
+          "    525c:\t88 02 40 f9\tldr\tx8, [x20]",
+          "    5260:\t00 01 40 f9\tldr\tx0, [x8]",
+          "    5264:\t00 00 00 94\tbl\t_objc_retain",
+          "    5268:\tf4 03 00 aa\tmov\tx20, x0",
+          "    526c:\ta8 06 40 f9\tldr\tx8, [x21, #0x8]",
+          "    5270:\ta0 02 c0 3d\tldr\tq0, [x21]",
+          "    5274:\te0 1f 80 3d\tstr\tq0, [sp, #0x70]",
+          "    5278:\t88 00 00 b4\tcbz\tx8, 0x5288",
+          "    527c:\t08 21 00 91\tadd\tx8, x8, #0x8",
+          "    5280:\t29 00 80 52\tmov\tw9, #0x1",
+          "    5284:\t\t.long\t0xf8290108"
+        ],
+        "normal_weight_owner_release_window": [
+          "    5b8c:\t75 01 00 b4\tcbz\tx21, 0x5bb8",
+          "    5b90:\ta8 22 00 91\tadd\tx8, x21, #0x8",
+          "    5b94:\t09 00 80 92\tmov\tx9, #-0x1",
+          "    5b98:\t\t.long\t0xf8e90108",
+          "    5b9c:\te8 00 00 b5\tcbnz\tx8, 0x5bb8",
+          "    5ba0:\ta8 02 40 f9\tldr\tx8, [x21]",
+          "    5ba4:\t08 09 40 f9\tldr\tx8, [x8, #0x10]",
+          "    5ba8:\te0 03 15 aa\tmov\tx0, x21",
+          "    5bac:\t00 01 3f d6\tblr\tx8",
+          "    5bb0:\te0 03 15 aa\tmov\tx0, x21",
+          "    5bb4:\t00 00 00 94\tbl\t__ZNSt3__119__shared_weak_count14__release_weakEv"
+        ],
+        "normal_owner_release_after_binding_and_endEncoding_if_encode": true,
+        "whole_function_static_retain_call_sites": 6,
+        "whole_function_static_release_call_sites": 26
+      }
+    }
+  },
+  "inputs": {
+    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump": "792a7ab8593499fabb6316aa915de8833d61949d6329f89a0d6416f8ed99f4c8",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-off/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o": "369fa7bd17ea9d97ab0057cd8c5caa7b0e1bd6e29f275b5c9633dd294b1dffab",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-off/CMakeFiles/garnet_metal.dir/flags.make": "11c20b3cd8fa482d627ba019224d32f4c6b5d9e9db8164753410dcb02e67591e",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-off/CMakeCache.txt": "3b9d5b6a264a35431b0e4d5fbda78d8c1758c05873606886e446decc934baf9a",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-off/libgarnet.dylib": "85f3205ecd94f4b5cbe72a0d77c4850fc550f2e428686b40ae11e08c2d66c0da",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-raw-borrow/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o": "a885e179fd04a0332233e997001c6e193aa4d75fd92544bf5c6aa431df6ffa56",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-raw-borrow/CMakeFiles/garnet_metal.dir/flags.make": "299b968fa952ab1f8055d79e19fc29d14ba75ad7cc3631fb3348b428e4631a7e",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-raw-borrow/CMakeCache.txt": "143be14da22a4c8f658204e6c8151d26a8e53573be04088b8f9b99a15e3b19e5",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-raw-borrow/libgarnet.dylib": "500dfdcc8c051b54b8f3ef9cc7071297b83cd0714e89202d699bb63d6d322634",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o": "f17c4347fac6f618499a35b911eb82726d79d793b3abc1aafae7f86c7b5ce3e2",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/CMakeFiles/garnet_metal.dir/flags.make": "ab2924c791b7f2473695470916cbc41d0cd4135e6b10370eca57e61160ead769",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/CMakeCache.txt": "b467b6f5ef755332998a87685f736e6c9bd4f2a3bc16239c5ec17458793b82fe",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-control/libgarnet.dylib": "2e010eafad8902c0e59bb2eb2fbd15eb33e110cdc4fde509f9f1f985bf9fbde2",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-on/CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o": "0857bf11ae500500ec6e46fededb68f09b7bbf3314bbbc30efe2088a23f5e5ff",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-on/CMakeFiles/garnet_metal.dir/flags.make": "9de648dbb6b7ef12a0c28347ab81254535028c6641602627c3047d2705a204df",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-on/CMakeCache.txt": "93dfd6c5e0b38eea75c97d90329ea142b83f69841e91a4d6d7b91e1565ed3957",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-owned-storage-local-on/libgarnet.dylib": "edc7a6854a2fbc029248f34e89e8653b6fd8bef40eacbf4e48c11606ff96ac7b"
+  },
+  "limits": "Actual HOST ARM64 static code windows and normal ownership cleanup, not dynamic call counts, cost, every error-path runtime safety, complete GPU operations/ISA/register/occupancy or speed proof. Original and additional native/learned error/lifetime checks still required. .long opcodes retained exactly as emitted by tool; shared_ptr identity determined from C++ handle/q0 control-block tracking and original compiler lowering, not ARC retainCount."
+}

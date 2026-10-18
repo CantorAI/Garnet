@@ -1,0 +1,32 @@
+START control-1 2026-10-18T19:42:35Z
+FINISH control-1 exit 0
+START candidate-1 2026-10-18T19:44:57Z
+FINISH candidate-1 exit 0
+This package has no running WorldSense stack.
+Boot-out failed: 3: No such process
+Launchd Cantor LRPC ready 88370
+Validated WS10, four files online, camera unmounted, benchmark404 PASS
+RESTORED VALIDATED WS10 AND NORMAL NONBENCHMARK SERVER
+Build/SDK/host dependency identity unchanged 1876 resource
+{
+  "status": "resource_feasibility_pass_requires_fresh_speed_screen",
+  "passed": true,
+  "sampled_maximum_bytes": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18060933472
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 18754076672,
+      "task_physical_footprint_bytes": 16073635688
+    }
+  },
+  "reduction": {
+    "metal_allocated_bytes": 0.1437814726272294,
+    "task_physical_footprint_bytes": 0.11003294968562516
+  },
+  "scope": "Eight actual WorldSense/Galaxy calls over two fresh workers and one warmup+one followup each. Maximum post-decode snapshots, not peaks/free system RAM. No timing or speed promotion from this resource feasibility check."
+}
+WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
+Launchd Cantor LRPC ready 88458
+Validated WS10, four files online, camera unmounted, benchmark404 PASS

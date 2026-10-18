@@ -1,0 +1,85 @@
+{
+  "build_corpus.py": {
+    "seed_sha256": "a9ffec33d039dd3a3d093ed672813eb74ea51181b65f02e08d9e3296d059f7f1",
+    "current_sha256": "479a9f04534159ce12111524cbde89b6ef1eb4c15a7262a5389af7b574084b8f",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed_sha256": "5ed7ffc092ad695a1f01b1a21c807d7f47f716741342d84aa9696eed2d6b786c",
+    "current_sha256": "e31934277aed05d0e432d607815cb99d74732579595d933ec4dd28c0e6ee1cd9",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed_sha256": "2367871159cb42ab53ca59b67c29aa3e6de5def6c787553bb5756395c5381e3e",
+    "current_sha256": "199bdfa6b040f2c3399ed18a9aabae422b7e6c3e0ec31b28157b84ac19cd6d65",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed_sha256": "d7932edd8854f74eb5f344505d5005234cfa9b240af8cf174d3bc91ba9e967a5",
+    "current_sha256": "d7932edd8854f74eb5f344505d5005234cfa9b240af8cf174d3bc91ba9e967a5",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed_sha256": "85d97e600698f34e81458c32910f8d76fb2d6ab299420b9625da63a65387db2d",
+    "current_sha256": "9fad3a7d50121aff37b35790cac41653c4ee34de320b521615ac40db604f2d68",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed_sha256": "102b05e1b5721dc3e218212ae681d5088d0e26715e590fa8f5fb327a1f316a6f",
+    "current_sha256": "7293e93beb675d25a77b02ffc9166c27fc8660fdcafcf25d58b69344af889cde",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed_sha256": "37b4d34d7f10d369bec76f96ca068150b96a5cf22c78b10af7af5f96c13e9d44",
+    "current_sha256": "b359b9747664023bfd0c1a2cb0b72d29ff5c5f04620b533df07a09d0355eb313",
+    "operations": [
+      {
+        "before": "mode=sys.argv[1];assert mode in ['off','primary','on','compat56'];expected=0 if mode=='off'else 1;vector_expected=mode in ['on','compat56'];core_expected=False;compat_expected=mode=='compat56';selective_expected=mode in ['primary','on']",
+        "after": "mode=sys.argv[1];assert mode in ['off','primary','on','compat56','control','raw-borrow'];profile={'control':'on','raw-borrow':'off'}.get(mode,mode);expected=0 if profile=='off'else 1;vector_expected=profile in ['on','compat56'];core_expected=False;compat_expected=profile=='compat56';selective_expected=profile in ['primary','on'];owned_expected=mode in ['primary','on','raw-borrow']",
+        "count": 1
+      },
+      {
+        "before": " assert ('primary_full_isolated_library'in call['backend'])==vector_expected",
+        "after": " assert ('owned_storage_local'in call['backend'])==owned_expected\n assert ('primary_full_isolated_library'in call['backend'])==vector_expected",
+        "count": 1
+      }
+    ],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "primary_corpus_test.cpp": {
+    "seed_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "current_sha256": "c25acaf0a06fed6d5353b97d30767596c20a7675751d47d844c3e2611c9c7e4d",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "direct_float_corpus_test.cpp": {
+    "seed_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+    "current_sha256": "9b968e0c1b8f9831c1a21c3e8d9c892815aa1a89dae7b09b80ef4f4456413c11",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "request_session_guard.py": {
+    "seed_sha256": "7e90fb65fd14b07b7357c45be8b42a38fa45716c9907b2e492c17cbc0c1e0f6d",
+    "current_sha256": "39d8742d40e855dc395ff050cc3253a884e36e14cb5c2b2a98e95414e5968b6a",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  },
+  "request_full_session_guard.py": {
+    "seed_sha256": "e03649870f873bc918339d29d31963b2828b9a0e4cf0339d38797b65565964cc",
+    "current_sha256": "8f4beaa4784deffe3036933f0ef57e9687b4147abecaf6179d73858aa1218610",
+    "operations": [],
+    "original_math_oracles_bounds_control_flow_inverse_exact": true
+  }
+}

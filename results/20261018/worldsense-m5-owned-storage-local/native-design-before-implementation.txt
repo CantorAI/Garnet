@@ -1,0 +1,108 @@
+WS-M5-77: externally retained selected-buffer locals, prospective design
+Written BEFORE inference source, builds, native/model/GPU execution or timing.
+Full goal ACTIVE. WS76 is a published diagnostic, WS74/75 remain rejected.
+Keep deployed validated WS10 until every original promotion gate passes.
+
+Measured evidence and hypothesis
+Existing uninstrumented current host ARM64 objects contain additional buffer
+local objc_retain/objc_release operations in PrepareBF16BodyShape and
+EncodeBF16MatVec. This is static compiler evidence, not runtime counts, cost,
+GPU ISA or a demonstrated speed bottleneck. WS76 sparse GPU diagnostics do not
+identify this as a cause. The proposal tests a distinct host overhead method.
+
+Exact method and ownership contract
+Seed the full unchanged 1721-file WS74 minimal FULL/vector/selective-defaults
+closure, not the WS75 raw-wide-head profile or instrumented WS76 sources.
+Add default-OFF Metal-only GARNET_METAL_OWNED_STORAGE_LOCAL. At only the two
+existing selected-buffer blocks, ON first determines the same primary bool,
+then initializes storage once to the same raw buffer/packed payload using
+Clang objc_externally_retained. Unsupported compiler attribute fails compile.
+The attribute implicitly makes the local const, omits local init/destruction
+ownership operations and requires a separate owner; no unsafe_unretained,
+weak local or lifetime extension is substituted. OFF keeps original block
+byte-exact. Keep shared_ptr w lexical lifetime and all ARC strong Impl fields.
+No owner reset, const_cast, field pointer mutation/export or owner-container
+change. Default retained ordinary command buffers/resource bindings remain.
+The private Impl is defined only in metal_context.mm. Its three relevant
+buffer pointer assignments occur during one UploadBF16 construction before
+return; other reviewed accesses only read/query/bind/describe. Existing graph
+mutex serialization remains, without claiming arbitrary concurrent API safety.
+Prepare early return/throw and Encode validation/unwind must retain old results.
+Queued GPU lifetime relies on unchanged command retention after method return,
+as it already does when callers drop weight handles. Test that contract.
+
+Allowed source delta: metal_context.mm two guarded selection blocks plus an
+attribute-availability compile guard; cmake/GarnetMetal.cmake option/definition
+and test registration; src/entry/metal_main.cpp exact active-profile diagnostic;
+one new test2026/metal/owned_storage_local_test.cpp. No shader/program literal,
+codec, FP32 accumulation, weights/precision, matrix shape, allocation, packing,
+graph/session source, image path, CUDA, XLang3 engine or original test edits.
+All 201 packed matrices and original five GPU readers stay unchanged. No cache,
+FP16 math, answer reuse, approximation or speculative decoding. No CPU inference.
+
+Eight frozen build roles
+OFF: original raw; PRIMARY: old primary/selective profile plus new flag ON;
+ON/FAULT: old minimal FULL/vector/selective with new flag ON; COMPAT56 and
+COMPAT56-FAULT: exact old compatibility flags with new flag OFF; CONTROL:
+matched old minimal WS74 profile with new flag OFF; RAW-BORROW: OFF plus new
+flag ON. Existing six-role route/program/complete-word proof remains. New
+raw-borrow/control prove flag-on raw and matched packed behavior. No future
+unproven feature-on compatibility deployment is authorized by feature-off tests.
+PRIMARY new flag is tested against old original source/words/states/programs.
+Actual CPU objects OFF versus RAW-BORROW and CONTROL versus ON must demonstrate
+removal of the selected-local ownership calls, not just profile strings or
+different whole-function counts. Retained shared_ptr lifetime must remain in
+compiled host functions through last use. If compiler output is unchanged or
+ownership cannot be established, stop before learned/timing; no no-op trial.
+
+Native and learned correctness before actual timing
+All original nine CTests per eight roles, original 186 complete FP32 streams,
+20 core-isolation records/432804 exact words per role, original actual MAIN/
+prefill/empty CORE program strings and route counters. No weakened tolerances.
+Add per-role binary-fraction complete-output lifetime test for raw and packed:
+alias after source release before Prepare/Encode; precommit last-owner release;
+postFlush last-owner release; same-device other-context ownership; invalid
+shape/active-Prepare throws; abort after flushed work/owner release and recovery;
+all live-weight logical counters restored. Do not use retainCount instrumentation.
+Inspect and independently recompute complete outputs and counters, not summaries.
+Preserve original full learned 16-check seed74 suite, all 201 matrices through
+five independent GPU readers EACH 4200857600 words, raw245 HOST1724383232,
+direct546 HOST334609152, 32 VLM/28 text full layer states/tokens, generic versus
+resident/shared routes, 64 private steps, numerical/lifecycle/fault/late/capacity/
+vision/prefix/4GiB COMPAT and all original error cases. Extend exact raw/control
+model states for flag isolation; freeze planned commands/inputs/helpers before
+dispatch. No timing before native/full-learned independent audit succeeds.
+
+Original performance gates IN ORDER, unchanged
+Actual candidate-only functional4 (not speed eligible) -> resource8 with >=10%
+sampled Metal allocation and >=5% sampled task-footprint reductions versus
+fresh RAW -> deployed WS10 speed20 ALL-model TTFT/total/deriveddecode and whole
+Skill within2% -> matched PRIMARY20 >=5%4B TTFT gain plus ALL2% model/wall/Metal/
+footprint preservation -> RAW20 -> full mirrored48 EACH pair independently
+passing -> canonical integration/rebuild/fullproof plus48actualWS10 and app
+smoke. Original quantitative/golden/metric/threshold ASTs unchanged outside
+strict new native-route admission, existing configuration rejection tests kept.
+No pooled rescue/favorable subset/retry of unchanged rejected settings/memory
+override. A valid failure stops later stages. Publish all first/warm/failure
+methods, raw metrics, exact source/build/model/input/runtime/guard identities
+and keep/reject decisions. First invocation is not claimed hardware-cold.
+
+Operational settings and limits
+Real WorldSense/Galaxy native Garnet C++/Metal/XLang3 pipeline only for speed.
+Fixed recorded video-derived images, normal VLM64/text16 chunks, capacity2048,
+image65536/shared vision/text prefix64tokens/2entries/64MiB; original stops,
+limits and Skill thresholds. Proof512VLM/256text explicitly separate. Each
+request fresh native image preparation/encoding. No camera/external CPython
+image prep or inference. CPython orchestration/audits only. Never inspect/read/
+copy/hash/archive protected work/worldsense-http.py; use runpy login/request
+only. Four normal file sources restored in finally. No consumed source/helper/
+model/library/guard mutations during live jobs. During timing only bounded
+observations; no build/other GPU/hash sweep/archive copy. Same process handle
+polled to authoritative terminal; timeout is not termination.
+Derived decode=(generated-1)/(total-TTFT), includes host/stop/postloop/possible
+EOS/telemetry, not pureGPU. GPU spans overlap; medians nonadditive. Memory
+snapshots not peaks/free/unique/physical residency. No clock/thermal/ISA/register/
+occupancy/causal/significance claim. Fixed-frame Skills exclude live decoding/
+scheduling, persisted events/shared states/dedup, retrieval/ranking/navigation/
+independent-camera fusion. Second-car source correlated. M5/24GiB/4B objective
+distinct from unmet M4mini/small-model/vLLM handover. Full goal stays ACTIVE.

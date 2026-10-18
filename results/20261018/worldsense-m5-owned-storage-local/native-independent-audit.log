@@ -1,0 +1,28 @@
+{
+  "utc": "2026-10-18T19:29:13.475095+00:00",
+  "observed_native_session": 18779,
+  "observed_exit_code": 0,
+  "source_files": 1722,
+  "exact_four_path_source_inverse": true,
+  "all_other1718files_unchanged": true,
+  "native_tests_pass": 80,
+  "CTest_names": [
+    "metal_inventory_reference",
+    "metal_matrix_metadata_reference",
+    "metal_memory_stats_reference",
+    "metal_mps_matmul_reference",
+    "metal_owned_storage_local_lifetime",
+    "metal_prefix_copy_reference",
+    "metal_primary_core_isolation_reference",
+    "metal_primary_projection_reference",
+    "metal_primary_storage_reference",
+    "metal_request_residency_reference"
+  ],
+  "original186_complete_projection_streams_exact_all_eight": true,
+  "original20records432804words_and_zero_CORE_all_eight": true,
+  "new120records4487160words_per_role_all_bytes_independently_exact": true,
+  "all_actual_programs_exact_seed74": true,
+  "source_and_all_explicit_native_inputs_binaries_unchanged": true,
+  "no_model_or_speed_result_yet": true,
+  "promotion": false
+}

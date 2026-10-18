@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T18:57:27.422074+00:00
+Generated UTC: 2026-10-18T20:00:07.688360+00:00
 
-Base HEAD at generation: `530a4ff8cb696fb48f54e79c05b0666f4e3aff0e`. Reports indexed: **267**.
+Base HEAD at generation: `16c46957f528392d44c96b68ff9d0a1d1b1e7b67`. Reports indexed: **268**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -251,6 +251,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |
 | [results/20261018/worldsense-m5-minimal-full-prefill](../../../results/20261018/worldsense-m5-minimal-full-prefill/README.md) | worldsense-m5-minimal-full-prefill |
 | [results/20261018/worldsense-m5-minimal-selective-defaults](../../../results/20261018/worldsense-m5-minimal-selective-defaults/README.md) | worldsense-m5-minimal-selective-defaults |
+| [results/20261018/worldsense-m5-owned-storage-local](../../../results/20261018/worldsense-m5-owned-storage-local/README.md) | worldsense-m5-owned-storage-local |
 | [results/20261018/worldsense-m5-packed-request-residency](../../../results/20261018/worldsense-m5-packed-request-residency/README.md) | worldsense-m5-packed-request-residency |
 | [results/20261018/worldsense-m5-paired-gpu-profile](../../../results/20261018/worldsense-m5-paired-gpu-profile/README.md) | WS-M5-76 — Paired legacy/current GPU-pass diagnostic |
 | [results/20261018/worldsense-m5-primary-core-isolation](../../../results/20261018/worldsense-m5-primary-core-isolation/README.md) | worldsense-m5-primary-core-isolation |
