@@ -1,0 +1,28 @@
+{
+  "experiment": "WS-M5-59",
+  "observed_utc": "2026-10-18T02:15:58.315075+00:00",
+  "terminal_session": 84370,
+  "terminal_exit_code": 0,
+  "stage_outcomes": {
+    "resource": true,
+    "production-speed": false
+  },
+  "decision": "reject",
+  "promote": false,
+  "prototype_confirmed": false,
+  "reason": "Companion text derived decode regression 22.019270% exceeds original 2% preservation gate.",
+  "no_unchanged_retry": true,
+  "later_stages_dispatched": false,
+  "normal_restored": {
+    "utc": "2026-10-18T02:15:18.237387+00:00",
+    "pid": 17943,
+    "WS10_sha256": "dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72",
+    "four_file_sources_online": true,
+    "no_camera": true,
+    "valid_benchmark_post_http404": true,
+    "commit": "1a4d89b635e37c7e32a00b1673232f242ef166f1",
+    "repository_clean": true
+  },
+  "source_manifest_sha256": "1359e3e68d2311cb0ab86e7d13f79d41ed999e0f82daa88774cd95536c617cbc",
+  "canonical_archive_pending": true
+}

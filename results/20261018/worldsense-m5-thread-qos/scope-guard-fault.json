@@ -1,0 +1,191 @@
+{
+  "all_native_scope_getters_nested_idempotent_finally_contract_pass": true,
+  "records": [
+    {
+      "case": "initial",
+      "value": {
+        "active_scopes": 0,
+        "class_main": 33,
+        "class_self": 33,
+        "end_errors": 0,
+        "ends": 0,
+        "get_status": 0,
+        "pid": 13118,
+        "relative_priority": 0,
+        "requested_class": 33,
+        "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+        "start_attempts": 0,
+        "starts": 0,
+        "thread_id": 5302847,
+        "thread_id_status": 0
+      }
+    },
+    {
+      "case": "outer_open",
+      "value": {
+        "after": null,
+        "api_end_status": 0,
+        "api_start_accepted": true,
+        "before": {
+          "active_scopes": 0,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 0,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 0,
+          "starts": 0,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "closed": false,
+        "during": {
+          "active_scopes": 1,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 0,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 1,
+          "starts": 1,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "relative_priority": 0,
+        "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+        "target_class": 25
+      }
+    },
+    {
+      "case": "inner_open",
+      "value": {
+        "after": null,
+        "api_end_status": 0,
+        "api_start_accepted": true,
+        "before": {
+          "active_scopes": 1,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 0,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 1,
+          "starts": 1,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "closed": false,
+        "during": {
+          "active_scopes": 2,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 0,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 2,
+          "starts": 2,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "relative_priority": 0,
+        "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+        "target_class": 25
+      }
+    },
+    {
+      "case": "explicit_idempotent_close",
+      "value": {
+        "after": {
+          "active_scopes": 0,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 2,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 2,
+          "starts": 2,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "api_end_status": 0,
+        "api_start_accepted": true,
+        "before": {
+          "active_scopes": 0,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 0,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 0,
+          "starts": 0,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "closed": true,
+        "during": {
+          "active_scopes": 1,
+          "class_main": 33,
+          "class_self": 33,
+          "end_errors": 0,
+          "ends": 0,
+          "get_status": 0,
+          "pid": 13118,
+          "relative_priority": 0,
+          "requested_class": 33,
+          "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+          "start_attempts": 1,
+          "starts": 1,
+          "thread_id": 5302847,
+          "thread_id_status": 0
+        },
+        "relative_priority": 0,
+        "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+        "target_class": 25
+      }
+    },
+    {
+      "case": "exception_finally",
+      "value": {
+        "active_scopes": 0,
+        "class_main": 33,
+        "class_self": 33,
+        "end_errors": 0,
+        "ends": 3,
+        "get_status": 0,
+        "pid": 13118,
+        "relative_priority": 0,
+        "requested_class": 33,
+        "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+        "start_attempts": 3,
+        "starts": 3,
+        "thread_id": 5302847,
+        "thread_id_status": 0
+      }
+    }
+  ],
+  "scope": "No model/GPU/performance proof. Requested getters do not expose overrides."
+}

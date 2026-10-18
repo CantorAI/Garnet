@@ -1,0 +1,16 @@
+{
+  "stage_calls": {
+    "resource": 8,
+    "production-speed": 20,
+    "functional-correctness-only": 4
+  },
+  "returned_model_calls": 32,
+  "native_requests": 16,
+  "worker_attempts": 5,
+  "scope": "Every returned WorldSense frame/query model call, first/warm/failure, once. The candidate-only functional cohort is retained separately and ineligible for speed. Native correctness calls remain raw JSON, not performance samples.",
+  "decode": "(generated-1)/(total-TTFT), includes host/stop/possible extraEOS/IPC/snapshot costs, not pureGPU.",
+  "memory": "Snapshots, not peaks/freeRAM/residency. Candidate controlled-process sums per category may double-count shared pages. Recommended device limit is not summed. LegacyWS10 missing memory stays unavailable, never zero. Per-process sample rows exist only for candidate gateway telemetry; RAW control process identity follows its cohort manifest.",
+  "parent_wall": "One native Skill request row only; do not sum parent wall across model phases.",
+  "initialization": "First request preserved separately; old ready API lacks separate worker/model-load decomposition. No hardware-cold claim.",
+  "confirmation": "Resource/screen exports are not independent confirmation or proof of isolated mechanism causality."
+}

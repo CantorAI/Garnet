@@ -1,0 +1,417 @@
+{
+  "all_cases_pass": true,
+  "records": [
+    {
+      "case": "spawn_identity_and_failed_model_load",
+      "status": {
+        "ready": false,
+        "model_id": "bad-text",
+        "error_message": "failed to open /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/invalid-text-fixture\\vocab.json"
+      },
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "d34e50015398249349804d819bd5f7369ff15329c4d2eb136add0770753deb9",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 0,
+            "inference_qos_mode": "user_initiated",
+            "last_inference_qos": null,
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+              "parent_pid": 13516,
+              "pid": 13517,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+              "steady_seconds": 177235.481671708,
+              "watch_parent_pid": 13516,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 13516
+      }
+    },
+    {
+      "case": "single_failed_infer_no_retry",
+      "response": {
+        "error_message": "Model is not loaded: bad-text",
+        "model_id": "bad-text",
+        "native_worker_call_index": 1,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 1,
+            "get_status": 0,
+            "pid": 13517,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 1,
+            "starts": 1,
+            "thread_id": 5307119,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 0,
+            "get_status": 0,
+            "pid": 13517,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 0,
+            "starts": 0,
+            "thread_id": 5307119,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 1,
+              "get_status": 0,
+              "pid": 13517,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 1,
+              "starts": 1,
+              "thread_id": 5307119,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 13517,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5307119,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 13517,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 1,
+              "starts": 1,
+              "thread_id": 5307119,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "status": "error"
+      },
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "d34e50015398249349804d819bd5f7369ff15329c4d2eb136add0770753deb9",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 1,
+            "inference_qos_mode": "user_initiated",
+            "last_inference_qos": {
+              "after": {
+                "active_scopes": 0,
+                "class_main": 33,
+                "class_self": 21,
+                "end_errors": 0,
+                "ends": 1,
+                "get_status": 0,
+                "pid": 13517,
+                "relative_priority": 0,
+                "requested_class": 21,
+                "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                "start_attempts": 1,
+                "starts": 1,
+                "thread_id": 5307119,
+                "thread_id_status": 0
+              },
+              "before": {
+                "active_scopes": 0,
+                "class_main": 33,
+                "class_self": 21,
+                "end_errors": 0,
+                "ends": 0,
+                "get_status": 0,
+                "pid": 13517,
+                "relative_priority": 0,
+                "requested_class": 21,
+                "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                "start_attempts": 0,
+                "starts": 0,
+                "thread_id": 5307119,
+                "thread_id_status": 0
+              },
+              "mode": "user_initiated",
+              "scope": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 1,
+                  "get_status": 0,
+                  "pid": 13517,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 1,
+                  "starts": 1,
+                  "thread_id": 5307119,
+                  "thread_id_status": 0
+                },
+                "api_end_status": 0,
+                "api_start_accepted": true,
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 0,
+                  "get_status": 0,
+                  "pid": 13517,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 0,
+                  "starts": 0,
+                  "thread_id": 5307119,
+                  "thread_id_status": 0
+                },
+                "closed": true,
+                "during": {
+                  "active_scopes": 1,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 0,
+                  "get_status": 0,
+                  "pid": 13517,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 1,
+                  "starts": 1,
+                  "thread_id": 5307119,
+                  "thread_id_status": 0
+                },
+                "relative_priority": 0,
+                "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                "target_class": 25
+              }
+            },
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+              "parent_pid": 13516,
+              "pid": 13517,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+              "steady_seconds": 177235.482566833,
+              "watch_parent_pid": 13516,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 13516
+      }
+    },
+    {
+      "case": "state_error_recovery_close_serve_policy",
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "d34e50015398249349804d819bd5f7369ff15329c4d2eb136add0770753deb9",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 1,
+            "inference_qos_mode": "user_initiated",
+            "last_inference_qos": {
+              "after": {
+                "active_scopes": 0,
+                "class_main": 33,
+                "class_self": 21,
+                "end_errors": 0,
+                "ends": 1,
+                "get_status": 0,
+                "pid": 13517,
+                "relative_priority": 0,
+                "requested_class": 21,
+                "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                "start_attempts": 1,
+                "starts": 1,
+                "thread_id": 5307119,
+                "thread_id_status": 0
+              },
+              "before": {
+                "active_scopes": 0,
+                "class_main": 33,
+                "class_self": 21,
+                "end_errors": 0,
+                "ends": 0,
+                "get_status": 0,
+                "pid": 13517,
+                "relative_priority": 0,
+                "requested_class": 21,
+                "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                "start_attempts": 0,
+                "starts": 0,
+                "thread_id": 5307119,
+                "thread_id_status": 0
+              },
+              "mode": "user_initiated",
+              "scope": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 1,
+                  "get_status": 0,
+                  "pid": 13517,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 1,
+                  "starts": 1,
+                  "thread_id": 5307119,
+                  "thread_id_status": 0
+                },
+                "api_end_status": 0,
+                "api_start_accepted": true,
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 0,
+                  "get_status": 0,
+                  "pid": 13517,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 0,
+                  "starts": 0,
+                  "thread_id": 5307119,
+                  "thread_id_status": 0
+                },
+                "closed": true,
+                "during": {
+                  "active_scopes": 1,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 0,
+                  "get_status": 0,
+                  "pid": 13517,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 1,
+                  "starts": 1,
+                  "thread_id": 5307119,
+                  "thread_id_status": 0
+                },
+                "relative_priority": 0,
+                "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                "target_class": 25
+              }
+            },
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+              "parent_pid": 13516,
+              "pid": 13517,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+              "steady_seconds": 177235.498606291,
+              "watch_parent_pid": 13516,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 13516
+      }
+    },
+    {
+      "case": "owned_peer_exit_no_hidden_retry_explicit_restart",
+      "info": {
+        "calls": 0,
+        "children": [
+          {
+            "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+            "birth_id": "9e974b8e63115eb5d873abde6d5253c66ccf545bcff7701b8b7806bbe4e3468",
+            "clock_epoch_metadata_enabled": true,
+            "infer_calls": 0,
+            "inference_qos_mode": "user_initiated",
+            "last_inference_qos": null,
+            "models": [],
+            "protocol": "garnet-native-text-v1",
+            "support": {
+              "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+              "parent_pid": 13516,
+              "pid": 13518,
+              "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+              "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+              "steady_seconds": 177235.680270875,
+              "watch_parent_pid": 13516,
+              "watchdog_active": true
+            }
+          }
+        ],
+        "enabled": true,
+        "parent_pid": 13516
+      }
+    },
+    {
+      "case": "bounded_explicit_shutdown",
+      "info": {
+        "calls": 0,
+        "children": [],
+        "enabled": true,
+        "parent_pid": 13516
+      }
+    }
+  ],
+  "scope": "Native parent/RAW worker plumbing and failed setup only. No loaded model/output/state/performance proof."
+}

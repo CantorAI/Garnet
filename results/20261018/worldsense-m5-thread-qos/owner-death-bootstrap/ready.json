@@ -1,0 +1,36 @@
+{
+  "parent_pid": 14652,
+  "case": "bootstrap",
+  "status": {
+    "ready": false,
+    "model_id": "invalid-text",
+    "error_message": "failed to open /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/invalid-text-fixture\\vocab.json"
+  },
+  "identity": {
+    "calls": 0,
+    "children": [
+      {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "birth_id": "11c18283871538b9219e9969cb06412c488a66568607c57dffe1690dee56f690",
+        "clock_epoch_metadata_enabled": true,
+        "infer_calls": 0,
+        "inference_qos_mode": "user_initiated",
+        "last_inference_qos": null,
+        "models": [],
+        "protocol": "garnet-native-text-v1",
+        "support": {
+          "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+          "parent_pid": 14652,
+          "pid": 14653,
+          "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+          "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+          "steady_seconds": 177910.368509166,
+          "watch_parent_pid": 14652,
+          "watchdog_active": true
+        }
+      }
+    ],
+    "enabled": true,
+    "parent_pid": 14652
+  }
+}

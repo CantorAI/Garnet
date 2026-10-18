@@ -1,0 +1,44 @@
+{
+  "utc": "2026-10-18T01:32:27.253640+00:00",
+  "commands": [
+    [
+      "/usr/bin/c++",
+      "-std=c++17",
+      "-O2",
+      "-I",
+      "/Users/shawn/CantorAI/xlang3/sdk",
+      "-I",
+      "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source/third_party",
+      "-dynamiclib",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos_probe.cpp",
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+      "-o",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/libqos_probe.dylib"
+    ],
+    [
+      "/usr/bin/c++",
+      "-std=c++17",
+      "-O2",
+      "-I",
+      "/Users/shawn/CantorAI/xlang3/sdk",
+      "-I",
+      "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source/third_party",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos_client.cpp",
+      "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-Wl,-rpath,/Users/shawn/CantorAI/out/build/macos-arm64-release/bin",
+      "-o",
+      "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos-client"
+    ]
+  ],
+  "files": {
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos_probe.cpp": "29b57b0423121c46408e6a9534d9d91645955b9525163ed596199b9fc12175f6",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos_client.cpp": "44a7dd5fd3cbbac9b892fbda7429a6bee0b1baa43b0fcfb89fcbfc34ca7de716",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos_server.py": "569ad9d626e7656eafc6d9222d93034c0118cc0b5b08490b1de8bd418204f705",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/feasibility.py": "8ee5f4276e421069e2d37aa073926194c0d6d51bd752cf75f017ddc01f423ea5",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/libqos_probe.dylib": "b7f9ee027e48a9e6b706adbee7f0496647795da2e8220978ff24238f2006dcdd",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-thread-qos/qos-client": "c60d88177771af09fcf22f11ce38717f4f8a209531a4bc41e0160a15ab203e7d",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/xlang3": "176fc13fa357cf68c6c3d233401b044bced0c77e73c80b7afc646f4e3f3d0048",
+    "/Users/shawn/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib": "915788e16ee1f11caac38e6f48c367ebfc9284c1ad53f053fce207d6832b656b"
+  }
+}

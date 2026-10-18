@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-18T01:30:38.837137+00:00",
+  "WS10_source_files": 1706,
+  "RAW58_source_files": 1723,
+  "all_common_original_bool_flags_equal": true,
+  "all_three_original_raw_literal_blocks_exact": true,
+  "body_shape_header_exact": true,
+  "assembled_WS10_MAIN_equals_actual_RAW58_MAIN": true,
+  "main_bytes": 63741,
+  "main_sha256": "75ccbf102d42d76a8ec3c7f394f5c729c7f89260cd0ed82af946bbed3ccca1b4",
+  "references": {
+    "old_source": "/Users/shawn/CantorAI/out/research/worldsense-prefix-cache/source",
+    "new_source": "/Users/shawn/CantorAI/out/research/worldsense-native-text-worker/source",
+    "actual_constructor_dump": "/Users/shawn/CantorAI/Garnet/results/20261017/worldsense-m5-native-text-worker/actual-off-main-program.metal"
+  },
+  "scope": "Read-only source composition and actual new constructor dump identity. Old source composition follows its pinned build flags. No new GPU job, binary-ISA identity, runtime resource identity, scheduling equivalence or causal/performance claim."
+}

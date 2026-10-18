@@ -1,0 +1,4719 @@
+{
+  "records": [
+    {
+      "kind": "cpp_default_invalid",
+      "call": {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "generated_tokens": 8,
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "model_id": "Qwen3-1.7B",
+        "native_first_token_monotonic": 177595.652306291,
+        "native_model_start_monotonic": 177594.909533125,
+        "native_worker_call_index": 1,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 1,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 1,
+            "starts": 1,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 0,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 0,
+            "starts": 0,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 1,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 1,
+              "starts": 1,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 1,
+              "starts": 1,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "serving_configuration": {
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false,
+          "text_prefix_cache": true
+        },
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "timings": {
+          "decode_fused_head_dispatches": 0,
+          "decode_profile": {
+            "encode_ms": 2.643208,
+            "gpu_ms": 223.34404167486355,
+            "prepare_ms": 0.7757510000000001,
+            "wait_ms": 225.308624
+          },
+          "decode_seconds": 0.229542708984809,
+          "executed_prefill_tokens": 137,
+          "host_input_seconds": 0.0014903339906595647,
+          "initialization_memory": {
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 3684204544,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3645423616,
+              "task_physical_footprint_bytes": 3648507168,
+              "task_resident_bytes": 3688284160,
+              "task_virtual_bytes": 453147656192
+            },
+            "before": {
+              "metal_allocated_bytes": 81920,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 26263552,
+              "task_physical_footprint_bytes": 26755648,
+              "task_resident_bytes": 46514176,
+              "task_virtual_bytes": 445953572864
+            },
+            "other_model_ids_at_start": []
+          },
+          "input_tokens": 137,
+          "lazy_default_planned_slots": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_retired_bytes": 0,
+          "memory_after_decode": {
+            "cohort_process_count": 2,
+            "metal_allocated_bytes": 4060463104,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 14180,
+            "process_samples": [
+              {
+                "metal_allocated_bytes": 81920,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14180,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177595.883122666,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 22544384,
+                "task_physical_footprint_bytes": 23020072,
+                "task_resident_bytes": 42860544,
+                "task_virtual_bytes": 445945921536
+              },
+              {
+                "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+                "metal_allocated_bytes": 4060381184,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14181,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177595.883823791,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 3656089600,
+                "task_physical_footprint_bytes": 3916025480,
+                "task_resident_bytes": 3700719616,
+                "task_virtual_bytes": 453530173440
+              }
+            ],
+            "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+            "snapshot_monotonic": 177595.883122666,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3678633984,
+            "task_physical_footprint_bytes": 3939045552,
+            "task_resident_bytes": 3743580160,
+            "task_virtual_bytes": 899476094976
+          },
+          "memory_after_input": {
+            "metal_allocated_bytes": 3684204544,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3647029248,
+            "task_physical_footprint_bytes": 3650309696,
+            "task_resident_bytes": 3691151360,
+            "task_virtual_bytes": 453147656192
+          },
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 4060512256,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3655909376,
+            "task_physical_footprint_bytes": 3912863368,
+            "task_resident_bytes": 3700408320,
+            "task_virtual_bytes": 453530304512
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 3684204544,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3645784064,
+            "task_physical_footprint_bytes": 3648867616,
+            "task_resident_bytes": 3688644608,
+            "task_virtual_bytes": 453147656192
+          },
+          "native_gateway": {
+            "child": {
+              "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+              "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+              "clock_epoch_metadata_enabled": true,
+              "infer_calls": 1,
+              "inference_qos_mode": "user_initiated",
+              "last_inference_qos": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 1,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 1,
+                  "starts": 1,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 0,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 0,
+                  "starts": 0,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "mode": "user_initiated",
+                "scope": {
+                  "after": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 1,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 1,
+                    "starts": 1,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "api_end_status": 0,
+                  "api_start_accepted": true,
+                  "before": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 0,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 0,
+                    "starts": 0,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "closed": true,
+                  "during": {
+                    "active_scopes": 1,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 0,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 1,
+                    "starts": 1,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "relative_priority": 0,
+                  "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                  "target_class": 25
+                }
+              },
+              "models": [
+                "Qwen3-1.7B"
+              ],
+              "protocol": "garnet-native-text-v1",
+              "support": {
+                "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+                "parent_pid": 14180,
+                "pid": 14181,
+                "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+                "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+                "steady_seconds": 177595.883908208,
+                "watch_parent_pid": 14180,
+                "watchdog_active": true
+              }
+            },
+            "first_token_monotonic": 177595.652306291,
+            "gateway_started_monotonic": 177594.882174958,
+            "model_memory_after_decode": {
+              "metal_allocated_bytes": 4060381184,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3656024064,
+              "task_physical_footprint_bytes": 3915959944,
+              "task_resident_bytes": 3700654080,
+              "task_virtual_bytes": 453530173440
+            },
+            "model_started_monotonic": 177594.909533125,
+            "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker; native_text_worker_user_initiated_qos",
+            "parent_pid": 14180,
+            "parent_primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_after": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_before": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_thread_qos_requested": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 33,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14180,
+              "relative_priority": 0,
+              "requested_class": 33,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314367,
+              "thread_id_status": 0
+            },
+            "process_count": 2,
+            "raw_model_total_seconds": 0.9730193330033217,
+            "raw_model_ttft_seconds": 0.7427992080338299,
+            "route": "native_lrpc_raw_text",
+            "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+          },
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "prefill_compile_ms": 28.824540999999996,
+          "prefill_profile": {
+            "encode_ms": 5.070125,
+            "gpu_ms": 668.4876249928493,
+            "prepare_ms": 1.063834,
+            "wait_ms": 691.804917
+          },
+          "prefill_seconds": 0.7373271660180762,
+          "prefix_cache_capture_seconds": 0.0030273330048657954,
+          "prefix_cache_captured_tokens": 64,
+          "prefix_cache_hit": false,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_cache_restore_seconds": 0,
+          "prefix_cache_restored_tokens": 0,
+          "prefix_capture_native_bytes": 14680064,
+          "prefix_restore_native_bytes": 0,
+          "primary_encoded_delta": {
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "prefill_encoded": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_after": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_before": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "reset_seconds": 0.003955666004912928,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source/runtime/metal_serving.py"
+        },
+        "total_seconds": 1.0018740419764072,
+        "ttft_seconds": 0.7701313330035191
+      },
+      "state": {
+        "model_id": "Qwen3-1.7B",
+        "states": [
+          [
+            {
+              "values": 262144,
+              "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+            },
+            {
+              "values": 262144,
+              "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+            },
+            {
+              "values": 262144,
+              "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+            },
+            {
+              "values": 262144,
+              "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+            },
+            {
+              "values": 262144,
+              "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+            },
+            {
+              "values": 262144,
+              "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+            },
+            {
+              "values": 262144,
+              "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+            },
+            {
+              "values": 262144,
+              "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+            },
+            {
+              "values": 262144,
+              "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+            },
+            {
+              "values": 262144,
+              "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+            },
+            {
+              "values": 262144,
+              "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+            },
+            {
+              "values": 262144,
+              "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+            },
+            {
+              "values": 262144,
+              "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+            },
+            {
+              "values": 262144,
+              "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+            },
+            {
+              "values": 262144,
+              "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+            },
+            {
+              "values": 262144,
+              "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+            },
+            {
+              "values": 262144,
+              "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+            },
+            {
+              "values": 262144,
+              "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+            },
+            {
+              "values": 262144,
+              "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+            },
+            {
+              "values": 262144,
+              "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+            },
+            {
+              "values": 262144,
+              "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+            },
+            {
+              "values": 262144,
+              "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+            },
+            {
+              "values": 262144,
+              "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+            },
+            {
+              "values": 262144,
+              "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+            },
+            {
+              "values": 262144,
+              "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+            },
+            {
+              "values": 262144,
+              "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+            },
+            {
+              "values": 262144,
+              "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+            },
+            {
+              "values": 262144,
+              "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+            },
+            {
+              "values": 262144,
+              "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+            }
+          ]
+        ],
+        "pid": 14181,
+        "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090"
+      }
+    },
+    {
+      "kind": "native_None",
+      "call": {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "generated_tokens": 8,
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "model_id": "Qwen3-1.7B",
+        "native_first_token_monotonic": 177601.748347125,
+        "native_model_start_monotonic": 177601.351677708,
+        "native_worker_call_index": 2,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 2,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 2,
+            "starts": 2,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 1,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 1,
+            "starts": 1,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 2,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 2,
+              "starts": 2,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 1,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 1,
+              "starts": 1,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 1,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 2,
+              "starts": 2,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "serving_configuration": {
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false,
+          "text_prefix_cache": true
+        },
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "timings": {
+          "decode_fused_head_dispatches": 0,
+          "decode_profile": {
+            "encode_ms": 3.1895,
+            "gpu_ms": 223.54641661513597,
+            "prepare_ms": 1.105208,
+            "wait_ms": 225.50596
+          },
+          "decode_seconds": 0.23110512501443736,
+          "executed_prefill_tokens": 73,
+          "host_input_seconds": 0.0009650420106481761,
+          "initialization_memory": {
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 3684204544,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3645423616,
+              "task_physical_footprint_bytes": 3648507168,
+              "task_resident_bytes": 3688284160,
+              "task_virtual_bytes": 453147656192
+            },
+            "before": {
+              "metal_allocated_bytes": 81920,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 26263552,
+              "task_physical_footprint_bytes": 26755648,
+              "task_resident_bytes": 46514176,
+              "task_virtual_bytes": 445953572864
+            },
+            "other_model_ids_at_start": []
+          },
+          "input_tokens": 137,
+          "lazy_default_planned_slots": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_retired_bytes": 0,
+          "memory_after_decode": {
+            "cohort_process_count": 2,
+            "metal_allocated_bytes": 4060446720,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 14180,
+            "process_samples": [
+              {
+                "metal_allocated_bytes": 65536,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14180,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177601.980861416,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 23871488,
+                "task_physical_footprint_bytes": 24363584,
+                "task_resident_bytes": 44187648,
+                "task_virtual_bytes": 445949542400
+              },
+              {
+                "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+                "metal_allocated_bytes": 4060381184,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14181,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177601.981911,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 3722084352,
+                "task_physical_footprint_bytes": 3923431240,
+                "task_resident_bytes": 3766796288,
+                "task_virtual_bytes": 453533794304
+              }
+            ],
+            "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+            "snapshot_monotonic": 177601.980861416,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3745955840,
+            "task_physical_footprint_bytes": 3947794824,
+            "task_resident_bytes": 3810983936,
+            "task_virtual_bytes": 899483336704
+          },
+          "memory_after_input": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3722018816,
+            "task_physical_footprint_bytes": 3891203912,
+            "task_resident_bytes": 3766730752,
+            "task_virtual_bytes": 453533794304
+          },
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 4060512256,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3722051584,
+            "task_physical_footprint_bytes": 3923529544,
+            "task_resident_bytes": 3766763520,
+            "task_virtual_bytes": 453533925376
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3721969664,
+            "task_physical_footprint_bytes": 3891154760,
+            "task_resident_bytes": 3766681600,
+            "task_virtual_bytes": 453533794304
+          },
+          "native_gateway": {
+            "child": {
+              "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+              "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+              "clock_epoch_metadata_enabled": true,
+              "infer_calls": 2,
+              "inference_qos_mode": "user_initiated",
+              "last_inference_qos": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 2,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 2,
+                  "starts": 2,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 1,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 1,
+                  "starts": 1,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "mode": "user_initiated",
+                "scope": {
+                  "after": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 2,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 2,
+                    "starts": 2,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "api_end_status": 0,
+                  "api_start_accepted": true,
+                  "before": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 1,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 1,
+                    "starts": 1,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "closed": true,
+                  "during": {
+                    "active_scopes": 1,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 1,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 2,
+                    "starts": 2,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "relative_priority": 0,
+                  "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                  "target_class": 25
+                }
+              },
+              "models": [
+                "Qwen3-1.7B"
+              ],
+              "protocol": "garnet-native-text-v1",
+              "support": {
+                "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+                "parent_pid": 14180,
+                "pid": 14181,
+                "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+                "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+                "steady_seconds": 177601.982036625,
+                "watch_parent_pid": 14180,
+                "watchdog_active": true
+              }
+            },
+            "first_token_monotonic": 177601.748347125,
+            "gateway_started_monotonic": 177601.350738291,
+            "model_memory_after_decode": {
+              "metal_allocated_bytes": 4060381184,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3722051584,
+              "task_physical_footprint_bytes": 3923398472,
+              "task_resident_bytes": 3766763520,
+              "task_virtual_bytes": 453533794304
+            },
+            "model_started_monotonic": 177601.351677708,
+            "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker; native_text_worker_user_initiated_qos",
+            "parent_pid": 14180,
+            "parent_primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_after": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_before": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_thread_qos_requested": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 33,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14180,
+              "relative_priority": 0,
+              "requested_class": 33,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314367,
+              "thread_id_status": 0
+            },
+            "process_count": 2,
+            "raw_model_total_seconds": 0.6285277089918964,
+            "raw_model_ttft_seconds": 0.3966938339872286,
+            "route": "native_lrpc_raw_text",
+            "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+          },
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "encode_ms": 2.8203750000000003,
+            "gpu_ms": 349.72237498732284,
+            "prepare_ms": 0.6513329999999999,
+            "wait_ms": 383.96000000000004
+          },
+          "prefill_seconds": 0.38976329198339954,
+          "prefix_cache_capture_seconds": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_hit": true,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_cache_restore_seconds": 0.00034945900551974773,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_capture_native_bytes": 0,
+          "prefix_restore_native_bytes": 14680064,
+          "primary_encoded_delta": {
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "prefill_encoded": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_after": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_before": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "reset_seconds": 0.005941082985373214,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source/runtime/metal_serving.py"
+        },
+        "total_seconds": 0.6315217090013903,
+        "ttft_seconds": 0.3976088339986745
+      },
+      "state": {
+        "model_id": "Qwen3-1.7B",
+        "states": [
+          [
+            {
+              "values": 262144,
+              "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+            },
+            {
+              "values": 262144,
+              "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+            },
+            {
+              "values": 262144,
+              "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+            },
+            {
+              "values": 262144,
+              "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+            },
+            {
+              "values": 262144,
+              "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+            },
+            {
+              "values": 262144,
+              "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+            },
+            {
+              "values": 262144,
+              "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+            },
+            {
+              "values": 262144,
+              "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+            },
+            {
+              "values": 262144,
+              "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+            },
+            {
+              "values": 262144,
+              "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+            },
+            {
+              "values": 262144,
+              "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+            },
+            {
+              "values": 262144,
+              "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+            },
+            {
+              "values": 262144,
+              "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+            },
+            {
+              "values": 262144,
+              "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+            },
+            {
+              "values": 262144,
+              "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+            },
+            {
+              "values": 262144,
+              "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+            },
+            {
+              "values": 262144,
+              "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+            },
+            {
+              "values": 262144,
+              "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+            },
+            {
+              "values": 262144,
+              "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+            },
+            {
+              "values": 262144,
+              "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+            },
+            {
+              "values": 262144,
+              "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+            },
+            {
+              "values": 262144,
+              "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+            },
+            {
+              "values": 262144,
+              "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+            },
+            {
+              "values": 262144,
+              "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+            },
+            {
+              "values": 262144,
+              "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+            },
+            {
+              "values": 262144,
+              "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+            },
+            {
+              "values": 262144,
+              "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+            },
+            {
+              "values": 262144,
+              "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+            },
+            {
+              "values": 262144,
+              "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+            }
+          ]
+        ],
+        "pid": 14181,
+        "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090"
+      }
+    },
+    {
+      "kind": "native_number",
+      "call": {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "generated_tokens": 8,
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "model_id": "Qwen3-1.7B",
+        "native_first_token_monotonic": 177607.710843625,
+        "native_model_start_monotonic": 177607.336973375,
+        "native_worker_call_index": 3,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 3,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 3,
+            "starts": 3,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 2,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 2,
+            "starts": 2,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 3,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 3,
+              "starts": 3,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 2,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 2,
+              "starts": 2,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 2,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 3,
+              "starts": 3,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "serving_configuration": {
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false,
+          "text_prefix_cache": true
+        },
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "timings": {
+          "decode_fused_head_dispatches": 0,
+          "decode_profile": {
+            "encode_ms": 2.6662519999999996,
+            "gpu_ms": 220.58604159974493,
+            "prepare_ms": 0.766292,
+            "wait_ms": 222.573874
+          },
+          "decode_seconds": 0.2267425829777494,
+          "executed_prefill_tokens": 73,
+          "host_input_seconds": 0.0007939170172903687,
+          "initialization_memory": {
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 3684204544,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3645423616,
+              "task_physical_footprint_bytes": 3648507168,
+              "task_resident_bytes": 3688284160,
+              "task_virtual_bytes": 453147656192
+            },
+            "before": {
+              "metal_allocated_bytes": 81920,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 26263552,
+              "task_physical_footprint_bytes": 26755648,
+              "task_resident_bytes": 46514176,
+              "task_virtual_bytes": 445953572864
+            },
+            "other_model_ids_at_start": []
+          },
+          "input_tokens": 137,
+          "lazy_default_planned_slots": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_retired_bytes": 0,
+          "memory_after_decode": {
+            "cohort_process_count": 2,
+            "metal_allocated_bytes": 4060446720,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 14180,
+            "process_samples": [
+              {
+                "metal_allocated_bytes": 65536,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14180,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177607.938710541,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 24051712,
+                "task_physical_footprint_bytes": 24543808,
+                "task_resident_bytes": 44384256,
+                "task_virtual_bytes": 445949542400
+              },
+              {
+                "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+                "metal_allocated_bytes": 4060381184,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14181,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177607.939378041,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 3726327808,
+                "task_physical_footprint_bytes": 3927691104,
+                "task_resident_bytes": 3771039744,
+                "task_virtual_bytes": 453537988608
+              }
+            ],
+            "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+            "snapshot_monotonic": 177607.938710541,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3750379520,
+            "task_physical_footprint_bytes": 3952234912,
+            "task_resident_bytes": 3815424000,
+            "task_virtual_bytes": 899487531008
+          },
+          "memory_after_input": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726311424,
+            "task_physical_footprint_bytes": 3895512928,
+            "task_resident_bytes": 3771023360,
+            "task_virtual_bytes": 453537988608
+          },
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 4060512256,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726311424,
+            "task_physical_footprint_bytes": 3927805792,
+            "task_resident_bytes": 3771023360,
+            "task_virtual_bytes": 453538119680
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726311424,
+            "task_physical_footprint_bytes": 3895512928,
+            "task_resident_bytes": 3771023360,
+            "task_virtual_bytes": 453537988608
+          },
+          "native_gateway": {
+            "child": {
+              "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+              "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+              "clock_epoch_metadata_enabled": true,
+              "infer_calls": 3,
+              "inference_qos_mode": "user_initiated",
+              "last_inference_qos": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 3,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 3,
+                  "starts": 3,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 2,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 2,
+                  "starts": 2,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "mode": "user_initiated",
+                "scope": {
+                  "after": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 3,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 3,
+                    "starts": 3,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "api_end_status": 0,
+                  "api_start_accepted": true,
+                  "before": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 2,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 2,
+                    "starts": 2,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "closed": true,
+                  "during": {
+                    "active_scopes": 1,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 2,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 3,
+                    "starts": 3,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "relative_priority": 0,
+                  "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                  "target_class": 25
+                }
+              },
+              "models": [
+                "Qwen3-1.7B"
+              ],
+              "protocol": "garnet-native-text-v1",
+              "support": {
+                "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+                "parent_pid": 14180,
+                "pid": 14181,
+                "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+                "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+                "steady_seconds": 177607.939458,
+                "watch_parent_pid": 14180,
+                "watchdog_active": true
+              }
+            },
+            "first_token_monotonic": 177607.710843625,
+            "gateway_started_monotonic": 177607.336314375,
+            "model_memory_after_decode": {
+              "metal_allocated_bytes": 4060381184,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3726327808,
+              "task_physical_footprint_bytes": 3927691104,
+              "task_resident_bytes": 3771039744,
+              "task_virtual_bytes": 453537988608
+            },
+            "model_started_monotonic": 177607.336973375,
+            "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker; native_text_worker_user_initiated_qos",
+            "parent_pid": 14180,
+            "parent_primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_after": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_before": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_thread_qos_requested": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 33,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14180,
+              "relative_priority": 0,
+              "requested_class": 33,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314367,
+              "thread_id_status": 0
+            },
+            "process_count": 2,
+            "raw_model_total_seconds": 0.6012072079756763,
+            "raw_model_ttft_seconds": 0.3738924580102321,
+            "route": "native_lrpc_raw_text",
+            "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+          },
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "encode_ms": 2.436917,
+            "gpu_ms": 334.51620835694484,
+            "prepare_ms": 0.5760000000000001,
+            "wait_ms": 365.733751
+          },
+          "prefill_seconds": 0.3708201670087874,
+          "prefix_cache_capture_seconds": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_hit": true,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_cache_restore_seconds": 0.00044025000534020364,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_capture_native_bytes": 0,
+          "prefix_restore_native_bytes": 14680064,
+          "primary_encoded_delta": {
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "prefill_encoded": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_after": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_before": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "reset_seconds": 0.002256165986182168,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source/runtime/metal_serving.py"
+        },
+        "total_seconds": 0.6032482080045156,
+        "ttft_seconds": 0.3745292500243522
+      },
+      "state": {
+        "model_id": "Qwen3-1.7B",
+        "states": [
+          [
+            {
+              "values": 262144,
+              "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+            },
+            {
+              "values": 262144,
+              "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+            },
+            {
+              "values": 262144,
+              "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+            },
+            {
+              "values": 262144,
+              "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+            },
+            {
+              "values": 262144,
+              "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+            },
+            {
+              "values": 262144,
+              "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+            },
+            {
+              "values": 262144,
+              "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+            },
+            {
+              "values": 262144,
+              "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+            },
+            {
+              "values": 262144,
+              "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+            },
+            {
+              "values": 262144,
+              "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+            },
+            {
+              "values": 262144,
+              "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+            },
+            {
+              "values": 262144,
+              "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+            },
+            {
+              "values": 262144,
+              "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+            },
+            {
+              "values": 262144,
+              "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+            },
+            {
+              "values": 262144,
+              "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+            },
+            {
+              "values": 262144,
+              "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+            },
+            {
+              "values": 262144,
+              "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+            },
+            {
+              "values": 262144,
+              "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+            },
+            {
+              "values": 262144,
+              "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+            },
+            {
+              "values": 262144,
+              "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+            },
+            {
+              "values": 262144,
+              "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+            },
+            {
+              "values": 262144,
+              "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+            },
+            {
+              "values": 262144,
+              "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+            },
+            {
+              "values": 262144,
+              "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+            },
+            {
+              "values": 262144,
+              "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+            },
+            {
+              "values": 262144,
+              "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+            },
+            {
+              "values": 262144,
+              "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+            },
+            {
+              "values": 262144,
+              "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+            },
+            {
+              "values": 262144,
+              "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+            }
+          ]
+        ],
+        "pid": 14181,
+        "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090"
+      }
+    },
+    {
+      "kind": "native_dict",
+      "call": {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "generated_tokens": 8,
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "model_id": "Qwen3-1.7B",
+        "native_first_token_monotonic": 177613.893094916,
+        "native_model_start_monotonic": 177613.518783708,
+        "native_worker_call_index": 4,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 4,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 4,
+            "starts": 4,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 3,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 3,
+            "starts": 3,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 4,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 4,
+              "starts": 4,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 3,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 3,
+              "starts": 3,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 3,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 4,
+              "starts": 4,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "serving_configuration": {
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false,
+          "text_prefix_cache": true
+        },
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "timings": {
+          "decode_fused_head_dispatches": 0,
+          "decode_profile": {
+            "encode_ms": 3.1026239999999996,
+            "gpu_ms": 222.0652499818243,
+            "prepare_ms": 0.894917,
+            "wait_ms": 224.0545
+          },
+          "decode_seconds": 0.22892845899332315,
+          "executed_prefill_tokens": 73,
+          "host_input_seconds": 0.0009335829818155617,
+          "initialization_memory": {
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 3684204544,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3645423616,
+              "task_physical_footprint_bytes": 3648507168,
+              "task_resident_bytes": 3688284160,
+              "task_virtual_bytes": 453147656192
+            },
+            "before": {
+              "metal_allocated_bytes": 81920,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 26263552,
+              "task_physical_footprint_bytes": 26755648,
+              "task_resident_bytes": 46514176,
+              "task_virtual_bytes": 445953572864
+            },
+            "other_model_ids_at_start": []
+          },
+          "input_tokens": 137,
+          "lazy_default_planned_slots": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_retired_bytes": 0,
+          "memory_after_decode": {
+            "cohort_process_count": 2,
+            "metal_allocated_bytes": 4060446720,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 14180,
+            "process_samples": [
+              {
+                "metal_allocated_bytes": 65536,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14180,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177614.123165666,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 24920064,
+                "task_physical_footprint_bytes": 25412160,
+                "task_resident_bytes": 45252608,
+                "task_virtual_bytes": 445949542400
+              },
+              {
+                "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+                "metal_allocated_bytes": 4060381184,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14181,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177614.124013791,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 3726327808,
+                "task_physical_footprint_bytes": 3927691104,
+                "task_resident_bytes": 3771039744,
+                "task_virtual_bytes": 453537988608
+              }
+            ],
+            "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+            "snapshot_monotonic": 177614.123165666,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3751247872,
+            "task_physical_footprint_bytes": 3953103264,
+            "task_resident_bytes": 3816292352,
+            "task_virtual_bytes": 899487531008
+          },
+          "memory_after_input": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726327808,
+            "task_physical_footprint_bytes": 3895529312,
+            "task_resident_bytes": 3771039744,
+            "task_virtual_bytes": 453537988608
+          },
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 4060512256,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726327808,
+            "task_physical_footprint_bytes": 3927822176,
+            "task_resident_bytes": 3771039744,
+            "task_virtual_bytes": 453538119680
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726327808,
+            "task_physical_footprint_bytes": 3895529312,
+            "task_resident_bytes": 3771039744,
+            "task_virtual_bytes": 453537988608
+          },
+          "native_gateway": {
+            "child": {
+              "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+              "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+              "clock_epoch_metadata_enabled": true,
+              "infer_calls": 4,
+              "inference_qos_mode": "user_initiated",
+              "last_inference_qos": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 4,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 4,
+                  "starts": 4,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 3,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 3,
+                  "starts": 3,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "mode": "user_initiated",
+                "scope": {
+                  "after": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 4,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 4,
+                    "starts": 4,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "api_end_status": 0,
+                  "api_start_accepted": true,
+                  "before": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 3,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 3,
+                    "starts": 3,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "closed": true,
+                  "during": {
+                    "active_scopes": 1,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 3,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 4,
+                    "starts": 4,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "relative_priority": 0,
+                  "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                  "target_class": 25
+                }
+              },
+              "models": [
+                "Qwen3-1.7B"
+              ],
+              "protocol": "garnet-native-text-v1",
+              "support": {
+                "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+                "parent_pid": 14180,
+                "pid": 14181,
+                "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+                "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+                "steady_seconds": 177614.124156083,
+                "watch_parent_pid": 14180,
+                "watchdog_active": true
+              }
+            },
+            "first_token_monotonic": 177613.893094916,
+            "gateway_started_monotonic": 177613.517836666,
+            "model_memory_after_decode": {
+              "metal_allocated_bytes": 4060381184,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3726327808,
+              "task_physical_footprint_bytes": 3927691104,
+              "task_resident_bytes": 3771039744,
+              "task_virtual_bytes": 453537988608
+            },
+            "model_started_monotonic": 177613.518783708,
+            "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker; native_text_worker_user_initiated_qos",
+            "parent_pid": 14180,
+            "parent_primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_after": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_before": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_thread_qos_requested": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 33,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14180,
+              "relative_priority": 0,
+              "requested_class": 33,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314367,
+              "thread_id_status": 0
+            },
+            "process_count": 2,
+            "raw_model_total_seconds": 0.6038505409960635,
+            "raw_model_ttft_seconds": 0.3743355830083601,
+            "route": "native_lrpc_raw_text",
+            "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+          },
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "encode_ms": 3.198458,
+            "gpu_ms": 335.213125043083,
+            "prepare_ms": 0.756542,
+            "wait_ms": 362.21108300000003
+          },
+          "prefill_seconds": 0.36849745802464895,
+          "prefix_cache_capture_seconds": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_hit": true,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_cache_restore_seconds": 0.0003317499940749258,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_capture_native_bytes": 0,
+          "prefix_restore_native_bytes": 14680064,
+          "primary_encoded_delta": {
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "prefill_encoded": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_after": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_before": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "reset_seconds": 0.004880167020019144,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source/runtime/metal_serving.py"
+        },
+        "total_seconds": 0.6064423749921843,
+        "ttft_seconds": 0.37525825001648627
+      },
+      "state": {
+        "model_id": "Qwen3-1.7B",
+        "states": [
+          [
+            {
+              "values": 262144,
+              "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+            },
+            {
+              "values": 262144,
+              "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+            },
+            {
+              "values": 262144,
+              "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+            },
+            {
+              "values": 262144,
+              "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+            },
+            {
+              "values": 262144,
+              "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+            },
+            {
+              "values": 262144,
+              "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+            },
+            {
+              "values": 262144,
+              "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+            },
+            {
+              "values": 262144,
+              "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+            },
+            {
+              "values": 262144,
+              "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+            },
+            {
+              "values": 262144,
+              "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+            },
+            {
+              "values": 262144,
+              "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+            },
+            {
+              "values": 262144,
+              "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+            },
+            {
+              "values": 262144,
+              "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+            },
+            {
+              "values": 262144,
+              "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+            },
+            {
+              "values": 262144,
+              "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+            },
+            {
+              "values": 262144,
+              "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+            },
+            {
+              "values": 262144,
+              "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+            },
+            {
+              "values": 262144,
+              "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+            },
+            {
+              "values": 262144,
+              "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+            },
+            {
+              "values": 262144,
+              "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+            },
+            {
+              "values": 262144,
+              "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+            },
+            {
+              "values": 262144,
+              "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+            },
+            {
+              "values": 262144,
+              "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+            },
+            {
+              "values": 262144,
+              "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+            },
+            {
+              "values": 262144,
+              "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+            },
+            {
+              "values": 262144,
+              "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+            },
+            {
+              "values": 262144,
+              "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+            },
+            {
+              "values": 262144,
+              "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+            },
+            {
+              "values": 262144,
+              "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+            }
+          ]
+        ],
+        "pid": 14181,
+        "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090"
+      }
+    },
+    {
+      "kind": "native_empty_bytes",
+      "call": {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "generated_tokens": 8,
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "model_id": "Qwen3-1.7B",
+        "native_first_token_monotonic": 177620.294268666,
+        "native_model_start_monotonic": 177619.922710958,
+        "native_worker_call_index": 5,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 5,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 5,
+            "starts": 5,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 4,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 4,
+            "starts": 4,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 5,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 5,
+              "starts": 5,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 4,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 4,
+              "starts": 4,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 4,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 5,
+              "starts": 5,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "serving_configuration": {
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false,
+          "text_prefix_cache": true
+        },
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "timings": {
+          "decode_fused_head_dispatches": 0,
+          "decode_profile": {
+            "encode_ms": 3.0422930000000004,
+            "gpu_ms": 222.56354169803672,
+            "prepare_ms": 0.880167,
+            "wait_ms": 224.5
+          },
+          "decode_seconds": 0.22925062497961335,
+          "executed_prefill_tokens": 73,
+          "host_input_seconds": 0.0008376250043511391,
+          "initialization_memory": {
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 3684204544,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3645423616,
+              "task_physical_footprint_bytes": 3648507168,
+              "task_resident_bytes": 3688284160,
+              "task_virtual_bytes": 453147656192
+            },
+            "before": {
+              "metal_allocated_bytes": 81920,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 26263552,
+              "task_physical_footprint_bytes": 26755648,
+              "task_resident_bytes": 46514176,
+              "task_virtual_bytes": 445953572864
+            },
+            "other_model_ids_at_start": []
+          },
+          "input_tokens": 137,
+          "lazy_default_planned_slots": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_retired_bytes": 0,
+          "memory_after_decode": {
+            "cohort_process_count": 2,
+            "metal_allocated_bytes": 4060446720,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 14180,
+            "process_samples": [
+              {
+                "metal_allocated_bytes": 65536,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14180,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177620.524689083,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 25133056,
+                "task_physical_footprint_bytes": 25625152,
+                "task_resident_bytes": 45465600,
+                "task_virtual_bytes": 445949542400
+              },
+              {
+                "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+                "metal_allocated_bytes": 4060381184,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14181,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177620.525495791,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 3726344192,
+                "task_physical_footprint_bytes": 3927707488,
+                "task_resident_bytes": 3771056128,
+                "task_virtual_bytes": 453537988608
+              }
+            ],
+            "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+            "snapshot_monotonic": 177620.524689083,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3751477248,
+            "task_physical_footprint_bytes": 3953332640,
+            "task_resident_bytes": 3816521728,
+            "task_virtual_bytes": 899487531008
+          },
+          "memory_after_input": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726327808,
+            "task_physical_footprint_bytes": 3895529312,
+            "task_resident_bytes": 3771039744,
+            "task_virtual_bytes": 453537988608
+          },
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 4060512256,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726327808,
+            "task_physical_footprint_bytes": 3927822176,
+            "task_resident_bytes": 3771039744,
+            "task_virtual_bytes": 453538119680
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726327808,
+            "task_physical_footprint_bytes": 3895529312,
+            "task_resident_bytes": 3771039744,
+            "task_virtual_bytes": 453537988608
+          },
+          "native_gateway": {
+            "child": {
+              "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+              "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+              "clock_epoch_metadata_enabled": true,
+              "infer_calls": 5,
+              "inference_qos_mode": "user_initiated",
+              "last_inference_qos": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 5,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 5,
+                  "starts": 5,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 4,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 4,
+                  "starts": 4,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "mode": "user_initiated",
+                "scope": {
+                  "after": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 5,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 5,
+                    "starts": 5,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "api_end_status": 0,
+                  "api_start_accepted": true,
+                  "before": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 4,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 4,
+                    "starts": 4,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "closed": true,
+                  "during": {
+                    "active_scopes": 1,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 4,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 5,
+                    "starts": 5,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "relative_priority": 0,
+                  "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                  "target_class": 25
+                }
+              },
+              "models": [
+                "Qwen3-1.7B"
+              ],
+              "protocol": "garnet-native-text-v1",
+              "support": {
+                "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+                "parent_pid": 14180,
+                "pid": 14181,
+                "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+                "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+                "steady_seconds": 177620.525599291,
+                "watch_parent_pid": 14180,
+                "watchdog_active": true
+              }
+            },
+            "first_token_monotonic": 177620.294268666,
+            "gateway_started_monotonic": 177619.921889791,
+            "model_memory_after_decode": {
+              "metal_allocated_bytes": 4060381184,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3726344192,
+              "task_physical_footprint_bytes": 3927707488,
+              "task_resident_bytes": 3771056128,
+              "task_virtual_bytes": 453537988608
+            },
+            "model_started_monotonic": 177619.922710958,
+            "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker; native_text_worker_user_initiated_qos",
+            "parent_pid": 14180,
+            "parent_primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_after": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_before": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_thread_qos_requested": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 33,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14180,
+              "relative_priority": 0,
+              "requested_class": 33,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314367,
+              "thread_id_status": 0
+            },
+            "process_count": 2,
+            "raw_model_total_seconds": 0.6014141670020763,
+            "raw_model_ttft_seconds": 0.3715800830104854,
+            "route": "native_lrpc_raw_text",
+            "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+          },
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "encode_ms": 2.599834,
+            "gpu_ms": 335.7812916801777,
+            "prepare_ms": 0.659041,
+            "wait_ms": 361.95262499999995
+          },
+          "prefill_seconds": 0.36703912500524893,
+          "prefix_cache_capture_seconds": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_hit": true,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_cache_restore_seconds": 0.0003029590006917715,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_capture_native_bytes": 0,
+          "prefix_restore_native_bytes": 14680064,
+          "primary_encoded_delta": {
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "prefill_encoded": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_after": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_before": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "reset_seconds": 0.0036809580051340163,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source/runtime/metal_serving.py"
+        },
+        "total_seconds": 0.6038590839889366,
+        "ttft_seconds": 0.37237887500668876
+      },
+      "state": {
+        "model_id": "Qwen3-1.7B",
+        "states": [
+          [
+            {
+              "values": 262144,
+              "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+            },
+            {
+              "values": 262144,
+              "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+            },
+            {
+              "values": 262144,
+              "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+            },
+            {
+              "values": 262144,
+              "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+            },
+            {
+              "values": 262144,
+              "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+            },
+            {
+              "values": 262144,
+              "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+            },
+            {
+              "values": 262144,
+              "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+            },
+            {
+              "values": 262144,
+              "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+            },
+            {
+              "values": 262144,
+              "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+            },
+            {
+              "values": 262144,
+              "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+            },
+            {
+              "values": 262144,
+              "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+            },
+            {
+              "values": 262144,
+              "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+            },
+            {
+              "values": 262144,
+              "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+            },
+            {
+              "values": 262144,
+              "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+            },
+            {
+              "values": 262144,
+              "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+            },
+            {
+              "values": 262144,
+              "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+            },
+            {
+              "values": 262144,
+              "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+            },
+            {
+              "values": 262144,
+              "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+            },
+            {
+              "values": 262144,
+              "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+            },
+            {
+              "values": 262144,
+              "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+            },
+            {
+              "values": 262144,
+              "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+            },
+            {
+              "values": 262144,
+              "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+            },
+            {
+              "values": 262144,
+              "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+            },
+            {
+              "values": 262144,
+              "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+            },
+            {
+              "values": 262144,
+              "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+            },
+            {
+              "values": 262144,
+              "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+            },
+            {
+              "values": 262144,
+              "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+            },
+            {
+              "values": 262144,
+              "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+            },
+            {
+              "values": 262144,
+              "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+            }
+          ]
+        ],
+        "pid": 14181,
+        "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090"
+      }
+    },
+    {
+      "kind": "original_empty_string",
+      "call": {
+        "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+        "generated_token_ids": [
+          4913,
+          36734,
+          788,
+          830,
+          11,
+          330,
+          19895,
+          788
+        ],
+        "generated_tokens": 8,
+        "image_preprocess_backend": "",
+        "image_preprocess_seconds": 0,
+        "input_prompt_sha256": "d7896a195a322e07b55da41e14b42cac2e8f1874fc7aac2d1fc116c96d7220f2",
+        "model_id": "Qwen3-1.7B",
+        "native_first_token_monotonic": 177626.912162791,
+        "native_model_start_monotonic": 177626.525355708,
+        "native_worker_call_index": 6,
+        "native_worker_qos": {
+          "after": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 6,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 6,
+            "starts": 6,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "before": {
+            "active_scopes": 0,
+            "class_main": 33,
+            "class_self": 21,
+            "end_errors": 0,
+            "ends": 5,
+            "get_status": 0,
+            "pid": 14181,
+            "relative_priority": 0,
+            "requested_class": 21,
+            "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+            "start_attempts": 5,
+            "starts": 5,
+            "thread_id": 5314377,
+            "thread_id_status": 0
+          },
+          "mode": "user_initiated",
+          "scope": {
+            "after": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 6,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 6,
+              "starts": 6,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "api_end_status": 0,
+            "api_start_accepted": true,
+            "before": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 5,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 5,
+              "starts": 5,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "closed": true,
+            "during": {
+              "active_scopes": 1,
+              "class_main": 33,
+              "class_self": 21,
+              "end_errors": 0,
+              "ends": 5,
+              "get_status": 0,
+              "pid": 14181,
+              "relative_priority": 0,
+              "requested_class": 21,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 6,
+              "starts": 6,
+              "thread_id": 5314377,
+              "thread_id_status": 0
+            },
+            "relative_priority": 0,
+            "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+            "target_class": 25
+          }
+        },
+        "serving_configuration": {
+          "capacity": 256,
+          "image_pixels": 65536,
+          "prefill_chunk": 16,
+          "requested_output_limit": 8,
+          "share_vision_weights": false,
+          "text_prefix_cache": true
+        },
+        "status": "ok",
+        "text": "{\"matched\": true, \"reason\":",
+        "timings": {
+          "decode_fused_head_dispatches": 0,
+          "decode_profile": {
+            "encode_ms": 3.7514979999999998,
+            "gpu_ms": 228.39445830322802,
+            "prepare_ms": 1.026292,
+            "wait_ms": 230.58591700000002
+          },
+          "decode_seconds": 0.23715274999267422,
+          "executed_prefill_tokens": 73,
+          "host_input_seconds": 0.0009338749805465341,
+          "initialization_memory": {
+            "after_decoder_ready": {
+              "metal_allocated_bytes": 3684204544,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3645423616,
+              "task_physical_footprint_bytes": 3648507168,
+              "task_resident_bytes": 3688284160,
+              "task_virtual_bytes": 453147656192
+            },
+            "before": {
+              "metal_allocated_bytes": 81920,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 26263552,
+              "task_physical_footprint_bytes": 26755648,
+              "task_resident_bytes": 46514176,
+              "task_virtual_bytes": 445953572864
+            },
+            "other_model_ids_at_start": []
+          },
+          "input_tokens": 137,
+          "lazy_default_planned_slots": 0,
+          "lazy_default_rehydrated_bytes": 0,
+          "lazy_default_retired_bytes": 0,
+          "memory_after_decode": {
+            "cohort_process_count": 2,
+            "metal_allocated_bytes": 4060446720,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "pid": 14180,
+            "process_samples": [
+              {
+                "metal_allocated_bytes": 65536,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14180,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177627.150690291,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 25313280,
+                "task_physical_footprint_bytes": 25805376,
+                "task_resident_bytes": 45645824,
+                "task_virtual_bytes": 445949542400
+              },
+              {
+                "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+                "metal_allocated_bytes": 4060381184,
+                "metal_recommended_working_set_bytes": 19069665280,
+                "metal_registry_id": 4294968354,
+                "pid": 14181,
+                "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+                "snapshot_monotonic": 177627.151634,
+                "task_compressed_bytes": 0,
+                "task_info_status": 0,
+                "task_internal_bytes": 3726376960,
+                "task_physical_footprint_bytes": 3927740256,
+                "task_resident_bytes": 3771088896,
+                "task_virtual_bytes": 453537988608
+              }
+            ],
+            "scope": "Controlled process-set sums per category; conservative task accounting may double count shared pages. Snapshots, not peaks, unique physical RAM or residency. One parent device recommendation, never summed.",
+            "snapshot_monotonic": 177627.150690291,
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3751690240,
+            "task_physical_footprint_bytes": 3953545632,
+            "task_resident_bytes": 3816734720,
+            "task_virtual_bytes": 899487531008
+          },
+          "memory_after_input": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726360576,
+            "task_physical_footprint_bytes": 3895562080,
+            "task_resident_bytes": 3771072512,
+            "task_virtual_bytes": 453537988608
+          },
+          "memory_after_prefill": {
+            "metal_allocated_bytes": 4060512256,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726360576,
+            "task_physical_footprint_bytes": 3927854944,
+            "task_resident_bytes": 3771072512,
+            "task_virtual_bytes": 453538119680
+          },
+          "memory_before_request": {
+            "metal_allocated_bytes": 4060381184,
+            "metal_recommended_working_set_bytes": 19069665280,
+            "metal_registry_id": 4294968354,
+            "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+            "task_compressed_bytes": 0,
+            "task_info_status": 0,
+            "task_internal_bytes": 3726360576,
+            "task_physical_footprint_bytes": 3895562080,
+            "task_resident_bytes": 3771072512,
+            "task_virtual_bytes": 453537988608
+          },
+          "native_gateway": {
+            "child": {
+              "backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill; dense_prefix_cache; body_shape",
+              "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090",
+              "clock_epoch_metadata_enabled": true,
+              "infer_calls": 6,
+              "inference_qos_mode": "user_initiated",
+              "last_inference_qos": {
+                "after": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 6,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 6,
+                  "starts": 6,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "before": {
+                  "active_scopes": 0,
+                  "class_main": 33,
+                  "class_self": 21,
+                  "end_errors": 0,
+                  "ends": 5,
+                  "get_status": 0,
+                  "pid": 14181,
+                  "relative_priority": 0,
+                  "requested_class": 21,
+                  "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                  "start_attempts": 5,
+                  "starts": 5,
+                  "thread_id": 5314377,
+                  "thread_id_status": 0
+                },
+                "mode": "user_initiated",
+                "scope": {
+                  "after": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 6,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 6,
+                    "starts": 6,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "api_end_status": 0,
+                  "api_start_accepted": true,
+                  "before": {
+                    "active_scopes": 0,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 5,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 5,
+                    "starts": 5,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "closed": true,
+                  "during": {
+                    "active_scopes": 1,
+                    "class_main": 33,
+                    "class_self": 21,
+                    "end_errors": 0,
+                    "ends": 5,
+                    "get_status": 0,
+                    "pid": 14181,
+                    "relative_priority": 0,
+                    "requested_class": 21,
+                    "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+                    "start_attempts": 6,
+                    "starts": 6,
+                    "thread_id": 5314377,
+                    "thread_id_status": 0
+                  },
+                  "relative_priority": 0,
+                  "scope": "Owned native current-thread QoS dependency scope; requested getters do not report the override's effective scheduling.",
+                  "target_class": 25
+                }
+              },
+              "models": [
+                "Qwen3-1.7B"
+              ],
+              "protocol": "garnet-native-text-v1",
+              "support": {
+                "library_path": "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-thread-qos-off/libgarnet.dylib",
+                "parent_pid": 14180,
+                "pid": 14181,
+                "scope": "native process/library identity and common monotonic epoch; not model throughput or physical residency",
+                "source_root": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source",
+                "steady_seconds": 177627.151792541,
+                "watch_parent_pid": 14180,
+                "watchdog_active": true
+              }
+            },
+            "first_token_monotonic": 177626.912162791,
+            "gateway_started_monotonic": 177626.524498833,
+            "model_memory_after_decode": {
+              "metal_allocated_bytes": 4060381184,
+              "metal_recommended_working_set_bytes": 19069665280,
+              "metal_registry_id": 4294968354,
+              "scope": "process Metal device resources and current task; snapshots, not peak or system free RAM",
+              "task_compressed_bytes": 0,
+              "task_info_status": 0,
+              "task_internal_bytes": 3726360576,
+              "task_physical_footprint_bytes": 3927723872,
+              "task_resident_bytes": 3771072512,
+              "task_virtual_bytes": 453537988608
+            },
+            "model_started_monotonic": 177626.525355708,
+            "parent_backend": "Garnet Metal/MPS Apple M5; resident_kv_inplace; attention_prefix; qwen35_4b_wide_prefill cached_matrix_metadata; primary_bf16_blocks; primary_vector_decode; primary_kmajor_decode; primary_u32_metadata; primary_vector_prefill; primary_duo_prefill; primary_prefill_isolated_library; primary_minimal_prefill_library; lazy_resident_defaults; dense_prefix_cache; body_shape; direct_float_weight_upload; primary_vector_prefill_k32_only; wide_primary_storage; primary_full_isolated_library; native_text_worker; native_text_worker_user_initiated_qos",
+            "parent_pid": 14180,
+            "parent_primary_encoded_delta": {
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "prefill_encoded": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_after": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_primary_storage_before": {
+              "active_weights": 0,
+              "allocated_bytes": 0,
+              "decode_encoded": 0,
+              "head_encoded": 0,
+              "metadata_bytes": 0,
+              "original_bytes": 0,
+              "payload_bytes": 0,
+              "prefill_encoded": 0,
+              "uploads": 0,
+              "vector_decode_encoded": 0,
+              "vector_head_encoded": 0
+            },
+            "parent_thread_qos_requested": {
+              "active_scopes": 0,
+              "class_main": 33,
+              "class_self": 33,
+              "end_errors": 0,
+              "ends": 0,
+              "get_status": 0,
+              "pid": 14180,
+              "relative_priority": 0,
+              "requested_class": 33,
+              "scope": "Requested QoS only: public getters do not expose overrides/effective GPU scheduling or frequency.",
+              "start_attempts": 0,
+              "starts": 0,
+              "thread_id": 5314367,
+              "thread_id_status": 0
+            },
+            "process_count": 2,
+            "raw_model_total_seconds": 0.624671583995223,
+            "raw_model_ttft_seconds": 0.3868290829996113,
+            "route": "native_lrpc_raw_text",
+            "timing_scope": "Actual existing first event minus gateway entry; total through routing/IPC/fresh process snapshots, before final response serialization. Raw model times retained; outer Skill includes response serialization."
+          },
+          "prefill_chunk_plan": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "prefill_compile_ms": 0,
+          "prefill_profile": {
+            "encode_ms": 2.715917,
+            "gpu_ms": 340.7919167075306,
+            "prepare_ms": 0.6262490000000001,
+            "wait_ms": 376.88179299999996
+          },
+          "prefill_seconds": 0.38230225001461804,
+          "prefix_cache_capture_seconds": 0,
+          "prefix_cache_captured_tokens": 0,
+          "prefix_cache_hit": true,
+          "prefix_cache_key_sha256": "9cec6c80fdb4526bfac2dc8e9d45e197a9f913c4d3c3ebc53ea25c3f72253496",
+          "prefix_cache_native_bytes": 14680064,
+          "prefix_cache_native_entries": 1,
+          "prefix_cache_restore_seconds": 0.0004539170186035335,
+          "prefix_cache_restored_tokens": 64,
+          "prefix_capture_native_bytes": 0,
+          "prefix_restore_native_bytes": 14680064,
+          "primary_encoded_delta": {
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "prefill_encoded": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_after": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "primary_storage_before": {
+            "active_weights": 0,
+            "allocated_bytes": 0,
+            "decode_encoded": 0,
+            "head_encoded": 0,
+            "metadata_bytes": 0,
+            "original_bytes": 0,
+            "payload_bytes": 0,
+            "prefill_encoded": 0,
+            "uploads": 0,
+            "vector_decode_encoded": 0,
+            "vector_head_encoded": 0
+          },
+          "reset_seconds": 0.003570958011550829,
+          "serving_source": "/Users/shawn/CantorAI/out/research/worldsense-thread-qos/source/runtime/metal_serving.py"
+        },
+        "total_seconds": 0.6274521250161342,
+        "ttft_seconds": 0.3876639580121264
+      },
+      "state": {
+        "model_id": "Qwen3-1.7B",
+        "states": [
+          [
+            {
+              "values": 262144,
+              "sha256": "a74a3abb45e06bd7b2ac9d48973f7027b74df71e7edcd0b4f688d8e76df6b65b"
+            },
+            {
+              "values": 262144,
+              "sha256": "2741dd223898ea634842df53724a4b2acd59991f5448a0af7291dc7dd3c7a701"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6c12a7d0241b0d5d16830d66c4d3ebc40f863a9c6ee1349807ef93f7a2a021d9"
+            },
+            {
+              "values": 262144,
+              "sha256": "59c342ebc14762249f4d41d945e17c17c1c41829aca7a97124d0bd5329da967b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "40ee827eb47b3098069637a0eaad55b62327a5a8f6010e4278033f150c943330"
+            },
+            {
+              "values": 262144,
+              "sha256": "ea2611796111d79f5094e67e27a74bc704e78c391d9c022c9252aba312542c12"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "fd371cdcab9808149860e4c009087dae0f5e7327fe53fd7da54e0eb7d6e9f61e"
+            },
+            {
+              "values": 262144,
+              "sha256": "aa8cdccf1dee200cffaa742b2960e61d97542d5fd0f757732e6d809f0d7011e8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "f8ed4f5599e8985b50de24b2c8778797b126ebc623bb5b10e25800453fb59fa6"
+            },
+            {
+              "values": 262144,
+              "sha256": "78b06e2093e72934b84ba40edf487709f51b14fb697a03ed05c7c81f740e07b1"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a714918d9135b32fb996556fe79a748586b552d23398402dcebfe1728b96d972"
+            },
+            {
+              "values": 262144,
+              "sha256": "bc96f7be979c0be92dca0047bdb4e4b17454d0df229687be668f1510af828bcc"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "6b66fcc868c80c3c4a6e4f8830765fe23dfa2d4cefe10b6e49dbe75378d58324"
+            },
+            {
+              "values": 262144,
+              "sha256": "90eb14970b2b042c97e3c10ed3cc9cf624942a1326191839d279061c29412532"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8266e10daaa8255ace26231bc57d0be2a2433cc3c7b77641002642e54ac4de76"
+            },
+            {
+              "values": 262144,
+              "sha256": "56a02256323333e9eb48bf51be86f7f1e80f1cde7238e3717bdc141faaa786e5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5ae16ccf79ff7e6a08dd1d000036d1d119f7934e3633f3493b5d0e335ec05485"
+            },
+            {
+              "values": 262144,
+              "sha256": "f4970ab178cfd2883472af1310246ef057aa467490197d19e2661ab79eaf44a3"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "c157947740b13eed1c0a63ea218edbe9d02d76b613909c09eeed3ca7ccd78c8a"
+            },
+            {
+              "values": 262144,
+              "sha256": "56e59632b0d79a7bb74ad627938c4d34eaab83edb9f6997416b2726156377834"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "5924bdcfd3d07a0743e510f3dd5e4eb8ba86eee4cf2fa46548273aee0f01a75f"
+            },
+            {
+              "values": 262144,
+              "sha256": "1321c47b55a7f22d6767ce0894fa232e430b03dbcd8a31ba8e25c46726634706"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a854c08ed01aea1d6285219eb2a7b0c78337906c7f6b10d947e8ff7b4400d9bc"
+            },
+            {
+              "values": 262144,
+              "sha256": "d14b101956c0be975f5d09433c5b66ecb4908eee922952d25d84364dcfd799b5"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "106cdc23c2216189e815523db3929849a9014fef8ede317d0bea8386ac2f69d6"
+            },
+            {
+              "values": 262144,
+              "sha256": "05c5f9d788cbf57c4314894de281524e13cb51f3edbff55e008160917532a357"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "03d0765cf44ae9c53bddfff24be2161e0f8d5ec86a75afee95da05537c7e73e5"
+            },
+            {
+              "values": 262144,
+              "sha256": "72e3e572d6c005aa44ab6449b331c53c9c308a97638ce977c3fc593c2bb61bd8"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "09220590456f6d201388f3d9b3cc8c829362a820bc455180e58026176c7b62d0"
+            },
+            {
+              "values": 262144,
+              "sha256": "69f702dc2baa101e09fb1f9153e3b5997e026fc314da6b827daaeed6d48d75db"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "be1b34229d21dd15461bf365d795a1338415dcb8901ab1c1c3ef94cf18154d53"
+            },
+            {
+              "values": 262144,
+              "sha256": "c8d43bc1484924a1028fcab6991b8ca1cdf65a7687505c8f6ae059b38ff34756"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf98078f12356c5984944695546ca1ad55c56be80879b87436aef5ad8dfd59e9"
+            },
+            {
+              "values": 262144,
+              "sha256": "c1e9ea5dd9a204bfe59b8a171684886496bc9f6a4f886d8ede27b6c71efbefa6"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "d16e8278125f0c1f540e9353dc0fab79632db3cebbd2eccca347a086db4029a7"
+            },
+            {
+              "values": 262144,
+              "sha256": "14ac11db6cfd165fef3e360f1b76423ced6bb12a5596c9844c4ec040a7f3ae55"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3df75179449f2caac2083e0319fce165b85fcbb457e0e1a79b38e6bd364d2403"
+            },
+            {
+              "values": 262144,
+              "sha256": "3735c33bca63495c626757e2b2de8b682a60fcebcf433fa5a3446951077ac690"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "43043a72c8ec421c91c7ba253344e8a42b62969c84724ccfe7ec652a9f845e4d"
+            },
+            {
+              "values": 262144,
+              "sha256": "03212276a0644a5191807c00f631717bdb54cd0b38587742406b257fa4e9de51"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "3b14665537da4a02aec049de5634a56fd50d11504ffe0b77ca12b1480beb831d"
+            },
+            {
+              "values": 262144,
+              "sha256": "edbc5d4fc1977c32aec391dd21d50f8be3e393d755e8dd817f5029856e4e148b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "e2a9763090818fceb13f4b8ddd57a072d6e66cc942abd04bee96906034ff16d5"
+            },
+            {
+              "values": 262144,
+              "sha256": "3885d23515cab36e1d39f37f2b9ab824d5472cbaa19c876bb6fe7c4f2408913b"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "4125546a3de3bc97828dd9424b7b62ac9b79e985c5cccffd7658c5d5cf540e58"
+            },
+            {
+              "values": 262144,
+              "sha256": "0e999a8bacef8db05788073938bcf9a8b2ecfbb3e3c3594e8997e4babb7f6d32"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "8498fa38c2e9b2b4898fd65d3878cd2df831af2e33835253aaa510ed56e4845d"
+            },
+            {
+              "values": 262144,
+              "sha256": "f1a81ff4d9ddbee4f52b84e4c7d88db0e1404db3716da4470a8ef62c14f999b4"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "bf997361bfebb0611778cc04f424721d666a1d6e655a1cceb275533a762dfa84"
+            },
+            {
+              "values": 262144,
+              "sha256": "4ce727f6987d90ed9b34229a3c88755ac4656cad7bc4a83afe0386fbf520c43f"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "a1936b65ae1a422a1577eed579ab40d24121ff0c26fc06a79886004d72917161"
+            },
+            {
+              "values": 262144,
+              "sha256": "de845d68131f9671dd069c6c2de9ee490ddd9ece4ead3f8c137c47a544081a1e"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "70b268a700c9399a3d3b627a21583a55e764e78e3e641fb12b4c8f37bc957439"
+            },
+            {
+              "values": 262144,
+              "sha256": "8884105169998b7471dd19cac0467e7b8f2b07c7d51973002a954959db1be969"
+            }
+          ],
+          [
+            {
+              "values": 262144,
+              "sha256": "b9b4a3aacbc05b3d74a9a789bfbf1845ff78d8a1defa0e466005480d6c0d179a"
+            },
+            {
+              "values": 262144,
+              "sha256": "9e75eb08266e7172b88f4e93627773bcc8bc6489949c5fc32af0a354498a8c9d"
+            }
+          ]
+        ],
+        "pid": 14181,
+        "birth_id": "c9deae9989a65ce3d35f71ceb55f38e23d7b85041975c98afb8c0012dcd5a090"
+      }
+    }
+  ],
+  "serve": {
+    "ready": true,
+    "state": "ready",
+    "model_id": "Qwen3-1.7B"
+  },
+  "all_six_Galaxy_absent_image_kinds_exact_native_28layer_state_tokens_profile_no_retry": true,
+  "scope": "FAULT-only C++ constructor hook; absent in measured libraries. Native correctness only, no WorldSense speed claim."
+}

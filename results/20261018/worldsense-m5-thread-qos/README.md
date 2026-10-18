@@ -1,0 +1,28 @@
+# WS-M5-59 — Scoped native text-worker QoS rejected
+
+WS-M5-59: scoped native text-worker QoS — rejected
+2026-10-18T02:15:58.315075+00:00
+
+Decision: reject; no promotion, later-stage dispatch or unchanged retry. WS10 remains selected. The full optimization goal remains active.
+
+Method: prospective design and protocol precede implementation. Immutable WS58 seed, default-OFF GARNET_METAL_NATIVE_TEXT_WORKER_QOS. Parent packed 4B plus owned native XLang3 RAW text worker. Scoped public Apple user-initiated QoS override around child inference; explicit close/finally/destructor cleanup. Six source files changed versus WS58, 1,723 source files total. No model/precision/budget/shader/math/order/CUDA/engine/SDK changes. Native C++/Metal performs images and inference; external CPython orchestrates and audits only. No camera. Accepted override and balanced cleanup establish API use, not effective GPU frequency or a causal speed effect.
+
+Proofs: all four builds, scope unit/SDK guards, original 28 native runs/186 full FP32 projection records, four-role actual shader program identity, full learned weight corpus, VLM/text state-token-prefix-vision-session guards, typed absent-image paths, parent-death/bootstrap/idle/active-infer cleanup, post-fault recovery, inherited-mode checks and ten invalid configurations passed. Separate actual WorldSense functional smoke returned four exact calls; its timing is ineligible for speed.
+
+Resource session 90145 exited 0: eight actual WorldSense/Galaxy calls, fresh RAW control and candidate workers, one first and one followup Skill each. Metal post-request snapshot maxima 21,903,376,384 -> 18,754,797,568 bytes (-14.374856%). Combined parent/worker task footprint 18,055,444,880 -> 16,112,286,408 bytes (-10.762174%). Original 10%/5% gate passed. Snapshots are not peaks, unique physical RAM, free RAM or residency; shared process pages may be counted twice. Device recommendation is counted once. Resource timing is not speed evidence.
+
+Actual WS10 screen session 84370 exited 0: 20 model calls over two fresh workers; first plus four warm identical fixed-frame Skills each. All 20 golden outputs, token IDs, prompts, images, Skill identities, native routing, QoS scopes and source/profile checks passed. Candidate owned one stable child with exactly five text calls and no hidden retry. Eleven stage driver/input files and 1,918 host/build dependency files remained unchanged. Warm per-model medians:
+Qwen3.5-4B: TTFT 24.142501 -> 5.482270 s; total 35.767039 -> 14.770228 s; derived generation 8.000323 -> 10.006690 tokens/s.
+Qwen3-1.7B: TTFT 8.910565 -> 2.388566 s; total 10.163997 -> 3.946281 s; derived generation 27.012859 -> 21.064825 tokens/s.
+Complete native Skill wall: 45.935251 -> 18.698850 s (59.293028% improvement).
+Text derived generation regressed 22.019270%, beyond the original 2% preservation limit. Favorable 4B TTFT/total/generation and Skill wall do not override rejection. No claim that QoS improved or caused the difference versus WS58: no matched WS58 contrast was run. No statistical significance or isolated mechanism claim.
+
+All first and warm records are retained in resource control-1.json/candidate-1.json and production-speed/control-1.json/candidate-1.json. Derived generation=(generated tokens-1)/(total-TTFT), including host/stop/post-loop/possible extra EOS/IPC/snapshot effects; not pure GPU throughput. The old WS10 memory API is unavailable and remains null in the speed screen. Do not divide its speed by a different cohort's memory denominator. Old readiness API lacks separate worker/model-load duration; no hardware-cold claim.
+
+Benchmark scope: actual WorldSense Skill -> Galaxy -> Garnet on fixed video-derived frame, excluding live video decode/scheduling/event persistence/shared-world-state writes/retrieval/ranking. This is not full WorldSense feature coverage. The original M4 Mac mini/small-model/vLLM handover objective remains separate and unmet. The 0.8B ordered vector vision shape constraints do not directly admit the 4B encoder.
+
+Normal service verified after timing: PID 17943, selected WS10 SHA dc3d135d664cde077a4333bfeea47252ff83ac64061c3fea562fdac6ccfdac72, four file sources online, camera absent, valid benchmark POST returns HTTP404. Canonical evidence packaging and independent archive verification remain next; no jobs active.
+
+Prospective design: [native-design-before-implementation.txt](native-design-before-implementation.txt). Raw [resource analysis](resource-analysis.json), [speed analysis](production-speed/analysis.json), and [decision](decision.json). All prior trials remain separate and unchanged.
+
+Posthoc retained-record diagnosis (no new inference or exclusions): text decode-loop medians 1.259224 -> 1.610244 s; GPU spans 1207.028792 -> 1567.437500 ms. Candidate per-call gateway-minus-raw decode interval difference median 3.041980 ms; total boundary difference 3.973708 ms. Differences are formed per call before aggregation. The measured boundary overhead is small relative to the inner decode gap, but it does not establish a shader, scheduling, VM, frequency or residency cause. GPU/wait/encode spans overlap and their separate medians are not additive. No cross-trial causal ratio, un-rejection, timing exclusion or claim of effective QoS from getters.

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T01:24:41.970076+00:00
+Generated UTC: 2026-10-18T02:18:22.295747+00:00
 
-Base HEAD at generation: `91b1eaded0ce26ad4d03210615626f175f095a1c`. Reports indexed: **249**.
+Base HEAD at generation: `1a4d89b635e37c7e32a00b1673232f242ef166f1`. Reports indexed: **250**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -245,6 +245,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261017/worldsense-m5-wide-cached-prefill](../../../results/20261017/worldsense-m5-wide-cached-prefill/README.md) | WS-M5-53 — Wide 4B storage with cached metadata rejected on text decoding |
 | [results/20261017/worldsense-m5-wide-primary-lazy](../../../results/20261017/worldsense-m5-wide-primary-lazy/README.md) | WS-M5-46 — Wide primary weights with global default retirement rejected |
 | [results/20261017/worldsense-m5-wide-storage](../../../results/20261017/worldsense-m5-wide-storage/README.md) | WS-M5-44 — Wide-checkpoint storage rejected by text decoding |
+| [results/20261018/worldsense-m5-thread-qos](../../../results/20261018/worldsense-m5-thread-qos/README.md) | WS-M5-59 — Scoped native text-worker QoS rejected |
 | [test2026/metal/results/20261012/vllm-metal](../../../test2026/metal/results/20261012/vllm-metal/README.md) | vLLM-Metal comparison evidence |
 | [test2026/metal/results/20261012/vllm-metal/lossless-gpu](../../../test2026/metal/results/20261012/vllm-metal/lossless-gpu/README.md) | Exact GPU packing experiments |
 | [test2026/metal/results/20261012/vllm-metal/partial-head](../../../test2026/metal/results/20261012/vllm-metal/partial-head/README.md) | Partial output-head bounds |
