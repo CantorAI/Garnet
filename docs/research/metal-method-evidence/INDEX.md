@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-18T07:34:10.231497+00:00
+Generated UTC: 2026-10-18T08:45:41.533564+00:00
 
-Base HEAD at generation: `a6924be03a4b36a3472677d17f0d16a4f8bdfb5a`. Reports indexed: **256**.
+Base HEAD at generation: `b4c46771465a620966971fb421295eb3d528df58`. Reports indexed: **257**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -248,6 +248,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261018/worldsense-m5-dense-prefetch](../../../results/20261018/worldsense-m5-dense-prefetch/README.md) | WS-M5-60 — Ordered raw dense load lookahead rejected |
 | [results/20261018/worldsense-m5-direct-interleaved-prefill](../../../results/20261018/worldsense-m5-direct-interleaved-prefill/README.md) | WS-M5-64 — Direct interleaved BF16 prefill: rejected |
 | [results/20261018/worldsense-m5-gpu-pass-profile](../../../results/20261018/worldsense-m5-gpu-pass-profile/README.md) | WS-M5-62 — Explicit WorldSense decode GPU-pass diagnostic |
+| [results/20261018/worldsense-m5-sole-dual-decode](../../../results/20261018/worldsense-m5-sole-dual-decode/README.md) | worldsense-m5-sole-dual-decode |
 | [results/20261018/worldsense-m5-sole-interleaved-mlp](../../../results/20261018/worldsense-m5-sole-interleaved-mlp/README.md) | WS-M5-63 — Sole interleaved text MLP weights: rejected |
 | [results/20261018/worldsense-m5-sole-interleaved-text](../../../results/20261018/worldsense-m5-sole-interleaved-text/README.md) | worldsense-m5-sole-interleaved-text |
 | [results/20261018/worldsense-m5-thread-qos](../../../results/20261018/worldsense-m5-thread-qos/README.md) | WS-M5-59 — Scoped native text-worker QoS rejected |

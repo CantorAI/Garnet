@@ -1,0 +1,28 @@
+loading initial cache file /Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-sole-dual-decode/build-profile/MetalWorldSense4BPrefix.cmake
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/shawn/CantorAI/out/build/garnet-metal-worldsense-sole-dual-decode-off
+[  6%] Built target garnet_native_image
+[  9%] Building OBJCXX object CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o
+[ 12%] Linking OBJCXX static library libgarnet_metal.a
+[ 12%] Built target garnet_metal
+[ 19%] Linking OBJCXX executable garnet_memory_stats_test
+[ 19%] Linking CXX executable garnet_inventory_test
+[ 25%] Built target garnet_memory_stats_test
+[ 25%] Built target garnet_inventory_test
+[ 32%] Linking CXX executable garnet_metal_matmul_test
+[ 32%] Linking CXX executable garnet_prefix_copy_test
+[ 35%] Built target garnet_prefix_copy_test
+[ 38%] Built target garnet_metal_matmul_test
+[ 41%] Linking CXX executable garnet_matrix_metadata_test
+[ 45%] Linking CXX shared library libgarnet.dylib
+[ 48%] Built target garnet_matrix_metadata_test
+[ 54%] Linking CXX executable garnet_primary_storage_test
+[ 77%] Built target garnet
+[ 80%] Linking CXX executable garnet_primary_projection_test
+[ 83%] Built target garnet_primary_storage_test
+[ 87%] Built target garnet_primary_projection_test
+[ 90%] Linking CXX executable garnet_sole_interleaved_test
+[ 93%] Linking CXX executable garnet_sole_dual_test
+[ 96%] Built target garnet_sole_interleaved_test
+[100%] Built target garnet_sole_dual_test

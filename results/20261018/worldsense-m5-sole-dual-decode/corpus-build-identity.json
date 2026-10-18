@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-Wno-deprecated-declarations",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-dual-decode/source/src/backends/metal",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-dual-decode/source/src/model",
+    "-I",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-dual-decode/source/third_party",
+    "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-sole-dual-decode/primary_corpus_test.cpp",
+    "/Users/shawn/CantorAI/out/research/worldsense-sole-dual-decode/source/src/model/safetensors_index.cpp",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-sole-dual-decode-on/libgarnet_metal.a",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-framework",
+    "Foundation",
+    "-o",
+    "/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-sole-dual-decode-on/primary_corpus_test"
+  ],
+  "source_sha256": "b32f1b55e3838eb59bc95e8fdda26a7c526be640a2dad99de205f9e793df17d0",
+  "library_sha256": "a24f6ec478c98e32c76a79ac4b034211b8425d1236c56d4e455c2aff4de43276",
+  "executable_sha256": "9248f16e9e509fff4573817e9d2e67f167e572b57d4fff3602a1f144acde659b"
+}

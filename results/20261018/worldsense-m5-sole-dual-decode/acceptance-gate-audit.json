@@ -1,0 +1,49 @@
+{
+  "all_five_original_golden_numeric_metric_gate_AST_unchanged": true,
+  "files": {
+    "analyze_resource.py": true,
+    "speed/analyze.py": true,
+    "primary-speed/analyze.py": true,
+    "production-speed/analyze.py": true,
+    "confirmation/analyze.py": true
+  },
+  "only_native_layout_admission_extended": true,
+  "full_route_mutation_audit_pending": false,
+  "driver_sha256": {
+    "analyze_resource.py": "b05121e6de860c554c5dc8ca7cfccfc0c812df2649454a593c2dc12e7aa1fad5",
+    "speed/analyze.py": "2fe3a4e6d0ceaa9ccd075a226322705d15c5e459c3a0c4594a133dcf116b6216",
+    "primary-speed/analyze.py": "dd1afc2bc1806f848ec22e1a3ce01e88460adf69438387c020e79816fbbfc5b7",
+    "production-speed/analyze.py": "0b874e16a422aafc0ce9359f73a4f4a3b7e168e17c5ff994a211c4e119db8ef6",
+    "confirmation/analyze.py": "6b2ce35999b330e8534c23f782971a62fa1c197b036f0fdffcae9b1cac909f4c"
+  },
+  "full_route_mutation_audit_pass": true,
+  "utc": "2026-10-18T08:10:38.000764+00:00",
+  "native_route_audit": {
+    "analyze_resource.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3286,
+      "actual_legacy_WS10_calls": 0
+    },
+    "speed/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3286,
+      "actual_legacy_WS10_calls": 0
+    },
+    "primary-speed/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3286,
+      "actual_legacy_WS10_calls": 0
+    },
+    "production-speed/analyze.py": {
+      "actual_full_API_calls": 5,
+      "malformed_copied_fixtures_rejected": 1186,
+      "actual_legacy_WS10_calls": 10
+    },
+    "confirmation/analyze.py": {
+      "actual_full_API_calls": 15,
+      "malformed_copied_fixtures_rejected": 3286,
+      "actual_legacy_WS10_calls": 0
+    }
+  },
+  "scope": "Offline mutated copies of retained calls, no new inference/speed samples."
+}

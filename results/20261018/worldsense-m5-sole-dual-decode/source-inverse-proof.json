@@ -1,0 +1,19 @@
+{
+  "seed_files": 1721,
+  "current_files": 1723,
+  "changed_or_added": [
+    "cmake/GarnetMetal.cmake",
+    "runtime/metal_serving.py",
+    "src/backends/metal/compiled_graph.cpp",
+    "src/backends/metal/metal_context.h",
+    "src/backends/metal/metal_context.mm",
+    "src/backends/metal/sole_dual_projection_shader.h",
+    "src/entry/metal_main.cpp",
+    "test2026/metal/sole_dual_projection_test.cpp"
+  ],
+  "original_shader_literals_and_all_original_eight_tests_unchanged": true,
+  "all_existing_graph_context_bytes_inverse_exact_outside_new_guarded_blocks": true,
+  "original_SiLU_and_complete_projection_outputs_retained": true,
+  "original_shader_literals_and_63_decode_graph_session_xModel_image_CUDA_original_tests_unchanged": false,
+  "scope": "Graph/session? Graph Encode has one new defaultOFF guarded pair block; session/xModel/image/CUDA/engine/SDK unchanged. Do not use inherited all-graph-unchanged label."
+}

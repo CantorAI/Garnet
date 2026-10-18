@@ -1,0 +1,91 @@
+{
+  "src/backends/metal/metal_context.h": [
+    {
+      "before": "class MetalContext {",
+      "after": "struct MetalDualProjectionStats {uint64_t encodedPairs=0,representedProjections=0;};\nclass MetalContext {",
+      "count": 1
+    },
+    {
+      "before": "    static MetalPrimaryStats PrimaryStats();",
+      "after": "    static MetalPrimaryStats PrimaryStats();\n    static MetalDualProjectionStats DualProjectionStats();\n    bool EncodeSoleDualProjectionDecode(const MetalMatrix&,const MetalBF16Weight&,const MetalBF16Weight&,const MetalMatrix&,const MetalMatrix&);\n    std::vector<uint32_t> SoleDualProjectionReadWords(const MetalBF16Weight&,const MetalBF16Weight&,size_t firstBlock,size_t countBlocks);\n    std::string DualProjectionShaderProgramSource() const;\n#if defined(GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE) && defined(GARNET_METAL_PRIMARY_TEST_FAULTS)\n    static void DualProjectionTestUnavailable(bool);\n    static void DualProjectionTestFailNext(bool);\n#endif",
+      "count": 1
+    }
+  ],
+  "src/backends/metal/metal_context.mm": [
+    {
+      "before": "#include \"sole_interleaved_mlp_shader.h\"",
+      "after": "#include \"sole_interleaved_mlp_shader.h\"\n#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n#include \"sole_dual_projection_shader.h\"\n#endif",
+      "count": 1
+    },
+    {
+      "before": "SoleCounters soleCounters;",
+      "after": "SoleCounters soleCounters;\n#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\nstd::atomic<uint64_t> soleDualPairs{0},soleDualProjections{0};\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\nstd::atomic<bool> soleDualUnavailable{false},soleDualFailNext{false};\n#endif\n#endif",
+      "count": 1
+    },
+    {
+      "before": "    std::string soleProgram;",
+      "after": "    std::string soleProgram;\n#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n    id<MTLLibrary> dualLibrary=nil;id<MTLComputePipelineState> dualB1=nil,dualB2=nil,dualRead=nil;\n    std::string dualProgram;\n#endif",
+      "count": 1
+    },
+    {
+      "before": "#ifdef GARNET_METAL_PRIMARY_VECTOR_PREFILL\n        id<MTLLibrary> prefillLibrary=library;",
+      "after": "#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n        impl_->kernels->dualProgram=impl_->kernels->soleProgram+kSoleDualProjectionShader;\n        auto dualLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:impl_->kernels->dualProgram.c_str()] options:compileOptions error:&error];\n        if(!dualLibrary)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));\n        auto fitsDual=[&](id<MTLComputePipelineState> p){return p&&p.threadExecutionWidth==32&&p.maxTotalThreadsPerThreadgroup>=128&&p.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength;};\n        id<MTLComputePipelineState> dual[2]={nil,nil};\n        for(uint32_t rows=1;rows<=2;++rows){\n            uint32_t values[5]={rows,2048,6144,2048,6144};auto constants=[MTLFunctionConstantValues new];\n            for(NSUInteger i=0;i<5;++i)[constants setConstantValue:&values[i] type:MTLDataTypeUInt atIndex:i];\n            bool noTail=true;[constants setConstantValue:&noTail type:MTLDataTypeBool atIndex:5];\n            auto fn=[dualLibrary newFunctionWithName:@\"sole_dual_specialized_decode\" constantValues:constants error:&error];\n            if(!fn)throw std::runtime_error(\"Cannot specialize sole dual decode\");\n            dual[rows-1]=[impl_->device newComputePipelineStateWithFunction:fn error:&error];\n            if(!dual[rows-1])throw std::runtime_error(\"Cannot create sole dual decode pipeline\");\n        }\n        auto read=[impl_->device newComputePipelineStateWithFunction:[dualLibrary newFunctionWithName:@\"sole_dual_read_pair\"] error:&error];\n        if(!read)throw std::runtime_error(\"Cannot create sole dual word reader\");\n        if(fitsDual(dual[0])&&fitsDual(dual[1])&&fitsDual(read)){\n            impl_->kernels->dualLibrary=dualLibrary;impl_->kernels->dualB1=dual[0];impl_->kernels->dualB2=dual[1];impl_->kernels->dualRead=read;\n        }\n#endif\n#ifdef GARNET_METAL_PRIMARY_VECTOR_PREFILL\n        id<MTLLibrary> prefillLibrary=library;",
+      "count": 1
+    },
+    {
+      "before": "",
+      "after": "\nnamespace Garnet {\nMetalDualProjectionStats MetalContext::DualProjectionStats(){\n#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n return {soleDualPairs.load(),soleDualProjections.load()};\n#else\n return {};\n#endif\n}\nstd::string MetalContext::DualProjectionShaderProgramSource()const{\n#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n return impl_->kernels->dualProgram;\n#else\n return {};\n#endif\n}\n#if defined(GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE) && defined(GARNET_METAL_PRIMARY_TEST_FAULTS)\nvoid MetalContext::DualProjectionTestUnavailable(bool v){soleDualUnavailable.store(v);}\nvoid MetalContext::DualProjectionTestFailNext(bool v){soleDualFailNext.store(v);}\n#endif\nbool MetalContext::EncodeSoleDualProjectionDecode(const MetalMatrix& input,const MetalBF16Weight& first,const MetalBF16Weight& second,const MetalMatrix& outputA,const MetalMatrix& outputB){\n#ifndef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n (void)input;(void)first;(void)second;(void)outputA;(void)outputB;return false;\n#else\n @autoreleasepool {\n auto g=first.impl_,u=second.impl_;\n auto eligible=[](const auto& w){return w&&w->soleInterleaved&&w->buffer&&!w->floatPrefill&&!w->visionPrefill&&w->rows==6144&&w->columns==2048&&w->buffer.length==6144ull*2048*2;};\n if(!eligible(g)||!eligible(u)||!input.impl_||!outputA.impl_||!outputB.impl_)return false;\n auto a=input.impl_->matrix,ga=outputA.impl_->matrix,ua=outputB.impl_->matrix;\n if(a.rows<1||a.rows>2||a.columns!=2048||ga.rows!=a.rows||ua.rows!=a.rows||ga.columns!=6144||ua.columns!=6144||a.rowBytes!=2048*4||ga.rowBytes!=6144*4||ua.rowBytes!=6144*4)return false;\n auto pipeline=a.rows==1?impl_->kernels->dualB1:impl_->kernels->dualB2;\n if(!pipeline)return false;\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n if(soleDualUnavailable.load())return false;\n#endif\n if(!impl_->command)throw std::invalid_argument(\"Sole dual decode requires active batch\");\n if(a.device!=impl_->device||ga.device!=impl_->device||ua.device!=impl_->device||g->buffer.device!=impl_->device||u->buffer.device!=impl_->device)\n  throw std::invalid_argument(\"Sole dual decode device mismatch\");\n if(ga.data==ua.data||ga.data==a.data||ua.data==a.data||ga.data==g->buffer||ga.data==u->buffer||ua.data==g->buffer||ua.data==u->buffer)\n  throw std::invalid_argument(\"Sole dual decode output alias\");\n if(!input.impl_->ready&&!(input.impl_->pending&&impl_->pendingOutputs.count(input.impl_.get())))throw std::logic_error(\"Sole dual decode uninitialized or foreign pending input\");\n for(const auto* out:{&outputA,&outputB})if(out->impl_->pending&&!impl_->pendingOutputs.count(out->impl_.get()))throw std::logic_error(\"Sole dual decode foreign pending output\");\n#ifdef GARNET_METAL_PRIMARY_TEST_FAULTS\n if(soleDualFailNext.exchange(false))throw std::runtime_error(\"Injected sole dual predispatch failure\");\n#endif\n struct Params{uint64_t rows,inner,columns,aStride,oStride;};Params p{a.rows,2048,6144,2048,6144};\n auto encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error(\"Cannot create sole dual encoder\");\n [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];[encoder setBuffer:g->buffer offset:0 atIndex:1];\n [encoder setBuffer:ga.data offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];[encoder setBuffer:u->buffer offset:0 atIndex:4];[encoder setBuffer:ua.data offset:0 atIndex:5];\n [encoder dispatchThreadgroups:MTLSizeMake(6144/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];\n for(const auto* out:{&outputA,&outputB}){out->impl_->ready=false;out->impl_->pending=true;if(impl_->pendingOutputs.insert(out->impl_.get()).second)impl_->outputs.push_back(out->impl_);}\n soleDualPairs.fetch_add(1);soleDualProjections.fetch_add(2);return true;\n }\n#endif\n}\nstd::vector<uint32_t> MetalContext::SoleDualProjectionReadWords(const MetalBF16Weight& first,const MetalBF16Weight& second,size_t start,size_t count){\n#ifndef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n (void)first;(void)second;(void)start;(void)count;throw std::logic_error(\"Sole dual word reader disabled\");\n#else\n @autoreleasepool {\n if(impl_->command||impl_->submitted.count)throw std::logic_error(\"Sole dual reader requires closed drained batch\");\n for(const auto* item:{&first,&second}){auto w=item->impl_;if(!w||!w->soleInterleaved||!w->buffer||w->buffer.device!=impl_->device||w->rows!=6144||w->columns!=2048||w->buffer.length!=6144ull*2048*2)throw std::invalid_argument(\"Sole dual reader requires exact same-device sole weights\");}\n const size_t total=6144*2048/16;if(!count||count>8*1024*1024/32||start>total||count>total-start)throw std::invalid_argument(\"Sole dual reader range\");\n if(!impl_->kernels->dualRead)throw std::runtime_error(\"Sole dual reader unavailable\");\n auto output=[impl_->device newBufferWithLength:count*32*4 options:MTLResourceStorageModeShared];if(!output)throw std::runtime_error(\"Sole dual reader allocation failed\");\n auto command=[impl_->queue commandBuffer];auto encoder=[command computeCommandEncoder];if(!command||!encoder)throw std::runtime_error(\"Sole dual reader command failed\");uint64_t p[2]={start,count};\n [encoder setComputePipelineState:impl_->kernels->dualRead];[encoder setBuffer:first.impl_->buffer offset:0 atIndex:0];[encoder setBuffer:second.impl_->buffer offset:0 atIndex:1];[encoder setBuffer:output offset:0 atIndex:2];[encoder setBytes:p length:sizeof(p) atIndex:3];\n [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];[command commit];[command waitUntilCompleted];if(command.status!=MTLCommandBufferStatusCompleted)throw std::runtime_error(\"Sole dual reader GPU failed\");\n std::vector<uint32_t> result(count*32);std::memcpy(result.data(),output.contents,result.size()*4);return result;\n }\n#endif\n}\n}\n",
+      "count": 1,
+      "append": true
+    }
+  ],
+  "src/backends/metal/compiled_graph.cpp": [
+    {
+      "before": "        if(op.kind==Kind::MatMul) {\n            if(slots_[op.b].bf16.Valid())",
+      "after": "#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n        if(!profileOps&&i+1<ops_.size()&&(packedOutput||residentOps_[i+1])){\n            const auto& next=ops_[i+1];\n            auto projection=[&](const Op& value){return (value.kind==Kind::BF16MatVec||(value.kind==Kind::MatMul&&value.transpose))&&slots_[value.b].bf16.Valid();};\n            if(projection(op)&&projection(next)&&op.a==next.a&&op.out!=next.out&&\n               gpu.EncodeSoleDualProjectionDecode(a,slots_[op.b].bf16,slots_[next.b].bf16,out,slots_[next.out].matrix)){\n                ++i;continue;\n            }\n        }\n#endif\n        if(op.kind==Kind::MatMul) {\n            if(slots_[op.b].bf16.Valid())",
+      "count": 1
+    }
+  ],
+  "src/entry/metal_main.cpp": [
+    {
+      "before": "    std::string SoleStatsJson() {",
+      "after": "    std::string DualProjectionStatsJson(){const auto p=MetalContext::DualProjectionStats();return nlohmann::json{{\"encoded_pairs\",p.encodedPairs},{\"represented_projections\",p.representedProjections}}.dump();}\n    std::string SoleStatsJson() {",
+      "count": 1
+    },
+    {
+      "before": "        APISET().AddFunc<0>(\"sole_interleaved_stats_json\",&GarnetMetalAPI::SoleStatsJson);",
+      "after": "        APISET().AddFunc<0>(\"sole_interleaved_stats_json\",&GarnetMetalAPI::SoleStatsJson);\n        APISET().AddFunc<0>(\"sole_dual_projection_stats_json\",&GarnetMetalAPI::DualProjectionStatsJson);",
+      "count": 1
+    },
+    {
+      "before": "        info+=\"; sole_direct_interleaved_prefill\";\n#endif",
+      "after": "        info+=\"; sole_direct_interleaved_prefill\";\n#endif\n#ifdef GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE\n        info+=\"; sole_dual_projection_decode\";\n#endif",
+      "count": 1
+    }
+  ],
+  "runtime/metal_serving.py": [
+    {
+      "before": "            sole_before=json.loads(garnet.sole_interleaved_stats_json())",
+      "after": "            sole_before=json.loads(garnet.sole_interleaved_stats_json())\n            dual_before=json.loads(garnet.sole_dual_projection_stats_json())",
+      "count": 1
+    },
+    {
+      "before": "            sole_after=json.loads(garnet.sole_interleaved_stats_json())",
+      "after": "            sole_after=json.loads(garnet.sole_interleaved_stats_json())\n            dual_after=json.loads(garnet.sole_dual_projection_stats_json())",
+      "count": 1
+    },
+    {
+      "before": "                result['timings']['sole_storage_before']=sole_before",
+      "after": "                result['timings']['dual_projection_before']=dual_before\n                result['timings']['dual_projection_after']=dual_after\n                result['timings']['dual_projection_delta']={key:dual_after[key]-dual_before[key] for key in ['encoded_pairs','represented_projections']}\n                result['timings']['sole_storage_before']=sole_before",
+      "count": 1
+    }
+  ],
+  "cmake/GarnetMetal.cmake": [
+    {
+      "before": "",
+      "after": "\noption(GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE \"Share activation loads for exact sole gate/up decode, retaining separate complete outputs\" OFF)\nif(GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE)\n if(NOT GARNET_METAL_SOLE_INTERLEAVED_MLP OR NOT GARNET_METAL_SOLE_INTERLEAVED_DIRECT_PREFILL)\n  message(FATAL_ERROR \"Sole dual decode requires sole MLP storage and direct prefill\")\n endif()\n target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_SOLE_DUAL_PROJECTION_DECODE=1)\nendif()\nadd_executable(garnet_sole_dual_test test2026/metal/sole_dual_projection_test.cpp)\ntarget_link_libraries(garnet_sole_dual_test PRIVATE garnet_metal)\nadd_test(NAME metal_sole_dual_reference COMMAND garnet_sole_dual_test \"${CMAKE_CURRENT_BINARY_DIR}/sole_dual_projection_words.bin\")\n",
+      "count": 1,
+      "append": true
+    }
+  ]
+}

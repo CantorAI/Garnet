@@ -1,0 +1,169 @@
+{
+  "utc": "2026-10-18T08:24:11.704102+00:00",
+  "observed_terminal_session": 75810,
+  "exit_code": 0,
+  "original8_exact_native_calls_pass": true,
+  "source_drivers_dependencies_unchanged": true,
+  "recomputed_snapshot_maxima": {
+    "control-1": {
+      "metal_allocated_bytes": 21903376384,
+      "task_physical_footprint_bytes": 18073255392
+    },
+    "candidate-1": {
+      "metal_allocated_bytes": 16870899712,
+      "task_physical_footprint_bytes": 16559831080
+    }
+  },
+  "recomputed_reductions": {
+    "metal_allocated_bytes": 0.22975803290656727,
+    "task_physical_footprint_bytes": 0.08373833485858373
+  },
+  "actual_native_layout_records": [
+    {
+      "label": "control-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "control-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "control-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "control-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 0,
+        "allocated_bytes": 0,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 0
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 84
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 980,
+        "prefill_encoded": 1092,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 84
+      },
+      "sole_delta": {
+        "decode_encoded": 980,
+        "prefill_encoded": 1092,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3.5-4B",
+      "sole_after": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 980,
+        "prefill_encoded": 1092,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 84
+      },
+      "sole_delta": {
+        "decode_encoded": 0,
+        "prefill_encoded": 0,
+        "restore_encoded": 0
+      }
+    },
+    {
+      "label": "candidate-1",
+      "model": "Qwen3-1.7B",
+      "sole_after": {
+        "active_weights": 84,
+        "allocated_bytes": 2113929216,
+        "decode_encoded": 1960,
+        "prefill_encoded": 1848,
+        "restore_encoded": 0,
+        "scratch_bytes": 0,
+        "uploads": 84
+      },
+      "sole_delta": {
+        "decode_encoded": 980,
+        "prefill_encoded": 756,
+        "restore_encoded": 0
+      }
+    }
+  ],
+  "original_resource_thresholds_pass": true,
+  "no_speed_or_promotion_claim": true
+}

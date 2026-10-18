@@ -1,0 +1,188 @@
+{
+  "build_corpus.py": {
+    "seed_sha256": "18b02e990f0c57035d6cb71cddde6715ba89bb8f24b99a0efaa1cae0385e8312",
+    "current_sha256": "ce64e05de2a713c90fbea54297c91a1a71a62985a054ab11cbfd4851847ba4b5",
+    "operations": [],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "build_direct_corpus.py": {
+    "seed_sha256": "815b91c5731a8cf94634d44fadab23b9eafdc262c564eda540ab394ac811f89f",
+    "current_sha256": "33f15fdb81a0b4e4e874793986357d7b14dd1df613ab46e0121fa1b7788e46a0",
+    "operations": [],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "make_resident_fixtures.py": {
+    "seed_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "current_sha256": "3690a633022d725e42e7fdfda777b53df43b8f896baf7eb52d38ba31ccd62fe3",
+    "operations": [],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "resident_controller.py": {
+    "seed_sha256": "ac8fa19a761e0123e7fa9f8a27daa90796a3ce50fa876c0f095a06c65561a034",
+    "current_sha256": "3096c0e0ee3e171b719be77c501e8beec0d9d66d8676fc4c7ff07836894d4ae2",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "print('OFF/ON ordinary-resident alternation, late second session, invalid inputs, closed/rebuilt graphs PASS',flush=True)",
+        "after": "\nimport os\nfor fixture in ['fixture-1-8','fixture-2-64']:\n env=dict(os.environ,GARNET_METAL_PROFILE_OPS='1');log=w/('resident-profile-on-'+fixture+'.log')\n with log.open('w')as stream:\n  p=subprocess.run([n,'-B',str(w/'resident_guard.py'),str(w/fixture/'fixture.json'),'/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-sole-dual-decode-on',source,'profile'],env=env,stdout=stream,stderr=subprocess.STDOUT)\n results.append(dict(mode='profile-on',fixture=fixture,returncode=p.returncode,log=log.name));(w/'resident-results.json').write_text(json.dumps(results,indent=2))\n if p.returncode:raise RuntimeError(str(results[-1]))\nprint('OFF/ON ordinary-resident alternation, late second session, invalid inputs, closed/rebuilt graphs PASS',flush=True)",
+        "count": 1
+      }
+    ],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "resident_guard.py": {
+    "seed_sha256": "9e5a0b6c76dc168eafbf2636720b8a3faca17c5b3d3d96a384427e2104decb64",
+    "current_sha256": "a07761c7521c5316b3bd75a4d3a30ff253d49e7a3b499c8553e3b7788ce6765d",
+    "operations": [
+      {
+        "before": "endswith(('-on','-restore'))",
+        "after": "endswith(('-on','-restore','-direct64'))",
+        "count": 1
+      },
+      {
+        "before": "def snapshot(s):",
+        "after": "dual_expected=('sole_dual_projection_decode'in garnet.backend_info())and not(len(sys.argv)>4 and sys.argv[4]=='profile')\nroute_checks=[]\ndef checked_run(fn):\n before=json.loads(garnet.sole_dual_projection_stats_json());result=fn();after=json.loads(garnet.sole_dual_projection_stats_json())\n delta={key:after[key]-before[key]for key in ['encoded_pairs','represented_projections']}\n assert delta['encoded_pairs']==int(dual_expected)and delta['represented_projections']==2*int(dual_expected),'Actual generic/resident layer dual route mismatch'\n route_checks.append(delta);return result\ndef snapshot(s):",
+        "count": 1
+      },
+      {
+        "before": "graph.run(control)",
+        "after": "checked_run(lambda:graph.run(control))",
+        "count": 3
+      },
+      {
+        "before": "session.run([graph],values[0],values[3],values[4],values[5],-1)",
+        "after": "checked_run(lambda:session.run([graph],values[0],values[3],values[4],values[5],-1))",
+        "count": 4
+      },
+      {
+        "before": "other.run([graph],values[0],values[3],values[4],values[5],-1)",
+        "after": "checked_run(lambda:other.run([graph],values[0],values[3],values[4],values[5],-1))",
+        "count": 1
+      },
+      {
+        "before": "    print('private_kv_reference PASS'",
+        "after": "    assert len(route_checks)==34\n    print('dual_projection_generic_resident_routes',json.dumps(dict(enabled=dual_expected,checks=route_checks)),flush=True)\n    print('private_kv_reference PASS'",
+        "count": 1
+      }
+    ],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "linear_guard.py": {
+    "seed_sha256": "d5363f77dc0c622644d4faf025a3f629d4c853183d1de7f7483b738fdd482bc2",
+    "current_sha256": "2d0fbf61458c4781bb02be8cb8bee5c49efc3e4c71ce4669c4b7ae47800264a2",
+    "operations": [],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "vision_grid_guard.py": {
+    "seed_sha256": "0ec9c908e02ee8becc2a919ff02fbb1f73a7e1ab457488466a1e81ba854033a5",
+    "current_sha256": "2fd3bc324fee6f8af3ddc06af058b0f4f8928c945b80cddafd59bac201c81c6a",
+    "operations": [],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "api_state_guard.py": {
+    "seed_sha256": "f6d29f208d389f1a367b0fb5611731949d7e30b3de4a7110bbfe733e68c062d9",
+    "current_sha256": "4c810a24c75a951b6a2cfef70a68ca966266f6f83c29723740c1b5c8b79a3ba9",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "vector_expected=mode in ['on','restore'];direct_expected=mode=='on'",
+        "after": "vector_expected=mode in ['on','restore','direct64'];direct_expected=mode in ['on','direct64'];dual_expected=mode=='on'",
+        "count": 1
+      },
+      {
+        "before": " assert ('sole_direct_interleaved_prefill'in call['backend'])==direct_expected",
+        "after": " assert ('sole_direct_interleaved_prefill'in call['backend'])==direct_expected\n assert ('sole_dual_projection_decode'in call['backend'])==dual_expected\n dual=timings['dual_projection_after'];db=timings['dual_projection_before'];dd=timings['dual_projection_delta'];assert set(dual)==set(db)==set(dd)=={'encoded_pairs','represented_projections'}\n assert dd=={key:dual[key]-db[key]for key in dual}and dual['represented_projections']==2*dual['encoded_pairs']and dd['represented_projections']==2*dd['encoded_pairs']\n if dual_expected and name=='Qwen3-1.7B':assert dd['encoded_pairs']>=28*(call['generated_tokens']-1)>0\n else:assert all(v==0 for v in dual.values())and all(v==0 for v in dd.values())\n",
+        "count": 1
+      }
+    ],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "full_correctness.py": {
+    "seed_sha256": "928d7be49e66043a9ec81dde9a4c9bea6e55e104033297800f9f1403facc088e",
+    "current_sha256": "51616958450b9d467fbd8d395e3b59de0eff062313c65e24db53fa21813d4874",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "{'off','primary','on','fault','restore'}",
+        "after": "{'off','primary','on','fault','restore','direct64'}",
+        "count": 1
+      },
+      {
+        "before": "['all_five_builds_FP32_words_identical']",
+        "after": "['all_six_builds_FP32_words_identical']",
+        "count": 2
+      },
+      {
+        "before": "assert json.loads((w/'sole-word-comparison.json').read_text())['all_six_builds_FP32_words_identical']",
+        "after": "assert json.loads((w/'sole-word-comparison.json').read_text())['all_six_builds_FP32_words_identical']\nassert json.loads((w/'dual-word-comparison.json').read_text())['all_six_builds_complete_FP32_words_identical']",
+        "count": 1
+      },
+      {
+        "before": " print('DIRECT_NATIVE_LEARNED_RAW_WEIGHTS_FP32_BITS_EXACT',flush=True)",
+        "after": " print('DIRECT_NATIVE_LEARNED_RAW_WEIGHTS_FP32_BITS_EXACT',flush=True)\n run([str(r/'out/build/garnet-metal-worldsense-sole-dual-decode-on/dual_pair_corpus_test'),str(w.parent/'worldsense-primary-blocks/matrix-selection.json'),str(w/'dual-pair-corpus.json')],'dual-pair-corpus.log')\n assert json.loads((w/'dual-pair-corpus.json').read_text())['totals']=={'pairs':28,'matrices':56,'original_FP32_words_checked':704643072}\n print('ALL56LEARNED_GATE_UP_WEIGHTS_DUAL_VECTOR_READER_WORDS_EXACT',flush=True)",
+        "count": 1
+      },
+      {
+        "before": "native8tests",
+        "after": "native9tests",
+        "count": 1
+      }
+    ],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "verify_correctness_terminal.py": {
+    "seed_sha256": "e575bccf978bb2d0bf5d41312a597c976bccfbde9aecbab44b62ae5b03ae738f",
+    "current_sha256": "96d153cee1f1cf33cee30f7a38a176586308a2313e6d5a36bdba1fb660239806",
+    "operations": [
+      {
+        "before": "['off','primary','on','restore']",
+        "after": "['off','primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "['all_five_builds_FP32_words_identical']",
+        "after": "['all_six_builds_FP32_words_identical']",
+        "count": 1
+      },
+      {
+        "before": "['primary','on','restore']",
+        "after": "['primary','on','restore','direct64']",
+        "count": 1
+      },
+      {
+        "before": "(mode in ['on','restore'])",
+        "after": "(mode in ['on','restore','direct64'])",
+        "count": 3
+      },
+      {
+        "before": "len(manifest)==1721",
+        "after": "len(manifest)==1723",
+        "count": 1
+      },
+      {
+        "before": "native8tests",
+        "after": "native9tests",
+        "count": 1
+      }
+    ],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  },
+  "primary_corpus_test.cpp": {
+    "seed_sha256": "b32f1b55e3838eb59bc95e8fdda26a7c526be640a2dad99de205f9e793df17d0",
+    "current_sha256": "b32f1b55e3838eb59bc95e8fdda26a7c526be640a2dad99de205f9e793df17d0",
+    "operations": [],
+    "original_mathematical_bounds_oracles_inverse_exact": true
+  }
+}
