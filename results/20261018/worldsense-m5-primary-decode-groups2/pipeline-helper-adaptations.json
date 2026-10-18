@@ -1,0 +1,37 @@
+{
+  "prepare_functional": {
+    "seed_sha256": "cdc40748e444fdc7b855546ff8f39eaab9363f1a598799cde83fc49b58603b39",
+    "adapted_sha256": "8ed2095e3e46ebfe2ffffc3b0f07555511d969617f42902b0965c992cbbb4cb4",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  },
+  "verify_functional": {
+    "seed_sha256": "0ce2de19e0288f19c71ad0c86737178c0e88a0e6c5f1d719f9fd8622c6f78688",
+    "adapted_sha256": "28a9ae01540e251aa3ed03942716f0531c4567b6d5435f7f0390eb88eaed6955",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  },
+  "prepare_resource": {
+    "seed_sha256": "f7ec41a7272d4e72ffca04b49048ad80b3d58151f4f9141275d741cfb1c1d56e",
+    "adapted_sha256": "b1427c4c9a47a9cbfc04a7cc5299e2c594f91fa30c10fed93b1c0d589f1e1ca5",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  },
+  "verify_resource": {
+    "seed_sha256": "a6138851395fa5990df389de8fc4c3bcf55a83bb2f17601aa74ec62beac10a9a",
+    "adapted_sha256": "3efc15b03268a667d2dd0b7d244f5bb690e1300a097de8d58bbcfbc729288cb4",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  },
+  "prepare_actual_speed": {
+    "seed_sha256": "4e369410935f7716a5291424363cbd63dc336b52ce69bd5572c8ae7947071fb8",
+    "adapted_sha256": "a2002f1d9dcfdea2a48e05c767ea1e0c41dd5e590c072298942f217e5508d71a",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  },
+  "verify_screen": {
+    "seed_sha256": "ec783b3765b58da24301740a99d7a67d5d0a7d1e1d518f552be7ccac40d7f938",
+    "adapted_sha256": "a0b60802fb7856136a4fe9eede34c0da12c775a64e7cafb0888b997197238855",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  },
+  "audit_routes": {
+    "seed_sha256": "722dabf001ed4481bc3ae3b7869946b1fadf6eede260e82823bc8d9b40fb4e1f",
+    "adapted_sha256": "b4f10d9d0705efa7f32be903a9fce3810abf5b7996142f85795ea3832271ed64",
+    "scope": "Path/count/profile/new encoded groups fields and negative marker tests; original quantitative/golden/metric thresholds preserved."
+  }
+}
