@@ -12,3 +12,6 @@ test2026/results.json
 test2026/tests/**/runtime_graph.cache
 *.safetensors
 adapter_model.bin
+
+# Generated experiment outputs stay outside source control.
+/results/
