@@ -2,7 +2,7 @@
 import os
 
 
-def peer_group_layout(batch, tokens, hidden):
+def peer_group_layout(batch, tokens, hidden, *, prefill_batch=None, decode_batch=None):
     flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '0')
     if flag not in ('0', '1'):
         raise ValueError('Owned peer group flag must be0/1')
@@ -15,10 +15,16 @@ def peer_group_layout(batch, tokens, hidden):
     threads_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS', '256')
     if threads_text not in ('256', '512') or (flag == '0' and threads_text != '256'):
         raise ValueError('Owned peer group threads-per-CTA policy must be256/512 and enabled')
+    prefill_batch = batch if prefill_batch is None else prefill_batch
+    decode_batch = batch if decode_batch is None else decode_batch
+    if (type(batch) is not int or type(tokens) is not int or
+            type(prefill_batch) is not int or type(decode_batch) is not int or
+            not 0 < prefill_batch <= batch or not 0 < decode_batch <= batch):
+        raise ValueError('Peer phase batches must fit the shared KV-pool capacity')
     if flag == '0':
         return None
     ctas = int(ctas_text)
-    counts = [batch * tokens * hidden, batch * hidden]
+    counts = [prefill_batch * tokens * hidden, decode_batch * hidden]
     if (any(type(v) is not int or v <= 0 for v in (batch, tokens, hidden)) or
             hidden != 2880 or counts[0] > 4096 * 2880):
         raise ValueError('Owned peer group requires hidden2880 and at most4096 rows')
@@ -37,14 +43,24 @@ def peer_group_layout(batch, tokens, hidden):
             protocol=('owned-mapped-bf16-peer-grid-threads-v1' if grid_flag == '1'
                       else 'owned-mapped-bf16-peer-threads-v1'),
             threads_per_cta=512)
+    if prefill_batch != batch or decode_batch != batch:
+        result.update(prefill_batch=prefill_batch, decode_batch=decode_batch)
     return result
 
 
-def validate_peer_group_layout(layout, batch, tokens, hidden):
+def validate_peer_group_layout(layout, batch, tokens, hidden, *,
+                               prefill_batch=None, decode_batch=None):
     # Validate a stored contract without consulting mutable process flags.
     if layout is None:
         return 0
-    counts = [batch * tokens * hidden, batch * hidden]
+    prefill_batch = (layout.get('prefill_batch', batch) if prefill_batch is None
+                     else prefill_batch)
+    decode_batch = (layout.get('decode_batch', batch) if decode_batch is None
+                    else decode_batch)
+    if (type(prefill_batch) is not int or type(decode_batch) is not int or
+            not 0 < prefill_batch <= batch or not 0 < decode_batch <= batch):
+        raise ValueError('Invalid stored peer phase batches')
+    counts = [prefill_batch * tokens * hidden, decode_batch * hidden]
     ctas = layout.get('ctas') if isinstance(layout, dict) else None
     if hidden != 2880 or not 0 < counts[0] <= 4096 * 2880 or ctas not in (64,128,188):
         raise ValueError('Invalid stored peer capacity')
@@ -64,6 +80,8 @@ def validate_peer_group_layout(layout, batch, tokens, hidden):
                       if expected.get('grid_signals') == 1
                       else 'owned-mapped-bf16-peer-threads-v1'),
             threads_per_cta=512)
+    if prefill_batch != batch or decode_batch != batch:
+        expected.update(prefill_batch=prefill_batch, decode_batch=decode_batch)
     if layout != expected:
         raise ValueError('Peer group storage/lifetime contract mismatch')
     # Conservatively charge the entire mapped amount against EACH GPU.

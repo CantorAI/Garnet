@@ -20,6 +20,10 @@ parser.add_argument('profile', type=Path)
 parser.add_argument('directory', type=Path)
 parser.add_argument('cases', nargs='*')
 parser.add_argument('--batch', type=int, help='explicit homogeneous batch override, up to512')
+parser.add_argument('--batch-profile-min', type=int,
+                    help='opt in to a TensorRT cohort profile with this minimum batch (default 1)')
+parser.add_argument('--batch-profile-max', type=int,
+                    help='maximum batch for the opt-in TensorRT cohort profile (default selected batch)')
 parser.add_argument('--output', type=int, help='explicit fixed output length, up to2048')
 parser.add_argument('--prefill-chunk', type=int, help='explicit Garnet query chunk length')
 parser.add_argument('--context', type=int, help='explicit context reservation; reject shorter requests')
@@ -39,6 +43,8 @@ parser.add_argument('--pattern-updates', type=int, choices=(0,1), default=0,
                     help='checked bounded integer row patterns enqueued by each rank worker')
 parser.add_argument('--native-greedy-state', type=int, choices=(0,1), default=0,
                     help='resident native token-history and candidate feedback state')
+parser.add_argument('--token-budget-scheduler', action='store_true',
+                    help='opt in to bounded vLLM-style token-budget scheduling for the profiled 224/112 shape')
 parser.add_argument('--runtime-switch-us', type=int, choices=(0,100,200,1000), default=0,
                     help='explicit process-local scheduling interval experiment for serial resident requests')
 parser.add_argument('--vllm-only', action='store_true',
@@ -50,7 +56,8 @@ host_candidates = dict(GARNET_RESIDENT_REUSE_OUTPUT=str(args.reuse_output),
     GARNET_RESIDENT_NATIVE_GREEDY_MERGE=str(args.native_greedy_merge),
     GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY=str(args.final_prefill_sample_only),
     GARNET_RESIDENT_PATTERN_UPDATES=str(args.pattern_updates),
-    GARNET_RESIDENT_NATIVE_GREEDY_STATE=str(args.native_greedy_state))
+    GARNET_RESIDENT_NATIVE_GREEDY_STATE=str(args.native_greedy_state),
+    GARNET_RESIDENT_TOKEN_BUDGET_SCHEDULER=str(int(args.token_budget_scheduler)))
 if any(value == '1' for value in host_candidates.values()) and (args.resident_profile is None or args.vllm_only):
     raise ValueError('Host lifecycle candidates require a resident Garnet comparison')
 if args.vllm_only and args.reuse_vllm_manifest is not None:
@@ -69,6 +76,11 @@ batch = reference['batch'] if args.batch is None else args.batch
 output = reference['output_tokens_per_request'] if args.output is None else args.output
 if not (1 <= batch <= 512 and 16 <= output <= 2048):
     raise ValueError('Invalid batch/output profile')
+batch_profile_enabled = args.batch_profile_min is not None or args.batch_profile_max is not None
+batch_profile_min = args.batch_profile_min if args.batch_profile_min is not None else 1
+batch_profile_max = args.batch_profile_max if args.batch_profile_max is not None else batch
+if batch_profile_enabled and not (1 <= batch_profile_min <= batch <= batch_profile_max <= 512):
+    raise ValueError('Batch profile bounds must contain the selected batch within [1,512]')
 if args.prefill_chunk is not None and not 1 <= args.prefill_chunk <= 4096:
     raise ValueError('Invalid prefill chunk')
 if args.context is not None and not 1 <= args.context <= 4096:
@@ -124,6 +136,9 @@ if args.resident_profile is not None:
     env['GARNET_RESIDENT_PROFILE'] = str(args.resident_profile.resolve())
     env['GARNET_RESIDENT_WARMUPS'] = '1'  # Existing V references have one complete warmup.
 env.update(host_candidates)
+if batch_profile_enabled:
+    env['GARNET_GPT_OSS_BATCH_PROFILE_MIN'] = str(batch_profile_min)
+    env['GARNET_GPT_OSS_BATCH_PROFILE_MAX'] = str(batch_profile_max)
 env[runtime_switch_policy] = str(args.runtime_switch_us)
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env.setdefault('XLANG3_PYTHON_LIB', str(root / 'ThirdPartySDK/Python-3.14.0/Lib'))
@@ -273,6 +288,10 @@ for case in manifest['cases']:
 for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
     if engine == 'garnet' and args.resident_session:
         case_env = env.copy()
+        # Preserve the suite's selected cache for the benchmark shell. The
+        # sanitized environment drops inherited GARNET_* values, but this
+        # path is part of the resident profile identity used at admission.
+        case_env['GARNET_GPT_OSS_CACHE'] = str(cache.resolve())
         case_env.update(GARNET_BATCH_CONTEXT_CAPACITY=str(session_payload['context']),
             GARNET_BATCH_PREFILL_CHUNK=str(session_payload['prefill_chunk']), GARNET_RESIDENT_SESSION='1')
         command_logged(['bash', repo / 'tools/gpt_oss/benchmark_batch_tp2.sh',
@@ -296,6 +315,8 @@ for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
         result = Path(str(prefix) + '.json')
         case_env = env.copy()
         case_env['GARNET_BATCH_CONTEXT_CAPACITY'] = str(case['context'])
+        if engine == 'garnet':
+            case_env['GARNET_GPT_OSS_CACHE'] = str(cache.resolve())
         print('Starting', engine, case['name'], 'batch', batch, 'input', case['input'],
               'output', output, 'context', case['context'], flush=True)
         if engine == 'vllm':

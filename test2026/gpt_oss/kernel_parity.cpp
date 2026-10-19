@@ -1259,6 +1259,10 @@ int main(int argc, char** argv) { try {
         // shards and exact original/prepacked comparison at dispatch bounds.
         testMoe(1023,32,32,true);
         testMoe(1024,96,64,false);
+        // Exercise the N64 up-projection grid across many output slices. The
+        // 128-column fixture above covers only two 64-column tiles and cannot
+        // expose wide-N stripe/lock indexing errors in the OPT156 candidate.
+        testMoe(1024,96,2048,false);
         testMoe(4096,32,32,true);
         testMoe(1024,32,32,true,true); // Decode must retain its old tile.
         if(std::strcmp(argv[1], "--prefill-down-parity") == 0)

@@ -42,6 +42,7 @@ namespace Garnet
         std::string m_backend = "tensorrt";
         std::string m_precision = "bf16";
         std::vector<std::vector<int>> m_inputShapes;
+        std::vector<TensorInputShapeRange> m_inputShapeRanges;
         FusionPartitionOptions m_partitionOptions;
         std::string m_state = "uninitialized";
         std::string m_errorCode;
@@ -96,7 +97,8 @@ namespace Garnet
             const std::vector<std::string>& inputDataTypes,
             const FusionPartitionOptions& partitionOptions = {},
             const std::string& backend = "tensorrt",
-            const std::string& precision = "");
+            const std::string& precision = "",
+            const std::vector<TensorInputShapeRange>& inputShapeRanges = {});
 
         X::Value Status() const;
         X::Value Forward(X::Value request);

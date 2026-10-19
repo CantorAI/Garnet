@@ -6,6 +6,7 @@
 #include <array>
 #include <atomic>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <cooperative_groups.h>
@@ -102,7 +103,6 @@ __global__ void reduceGridSignals(const uint4* first,const uint4* second,float4*
         }
         sequence[0].value=epoch;if(failed)faults[0]=failed;
     }
-    grid.sync();
 }
 }
 
@@ -271,9 +271,31 @@ public:
     }
     cudaError_t enqueue(const float* input,float* output,size_t count,int rank,cudaStream_t stream){
         if(!ready_)return cudaErrorNotReady;
-        if(!input || !output || !count || count%8 || count>capacity_ || rank<0 || rank>1 ||
-            reinterpret_cast<uintptr_t>(input)%16 || reinterpret_cast<uintptr_t>(output)%16 || stream!=streams[rank])
+        const char* rejection=nullptr;
+        if(!input)rejection="null_input";
+        else if(!output)rejection="null_output";
+        else if(!count)rejection="zero_count";
+        else if(count%8)rejection="count_not_multiple_of_8";
+        else if(count>capacity_)rejection="count_over_capacity";
+        else if(rank<0 || rank>1)rejection="invalid_rank";
+        else if(reinterpret_cast<uintptr_t>(input)%16)rejection="input_alignment";
+        else if(reinterpret_cast<uintptr_t>(output)%16)rejection="output_alignment";
+        else if(stream!=streams[rank])rejection="stream_mismatch";
+        if(rejection){
+            static std::atomic<int> diagnosticCount{0};
+            if(std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG") &&
+               diagnosticCount.fetch_add(1,std::memory_order_relaxed)<32){
+                int device=-1;const auto deviceStatus=cudaGetDevice(&device);
+                std::fprintf(stderr,"GPT-OSS peer owner enqueue rejected: reason=%s rank=%d count=%llu capacity=%llu input=%p output=%p input_mod16=%llu output_mod16=%llu stream=%p expected_stream=%p device=%d device_status=%d\n",
+                    rejection,rank,static_cast<unsigned long long>(count),
+                    static_cast<unsigned long long>(capacity_),input,output,
+                    static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(input)%16),
+                    static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(output)%16),
+                    reinterpret_cast<void*>(stream),rank>=0&&rank<2?reinterpret_cast<void*>(streams[rank]):nullptr,
+                    device,static_cast<int>(deviceStatus));
+            }
             return cudaErrorInvalidValue;
+        }
         int device=0;auto e=cudaGetDevice(&device);if(e!=cudaSuccess)return e;
         if(device!=rank)return cudaErrorInvalidDevice;
         for(const void* pointer:{static_cast<const void*>(input),static_cast<const void*>(output)}){

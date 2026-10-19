@@ -83,7 +83,8 @@ namespace Garnet
             const std::vector<std::string>& inputDataTypes,
             const FusionPartitionOptions& partitionOptions = {},
             const std::string& backend = "tensorrt",
-            const std::string& precision = "");
+            const std::string& precision = "",
+            const std::vector<TensorInputShapeRange>& inputShapeRanges = {});
         X::Value CompiledRuntimeStatus()
         {
             return mCompiledRuntime ? mCompiledRuntime->Status() : X::Value();

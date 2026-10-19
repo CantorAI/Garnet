@@ -90,15 +90,38 @@ def plan_identity(plan):
         'batch', 'capacity', 'max_tokens', 'kv_pages', 'config', 'local_kv_heads',
         'expert_weight_shards', 'moe_intermediate_shards', 'marlin_prepacked',
         'compact_vocab_greedy', 'marlin_workspace_layout', 'collective_workspace_layout')}
+    phases = plan.get('phase_engine_batches',
+        dict(prefill=plan['batch'], decode=plan['batch']))
+    if phases != dict(prefill=plan['batch'], decode=plan['batch']):
+        identity['phase_engine_batches'] = phases
     if 'kv_layout' in plan:
         # Recompute/validate the bank contract before trusting a profile.
         kv_memory(plan)
         identity['kv_layout'] = plan['kv_layout']
     if 'operator_execution_layout' in plan:
         validate_peer_group_layout(plan['operator_execution_layout'], plan['batch'],
-            plan['max_tokens'], plan['config']['hidden_size'])
+            plan['max_tokens'], plan['config']['hidden_size'],
+            prefill_batch=phases['prefill'], decode_batch=phases['decode'])
         identity['operator_execution_layout'] = plan['operator_execution_layout']
     return identity
+
+
+def validate_runtime_candidate_shape(profile, *, batch, input_tokens, output_tokens,
+                                     context, prefill_chunk, phase_engine_batches):
+    """Reject workloads that differ from the shape used to build candidate engines."""
+    shape = profile.get('candidate_shape')
+    if shape is None:
+        return
+    if not isinstance(shape, dict):
+        raise ValueError('Resident candidate profile shape is malformed')
+    expected = dict(batch=batch, input_tokens_per_request=input_tokens,
+        output_tokens_per_request=output_tokens,
+        max_context_tokens_per_request=context,
+        prefill_chunk_tokens=prefill_chunk,
+        prefill_engine_batch=phase_engine_batches['prefill'],
+        decode_engine_batch=phase_engine_batches['decode'])
+    if any(shape.get(key) != value for key, value in expected.items()):
+        raise ValueError('Resident request shape differs from the immutable candidate profile')
 
 
 def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environment,
@@ -122,6 +145,22 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
             value = normalize_kernel_environment(value)
         if actual != value:
             raise ValueError('Resident profile identity mismatch: ' + key)
+    phase_batches = profile.get('phase_engine_batches',
+        dict(prefill=plan['batch'], decode=plan['batch']))
+    if (not isinstance(phase_batches, dict) or set(phase_batches) != {'prefill','decode'} or
+            any(type(value) is not int or not 1 <= value <= plan['batch']
+                for value in phase_batches.values())):
+        raise ValueError('Resident profile has invalid phase engine batches')
+    planned_batches = plan.get('phase_engine_batches',
+        dict(prefill=plan['batch'], decode=plan['batch']))
+    if phase_batches != planned_batches:
+        raise ValueError('Resident profile phase batches differ from the current TP2 plan')
+    candidate_shape = profile.get('candidate_shape')
+    if candidate_shape is not None and (
+            candidate_shape.get('batch') != plan['batch'] or
+            candidate_shape.get('prefill_engine_batch', plan['batch']) != phase_batches['prefill'] or
+            candidate_shape.get('decode_engine_batch', plan['batch']) != phase_batches['decode']):
+        raise ValueError('Resident phase batches differ from the immutable candidate shape')
     rows = profile['engine_statistics']
     if len(rows) != 4 or len(devices) != 2:
         raise ValueError('Resident profile requires exactly two phases per rank')
@@ -131,7 +170,8 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
     kv_bytes, auxiliary_bytes = kv_memory(plan)
     packed_lower_bound = plan['weight_storage_estimate']['prepacked_marlin_constant_bytes']
     group_bytes = (validate_peer_group_layout(plan['operator_execution_layout'],
-        plan['batch'], plan['max_tokens'], plan['config']['hidden_size'])
+        plan['batch'], plan['max_tokens'], plan['config']['hidden_size'],
+        prefill_batch=phase_batches['prefill'], decode_batch=phase_batches['decode'])
         if 'operator_execution_layout' in plan else 0)
     result = []
     for device in devices:
@@ -157,7 +197,8 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
             result[-1]['shared_auxiliary_bytes'] = auxiliary_bytes
         if group_bytes:
             result[-1]['operator_execution_storage_bytes'] = group_bytes
-    return dict(ranks=result, concurrency='serial complete batches; one context per engine',
+    return dict(ranks=result, phase_engine_batches=phase_batches,
+        concurrency='serial complete batches; one context per engine',
         limits='Measured engine bounds plus explicit reserve; execution peak validation still required')
 
 

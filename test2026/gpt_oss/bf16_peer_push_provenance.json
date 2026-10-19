@@ -1,7 +1,7 @@
 {
-  "production_owner_sha256": "2b7899e7c3ec40b7e919939e75c1aa957ee58a44a90befe466f0be234d218194",
+  "production_owner_sha256": "a26e15b6e1119b7140955d6372857740db6d6496193be2d4b1c7714a943d53d4",
   "fixture_sha256": "99e2e01595a2fd57f2d4c0ce52e4cb1ebbc96bba61d8629c3ef5699cf7d82f96",
-  "scope": "Private generated copy: ownership contract unchanged except explicit receive buffers/grid write-ready/read-end protocol; fixture derived from original with identical numerical/cost/lifetime assertions, no production changes",
+  "scope": "Private fixture validated against the current production owner header at the pinned SHA; original pull control uses Bf16PeerNative default threads=256 and the same pack/reduce/unpack contract; candidate peer-push kernel remains private, with no production selection or integration.",
   "phase_fixture_sha256": "8bc9ac4ffe8d14a716f959c17ff41fdc99f7d4fc102a576a5a7f61f97635a9a3",
   "independent_oracle_origin_sha256": "fe53d28cbd4e2c204aab90e2ab727903aa694e16b22cb1165fa21a52eba0f2eb",
   "independent_oracle_changes": "Explicit current pull-grid1 versus push-grid1 metadata plus UTF8 output; identical RN/finite/full-byte numerical oracle"

@@ -16,6 +16,17 @@
 #include <NvInfer.h>
 
 namespace Garnet {
+    // Optional TensorRT input profile. The captured opt shape stays concrete;
+    // only the declared cohort and sequence axes may vary.
+    struct TensorInputShapeRange {
+        std::vector<int> minShape;
+        std::vector<int> optShape;
+        std::vector<int> maxShape;
+        int batchAxis = -1;
+        int batchUnits = 1;
+        int sequenceAxis = -1;
+    };
+
     struct EnginePartitionBinding {
         std::string name;
         unsigned long long tensorId = 0;
@@ -90,6 +101,7 @@ namespace Garnet {
             X::ARGS& symbolicInputs,
             const SafeTensorsIndex* weightIndex,
             const std::string& enginePath,
+            const std::vector<TensorInputShapeRange>& inputShapeRanges,
             std::string& errorMessage);
         bool AnalyzeCapturedGraph(
             X::Value graph,
@@ -126,7 +138,8 @@ namespace Garnet {
             const SafeTensorsIndex* weightIndex,
             X::Value reusableOutput,
             bool enableCudaGraph,
-            std::string& errorMessage);
+            std::string& errorMessage,
+            const std::vector<TensorInputShapeRange>& inputShapeRanges = {});
         X::Value RunCapturedPartitions(
             const std::vector<EnginePartitionSpec>& partitions,
             X::Value inputs,

@@ -4,7 +4,8 @@ import json
 
 
 def candidate_shape(reference, reference_bytes, *, batch=None, output=None,
-                    context=None, prefill_chunk=None):
+                    context=None, prefill_chunk=None, prefill_engine_batch=None,
+                    decode_engine_batch=None):
     ids = reference.get('input_token_ids')
     if (not isinstance(ids, list) or not ids or
             any(type(token) is not int or token < 0 for token in ids) or
@@ -20,6 +21,11 @@ def candidate_shape(reference, reference_bytes, *, batch=None, output=None,
     for key, (low,high) in limits.items():
         if type(selected[key]) is not int or not low <= selected[key] <= high:
             raise ValueError(f'Invalid candidate profile {key}')
+    selected['prefill_engine_batch'] = selected['batch'] if prefill_engine_batch is None else prefill_engine_batch
+    selected['decode_engine_batch'] = selected['batch'] if decode_engine_batch is None else decode_engine_batch
+    for key in ('prefill_engine_batch', 'decode_engine_batch'):
+        if type(selected[key]) is not int or not 1 <= selected[key] <= selected['batch']:
+            raise ValueError(f'Invalid candidate profile {key}')
     if len(ids)+selected['output_tokens_per_request'] > selected['max_context_tokens_per_request']:
         raise ValueError('Candidate context shortens the original input or requested output')
     return dict(schema=1, scope='Unvalidated shape for sequential engine statistics, not a completed workload',
@@ -34,7 +40,9 @@ def validate_candidate_shape(specification, reference, reference_bytes):
     expected = candidate_shape(reference,reference_bytes,
         batch=specification.get('batch'), output=specification.get('output_tokens_per_request'),
         context=specification.get('max_context_tokens_per_request'),
-        prefill_chunk=specification.get('prefill_chunk_tokens'))
+        prefill_chunk=specification.get('prefill_chunk_tokens'),
+        prefill_engine_batch=specification.get('prefill_engine_batch'),
+        decode_engine_batch=specification.get('decode_engine_batch'))
     if specification != expected:
         raise ValueError('Candidate shape/reference/input identity mismatch')
     return expected

@@ -427,6 +427,7 @@ namespace
         const std::string& precision,
         const std::vector<std::vector<int>>& inputShapes,
         const std::vector<std::string>& inputDataTypes,
+        const std::vector<Garnet::TensorInputShapeRange>& inputShapeRanges,
         const Garnet::FusionPartitionOptions& partitionOptions)
     {
         std::set<std::filesystem::path> dependencies;
@@ -500,6 +501,18 @@ namespace
         }
         for (const auto& dataType : inputDataTypes) {
             material << "dtype:" << dataType << '\n';
+        }
+        for (size_t input = 0; input < inputShapeRanges.size(); ++input) {
+            material << "input_profile:" << input << '\n';
+            material << "batch_axis:" << inputShapeRanges[input].batchAxis << '\n';
+            material << "batch_units:" << inputShapeRanges[input].batchUnits << '\n';
+            material << "sequence_axis:" << inputShapeRanges[input].sequenceAxis << '\n';
+            for (const int dimension : inputShapeRanges[input].minShape)
+                material << "min:" << dimension << '\n';
+            for (const int dimension : inputShapeRanges[input].optShape)
+                material << "opt:" << dimension << '\n';
+            for (const int dimension : inputShapeRanges[input].maxShape)
+                material << "max:" << dimension << '\n';
         }
         material << "partition.enable_preferred:"
                  << partitionOptions.enablePreferredBoundaries << '\n'
@@ -717,7 +730,8 @@ namespace Garnet
         const std::vector<std::string>& inputDataTypes,
         const FusionPartitionOptions& partitionOptions,
         const std::string& backend,
-        const std::string& precision)
+        const std::string& precision,
+        const std::vector<TensorInputShapeRange>& inputShapeRanges)
     {
         auto* host = m_host;
         std::lock_guard<std::mutex> guard(m_mutex);
@@ -747,6 +761,7 @@ namespace Garnet
             m_openVinoSessionId = NextOpenVINOSessionId();
         }
         m_inputShapes = inputShapes;
+        m_inputShapeRanges = inputShapeRanges;
         m_partitionOptions = partitionOptions;
         m_ready = false;
         m_loadedWeights.clear();
@@ -860,10 +875,101 @@ namespace Garnet
             m_errorMessage = "input_dtypes must contain one entry per input_shapes entry";
             return false;
         }
+        if (!m_inputShapeRanges.empty()) {
+            if (m_backend != "tensorrt" || m_inputShapeRanges.size() != inputShapes.size()) {
+                m_state = "failed";
+                m_errorCode = "invalid_input_shape_profile";
+                m_errorMessage = "shape profiles require TensorRT and exactly one range per input";
+                return false;
+            }
+            int sharedMinimumBatch = -1, sharedOptimumBatch = -1, sharedMaximumBatch = -1;
+            int sharedMinimumSequence = -1, sharedOptimumSequence = -1, sharedMaximumSequence = -1;
+            for (size_t input = 0; input < inputShapes.size(); ++input) {
+                const auto& shape = inputShapes[input];
+                const auto& range = m_inputShapeRanges[input];
+                if (shape.empty() || range.minShape.size() != shape.size() ||
+                    range.optShape != shape || range.maxShape.size() != shape.size()) {
+                    m_state = "failed";
+                    m_errorCode = "invalid_input_shape_profile";
+                    m_errorMessage = "profile min/opt/max ranks must match the positive captured opt shape";
+                    return false;
+                }
+                if (range.batchAxis < -1 || range.batchAxis >= static_cast<int>(shape.size()) ||
+                    range.sequenceAxis < -1 || range.sequenceAxis >= static_cast<int>(shape.size()) ||
+                    (range.batchAxis >= 0 && range.batchAxis == range.sequenceAxis) ||
+                    range.batchUnits <= 0 || (range.batchAxis < 0 && range.batchUnits != 1)) {
+                    m_state = "failed";
+                    m_errorCode = "invalid_input_shape_profile";
+                    m_errorMessage = "profile batch axis or per-request extent is invalid";
+                    return false;
+                }
+                if (range.batchAxis >= 0) {
+                    const auto axis = static_cast<size_t>(range.batchAxis);
+                    if (range.minShape[axis] % range.batchUnits != 0 ||
+                        shape[axis] % range.batchUnits != 0 ||
+                        range.maxShape[axis] % range.batchUnits != 0) {
+                        m_state = "failed";
+                        m_errorCode = "invalid_input_shape_profile";
+                        m_errorMessage = "cohort extents must be divisible by batch_units";
+                        return false;
+                    }
+                    const int minimumBatch = range.minShape[axis] / range.batchUnits;
+                    const int optimumBatch = shape[axis] / range.batchUnits;
+                    const int maximumBatch = range.maxShape[axis] / range.batchUnits;
+                    if (minimumBatch <= 0 || optimumBatch <= 0 || maximumBatch < optimumBatch ||
+                        (sharedMinimumBatch >= 0 &&
+                            (minimumBatch != sharedMinimumBatch ||
+                                optimumBatch != sharedOptimumBatch ||
+                                maximumBatch != sharedMaximumBatch))) {
+                        m_state = "failed";
+                        m_errorCode = "invalid_input_shape_profile";
+                        m_errorMessage = "batch-bearing profile inputs must describe identical cohort bounds";
+                        return false;
+                    }
+                    sharedMinimumBatch = minimumBatch;
+                    sharedOptimumBatch = optimumBatch;
+                    sharedMaximumBatch = maximumBatch;
+                }
+                if (range.sequenceAxis >= 0) {
+                    const auto axis = static_cast<size_t>(range.sequenceAxis);
+                    const int minimumSequence = range.minShape[axis];
+                    const int optimumSequence = shape[axis];
+                    const int maximumSequence = range.maxShape[axis];
+                    if (sharedMinimumSequence >= 0 &&
+                        (minimumSequence != sharedMinimumSequence ||
+                            optimumSequence != sharedOptimumSequence ||
+                            maximumSequence != sharedMaximumSequence)) {
+                        m_state = "failed";
+                        m_errorCode = "invalid_input_shape_profile";
+                        m_errorMessage = "sequence-bearing profile inputs must describe identical sequence bounds";
+                        return false;
+                    }
+                    sharedMinimumSequence = minimumSequence;
+                    sharedOptimumSequence = optimumSequence;
+                    sharedMaximumSequence = maximumSequence;
+                }
+                for (size_t dimension = 0; dimension < shape.size(); ++dimension) {
+                    const int minimum = range.minShape[dimension];
+                    const int maximum = range.maxShape[dimension];
+                    const bool variableAxis =
+                        dimension == static_cast<size_t>(range.batchAxis) ||
+                        dimension == static_cast<size_t>(range.sequenceAxis);
+                    if (minimum <= 0 || maximum < minimum || minimum > shape[dimension] ||
+                        shape[dimension] > maximum ||
+                        (!variableAxis &&
+                            (minimum != shape[dimension] || maximum != shape[dimension]))) {
+                        m_state = "failed";
+                        m_errorCode = "invalid_input_shape_profile";
+                        m_errorMessage = "only declared batch/sequence axes may vary; all other dimensions must remain static";
+                        return false;
+                    }
+                }
+            }
+        }
 
         const std::string graphFingerprint = MakeGraphFingerprint(
             rootPath, m_weightsLocation, m_entryFunction, m_backend, m_precision,
-            inputShapes, inputDataTypes, m_partitionOptions);
+            inputShapes, inputDataTypes, m_inputShapeRanges, m_partitionOptions);
         const std::filesystem::path graphCachePath =
             std::filesystem::path(m_cacheDirectory) / "runtime_graph.cache";
         const std::filesystem::path enginePath =
@@ -1380,6 +1486,12 @@ namespace Garnet
                     partitionCount = std::max(
                         partitionCount, operation.candidatePartition + 1);
                 }
+                if (!m_inputShapeRanges.empty() && partitionCount > 1) {
+                    m_state = "failed";
+                    m_errorCode = "dynamic_input_shape_partition_unsupported";
+                    m_errorMessage = "dynamic input profiles require a single compiled TensorRT partition";
+                    return false;
+                }
                 m_executionPlanJson = BuildExecutionPlanJson(
                     GetCapturedFusionRegions(),
                     GetCapturedTensorOperations(),
@@ -1425,6 +1537,7 @@ namespace Garnet
                             symbolicInputs,
                             &m_weightIndex,
                             m_enginePath,
+                            m_inputShapeRanges,
                             m_errorMessage);
                 }
                 if (!built) {
@@ -1726,6 +1839,8 @@ namespace Garnet
             return result;
         }
         std::string executionError;
+        int64_t sharedBatchExtent = -1;
+        int64_t sharedSequenceExtent = -1;
         for (size_t index = 0; index < m_inputShapes.size(); ++index) {
             const auto input = inputs.Get(static_cast<long long>(index));
             if (!X::Tensor::IsTensor(input)) {
@@ -1737,8 +1852,24 @@ namespace Garnet
             const auto& info = tensor.Info();
             const auto& shape = m_inputShapes[index];
             bool matches = static_cast<size_t>(info.rank) == shape.size();
-            for (size_t dimension = 0; matches && dimension < shape.size(); ++dimension)
-                matches = info.shape[dimension] == shape[dimension];
+            const TensorInputShapeRange* range = m_inputShapeRanges.empty()
+                ? nullptr : &m_inputShapeRanges[index];
+            for (size_t dimension = 0; matches && dimension < shape.size(); ++dimension) {
+                if (!range) matches = info.shape[dimension] == shape[dimension];
+                else matches = info.shape[dimension] >= range->minShape[dimension] &&
+                    info.shape[dimension] <= range->maxShape[dimension];
+            }
+            if (matches && range && range->batchAxis >= 0) {
+                const int64_t extent = info.shape[range->batchAxis];
+                if (range->batchUnits <= 0 || extent % range->batchUnits != 0) matches = false;
+                else if (sharedBatchExtent < 0) sharedBatchExtent = extent / range->batchUnits;
+                else matches = sharedBatchExtent == extent / range->batchUnits;
+            }
+            if (matches && range && range->sequenceAxis >= 0) {
+                const int64_t extent = info.shape[range->sequenceAxis];
+                if (sharedSequenceExtent < 0) sharedSequenceExtent = extent;
+                else matches = sharedSequenceExtent == extent;
+            }
             if (!matches) {
                 result.SetItem("status", NativeValue(host, "error"));
                 result.SetItem("error_code", NativeValue(host, "compiled_input_shape_mismatch"));
@@ -1777,7 +1908,8 @@ namespace Garnet
                     &m_weightIndex,
                     reusableOutput,
                     m_cudaGraphEnabled,
-                    executionError);
+                    executionError,
+                    m_inputShapeRanges);
         }
         if (!(X::Tensor::IsTensor(output))) {
             result.SetItem("status", NativeValue(host, "error"));

@@ -12,7 +12,7 @@ import ctypes
 from pathlib import Path
 
 import garnet as G
-from pipeline import build_tensor_parallel, make_tensor_parallel_plan
+from pipeline import build_tensor_parallel, make_tensor_parallel_plan, shared_kv_handoff
 
 
 assert len(sys.argv) == 7, 'expected weights, cache, request, result, batch, output tokens'
@@ -98,7 +98,7 @@ loaded_tokens = None
 for chunk_index, (offset, chunk_tokens) in enumerate(prefill_chunks):
     if chunk_tokens != loaded_tokens:
         if model is not None:
-            kv = [(stage['keys'], stage['values']) for stage in model.stages]
+            kv = shared_kv_handoff(model.stages, plan.get('kv_layout'))
             model.release()
         started = time.perf_counter()
         print('Building TP2 batch prefill engines for', chunk_tokens,
@@ -148,7 +148,7 @@ prefill_completed_memory_mib = prefill_completed_memory_samples_mib[-1]
 generated = [[int(token)] for token in prefill['token_ids']]
 assert len(generated) == batch, (len(generated), batch)
 print('TP2 batch prefill complete', prefill_seconds, flush=True)
-kv = [(stage['keys'], stage['values']) for stage in model.stages]
+kv = shared_kv_handoff(model.stages, plan.get('kv_layout'))
 model.release()
 
 started = time.perf_counter()

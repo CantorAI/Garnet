@@ -191,7 +191,8 @@ namespace Garnet {
             TRTContextPool::Slot& state,
             const std::vector<void*>& bindingSignature,
             bool enableCudaGraph,
-            cudaStream_t stream)
+            cudaStream_t stream,
+            const std::vector<int64_t>& shapeSignature = {})
         {
             const char* enabled = std::getenv("GARNET_DECODE_CUDA_GRAPH");
             const bool useCudaGraph =
@@ -207,9 +208,10 @@ namespace Garnet {
             state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
             if (!useCudaGraph) return context->enqueueV3(stream);
 
-            if (state.bindings != bindingSignature) {
+            if (state.bindings != bindingSignature || state.shapeSignature != shapeSignature) {
                 state.ResetGraph();
                 state.bindings = bindingSignature;
+                state.shapeSignature = shapeSignature;
             }
             state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
             if (state.executable) {
@@ -4348,6 +4350,7 @@ namespace Garnet {
         X::ARGS& symbolicInputs,
         const SafeTensorsIndex* weightIndex,
         const std::string& enginePath,
+        const std::vector<TensorInputShapeRange>& inputShapeRanges,
         std::string& errorMessage) {
         capturedTensorNames.clear();
         unsigned long long graphOutputId = 0;
@@ -4467,6 +4470,28 @@ namespace Garnet {
             for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
                 dimensions.d[dimension] = TensorDimension(input, dimension);
             }
+            if (!inputShapeRanges.empty()) {
+                if (index >= inputShapeRanges.size() ||
+                    inputShapeRanges[index].minShape.size() != static_cast<size_t>(dimensions.nbDims) ||
+                    inputShapeRanges[index].optShape.size() != static_cast<size_t>(dimensions.nbDims) ||
+                    inputShapeRanges[index].maxShape.size() != static_cast<size_t>(dimensions.nbDims)) {
+                    loweringError = "TensorRT input profile rank/count mismatch";
+                    break;
+                }
+                const auto& range = inputShapeRanges[index];
+                if (range.batchAxis < -1 || range.batchAxis >= dimensions.nbDims ||
+                    range.sequenceAxis < -1 || range.sequenceAxis >= dimensions.nbDims ||
+                    (range.batchAxis >= 0 && range.batchAxis == range.sequenceAxis)) {
+                    loweringError = "TensorRT profile batch/sequence axis is out of range";
+                    break;
+                }
+                if (range.batchAxis >= 0 &&
+                    range.minShape[range.batchAxis] != range.maxShape[range.batchAxis])
+                    dimensions.d[range.batchAxis] = -1;
+                if (range.sequenceAxis >= 0 &&
+                    range.minShape[range.sequenceAxis] != range.maxShape[range.sequenceAxis])
+                    dimensions.d[range.sequenceAxis] = -1;
+            }
             const std::string name = partitionBuildActive
                 ? partitionInputNames.at(TensorId(inputValue))
                 : "input_" + std::to_string(index);
@@ -4523,8 +4548,33 @@ namespace Garnet {
             // such networks; an empty profile is sufficient when no input
             // dimension itself is dynamic.
             auto* optimizationProfile = builder->createOptimizationProfile();
-            if (!optimizationProfile ||
-                config->addOptimizationProfile(optimizationProfile) < 0) {
+            bool profileValid = optimizationProfile != nullptr;
+            if (profileValid && !inputShapeRanges.empty()) {
+                if (inputShapeRanges.size() != symbolicInputs.size()) profileValid = false;
+                for (size_t index = 0; profileValid && index < inputShapeRanges.size(); ++index) {
+                    auto makeDims = [&](const std::vector<int>& shape) {
+                        Dims dims{};
+                        dims.nbDims = static_cast<int>(shape.size());
+                        for (int d = 0; d < dims.nbDims; ++d) dims.d[d] = shape[d];
+                        return dims;
+                    };
+                    const std::string name = "input_" + std::to_string(index);
+                    const auto& range = inputShapeRanges[index];
+                    const bool dynamicBatch = range.batchAxis >= 0 &&
+                        range.minShape[range.batchAxis] != range.maxShape[range.batchAxis];
+                    const bool dynamicSequence = range.sequenceAxis >= 0 &&
+                        range.minShape[range.sequenceAxis] != range.maxShape[range.sequenceAxis];
+                    const bool dynamicInput = dynamicBatch || dynamicSequence;
+                    if (!dynamicInput) continue;
+                    profileValid = optimizationProfile->setDimensions(
+                        name.c_str(), OptProfileSelector::kMIN, makeDims(range.minShape)) &&
+                        optimizationProfile->setDimensions(
+                            name.c_str(), OptProfileSelector::kOPT, makeDims(range.optShape)) &&
+                        optimizationProfile->setDimensions(
+                            name.c_str(), OptProfileSelector::kMAX, makeDims(range.maxShape));
+                }
+            }
+            if (!profileValid || config->addOptimizationProfile(optimizationProfile) < 0) {
                 loweringError = "TensorRT optimization profile creation failed";
             }
         }
@@ -4718,6 +4768,7 @@ namespace Garnet {
                     symbolicInputs,
                     weightIndex,
                     spec.enginePath,
+                    {},
                     errorMessage)) {
                 partitionBuildActive = false;
                 partitionInputNames.clear();
@@ -4803,7 +4854,8 @@ namespace Garnet {
         const SafeTensorsIndex* weightIndex,
         X::Value reusableOutput,
         bool enableCudaGraph,
-        std::string& errorMessage) {
+        std::string& errorMessage,
+        const std::vector<TensorInputShapeRange>& inputShapeRanges) {
         if (!EnsurePagedKVDecodePluginRegistered()) {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
             return X::Value();
@@ -4825,6 +4877,21 @@ namespace Garnet {
         ExecutionInputs execution;
         std::vector<void*> bindingSignature;
         bindingSignature.reserve(static_cast<size_t>(inputs.Size()) + 1);
+        std::vector<int64_t> shapeSignature;
+        if (!inputShapeRanges.empty()) {
+            if (inputShapeRanges.size() != static_cast<size_t>(inputs.Size())) {
+                errorMessage = "TensorRT runtime profile/input count mismatch";
+                return X::Value();
+            }
+            if (cachedUse.slot->activeOptimizationProfile != 0) {
+                if (!cachedContext->setOptimizationProfileAsync(0, CurrentExecutionStream())) {
+                    errorMessage = "failed to select TensorRT optimization profile";
+                    return X::Value();
+                }
+                cachedUse.slot->activeOptimizationProfile = 0;
+            }
+            shapeSignature.push_back(0); // selected optimization profile
+        }
         for (long long index = 0; index < inputs.Size(); ++index) {
             X::Value inputValue = inputs.Get(index);
             if (!IsTensor(inputValue)) {
@@ -4833,6 +4900,7 @@ namespace Garnet {
                 return X::Value();
             }
             X::Tensor input(inputValue);
+            const auto& info = input.Info();
             if (!IsContiguousTensor(input)) {
                 errorMessage = "TensorRT compiled inputs must be contiguous";
                 return X::Value();
@@ -4858,6 +4926,34 @@ namespace Garnet {
             }
             void* devicePointer = TensorHelper::GetGPUMemory(input);
             const std::string name = "input_" + std::to_string(index);
+            if (!inputShapeRanges.empty()) {
+                Dims dimensions{};
+                dimensions.nbDims = static_cast<int>(info.rank);
+                if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS ||
+                    inputShapeRanges[static_cast<size_t>(index)].minShape.size() != info.rank) {
+                    errorMessage = "TensorRT runtime profile/input rank mismatch";
+                    return X::Value();
+                }
+                shapeSignature.push_back(dimensions.nbDims);
+                for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+                    if (info.shape[dimension] <= 0 || info.shape[dimension] > INT_MAX) {
+                        errorMessage = "TensorRT runtime input dimension is out of range";
+                        return X::Value();
+                    }
+                    dimensions.d[dimension] = static_cast<int>(info.shape[dimension]);
+                    shapeSignature.push_back(info.shape[dimension]);
+                }
+                const auto& range = inputShapeRanges[static_cast<size_t>(index)];
+                const bool dynamicBatch = range.batchAxis >= 0 &&
+                    range.minShape[range.batchAxis] != range.maxShape[range.batchAxis];
+                const bool dynamicSequence = range.sequenceAxis >= 0 &&
+                    range.minShape[range.sequenceAxis] != range.maxShape[range.sequenceAxis];
+                if ((dynamicBatch || dynamicSequence) &&
+                    !cachedContext->setInputShape(name.c_str(), dimensions)) {
+                    errorMessage = "TensorRT rejected runtime input shape " + name;
+                    return X::Value();
+                }
+            }
             if (!devicePointer || !cachedContext->setTensorAddress(name.c_str(), devicePointer)) {
                 errorMessage = "failed to bind TensorRT input " + name;
                 return X::Value();
@@ -4865,19 +4961,28 @@ namespace Garnet {
             bindingSignature.push_back(devicePointer);
         }
 
-        const Dims outputDimensions = cachedEngine->getTensorShape("output_0");
+        const Dims outputDimensions = inputShapeRanges.empty()
+            ? cachedEngine->getTensorShape("output_0")
+            : cachedContext->getTensorShape("output_0");
         if (outputDimensions.nbDims < 0 || outputDimensions.nbDims > Dims::MAX_DIMS) {
             errorMessage = "TensorRT engine returned an invalid output shape";
             return X::Value();
         }
         size_t outputCount = 1;
         std::vector<int64_t> outputShape; outputShape.reserve(outputDimensions.nbDims);
+        if (!inputShapeRanges.empty()) shapeSignature.push_back(outputDimensions.nbDims);
         for (int dimension = 0; dimension < outputDimensions.nbDims; ++dimension) {
             if (outputDimensions.d[dimension] <= 0) {
-                errorMessage = "dynamic output shapes are not implemented in compiled fixture execution";
+                errorMessage = "TensorRT output shape is unresolved for the selected input profile";
+                return X::Value();
+            }
+            if (outputCount > std::numeric_limits<size_t>::max() /
+                    static_cast<size_t>(outputDimensions.d[dimension])) {
+                errorMessage = "TensorRT output element count overflows addressable memory";
                 return X::Value();
             }
             outputShape.push_back(outputDimensions.d[dimension]);
+            if (!inputShapeRanges.empty()) shapeSignature.push_back(outputDimensions.d[dimension]);
             outputCount *= static_cast<size_t>(outputDimensions.d[dimension]);
         }
 
@@ -4904,6 +5009,10 @@ namespace Garnet {
         else {
             errorMessage = "unsupported TensorRT output dtype: " +
                 std::to_string(static_cast<int>(outputDataType));
+            return X::Value();
+        }
+        if (elementBytes == 0 || outputCount > std::numeric_limits<size_t>::max() / elementBytes) {
+            errorMessage = "TensorRT output byte count overflows addressable memory";
             return X::Value();
         }
         const size_t outputBytes = outputCount * elementBytes;
@@ -4954,7 +5063,7 @@ namespace Garnet {
         if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
             !EnqueueTRTWithOptionalCudaGraph(
                 enginePath, cachedContext, *cachedUse.slot.operator->(), bindingSignature, enableCudaGraph,
-                CurrentExecutionStream())) {
+                CurrentExecutionStream(), shapeSignature)) {
             if (profileDecodeLayers) {
                 cachedContext->setProfiler(nullptr);
                 cachedContext->setEnqueueEmitsProfile(false);
@@ -5973,19 +6082,91 @@ namespace Garnet {
         }
         else if (opName == "last_token") {
             const Dims sourceDims = source->getDimensions();
-            if (sourceDims.nbDims < 2 || sourceDims.d[1] <= 0) {
+            if (sourceDims.nbDims < 2 || sourceDims.d[0] == 0 || sourceDims.d[1] == 0) {
                 loweringError = "last_token requires a non-empty sequence dimension";
                 return X::Value();
             }
+            bool hasDynamicBatch = sourceDims.d[0] < 0;
+            bool hasDynamicSequence = sourceDims.d[1] < 0;
             Dims start{};
             Dims size = sourceDims;
             Dims stride{};
             start.nbDims = sourceDims.nbDims;
             stride.nbDims = sourceDims.nbDims;
             for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
-            start.d[1] = sourceDims.d[1] - 1;
+            start.d[1] = hasDynamicSequence ? 0 : sourceDims.d[1] - 1;
             size.d[1] = 1;
-            auto* layer = network->addSlice(*source, start, size, stride);
+            ISliceLayer* layer = nullptr;
+            if (hasDynamicBatch || hasDynamicSequence) {
+                for (int i = 2; i < sourceDims.nbDims; ++i) {
+                    if (sourceDims.d[i] <= 0) {
+                        loweringError = "last_token dynamic batch/sequence requires concrete trailing dimensions";
+                        return X::Value();
+                    }
+                }
+                // TensorRT Slice start/size must be shape tensors when either
+                // leading extent varies. Derive S-1 from the runtime shape and
+                // preserve the existing [B,1,...] output extent contract.
+                auto* sourceShapeLayer = network->addShape(*source);
+                ITensor* sourceShape = sourceShapeLayer
+                    ? sourceShapeLayer->getOutput(0) : nullptr;
+                auto shapePart = [&](int offset, int count) -> ITensor* {
+                    Dims shapeStart{1, {offset}};
+                    Dims shapeSize{1, {count}};
+                    Dims shapeStride{1, {1}};
+                    auto* part = sourceShape
+                        ? network->addSlice(*sourceShape, shapeStart, shapeSize, shapeStride)
+                        : nullptr;
+                    return part ? part->getOutput(0) : nullptr;
+                };
+                auto constantShapeScalar = [&](int64_t value) -> ITensor* {
+                    if (value < 0) return nullptr;
+                    integer64VectorWeights.emplace_back(1, static_cast<long long>(value));
+                    Dims scalarDims{1, {1}};
+                    Weights scalarWeights{
+                        DataType::kINT64, integer64VectorWeights.back().data(), 1};
+                    auto* constant = network->addConstant(scalarDims, scalarWeights);
+                    return constant ? constant->getOutput(0) : nullptr;
+                };
+                ITensor* startParts[Dims::MAX_DIMS]{};
+                ITensor* sizeParts[Dims::MAX_DIMS]{};
+                ITensor* sequenceExtent = hasDynamicSequence ? shapePart(1, 1) : nullptr;
+                ITensor* one = hasDynamicSequence ? constantShapeScalar(1) : nullptr;
+                auto* sequenceStartLayer = hasDynamicSequence && sequenceExtent && one
+                    ? network->addElementWise(*sequenceExtent, *one, ElementWiseOperation::kSUB)
+                    : nullptr;
+                ITensor* sequenceStart = sequenceStartLayer ? sequenceStartLayer->getOutput(0) : nullptr;
+                bool validShapeParts = !hasDynamicSequence || sequenceStart != nullptr;
+                for (int i = 0; i < sourceDims.nbDims; ++i) {
+                    if (i == 1 && hasDynamicSequence) {
+                        startParts[i] = sequenceStart;
+                        sizeParts[i] = one;
+                    } else {
+                        startParts[i] = constantShapeScalar(0);
+                        sizeParts[i] = (i == 0 && hasDynamicBatch)
+                            ? shapePart(i, 1) : constantShapeScalar(sourceDims.d[i]);
+                    }
+                    validShapeParts = validShapeParts && startParts[i] && sizeParts[i];
+                }
+                auto* dynamicStart = validShapeParts
+                    ? network->addConcatenation(startParts, sourceDims.nbDims) : nullptr;
+                auto* dynamicSize = validShapeParts
+                    ? network->addConcatenation(sizeParts, sourceDims.nbDims) : nullptr;
+                if (dynamicStart) dynamicStart->setAxis(0);
+                if (dynamicSize) dynamicSize->setAxis(0);
+                size.d[0] = hasDynamicBatch ? 1 : sourceDims.d[0];
+                layer = network->addSlice(*source, start, size, stride);
+                if (!layer || !dynamicStart || !dynamicSize ||
+                    !dynamicStart->getOutput(0) || !dynamicSize->getOutput(0)) {
+                    loweringError = "last_token dynamic batch/sequence Slice shape construction failed";
+                    return X::Value();
+                }
+                layer->setInput(1, *dynamicStart->getOutput(0));
+                layer->setInput(2, *dynamicSize->getOutput(0));
+            }
+            else {
+                layer = network->addSlice(*source, start, size, stride);
+            }
             lastOutput = layer ? layer->getOutput(0) : nullptr;
         }
         else if (opName == "argmax_last_dim") {
