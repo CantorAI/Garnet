@@ -1,4 +1,0 @@
-{
-  "scope": "Archive overlay validation now uses an isolated temporary Gitindex loaded from the recorded immutable base, so current canonical edits do not cause false failure. No source/worktree reset or historical hash change. Original verifier retained.",
-  "timing_workers_terminal_before_change": true
-}

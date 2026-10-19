@@ -1,9 +1,0 @@
-chunk reference linear_attention batch 1 chunk 40 worst_ratio 0.3172875043975116 ms 5.663584
-chunk reference linear_attention batch 1 chunk 40 worst_ratio 0.320608445211177 ms 5.326333
-chunk reference linear_attention batch 1 chunk 40 worst_ratio 0.3574774187552681 ms 5.421042
-pretrained chunk PASS linear_attention 1 40
-runtime: uncaught exception in <module> (/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_chunk_graph.py:1): <class 'RuntimeError'>: Metal session is closed
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_qwen35_extended_prefill_reference.py", line 70, in <module>
-    raise RuntimeError('Extended reference failed; fixture retained at '+str(target))
-RuntimeError: Extended reference failed; fixture retained at /Users/zsdx/garnet-metal-investigation/logs/qwen35-extended-prefill-numerical-20261013/jobs/failures/layer-0-b1-c80

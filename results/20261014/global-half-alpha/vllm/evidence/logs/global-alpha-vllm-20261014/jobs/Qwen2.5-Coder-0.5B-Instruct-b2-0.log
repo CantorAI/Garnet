@@ -1,9 +1,0 @@
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 garnet-0
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 garnet-0
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-0
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-0
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-1
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-1
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 garnet-1
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 garnet-1
-{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 2, "means": {"garnet": {"requests": 4, "ttft_ms": 52.03618761152029, "decode_tps": 70.53672423248476, "initialization_s": 1.3905284791253507, "peak_child_rss_bytes": 2070216704}, "vllm-metal": {"requests": 4, "ttft_ms": 84.22376064117998, "decode_tps": 28.401956397545113, "initialization_s": 15.932827374897897, "peak_child_rss_bytes": 3835084800}}, "decode_ratio": 2.4835163903913853, "ttft_fraction": 0.6178326307846904, "decode_target_met": true, "ttft_target_met": false, "exact_complete_outputs": true, "counts_as_default_bf16_speedup": false, "scope": "Current retained prefill policy, equivalent-FP32 native/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"}

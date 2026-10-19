@@ -1,9 +1,0 @@
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b1 garnet-0
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b1 garnet-0
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b1 vllm-metal-0
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b1 vllm-metal-0
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b1 vllm-metal-1
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b1 vllm-metal-1
-Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b1 garnet-1
-Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b1 garnet-1
-{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 1, "means": {"garnet": {"requests": 4, "ttft_ms": 39.730395656079054, "decode_tps": 72.10410149363433, "initialization_s": 1.3927718542981893, "peak_child_rss_bytes": 2069053440}, "vllm-metal": {"requests": 4, "ttft_ms": 58.57576022390276, "decode_tps": 47.366652059601996, "initialization_s": 15.982311125146225, "peak_child_rss_bytes": 3843399680}}, "decode_ratio": 1.5222545474167126, "ttft_fraction": 0.6782736665168614, "decode_target_met": false, "ttft_target_met": false, "exact_complete_outputs": true, "counts_as_default_bf16_speedup": false, "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"}

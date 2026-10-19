@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_prepared_qkv_native_checks_countfix.py", line 9, in <module>
-    exec(compile(source,__file__,'exec'))
-    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_prepared_qkv_native_checks_countfix.py", line 31, in <module>
-AssertionError: Native checks failed; terminal archive preserved, no performance launch

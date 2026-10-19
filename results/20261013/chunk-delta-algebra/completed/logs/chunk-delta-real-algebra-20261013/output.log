@@ -1,6 +1,0 @@
-{"layer": 0, "batch": 1, "chunk": 16, "iteration": 0, "block": 16, "hidden_ratio": 110237.66488854031, "state_ratio": 1974.85986328125, "conv_ratio": 0.0, "max_hidden_error": 1.7418832293422288, "max_state_error": 0.010085737332701683, "passed": false}
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/probe_real_chunk_delta_formulation.py", line 70, in <module>
-    assert row['passed'],row
-           ~~~^^^^^^^^^^
-AssertionError: {'layer': 0, 'batch': 1, 'chunk': 16, 'iteration': 0, 'block': 16, 'hidden_ratio': 110237.66488854031, 'state_ratio': 1974.85986328125, 'conv_ratio': 0.0, 'max_hidden_error': 1.7418832293422288, 'max_state_error': 0.010085737332701683, 'passed': False}

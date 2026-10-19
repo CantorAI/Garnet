@@ -1,9 +1,0 @@
-{
-  "utc": "2026-10-18T00:15:49.754628+00:00",
-  "controller_session": 16193,
-  "exit": 1,
-  "classification": "Incorrect test expectation of second prefix cache miss",
-  "evidence": "Original prefix and WS54OFF full API records both show false,true,true for these shared64-token-prefix prompts. First two actual token/full28-layer-state/serving/text/prompt comparisons passed before cache assertion.",
-  "change": "Compare actual cache-hit sequence to immutable validated full API reference, not j==2. No source/library/model/numeric/performance gate change.",
-  "restoration": "Controller verifies validated WS10/four files/noCam/benchmark404"
-}

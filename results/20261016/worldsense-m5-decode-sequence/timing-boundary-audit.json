@@ -1,9 +1,0 @@
-{
-  "source": "Exact WS21 runtime/metal_serving.py lines195-265 and cpu_decoder.py step",
-  "serving_decode_metric_preserved": "(generated_tokens-1)/(total_seconds-ttft_seconds), includes post-loop memory/ownership telemetry and tokenizer response work; old gates unchanged.",
-  "decode_loop_seconds": "monotonic-first until generation loop ends; includes decoder.step and embedding, native calls, per-step property reads and host work.",
-  "native_profile": "prepare/encode/GPU/wait aggregated in session; GPU and wait overlap, never add them.",
-  "new_derived_views": "decode_loop_tps, post_loop_seconds=servingtail-decode_loop, loop_minus_reported_wait. Attribution unavailable: not pure CPU/pool costs.",
-  "first_pair_observation": "Followup Skillreasoner servingtail control1.3770s candidate2.4279s; loop1.3720\u21922.2821, postloop.0051\u2192.1458, nativewait1.3419\u21921.5917, GPU1.3078\u21921.3228s. Descriptive singlepair only; reversedworkers pending.",
-  "no_runtime_change": true
-}

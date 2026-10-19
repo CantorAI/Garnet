@@ -1,8 +1,0 @@
-{
-  "experiment": "WS-M5-38",
-  "declared_utc": "2026-10-17T11:46:10.016978+00:00",
-  "seed": "Frozen WS37 source; distinct four-row/four-K vector decode load. Original scalar prefill, codec, ownership and FP32 arithmetic unchanged.",
-  "gates": "All original native/full-model/fault/corpus gates plus vector GPU reconstruction first; then NEW8resource10%Metal5%footprint,NEW20speed2%preservationbothmodelsTTFTtotalderiveddecodeSkillwall,NEW48fullfourworkers/twopairs individuallypassing.",
-  "accounting": "Native counters encoded not completedGPU; source/build/model/input identities and all first/warm/failures retained. No externalCPythonimages/inference;no cameras;preserveCUDA;restoreWS10normal.",
-  "hypothesis": "Explicit vector loads and shared metadata may reduce decode reconstruction costs. Compiler may already optimize scalar loads; register pressure may regress. No speed prediction."
-}

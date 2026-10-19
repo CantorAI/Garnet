@@ -1,1 +1,0 @@
-Before first build, source review found that the new diagnostic helper uses the existing third_party/nlohmann header while garnet_metal lacked its include path. Added PRIVATE third_party include directory; no shader/model/test/timing executed before correction. Original generated CMake/manifest/transform/generator preserved here.

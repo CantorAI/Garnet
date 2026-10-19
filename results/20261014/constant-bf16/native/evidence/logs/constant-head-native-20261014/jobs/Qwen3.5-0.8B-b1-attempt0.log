@@ -1,9 +1,0 @@
-Starting exclusive native worker Qwen3.5-0.8B-b1-control-0
-Completed exact native worker Qwen3.5-0.8B-b1-control-0
-Starting exclusive native worker Qwen3.5-0.8B-b1-candidate-0
-Completed exact native worker Qwen3.5-0.8B-b1-candidate-0
-Starting exclusive native worker Qwen3.5-0.8B-b1-candidate-1
-Completed exact native worker Qwen3.5-0.8B-b1-candidate-1
-Starting exclusive native worker Qwen3.5-0.8B-b1-control-1
-Completed exact native worker Qwen3.5-0.8B-b1-control-1
-{"model": "Qwen3.5-0.8B", "batch": 1, "means": {"control": {"requests": 4, "ttft_ms": 209.95771861635149, "decode_tps": 48.0947277949521, "initialization_s": 2.9599022502079606, "peak_individual_rss_bytes": 3615727616}, "candidate": {"requests": 4, "ttft_ms": 206.6802919143811, "decode_tps": 48.135300943854716, "initialization_s": 2.9156251868698746, "peak_individual_rss_bytes": 3615776768}}, "decode_ratio": 1.0008436090765624, "ttft_fraction": 0.9843900632776491, "exact_complete_outputs": true}

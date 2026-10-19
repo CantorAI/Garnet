@@ -1,5 +1,0 @@
-WorldSense stopped. Cantor started by this package was also stopped; reused Cantor was left running.
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-lazy-defaults/restore_normal.py", line 20, in <module>
-    a['request']('/api/skill-lab/benchmark/run',method='POST',body=json.loads((w/'cases.json').read_text()),token=t)
-TypeError: request() got an unexpected keyword argument 'body'

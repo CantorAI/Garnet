@@ -1,5 +1,0 @@
-{
-  "scope": "Packaging only, after all performance cohorts and runtime restoration",
-  "failure": "Post-finalization verification was invoked before asynchronous archive finalizer session5083 had reached its terminal record. It found missing native word files and exited1. No benchmark repeated or raw/source data altered.",
-  "correction": "Polled the same finalizer session5083 to exit0, then reran post-finalization against completed archive. This note retained before final manifest."
-}

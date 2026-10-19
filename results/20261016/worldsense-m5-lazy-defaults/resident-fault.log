@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "work/worldsense-lazy-defaults/resident_fault_guard.py", line 38, in <module>
-    assert (graph.lazy_default_retired_bytes>0)==('lazy_resident_defaults' in garnet.backend_info())
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'compiled_graph' object has no attribute 'lazy_default_retired_bytes'

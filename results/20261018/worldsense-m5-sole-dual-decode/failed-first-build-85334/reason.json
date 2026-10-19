@@ -1,8 +1,0 @@
-{
-  "utc": "2026-10-18T07:51:15.275567+00:00",
-  "session": 85334,
-  "exit_code": 1,
-  "scope": "First two builds passed, ON compile stopped before any GPU/native/model execution.",
-  "failure": "New constructor local read collides with existing sole reader local in same scope.",
-  "repair": "Rename only new dual reader local to dualReaderPipeline; rebuild all six roles. No shader/arithmetic/oracle/threshold changes."
-}

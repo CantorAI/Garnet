@@ -1,7 +1,0 @@
-{
-  "declared_utc": "2026-10-16T22:44:07.474774+00:00",
-  "conditional": "Only after WS09 screen passes unchanged gates; no screen result exists yet",
-  "sequence": "Two fresh WorldSense/Galaxy workers, warm both modes; three archived frames and passenger-car text plan in each window. ABBA then fresh BAAB; two measured repetitions per policy per case/query.",
-  "gates": "Each worker separately: exact golden outputs and all input/Skill hashes/counts; same actual prompt SHA and non-chunk budgets; actual plans VLM64/reasoner32 versus16/16.4B TTFT gain>=10%,total>=3%, both-model decode regression<=2%, text total/TTFT regression<=2%. Skill native wall must improve in both.",
-  "scope": "Fixed frames/current Skill and text planning, excludes decode/scheduling/persistence and retrieval/ranking. No pooling to rescue a failed worker."
-}

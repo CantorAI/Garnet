@@ -1,8 +1,0 @@
-{
-  "initial_session": 33993,
-  "exit_code": 1,
-  "cause": "Probe incorrectly expected SDK Value::operator() to throw. Its implementation ignores Call boolean. Existing checked Call API returns failure and runtime_last_error; runtime not changed.",
-  "repair": "Use checked Call for every native remote operation, then retest original error propagation/recovery and identity/UTF8/clock/shutdown assertions.",
-  "initial_sources_logs_binary_identity_retained": true,
-  "no_model_or_performance_attempt": true
-}

@@ -1,6 +1,0 @@
-{
-  "native_test_review": "Before first test execution, CPU oracle common x access was unsafe for reshape mode9; moved access behind nonreshape condition. Build may have read previous test source; force rebuild before testing. No performance measurements.",
-  "native_test_cases_per_build": 56,
-  "native_tests_off_on_pass": true,
-  "final_source_rebuild_before_tests": true
-}

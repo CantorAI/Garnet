@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_prepared_qkv_native_checks.py", line 31, in <module>
-    assert status['exit_code']==0,'Native checks failed; terminal archive preserved, no performance launch'
-           ^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: Native checks failed; terminal archive preserved, no performance launch

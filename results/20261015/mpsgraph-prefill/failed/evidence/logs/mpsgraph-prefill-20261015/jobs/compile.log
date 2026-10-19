@@ -1,4 +1,0 @@
-/Users/zsdx/garnet-metal-investigation/source/test2026/metal/mpsgraph_prefill_gpu.mm:38:260: error: property 'compilationDescriptor' not found on object of type 'MPSGraph *'
-   38 |             for(int policy=1;policy<=2;++policy){auto& p=products[policy-1];p.graph=[MPSGraph new];auto descriptor=[MPSGraphCompilationDescriptor new];descriptor.optimizationLevel=MPSGraphOptimizationLevel1;descriptor.waitForCompilationCompletion=YES;p.graph.compilationDescriptor=descriptor;
-      |                                                                                                                                                                                                                                                                    ^
-1 error generated.

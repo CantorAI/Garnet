@@ -1,1 +1,0 @@
-Prepared after screen success for post-confirmation correctness only. Not executed yet. Checks all state values finite, bitwise state/tokens, capacity rejection and recovery. Never use their elapsed time as performance evidence. Move executed scripts and logs to an explicitly executed directory only after actual success.
