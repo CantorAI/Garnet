@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 using namespace Garnet;
@@ -53,7 +54,7 @@ int main(int argc, char** argv) { try {
     options.topK = 8;
     options.prefill = prefill;
     constexpr size_t h = 2880, experts = 128;
-    Buffer x(size_t(tokens) * h * 4), router(experts * h * 4), routerBias(experts * 4);
+    Buffer x{size_t(tokens) * h * 4}, router{experts * h * 4}, routerBias{experts * 4};
     // Diverse deterministic rows/router, rather than only tied zero routes.
     // This is synthetic scheduling evidence, not a pretrained benchmark.
     auto values = [](size_t count, uint32_t seed, float scale) {
@@ -70,15 +71,15 @@ int main(int argc, char** argv) { try {
     auto hostRouter=values(experts*h,991,1.f/4096);
     check(cudaMemcpy(x.data,hostX.data(),hostX.size()*4,cudaMemcpyHostToDevice));
     check(cudaMemcpy(router.data,hostRouter.data(),hostRouter.size()*4,cudaMemcpyHostToDevice));
-    Buffer up(experts * 2 * intermediate * h / 2, 0x31);
-    Buffer upScales(experts * 2 * intermediate * h / 32, 120);
-    Buffer upBias(experts * 2 * intermediate * 4);
-    Buffer down(experts * h * intermediate / 2, 0x24);
-    Buffer downScales(experts * h * intermediate / 32, 120);
-    Buffer downBias(experts * h * 4), output(size_t(tokens) * h * 4);
+    Buffer up{experts * 2 * intermediate * h / 2, 0x31};
+    Buffer upScales{experts * 2 * intermediate * h / 32, 120};
+    Buffer upBias{experts * 2 * intermediate * 4};
+    Buffer down{experts * h * intermediate / 2, 0x24};
+    Buffer downScales{experts * h * intermediate / 32, 120};
+    Buffer downBias{experts * h * 4}, output{size_t(tokens) * h * 4};
     const auto workspaceBytes=GptOssMarlin::Workspace(tokens, options);
     if(!workspaceBytes) throw std::runtime_error("Requested Marlin shape is unsupported");
-    Buffer workspace(workspaceBytes);
+    Buffer workspace{workspaceBytes};
     const void* inputs[]{x.data, router.data, routerBias.data, up.data,
         upScales.data, upBias.data, down.data, downScales.data, downBias.data};
     GptOssMarlin marlin(options);
@@ -102,7 +103,7 @@ int main(int argc, char** argv) { try {
     check(cudaGetDeviceProperties(&device, 0));
     const size_t flushBytes = std::max(size_t(256) << 20,
         size_t(device.l2CacheSize) * 4);
-    Buffer flush(flushBytes);
+    Buffer flush{flushBytes};
     cudaEvent_t begin, end;
     check(cudaEventCreate(&begin));
     check(cudaEventCreate(&end));
