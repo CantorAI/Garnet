@@ -5,6 +5,8 @@
 #include <cuda_runtime.h>
 #include <mma.h>
 #include <iostream>
+#include <stdexcept>
+#include <type_traits>
 
 // Include headers for each type.
 #include <cuda_fp16.h>    // For FP16
@@ -23,37 +25,46 @@ using namespace nvcuda::wmma;
 // Each block (one warp) computes one 16x16 tile of C.
 template <typename DataType>
 __global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C, int M, int N, int K) {
-    // Compute tile indices.
-    int tileRow = blockIdx.y;  // Tile row index in C.
-    int tileCol = blockIdx.x;  // Tile column index in C.
-    int row = tileRow * WMMA_M;
-    int col = tileCol * WMMA_N;
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 800
+    // BF16 WMMA fragments are unavailable before Ampere. The host wrapper
+    // rejects this unsupported path; keep FP16 images for older GPUs.
+    if constexpr (std::is_same<DataType, __nv_bfloat16>::value) {
+        return;
+    } else
+#endif
+    {
+        // Compute tile indices.
+        int tileRow = blockIdx.y;  // Tile row index in C.
+        int tileCol = blockIdx.x;  // Tile column index in C.
+        int row = tileRow * WMMA_M;
+        int col = tileCol * WMMA_N;
 
-    // Declare the accumulator fragment and initialize to zero.
-    fragment<accumulator, WMMA_M, WMMA_N, WMMA_K, float> cFrag;
-    fill_fragment(cFrag, 0.0f);
+        // Declare the accumulator fragment and initialize to zero.
+        fragment<accumulator, WMMA_M, WMMA_N, WMMA_K, float> cFrag;
+        fill_fragment(cFrag, 0.0f);
 
-    // Loop over the K dimension tiles.
-    for (int i = 0; i < K; i += WMMA_K) {
-        // Pointers to the sub-tiles of A and B.
-        const DataType* A_tile = A + row * K + i;
-        const DataType* B_tile = B + i * N + col;
+        // Loop over the K dimension tiles.
+        for (int i = 0; i < K; i += WMMA_K) {
+            // Pointers to the sub-tiles of A and B.
+            const DataType* A_tile = A + row * K + i;
+            const DataType* B_tile = B + i * N + col;
 
-        // Declare fragments for the A and B sub-tiles.
-        fragment<matrix_a, WMMA_M, WMMA_N, WMMA_K, DataType, row_major> aFrag;
-        fragment<matrix_b, WMMA_M, WMMA_N, WMMA_K, DataType, col_major> bFrag;
+            // Declare fragments for the A and B sub-tiles.
+            fragment<matrix_a, WMMA_M, WMMA_N, WMMA_K, DataType, row_major> aFrag;
+            fragment<matrix_b, WMMA_M, WMMA_N, WMMA_K, DataType, col_major> bFrag;
 
-        // Load the sub-tiles from global memory.
-        load_matrix_sync(aFrag, A_tile, K);
-        load_matrix_sync(bFrag, B_tile, N);
+            // Load the sub-tiles from global memory.
+            load_matrix_sync(aFrag, A_tile, K);
+            load_matrix_sync(bFrag, B_tile, N);
 
-        // Multiply and accumulate: cFrag += aFrag * bFrag.
-        mma_sync(cFrag, aFrag, bFrag, cFrag);
+            // Multiply and accumulate: cFrag += aFrag * bFrag.
+            mma_sync(cFrag, aFrag, bFrag, cFrag);
+        }
+
+        // Write the resulting tile back to global memory.
+        float* C_tile = C + row * N + col;
+        store_matrix_sync(C_tile, cFrag, N, mem_row_major);
     }
-
-    // Write the resulting tile back to global memory.
-    float* C_tile = C + row * N + col;
-    store_matrix_sync(C_tile, cFrag, N, mem_row_major);
 }
 
 // -----------------------------------------------------------------
@@ -98,6 +109,14 @@ extern "C" void runWmmaGemmKernel_fp16(const __half* d_A, const __half* d_B, flo
 
 // BF16 version.
 extern "C" void runWmmaGemmKernel_bf16(const __nv_bfloat16* d_A, const __nv_bfloat16* d_B, float* d_C, int M, int N, int K) {
+    int device = -1;
+    int computeMajor = 0;
+    auto status = cudaGetDevice(&device);
+    if (status == cudaSuccess)
+        status = cudaDeviceGetAttribute(&computeMajor, cudaDevAttrComputeCapabilityMajor, device);
+    if (status != cudaSuccess) throw std::runtime_error(cudaGetErrorString(status));
+    if (computeMajor < 8)
+        throw std::runtime_error("BF16 WMMA requires an NVIDIA compute capability of 8.0 or newer; use FP16 on this GPU");
     dim3 gridDim(N / WMMA_N, M / WMMA_M);
     dim3 blockDim(32, 1, 1);
     wmmaGemmKernelT<__nv_bfloat16> << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);

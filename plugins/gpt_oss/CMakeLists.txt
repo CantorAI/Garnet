@@ -7,6 +7,14 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     enable_testing()
 endif()
 find_package(CUDAToolkit REQUIRED)
+
+# The GPT-OSS BF16/Marlin path already rejects devices below compute 8.0
+# at runtime. Do not instantiate its BF16 kernels for the parent's SM75
+# compatibility pass; keep other Garnet targets and their architectures intact.
+list(FILTER CMAKE_CUDA_ARCHITECTURES EXCLUDE REGEX "^[0-7][0-9](-real|-virtual)?$")
+if(NOT CMAKE_CUDA_ARCHITECTURES)
+    message(FATAL_ERROR "GPT-OSS BF16 kernels require a CUDA architecture of 80 or newer")
+endif()
 option(GARNET_GPT_OSS_BUILD_XQA_PARITY "Build private XQA native parity test; inference remains unchanged" OFF)
 option(GARNET_GPT_OSS_BUILD_XQA_BENCHMARK "Build private native XQA cost comparison; no inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_BF16_PAIR_MATH_PARITY "Build private BF16 vector arithmetic test; no peer/inference selection" OFF)

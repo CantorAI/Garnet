@@ -86,7 +86,8 @@ int main(int argc, char** argv) { try {
                 throw std::runtime_error("Inactive attention slot is nonzero");
         }
         for (int b : {0, batch / 2, batch - 1}) for (int h : {0, 7, 8, 31}) {
-            double sum = std::exp(double(sink[h])), accum[dimension] = {};
+            double sum = std::exp(double(sink[h]));
+            std::vector<double> accum(dimension, 0.0);
             if (mask[b]) for (int p = window ? std::max(0, length - window) : 0; p < length; ++p) {
                 const int page = pageTable[b * logical + p / 16];
                 if (page < 0) continue;
