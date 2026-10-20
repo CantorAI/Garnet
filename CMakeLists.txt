@@ -31,6 +31,12 @@ enable_testing()
 # Find CUDA package
 find_package(CUDA REQUIRED)
 find_package(CUDAToolkit REQUIRED)
+
+add_executable(garnet_wmma_compatibility_test test/cuda/wmma_compatibility.cu)
+target_link_libraries(garnet_wmma_compatibility_test PRIVATE CUDA::cudart)
+add_test(NAME garnet_wmma_compatibility COMMAND garnet_wmma_compatibility_test)
+set_tests_properties(garnet_wmma_compatibility PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77)
+
 find_package(OpenMP QUIET COMPONENTS CXX)
 
 # Ensure that CUDA and CXX code uses C++17

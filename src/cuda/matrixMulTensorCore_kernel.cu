@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 #include <mma.h>
 #include <iostream>
+#include <type_traits>
 
 // Include headers for each type.
 #include <cuda_fp16.h>    // For FP16
@@ -29,6 +30,22 @@ __global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C, 
     int row = tileRow * WMMA_M;
     int col = tileCol * WMMA_N;
 
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 800
+    if constexpr (std::is_same<DataType, __nv_bfloat16>::value) {
+        // SM75 has FP16 WMMA but no BF16 fragments. Preserve the same A-row /
+        // B-column tile storage using float accumulation on this architecture.
+        for (int element = threadIdx.x; element < WMMA_M * WMMA_N; element += blockDim.x) {
+            const int localRow = element / WMMA_N, localCol = element % WMMA_N;
+            float sum = 0.0f;
+            for (int tile = 0; tile < K; tile += WMMA_K)
+                for (int k = 0; k < WMMA_K; ++k)
+                    sum += __bfloat162float(A[(row + localRow) * K + tile + k]) *
+                        __bfloat162float(B[tile * N + col + localCol * N + k]);
+            C[(row + localRow) * N + col + localCol] = sum;
+        }
+    } else
+#endif
+    {
     // Declare the accumulator fragment and initialize to zero.
     fragment<accumulator, WMMA_M, WMMA_N, WMMA_K, float> cFrag;
     fill_fragment(cFrag, 0.0f);
@@ -54,6 +71,7 @@ __global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C, 
     // Write the resulting tile back to global memory.
     float* C_tile = C + row * N + col;
     store_matrix_sync(C_tile, cFrag, N, mem_row_major);
+    }
 }
 
 // -----------------------------------------------------------------
