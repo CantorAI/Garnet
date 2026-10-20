@@ -34,6 +34,7 @@ find_package(CUDAToolkit REQUIRED)
 
 add_executable(garnet_wmma_compatibility_test test/cuda/wmma_compatibility.cu)
 target_link_libraries(garnet_wmma_compatibility_test PRIVATE CUDA::cudart)
+set_target_properties(garnet_wmma_compatibility_test PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 add_test(NAME garnet_wmma_compatibility COMMAND garnet_wmma_compatibility_test)
 set_tests_properties(garnet_wmma_compatibility PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77)
 
