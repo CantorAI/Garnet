@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_exact_dense_tail_checks.py", line 12, in <module>
-    guard();(out/(model+'-before-processes.txt')).write_text(snapshot())
-    ~~~~~^^
-  File "guard", line 75, in guard
-  File "guard", line 63, in verified_worldsense_service
-NameError: name 'output' is not defined

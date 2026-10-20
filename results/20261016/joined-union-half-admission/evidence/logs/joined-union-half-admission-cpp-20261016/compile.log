@@ -1,4 +1,0 @@
-/Users/zsdx/garnet-metal-investigation/source/test2026/metal/joined_union_half_admission_cpu.mm:17:169: warning: 'auto' deduced as 'id' in declaration of 'report' [-Wauto-var-id]
-   17 |     need(argc==2,"Expected captured CPU union report");auto raw=[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:argv[1]]];need(raw!=nil,"Missing report");auto report=[NSJSONSerialization JSONObjectWithData:raw options:0 error:nil];need(report!=nil,"Report parse failed");size_t pairs=0,matrices=0,restored=0,admittedPairs=0;
-      |                                                                                                                                                                         ^~~~~~~~~~~
-1 warning generated.

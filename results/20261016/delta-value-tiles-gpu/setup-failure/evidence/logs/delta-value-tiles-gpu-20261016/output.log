@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/delta-value-tiles-component-tools-20261016/run_delta_value_tiles_gpu.py", line 45, in <module>
-    guard();quiet=time.monotonic()
-    ~~~~~^^
-  File "exclusive_guard", line 76, in guard
-  File "exclusive_guard", line 63, in verified_worldsense_service
-NameError: name 'output' is not defined

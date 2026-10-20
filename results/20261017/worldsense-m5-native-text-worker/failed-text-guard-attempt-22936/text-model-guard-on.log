@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-native-text-worker/text_model_guard.py", line 20, in <module>
-    call=json.loads(garnet.infer_json(prompts[index],'',8,name));assert call['status']=='ok';state=json.loads(garnet.native_text_worker_state_json(name));ref=refs[index];assert state['states']==ref['states']and call['generated_token_ids']==ref['call']['generated_token_ids'];assert len(state['states'])==28
-                                                                                                                                                                                                                                                ~~~^^^^^^^^
-KeyError: 'call'

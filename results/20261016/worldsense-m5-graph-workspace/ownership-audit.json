@@ -1,9 +1,0 @@
-{
-  "plan_modes": "Immutable outputParts contract:3part uses resident mask;0part ordinary uses all operations; other shapes conservatively empty. Clear invalidates plan/pool.",
-  "binding": "Ordinary pool growth/replacement vector built after host validation and before Begin; assignments nonthrowing, restored nil on success/abort before graph unlock; returned root always protected.",
-  "head": "Native Session.Run materializes any prior ordinary-head managed scratch before GPU Begin; direct EncodeGreedy must not see nil scratch.",
-  "protected": "Inputs/root/outputparts/weights/held-weight records/constants/shared storage; standard tracked singleton matrices; same full writer whitelist and strict exact-layout interval colors asWS18; customVision producers excluded, customVision args still conservatively read.",
-  "vision": "All LowerVision matrices passed througha/b/arguments; dimensions are geometry/mode, not secret slot ids. MatMul/Bias/Add producers eligible; customVision output buffers remain separate.",
-  "fallback": "Generic3part decoder calls retain distinct materialization and session-private workspace; ordinary pool appliesonly0part.",
-  "tests": "Synthetic repeated shapes/tails/returned tensors/input preservation/shared-close/rebuild and ordinary-head transition passed; full32/28 state/token/prefix/capacity parity passed; multi-grid OFF/ON full vision embeddings and separate partial-grow/encoder-abort/unbinding/root-preservation/recovery passed. See extra-correctness-result.json and final native test logs. Performance remains unconfirmed."
-}

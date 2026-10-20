@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/CantorAI/Garnet/docs/research/verify_metal_research_log.py", line 614, in <module>
-    main()
-  File "/Users/shawn/CantorAI/Garnet/docs/research/verify_metal_research_log.py", line 309, in main
-    for name,info in integration['changes'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==info['after_sha256']
-AssertionError

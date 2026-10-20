@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws76_v2.py", line 152, in <module>
-    for name,info in alias_data.items():assert resolution[str(Path(name)/'libgarnet.dylib')]['sha256']==info['library_sha256']and info['target']==info['resolved']
-KeyError: '/Users/shawn/CantorAI/out/build/garnet-metal-worldsense-paired-gpu-profile-current-off/libgarnet.dylib'

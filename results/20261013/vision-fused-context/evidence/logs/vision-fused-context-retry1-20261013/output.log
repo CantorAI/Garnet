@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_vision_fused_context_probe.py", line 45, in <module>
-    check();time.sleep(5);check();run('gpu',[str(binary),str(shader)])
-                                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_vision_fused_context_probe.py", line 36, in run
-    if code:raise RuntimeError(name+' failed; log retained')
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-RuntimeError: gpu failed; log retained

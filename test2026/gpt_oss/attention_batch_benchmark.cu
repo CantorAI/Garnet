@@ -54,7 +54,9 @@ int main(int argc, char** argv) { try {
         throw std::runtime_error("Invalid GQA setting; refusing mislabeled timing");
     if (gqaSplits != "4" && gqaSplits != "8" && gqaSplits != "16")
         throw std::runtime_error("Invalid GQA split setting; refusing mislabeled timing");
-    constexpr int layers = 36, dimension = 64, qHeads = 32, kvHeads = 4;
+    constexpr int layers = 36, qHeads = 32, kvHeads = 4;
+    // Keep the array bound out of NVCC's MSVC host lambda capture.
+    static constexpr int dimension = 64;
     const int logical = (length + 15) / 16, pages = batch * logical;
     const int packed = (qHeads + 2 * kvHeads) * dimension;
     const size_t cacheElements = size_t(layers) * pages * 16 * kvHeads * dimension;

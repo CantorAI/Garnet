@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws76_v3.py", line 219, in <module>
-    assert resolution[worker['library']]['sha256']==worker['library_sha256']and resolution[worker['serving_source']]['sha256']==worker['serving_sha256']
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws76_v3.py", line 93, in __missing__
-    raise KeyError(key)
-KeyError: '/Users/shawn/CantorAI/out/research/worldsense-paired-gpu-profile-legacy/source/runtime/metal_serving.py'

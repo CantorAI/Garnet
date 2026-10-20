@@ -1,4 +1,0 @@
-{
-  "metadata_label_fix": "Before execution, replace inherited lazy_defaults_expected=expected with primary_expected=expected,lazy_defaults_expected=False; correct the old lazy retirement success-message label. Test assertions/inputs/outputs/numerical bounds unchanged except new K-major compiled capability check.",
-  "lazy_policy": "OFF both; old lazy-allocation fault block disabled. Primary stage1/2 faults execute in native C++ fault build; owner counters not driver leak proof."
-}

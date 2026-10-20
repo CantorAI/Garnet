@@ -1,6 +1,0 @@
-compiled Garnet decoder layer 0 linear_attention ms 1.202042
-compiled Garnet decoder layer 1 full_attention ms 1.057791
-Garnet Metal/MPS Apple M4; dense_key_split_k; qwen35_extended_prefill; resident_kv_inplace; attention_prefix; fused_head_argmax; fused_head_decode_only; global_half_alpha image-to-mixed-decoder/head batch 1 PASS two requests, 14 steps each
-compiled Garnet decoder layer 0 linear_attention ms 1.222792
-compiled Garnet decoder layer 1 full_attention ms 1.014375
-Garnet Metal/MPS Apple M4; dense_key_split_k; qwen35_extended_prefill; resident_kv_inplace; attention_prefix; fused_head_argmax; fused_head_decode_only; global_half_alpha image-to-mixed-decoder/head batch 2 PASS two requests, 14 steps each

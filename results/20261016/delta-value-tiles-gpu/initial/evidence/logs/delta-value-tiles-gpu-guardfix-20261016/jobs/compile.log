@@ -1,4 +1,0 @@
-/Users/zsdx/garnet-metal-investigation/delta-value-tiles-component-tools-20261016/delta_value_tiles_gpu.mm:24:193: warning: 'auto' deduced as 'id' in declaration of 'manifest' [-Wauto-var-id]
-   24 |  NSString* folder=[NSString stringWithUTF8String:argv[2]];auto data=[NSData dataWithContentsOfFile:[folder stringByAppendingPathComponent:@"manifest.json"]];need(data!=nil,"Manifest missing");auto manifest=[NSJSONSerialization JSONObjectWithData:data options:0 error:&error];need([manifest isKindOfClass:[NSDictionary class]],"Invalid manifest");size_t profiles=0,checks=0,checked=0,samples=0;
-      |                                                                                                                                                                                                 ^~~~~~~~~~~~~
-1 warning generated.

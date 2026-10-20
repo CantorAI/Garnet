@@ -1,7 +1,0 @@
-{
-  "utc": "2026-10-18T11:53:45.251784+00:00",
-  "exit_code": 1,
-  "stage": "prospective canonical verifier generator AST parse before writing verifier or creating archive",
-  "error": "SyntaxError: replacing parenthesized source lookup after `in` removed token separation (inseed_source / incurrent).",
-  "repair": "Keep replacement expressions parenthesized. No source, model, result, gate or timing change. No inference rerun."
-}

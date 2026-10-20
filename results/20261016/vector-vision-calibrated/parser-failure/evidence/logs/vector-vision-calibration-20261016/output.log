@@ -1,7 +1,0 @@
-Quiet interval verified; starting exclusive calibration probe
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_calibrated_vector_vision_context.py", line 16, in <module>
-    if '--generate-only' not in sys.argv[3:]:exec(compile(source,__file__,'exec'))
-                                             ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_calibrated_vector_vision_context.py", line 26, in <module>
-AssertionError

@@ -1,1 +1,0 @@
-Before any build/native call: corrected a new test assumption. The established API permits same-device shared weights across contexts; test successful shared readback rather than inventing a foreign-context rejection. Original numerical tests and ownership contract unchanged. Source/generator updated and re-manifested before consumption.

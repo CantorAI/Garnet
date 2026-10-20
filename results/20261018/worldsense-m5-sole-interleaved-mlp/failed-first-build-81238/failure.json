@@ -1,8 +1,0 @@
-{
-  "utc": "2026-10-18T05:23:09.313509+00:00",
-  "session": 81238,
-  "exit_code": 1,
-  "stage": "first OFF build unit compile",
-  "reason": "New unit used repository-relative include; garnet_metal exports src/backends/metal include directory.",
-  "repair": "Use metal_context.h like existing native tests; no test assertion/numeric gate or inference changed."
-}

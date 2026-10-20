@@ -1,9 +1,0 @@
-Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-0
-Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-0
-Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0
-Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0
-Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1
-Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1
-Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-1
-Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-1
-{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 2, "means": {"control": {"requests": 4, "ttft_ms": 52.72511427756399, "decode_tps": 70.69866327126665, "initialization_s": 1.3895018121693283, "peak_individual_rss_bytes": 2070274048}, "candidate": {"requests": 4, "ttft_ms": 52.709343493916094, "decode_tps": 70.98943485063833, "initialization_s": 1.3961965418420732, "peak_individual_rss_bytes": 2070904832}}, "decode_ratio": 1.0041128299449738, "ttft_fraction": 0.9997008866862788, "exact_complete_outputs": true}

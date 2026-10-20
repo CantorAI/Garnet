@@ -1,7 +1,0 @@
-{
-  "utc": "2026-10-18T05:33:28.668766+00:00",
-  "session": 19966,
-  "exit_code": 1,
-  "reason": "Joined-prefill invalid fixture did not enable its existing exact-half dependency, so the earlier guard rejected it before the new sole-layout guard.",
-  "repair": "Supply the dependency and expect the explicit exact-half exclusion. No source, numerical/performance gate or inference changed."
-}

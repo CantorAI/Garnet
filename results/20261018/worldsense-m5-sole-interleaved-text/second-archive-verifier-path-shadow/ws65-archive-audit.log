@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_archive_ws65.py", line 123, in <module>
-    (b/'work/worldsense-opt/ws65-archive-independent-audit.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
-TypeError: unsupported operand type(s) for /: 'bytes' and 'str'

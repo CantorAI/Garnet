@@ -1,5 +1,0 @@
-{
-  "utc": "2026-10-18T08:55:50.306951+00:00",
-  "scope": "Generated native-controller syntax only; no native/GPU/model invocation.",
-  "repair": "Separate else from integer literals, preserve all numeric criteria. Build.py had already passed ast.parse/written before this failure; build62263 consumes only that build.py and frozen source, so continue same live build without restart or consumed edits."
-}

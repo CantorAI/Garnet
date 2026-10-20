@@ -1,7 +1,0 @@
-{
-  "stage": "Before first timing dispatch",
-  "change": "Add SDK/build dependency union and native host/backend SHA capture before dispatch plus post-worker checks. Original input/source/model/runtime checks and quantitative/golden gates unchanged.",
-  "correctness_controller_exit": 0,
-  "implementation_changed": false,
-  "scope_limit": "Does not hash every loaded OS dyld-cache page; OS/Xcode identities separately recorded."
-}

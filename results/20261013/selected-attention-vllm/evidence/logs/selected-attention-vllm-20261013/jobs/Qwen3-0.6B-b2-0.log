@@ -1,9 +1,0 @@
-Starting sequential runtime Qwen3-0.6B-b2 garnet-0
-Completed exact runtime Qwen3-0.6B-b2 garnet-0
-Starting sequential runtime Qwen3-0.6B-b2 vllm-metal-0
-Completed exact runtime Qwen3-0.6B-b2 vllm-metal-0
-Starting sequential runtime Qwen3-0.6B-b2 vllm-metal-1
-Completed exact runtime Qwen3-0.6B-b2 vllm-metal-1
-Starting sequential runtime Qwen3-0.6B-b2 garnet-1
-Completed exact runtime Qwen3-0.6B-b2 garnet-1
-{"model": "Qwen3-0.6B", "batch": 2, "means": {"garnet": {"requests": 4, "ttft_ms": 86.18889562785625, "decode_tps": 58.6243012070115, "initialization_s": 1.8840877078473568, "peak_child_rss_bytes": 2495496192}, "vllm-metal": {"requests": 4, "ttft_ms": 89.80759349651635, "decode_tps": 28.25112063524663, "initialization_s": 16.377268312266096, "peak_child_rss_bytes": 3748937728}}, "decode_ratio": 2.0751141862270313, "ttft_fraction": 0.9597061035957893, "decode_target_met": true, "ttft_target_met": false, "exact_complete_outputs": true, "counts_as_default_bf16_speedup": false, "scope": "Current retained prefill policy, equivalent-FP32 native/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"}

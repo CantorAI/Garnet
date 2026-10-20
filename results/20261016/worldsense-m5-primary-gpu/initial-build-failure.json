@@ -1,6 +1,0 @@
-{
-  "controller": 44526,
-  "exit": 1,
-  "cause": "Generated C++ correctness-test print statements contained unescaped literal newlines. Both library targets linked, test compilation failed before any GPU execution or model timing.",
-  "repair": "Only test output statements changed to std::endl; initial test source/build logs retained. No kernel/math/source policy repair."
-}

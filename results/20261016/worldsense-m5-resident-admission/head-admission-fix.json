@@ -1,5 +1,0 @@
-{
-  "failure": "Inherited graph builder also constructs single-input vocabulary head; explicit resident API rejected non-six-input graph as designed",
-  "fix": "Call resident construction only for six-input layer graphs; retain ordinary BF16 head construction",
-  "performance_samples_taken": false
-}

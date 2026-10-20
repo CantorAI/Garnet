@@ -1,9 +1,0 @@
-{
-  "utc": "2026-10-18T13:25:37.464415+00:00",
-  "generator_exit": 1,
-  "subsequent_route_audit_exit": 1,
-  "issue": "New early legacy marker check repeated the exact predicate targeted by a one-occurrence generator assertion. No analyzer was written. The dependent offline audit was mistakenly dispatched after failed generation and found the missing file.",
-  "repair": "Apply the original secondary-loop replacement before injecting the stricter native-route guard. Numeric/golden/metric/threshold ASTs untouched.",
-  "inference_source_model_build_timing_changes": false,
-  "no_actual_pipeline_inference_dispatched": true
-}

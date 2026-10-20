@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "work/worldsense-prefix-cache/prefix_safety_guard.py", line 44, in <module>
-    old=next(reversed(m._prefix_keys.values()));session.clear_prefix_cache();m._prefix_keys.clear();check('explicit_clear_releases_payload',session.prefix_cache_entries==0 and session.prefix_cache_bytes==0);session.reset();reject('cleared_handle_rejected',lambda:session.restore_prefix(old))
-             ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: object is not subscriptable

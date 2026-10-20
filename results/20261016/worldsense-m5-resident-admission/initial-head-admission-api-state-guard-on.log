@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-resident-admission/api_state_guard.py", line 27, in <module>
-    load('Qwen3.5-4B','xModel/qwen35/vl_4b',dict(maxInputTokens=384,maxOutputTokens=128,prefillChunk=64,linearChunk=True,imagePixels=65536))
-    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-resident-admission/api_state_guard.py", line 21, in load
-    result=json.loads(garnet.serve_model('/Users/shawn/CantorAI/out/models/'+name,source+'/'+xmodel,'/Users/shawn/CantorAI/out/cache/'+name,json.dumps(profile),name));loads.append(result);save();assert result['ready'];assert name in metal_serving._models
-                                                                                                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError

@@ -1,6 +1,0 @@
-{
-  "utc": "2026-10-17T21:03:15.094779+00:00",
-  "old_label": "original_legacy_lookups_use_main_library",
-  "new_label": "original_raw_lookups_use_main_library",
-  "reason": "Primary lookups move to the secondary library; raw kernel lookups stay in MAIN. Clarify inherited wording. All measured program bytes, native numeric outputs, cases and thresholds unchanged; no test rerun."
-}

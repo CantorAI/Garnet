@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/shawn/Documents/Codex/2026-10-15/i/work/worldsense-opt/verify_resource_ws77.py", line 18, in <module>
-    (w/'resource-independent-audit.json').write_text(json.dumps(dict(utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),observed_terminal_session=int(sys.argv[1]),exit_code=0,original8_exact_native_calls_pass=True,source_drivers_dependencies_unchanged=True,recomputed_snapshot_maxima=maxima,recomputed_reductions=gains,actual_native_layout_records=records,original_resource_thresholds_pass=True,no_speed_or_promotion_claim=True),indent=2)+'\n');print(json.dumps(gains))
-IndexError: list index out of range

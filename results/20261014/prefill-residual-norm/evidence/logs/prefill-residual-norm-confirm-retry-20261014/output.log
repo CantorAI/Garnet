@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/launch_quiet_prefill_residual_norm_probe.py", line 19, in <module>
-    try:guard()
-        ~~~~~^^
-  File "exclusive_guard", line 76, in guard
-  File "exclusive_guard", line 63, in verified_worldsense_service
-NameError: name 'output' is not defined

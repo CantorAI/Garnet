@@ -1,5 +1,0 @@
-{
-  "failure": "24 Qwen3.5 decode linear layers use4 inputs; six-input-only caller left107347968 actual retired bytes in correctness profile",
-  "fix": "Admit4/6-input state-bearing layer signatures with same rank/root/alias/writer proofs; keepzero-retirement/zero-regrowth serving assertions",
-  "performance_samples_taken": false
-}

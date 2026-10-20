@@ -1,8 +1,0 @@
-{
-  "seed": "/Users/shawn/CantorAI/out/research/worldsense-dense-decode256/source",
-  "original_four_MSL_blocks_unchanged": true,
-  "original_body_and256_shader_unchanged": true,
-  "new512_shader_only_name_and_group_stride_differ": true,
-  "cuda_files_unchanged": 21,
-  "scope": "Original per-output SIMD32math preserved; new fixed geometry/pipeline/cumulative encoded512counter; old256OFF inboth measured variants; native test counter confirms512selection onM5."
-}

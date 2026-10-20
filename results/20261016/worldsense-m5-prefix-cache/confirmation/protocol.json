@@ -1,8 +1,0 @@
-{
-  "declared_utc": "2026-10-16T23:11:28.520721+00:00",
-  "conditional": "Only after WS10 screen passes unchanged gates; no screen result exists yet",
-  "sequence": "Two fresh WorldSense/Galaxy workers, warm both modes; three archived frames and passenger-car text plan in each window. ABBA then fresh BAAB; two measured repetitions per policy per case/query.",
-  "gates": "Each worker separately: exact golden outputs and all input/Skill hashes/counts; same actual prompt SHA and non-policy budgets; actual plans VLM64/reasoner16 with native64-token prefix restore versus16/16.4B TTFT gain>=10%,total>=3%, both-model decode regression<=2%, text total/TTFT regression<=2%. Skill native wall must improve in both.",
-  "scope": "Fixed frames/current Skill and text planning, excludes decode/scheduling/persistence and retrieval/ranking. No pooling to rescue a failed worker.",
-  "cache_gate": "Candidate measured text calls must restore64 exact prefix tokens; VLM/control restore zero. Cold misses retained separately."
-}
