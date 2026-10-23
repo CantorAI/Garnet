@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "modelopt_cublaslt.h"
+#include "modelopt_nvfp4.cuh"
 #include <cuda_bf16.h>
+#include <algorithm>
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
@@ -34,8 +36,39 @@ int main(){
                 expected=__bfloat162float(__float2bfloat16(expected));
                 if(__bfloat162float(output[b*rows+r])!=expected)throw std::runtime_error("Native FP4 matmul differs from independent tiled-scale oracle");
             }
-            CUDA(cudaFree(dw));CUDA(cudaFree(dx));CUDA(cudaFree(dsw));CUDA(cudaFree(dsx));CUDA(cudaFree(dy));CUDA(cudaFree(workspace));
             printf("CUBLASLT_NATIVE_FP4_PASS: batch=%d, exact outputs=%d; no performance claim\n",batch,batch*rows);fflush(stdout);
+            // Exercise the complete BF16 -> dynamic NVFP4 -> native FP4 path.
+            std::vector<__nv_bfloat16> hidden(batch*k);
+            const float activations[]={0,.5f,1.f,1.5f};
+            for(int b=0;b<batch;++b)for(int c=0;c<k;++c)hidden[b*k+c]=__float2bfloat16(activations[(b+c)%4]);
+            std::vector<unsigned char> rowScales(rows*blocks);
+            for(int r=0;r<rows;++r)for(int block=0;block<blocks;++block)rowScales[r*blocks+block]=codes[(r+block)%3];
+            std::fill(w.begin(),w.end(),0x42);
+            void *deviceHidden=nullptr,*deviceRowScales=nullptr;
+            CUDA(cudaMalloc(&deviceHidden,hidden.size()*2));CUDA(cudaMalloc(&deviceRowScales,rowScales.size()));
+            CUDA(cudaMemcpy(deviceHidden,hidden.data(),hidden.size()*2,cudaMemcpyHostToDevice));
+            CUDA(cudaMemcpy(deviceRowScales,rowScales.data(),rowScales.size(),cudaMemcpyHostToDevice));
+            CUDA(cudaMemcpy(dw,w.data(),w.size(),cudaMemcpyHostToDevice));
+            CUDA(Garnet::RepackModelOptNVFP4Scales((unsigned char*)deviceRowScales,(unsigned char*)dsw,rows,k,stream));
+            constexpr float inputGlobal=1.f/448.f;
+            CUDA(Garnet::QuantizeModelOptNVFP4Activation(deviceHidden,(unsigned char*)dx,(unsigned char*)dsx,inputGlobal,batch,k,stream));
+            BLAS(Garnet::RunModelOptNVFP4Matmul(handle,dw,dsw,dx,dsx,dy,batch,rows,k,.5f*inputGlobal,workspace,workspaceBytes,stream));
+            CUDA(cudaStreamSynchronize(stream));CUDA(cudaMemcpy(output.data(),dy,output.size()*2,cudaMemcpyDeviceToHost));
+            for(int b=0;b<batch;++b)for(int r=0;r<rows;++r){
+                float expected=0;for(int col=0;col<k;++col)expected+=__bfloat162float(hidden[b*k+col])*(col%2?2.f:1.f)*values[(r+col/16)%3]*.5f;
+                expected=__bfloat162float(__float2bfloat16(expected));
+                if(__bfloat162float(output[b*rows+r])!=expected)throw std::runtime_error("Dynamic NVFP4 pipeline differs from independent CPU oracle");
+            }
+            CUDA(cudaMemsetAsync(deviceHidden,0,hidden.size()*2,stream));
+            CUDA(Garnet::QuantizeModelOptNVFP4Activation(deviceHidden,(unsigned char*)dx,(unsigned char*)dsx,inputGlobal,batch,k,stream));
+            BLAS(Garnet::RunModelOptNVFP4Matmul(handle,dw,dsw,dx,dsx,dy,batch,rows,k,.5f*inputGlobal,workspace,workspaceBytes,stream));
+            CUDA(cudaStreamSynchronize(stream));CUDA(cudaMemcpy(output.data(),dy,output.size()*2,cudaMemcpyDeviceToHost));
+            for(auto value:output)if(__bfloat162float(value)!=0)throw std::runtime_error("All-zero activation block did not remain zero");
+            CUDA(cudaMemcpy(xs.data(),dsx,xs.size(),cudaMemcpyDeviceToHost));
+            for(auto value:xs)if(value!=0)throw std::runtime_error("Zero or padded activation scale was not zero-filled");
+            CUDA(cudaFree(deviceHidden));CUDA(cudaFree(deviceRowScales));
+            CUDA(cudaFree(dw));CUDA(cudaFree(dx));CUDA(cudaFree(dsw));CUDA(cudaFree(dsx));CUDA(cudaFree(dy));CUDA(cudaFree(workspace));
+            printf("DYNAMIC_NVFP4_PIPELINE_PASS: batch=%d, exact outputs=%d; no performance claim\n",batch,batch*rows);fflush(stdout);
         }
         CUDA(cudaStreamDestroy(stream));BLAS(cublasLtDestroy(handle));return 0;
     }catch(const std::exception& e){fprintf(stderr,"%s\n",e.what());return 1;}

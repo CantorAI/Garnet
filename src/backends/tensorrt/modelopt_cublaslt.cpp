@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "modelopt_cublaslt.h"
+#include <cuda_runtime_api.h>
 #include <cmath>
 namespace Garnet {
 namespace {
@@ -21,6 +22,7 @@ cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
     const void* weights,const void* weightScales,const void* input,const void* inputScales,
     void* output,int batch,int rows,int columns,float globalScale,
     void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept {
+#if CUDART_VERSION >= 12080
     if(!handle||!weights||!weightScales||!input||!inputScales||!output||batch<=0||rows<=0||
         columns<=0||rows%16||columns%64||!std::isfinite(globalScale)||globalScale<=0||
         (workspaceBytes&&!workspace))return CUBLAS_STATUS_INVALID_VALUE;
@@ -53,6 +55,9 @@ cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
         if(status!=CUBLAS_STATUS_NOT_SUPPORTED)return status;
     }
     return CUBLAS_STATUS_NOT_SUPPORTED;
+#else
+    return CUBLAS_STATUS_NOT_SUPPORTED;
+#endif
 }
 #undef MODELOPT_LT_CHECK
 }

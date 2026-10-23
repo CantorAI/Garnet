@@ -430,3 +430,44 @@ No controlled TTFT, decode tok/s, concurrency throughput, model peak VRAM or
 measured2x result has been established. Next: activation quantization/scale
 repacking and retained native projection contexts/plugins, then mixed checkpoint
 loader and full27B decoder/vision correctness before the performance gate.
+
+## P017 — 2026-10-23: GPU quantization pipeline and reference SDK repair
+
+Added CUDA BF16 activation-to-NVFP4 quantization using per-block maxima,
+E4M3 round/saturate block scales, the checkpoint tensor-global scale, E2M1
+round-to-nearest conversion, and packed low-even nibbles. Added GPU repacking
+of row-major checkpoint scales to128x4 tiled storage. Tiled allocations include
+zero-filled outer/inner padding. Native FP4 compilation is guarded at CUDA12.8;
+older SDK branches return not-supported (an older-SDK build is not yet tested).
+
+Jobs dynamic-nvfp4-native-pipeline and guarded-native-fp4-pipeline both completed
+exit0. The final native-fp4-pipeline-zero-blocks job rebuilt/linked Garnet and the
+native test after the explicit CUDA runtime-header include, then completed exit0.
+For each batch1 and16 it validated prepacked native cuBLASLt arithmetic and the
+complete BF16 input -> GPU quantization/repacking -> native packed FP4 multiply
+pipeline. Each case checked256/4096 outputs exactly against a CPU oracle. Added
+all-zero activation cases and checked zero-filled padded scale storage. These
+are synthetic correctness checks; kernel tracing, actual checkpoint layer parity,
+retained descriptors/heuristics, TensorRT plugin integration and performance are
+still pending. The tested code performs no full BF16 weight expansion.
+
+The linked Garnet build also completed exit0 after moving the numerical-only
+TensorRT Q/DQ helper out of production source. Obsolete study-created backend
+copies were removed only after matching their recorded SHA256 hashes. Source
+verification then checked6355 files with no mismatches at commit80847253d.
+Subsequent source additions are separately hashed in the command ledger.
+
+SGLang's first initial-load job terminated exit9: its JIT compiled a per-tensor
+FP8 kernel but the Linux linker could not find -lcudart under CUDA_HOME/lib64.
+Inspection found the installed wheel runtime under cu13/lib/libcudart.so.13,
+with neither lib64 nor the unversioned linker entry. The guarded setup helper
+created relative symlinks lib64->lib and lib/libcudart.so->libcudart.so.13, refusing
+to replace differing existing paths. No library copy/package replacement occurred.
+Setup job sglang-wheel-cuda-linker-layout completed exit0 and saved provenance
+in results/references/sglang/cuda-layout.json, including actual nvcc13.4.92 output
+and runtime SHA25696c42e418cec19054186b9429c321603cc1190bf26a18104e19408117a2a817b0.
+The sglang-vlm-cuda-linker-fixed retry is active; it has reached shard loading.
+Both attempts append to sglang-server.log. Its text/image smoke is not yet proven.
+
+The integration/performance goal remains incomplete. There are no controlled
+benchmarks or measured2x speedup results yet.
