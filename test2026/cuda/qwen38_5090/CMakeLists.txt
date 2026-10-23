@@ -1,6 +1,7 @@
 # Build Garnet against a preserved XLang3 SDK runtime without rebuilding its VM.
 cmake_minimum_required(VERSION 3.20)
 project(garnet_qwen38_study LANGUAGES CXX CUDA)
+find_package(CUDAToolkit REQUIRED)
 if(NOT WIN32)
     message(FATAL_ERROR "This study wrapper currently describes native Windows dependencies")
 endif()
@@ -28,3 +29,9 @@ file(COPY "${XLANG3_RUNTIME_DIR}/xlang3_runtime.dll" "${XLANG3_RUNTIME_DIR}/xlan
 set_target_properties(xlang3 PROPERTIES IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xlang3.exe")
 get_filename_component(GARNET_STUDY_SOURCE "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 add_subdirectory("${GARNET_STUDY_SOURCE}" "${CMAKE_BINARY_DIR}/garnet")
+add_executable(garnet_nvfp4_projection_test nvfp4_projection_test.cu
+    "${GARNET_STUDY_SOURCE}/src/cuda/modelopt_nvfp4.cu")
+target_include_directories(garnet_nvfp4_projection_test PRIVATE "${GARNET_STUDY_SOURCE}/src/cuda")
+target_link_libraries(garnet_nvfp4_projection_test PRIVATE CUDA::cudart)
+set_target_properties(garnet_nvfp4_projection_test PROPERTIES CUDA_STANDARD 17 CXX_STANDARD 17)
+add_test(NAME garnet_nvfp4_projection COMMAND garnet_nvfp4_projection_test)

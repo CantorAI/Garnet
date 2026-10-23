@@ -299,3 +299,34 @@ and the append-only command ledger with the DLL hash.
 These are tiny synthetic correctness checks, not full Qwen3.8 inference or
 performance measurements. Packed NVFP4 output-head support is still pending;
 there is no measured2x speedup, TTFT, throughput, or peak-VRAM result yet.
+
+## P014 — 2026-10-23: packed NVFP4 projection correctness on SM120
+
+Added a direct packed NVFP4 CUDA projection primitive. It consumes ModelOpt
+row-major E2M1 pairs (even element low nibble), E4M3 block16 scales and positive
+F32 scale2, with BF16 activations/output and F32 accumulation. It allocates no
+full-size dequantized weight matrix. This is an experimental W4A16 arithmetic
+path, not Blackwell W4A4 tensor-core execution or a completed model integration.
+ModelOpt's published nvfp4_tensor.py pack/unpack implementation confirms nibble
+order: https://github.com/NVIDIA/Model-Optimizer/blob/main/modelopt/torch/quantization/qtensor/nvfp4_tensor.py
+
+Initial test CMake generation failed due imported CUDA targets being scoped to
+the Garnet child directory; explicit parent CUDAToolkit discovery fixed it.
+Target job nvfp4-projection-oracle then completed exit0. Its independent CPU
+oracle uses arithmetic E4M3 decoding and double accumulation, compared after BF16
+rounding with51 GPU outputs, all16 nibble codes, subnormal/zero/large scales,
+multiple rows/batches and a non-power-of-two K=528. Invalid K alignment is rejected.
+The exact test/kernel source hashes and raw output are retained by run_logged.
+No performance number was measured. This primitive is not wired to the serving
+factory yet; the production packed output-head admission remains intentionally
+closed until integration and end-to-end tests pass.
+
+Pinned candidate reference packages using official PyPI metadata retrieved this
+session: vLLM0.32.0, SGLang0.5.22, uv0.13.5. Saved release filenames, hashes,
+requirements and timestamps in evidence/*-pypi.json. Current primary recipes:
+https://github.com/vllm-project/recipes/blob/main/models/Qwen/Qwen3.8-27B.yaml
+https://github.com/sgl-project/sglang/blob/main/docs/cookbook/autoregressive/Qwen/Qwen3.8-27B.mdx
+These upstream claims are not target measurements. WSL Python prerequisite
+installation is active; reference package installation and model load remain
+unverified. Separate engine environments share a uv cache within the single
+study-owned WSL disk; neither script downloads a second model copy.
