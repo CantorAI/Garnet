@@ -74,7 +74,12 @@ def validate_cuda_profile(config,capacity,batch=1):
 def create_cuda_decoder(checkpoint,config,capacity,batch=1,chunk_size=1,fused_delta=False,fused_attention=False,projection_workspace_bytes=0,retain_linear_inputs=False):
     validate_cuda_profile(config,capacity,batch)
     from xModel.qwen35.vl_0_8b.cuda_decoder import CUDADecoder
-    return CUDADecoder(checkpoint,config['text_config'],batch,capacity,chunk_size,fused_delta,fused_attention,projection_workspace_bytes,retain_linear_inputs)
+    decoder=CUDADecoder(checkpoint,config['text_config'],batch,capacity,chunk_size,fused_delta,fused_attention,projection_workspace_bytes,retain_linear_inputs)
+    try:
+        decoder.io.enable_nvfp4_head(True)
+        return decoder
+    except:
+        decoder.close();raise
 
 
 def create_cuda_vision(checkpoint,config,gh,gw):

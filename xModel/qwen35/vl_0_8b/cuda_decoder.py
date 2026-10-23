@@ -133,9 +133,12 @@ class CUDADecoder:
         runtime_bytes=sum(g['trt_allocator_live_bytes'] for g in graphs) if tracked else None
         proposal_bytes=io.get('candidate_workspace_bytes',0)+io.get('candidate_index_bytes',0)+io.get('indexed_head_buffers_bytes',0)
         pool_bytes=io.get('projection_weight_pool_bytes',0)
-        owned=state_bytes+request_bytes+output_bytes+io['embedding_head_shared_bytes']+io['head_input_bytes']+io['head_output_bytes']+proposal_bytes+pool_bytes
+        weight_bytes=io['embedding_table_bytes']+io['untied_head_bytes']
+        native_head_bytes=io.get('native_head_workspace_bytes',0)
+        owned=state_bytes+request_bytes+output_bytes+weight_bytes+native_head_bytes+io['head_input_bytes']+io['head_output_bytes']+proposal_bytes+pool_bytes
         return {'graphs':graphs,'register_delta_128':self.register_delta_128,'state_bytes':state_bytes,'request_buffer_bytes':request_bytes,'engine_output_bytes':output_bytes,
-            'embedding_head_shared_bytes':io['embedding_head_shared_bytes'],'head_input_bytes':io['head_input_bytes'],'head_output_bytes':io['head_output_bytes'],
+            'embedding_head_shared_bytes':io['embedding_head_shared_bytes'],'embedding_table_bytes':io['embedding_table_bytes'],
+            'untied_head_bytes':io['untied_head_bytes'],'native_head_workspace_bytes':native_head_bytes,'head_input_bytes':io['head_input_bytes'],'head_output_bytes':io['head_output_bytes'],
             'proposal_io_bytes':proposal_bytes,'proposal_io':{key:io.get(key,0) for key in ('candidate_workspace_bytes','candidate_index_bytes','indexed_head_buffers_bytes')},
             'projection_weight_pool_bytes':pool_bytes,'projection_weight_pool_entries':io.get('projection_weight_pool_entries',0),
             'trt_runtime_allocator_live_bytes':runtime_bytes,'owned_decoder_bytes':owned+runtime_bytes if tracked else None,

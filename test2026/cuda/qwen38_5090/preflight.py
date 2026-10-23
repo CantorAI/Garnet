@@ -29,7 +29,7 @@ def audit(config, batch=1, context=4096, cache_bytes=4):
             'estimate_scope':'Single canonical state only; excludes weights, duplicate states, graphs, workspace, activations and vision. Not peak VRAM.',
             'quantization':quant and {'method':fmt, 'algorithm':quant.get('quant_algo'), 'producer':quant.get('producer')},
             'blockers':['CUDA serving model admission and 27B GPU validation pending',
-                        'NVFP4/FP8 mixed loader and projection kernels unverified',
+                        'Native NVFP4/FP8 primitives tested; full decoder/vision parity and admission still pending',
                         'INT4 captured-weight path does not establish external BF16 projection compatibility',
                         'Single RTX 5090 numerical, memory and performance validation pending']}
 

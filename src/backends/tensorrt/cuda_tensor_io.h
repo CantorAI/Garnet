@@ -16,7 +16,10 @@ class CUDATensorIO {
     X::Tensor table_,headInput_,headOutput_,tokenHeadInput_,tokenHeadOutput_;
     X::Tensor untiedHead_;
     X::Tensor packedHead_,packedHeadScales_;
-    float packedHeadScale2_=0;
+    float packedHeadScale2_=0,packedHeadInputScale_=0;
+    bool nativeNVFP4Head_=false;
+    X::Tensor nativeHeadTiledScales_,nativeHeadPackedInput_,nativeHeadInputScales_,nativeHeadWorkspace_;
+    std::shared_ptr<void> nativeHeadContext_;
     X::Tensor candidateScratch_,candidateOutput_,indexedScores_,indexedIds_,indexedValues_;
     std::unordered_map<std::string,X::Tensor> projectionWeights_;
     std::unordered_map<std::string,X::Tensor> projectionWeightGroups_;
@@ -32,6 +35,7 @@ public:
     ~CUDATensorIO();
     bool Open(const std::string& checkpoint);
     void Close();
+    void EnableNVFP4Head(bool enabled);
     X::Value Zeros(X::Value shape);
     X::Value StorageView(X::Value source,X::Value shape);
     X::Value FiniteF32Bytes(X::Value source);
@@ -71,6 +75,7 @@ public:
         APISET().AddFunc<1>("open",&CUDATensorIO::Open);
         APISET().AddFunc<0>("close",&CUDATensorIO::Close);
         APISET().AddFunc<1>("zeros",&CUDATensorIO::Zeros);
+        APISET().AddFunc<1>("enable_nvfp4_head",&CUDATensorIO::EnableNVFP4Head);
         APISET().AddFunc<2>("storage_view",&CUDATensorIO::StorageView);
         APISET().AddFunc<1>("finite_f32_bytes",&CUDATensorIO::FiniteF32Bytes);
         APISET().AddFunc<1>("zero",&CUDATensorIO::Zero);

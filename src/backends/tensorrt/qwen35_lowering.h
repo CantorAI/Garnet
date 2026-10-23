@@ -221,11 +221,16 @@ public:
             return reshape(mul(reshape(input,{batch,kv,1,capacity,dim}),
                 constant(std::vector<float>(heads/kv,1),{1,1,heads/kv,1,1})),{batch,heads,capacity,dim});
         };
-        T* scores=mul(matmul(reshape(q,{batch,heads,1,dim}),repeat(nextK),true),scalar(1/std::sqrt(float(dim)),4));
+        // The verified27B profile has six query heads per KV head. Group
+        // queries inside each KV head instead of expanding both caches sixfold.
+        // Keep other profiles on their previously validated graph geometry.
+        const bool grouped27B=heads==24&&kv==4&&dim==256;
+        T* query=reshape(q,grouped27B?std::vector<int>{batch,kv,heads/kv,dim}:std::vector<int>{batch,heads,1,dim});
+        T* scores=mul(matmul(query,grouped27B?nextK:repeat(nextK),true),scalar(1/std::sqrt(float(dim)),4));
         auto* beyond=ew(range2,slots2,nvinfer1::ElementWiseOperation::kGREATER);
         auto* valid=unary(beyond,nvinfer1::UnaryOperation::kNOT);
         scores=select(reshape(valid,{batch,1,1,capacity}),scores,scalar(-1e30f,4));
-        T* context=reshape(matmul(softmax(scores,-1),repeat(nextV)),{batch,heads*dim});
+        T* context=reshape(matmul(softmax(scores,-1),grouped27B?nextV:repeat(nextV)),{batch,heads*dim});
         T* output=maskRows(mul(context,sigmoid(gate)),active);
         return cat({output,reshape(nextK,{batch,kv*capacity*dim}),reshape(nextV,{batch,kv*capacity*dim})},1);
     }

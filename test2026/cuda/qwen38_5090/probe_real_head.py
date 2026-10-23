@@ -7,6 +7,7 @@ with open(oracle_path) as f: oracle=json.load(f)
 io=garnet.cuda_tensor_io()
 try:
     io.open(checkpoint)
+    if oracle.get('head_mode')=='nvfp4_w4a4':io.enable_nvfp4_head(True)
     width=oracle['shape'][1]
     values=[0.]*width
     for i in range(len(oracle['positions'])): values[oracle['positions'][i]]=oracle['values'][i]

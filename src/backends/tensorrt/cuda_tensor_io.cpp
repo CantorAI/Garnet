@@ -2,6 +2,7 @@
 #if !defined(GARNET_CPU_ONLY) && !defined(GARNET_METAL)
 #include "cuda_tensor_io.h"
 #include "bf16_projection_plugin.h"
+#include "modelopt_cublaslt.h"
 #include "tensor_helper.h"
 #include "cuda_lib.h"
 #include "../../cuda/qwen35_indexed_head.cuh"
@@ -58,7 +59,8 @@ bool SameShape(const X::Tensor& tensor,const std::vector<int64_t>& shape){
 }
 CUDATensorIO::~CUDATensorIO(){Close();}
 void CUDATensorIO::CloseUnlocked(){table_=X::Tensor();headInput_=X::Tensor();headOutput_=X::Tensor();tokenHeadInput_=X::Tensor();tokenHeadOutput_=X::Tensor();
-    untiedHead_=packedHead_=packedHeadScales_=X::Tensor();packedHeadScale2_=0;
+    untiedHead_=packedHead_=packedHeadScales_=X::Tensor();packedHeadScale2_=packedHeadInputScale_=0;nativeNVFP4Head_=false;
+    nativeHeadTiledScales_=nativeHeadPackedInput_=nativeHeadInputScales_=nativeHeadWorkspace_=X::Tensor();nativeHeadContext_.reset();
     candidateScratch_=candidateOutput_=indexedScores_=indexedIds_=indexedValues_=X::Tensor();projectionWeights_.clear();projectionWeightGroupMembers_.clear();projectionWeightGroups_.clear();projection_.reset();vocab_=width_=0;}
 void CUDATensorIO::Close(){std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();}
 bool CUDATensorIO::Open(const std::string& checkpoint){
@@ -92,7 +94,7 @@ bool CUDATensorIO::Open(const std::string& checkpoint){
     const bool packed=head&&head->dataType=="U8"&&modelopt;
     const SafeTensorMetadata* scales=nullptr;
     SafeTensorsMappedFile scalesMapping;
-    const void* scaleBytes=nullptr;float headScale2=0;
+    const void* scaleBytes=nullptr;float headScale2=0,headInputScale=0;
     if(packed){
         const auto rows=entry->shape[0],width=entry->shape[1];
         scales=index_.Find("lm_head.weight_scale");
@@ -109,7 +111,7 @@ bool CUDATensorIO::Open(const std::string& checkpoint){
             !scales||(scales->dataType!="F8_E4M3"&&scales->dataType!="F8_E4M3FN")||
             scales->shape!=std::vector<long long>{rows,width/16}||scales->dataSize!=uint64_t(rows)*width/16)
             throw X::Error("Invalid ModelOpt NVFP4 head layout");
-        headScale2=scalar(scale2);scalar(inputScale); // W4A16 uses the weights but does not quantize activations.
+        headScale2=scalar(scale2);headInputScale=scalar(inputScale);
         if(!scalesMapping.Open(scales->filePath,error))throw X::Error(error);
         scaleBytes=scalesMapping.DataAt(scales->dataOffset,scales->dataSize);
         if(!scaleBytes)throw X::Error("NVFP4 block scale storage exceeds checkpoint");
@@ -133,8 +135,25 @@ bool CUDATensorIO::Open(const std::string& checkpoint){
     }
     auto projection=CreateBF16ProjectionContext();if(!projection)throw X::Error("CUDA tied head context initialization failed");
     table_=std::move(table);untiedHead_=std::move(separateHead);packedHead_=std::move(packedWeight);
-    packedHeadScales_=std::move(packedScales);packedHeadScale2_=headScale2;
+    packedHeadScales_=std::move(packedScales);packedHeadScale2_=headScale2;packedHeadInputScale_=headInputScale;
     projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);return true;
+}
+void CUDATensorIO::EnableNVFP4Head(bool enabled){
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(!enabled){nativeNVFP4Head_=false;nativeHeadContext_.reset();
+        nativeHeadTiledScales_=nativeHeadPackedInput_=nativeHeadInputScales_=nativeHeadWorkspace_=X::Tensor();return;}
+    if(nativeNVFP4Head_)return;
+    if(!packedHead_.IsValid()||vocab_%16||width_%64||
+        !std::isfinite(packedHeadScale2_*packedHeadInputScale_)||packedHeadScale2_*packedHeadInputScale_<=0)
+        throw X::Error("Native NVFP4 head requires a valid packed block16 checkpoint with rows%16/K%64");
+    auto context=CreateModelOptNVFP4Context();if(!context)throw X::Error("Native NVFP4 head requires a supported Blackwell CUDA device");
+    const auto scaleBytes=ModelOptNVFP4ScaleBytes(vocab_,width_);
+    if(!scaleBytes||scaleBytes>INT_MAX)throw X::Error("Native NVFP4 head scale storage exceeds admitted size");
+    auto tiled=TensorHelper::CreateGPU(Host(),X3_TENSOR_UINT8,{int64_t(scaleBytes)});
+    auto use=TensorHelper::AcquireGPU({{packedHeadScales_,X3_TENSOR_READ},{tiled,X3_TENSOR_WRITE}});
+    Check(RepackModelOptNVFP4Scales(static_cast<const unsigned char*>(packedHeadScales_.Info().data),
+        static_cast<unsigned char*>(tiled.Info().data),vocab_,width_,CurrentExecutionStream()));use.Finish();
+    nativeHeadTiledScales_=std::move(tiled);nativeHeadContext_=std::move(context);nativeNVFP4Head_=true;
 }
 X::Value CUDATensorIO::Zeros(X::Value shape){return TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,Shape(shape));}
 X::Value CUDATensorIO::StorageView(X::Value source,X::Value dimensions){
@@ -360,9 +379,24 @@ X::Value CUDATensorIO::LogitsUnlocked(X::Value hidden,bool reuse,bool tokens){
     std::vector<std::pair<X::Tensor,X3TensorAccess>> accesses{{input,X3_TENSOR_READ},{packed?packedHead_:HeadTable(),X3_TENSOR_READ},
         {inputBuffer,X3_TENSOR_WRITE},{output,X3_TENSOR_WRITE}};
     if(packed)accesses.push_back({packedHeadScales_,X3_TENSOR_READ});
+    if(nativeNVFP4Head_){
+        const std::vector<int64_t> packedShape{rows,width_/2},scaleShape{int64_t(ModelOptNVFP4ScaleBytes(int(rows),width_))};
+        if(!SameShape(nativeHeadPackedInput_,packedShape))nativeHeadPackedInput_=TensorHelper::CreateGPU(Host(),X3_TENSOR_UINT8,packedShape);
+        if(!SameShape(nativeHeadInputScales_,scaleShape))nativeHeadInputScales_=TensorHelper::CreateGPU(Host(),X3_TENSOR_UINT8,scaleShape);
+        if(!nativeHeadWorkspace_.IsValid())nativeHeadWorkspace_=TensorHelper::CreateGPU(Host(),X3_TENSOR_UINT8,{4LL<<20});
+        accesses.push_back({nativeHeadTiledScales_,X3_TENSOR_READ});accesses.push_back({nativeHeadPackedInput_,X3_TENSOR_WRITE});
+        accesses.push_back({nativeHeadInputScales_,X3_TENSOR_WRITE});accesses.push_back({nativeHeadWorkspace_,X3_TENSOR_WRITE});
+    }
     auto use=TensorHelper::AcquireGPU(accesses);
     Check(runConvertFP32ToBF16Async(static_cast<const float*>(a.data),static_cast<bfloat16*>(inputBuffer.Info().data),rows*width_,CurrentExecutionStream()));
-    if(packed)Check(RunModelOptNVFP4Projection(inputBuffer.Info().data,
+    if(nativeNVFP4Head_){
+        Check(QuantizeModelOptNVFP4Activation(inputBuffer.Info().data,static_cast<unsigned char*>(nativeHeadPackedInput_.Info().data),
+            static_cast<unsigned char*>(nativeHeadInputScales_.Info().data),packedHeadInputScale_,int(rows),width_,CurrentExecutionStream()));
+        const auto status=RunModelOptNVFP4MatmulContext(nativeHeadContext_,packedHead_.Info().data,nativeHeadTiledScales_.Info().data,
+            nativeHeadPackedInput_.Info().data,nativeHeadInputScales_.Info().data,output.Info().data,int(rows),vocab_,width_,
+            packedHeadScale2_*packedHeadInputScale_,nativeHeadWorkspace_.Info().data,4ULL<<20,CurrentExecutionStream());
+        if(status!=CUBLAS_STATUS_SUCCESS)throw X::Error("Native NVFP4 head cuBLASLt failure: "+std::to_string(int(status)));
+    }else if(packed)Check(RunModelOptNVFP4Projection(inputBuffer.Info().data,
         static_cast<const unsigned char*>(packedHead_.Info().data),static_cast<const unsigned char*>(packedHeadScales_.Info().data),
         packedHeadScale2_,output.Info().data,int(rows),vocab_,width_,CurrentExecutionStream()));
     else if(RunBF16Projection(projection_,inputBuffer.Info().data,HeadTable().Info().data,output.Info().data,rows,width_,vocab_,CurrentExecutionStream()))
@@ -448,7 +482,9 @@ std::string CUDATensorIO::MemoryJson() const{
     for(const auto& item:projectionWeights_)if(!projectionWeightGroupMembers_.count(item.first))poolBytes+=bytes(item.second);
     return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_tied",!untiedHead_.IsValid()&&!packedHead_.IsValid()},
         {"embedding_table_bytes",bytes(table_)},{"untied_head_bytes",bytes(untiedHead_)+bytes(packedHead_)+bytes(packedHeadScales_)},
-        {"head_precision",packedHead_.IsValid()?"modelopt_nvfp4_w4a16":"bf16"},
+        {"head_precision",nativeNVFP4Head_?"modelopt_nvfp4_w4a4":(packedHead_.IsValid()?"modelopt_nvfp4_w4a16":"bf16")},
+        {"native_head_workspace_bytes",bytes(nativeHeadTiledScales_)+bytes(nativeHeadPackedInput_)+bytes(nativeHeadInputScales_)+bytes(nativeHeadWorkspace_)},
+        {"native_head_tiled_weight_scales_bytes",bytes(nativeHeadTiledScales_)},
         {"embedding_head_shared_bytes",untiedHead_.IsValid()||packedHead_.IsValid()?0:bytes(table_)},{"head_input_bytes",bytes(headInput_)+bytes(tokenHeadInput_)},{"head_output_bytes",bytes(headOutput_)+bytes(tokenHeadOutput_)},
         {"single_head_input_bytes",bytes(headInput_)},{"single_head_output_bytes",bytes(headOutput_)},
         {"token_head_input_bytes",bytes(tokenHeadInput_)},{"token_head_output_bytes",bytes(tokenHeadOutput_)},

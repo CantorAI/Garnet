@@ -595,3 +595,108 @@ accounting must use its supported protocol rather than assuming vLLM's extension
 
 P021 oracle sanity: NumPy2.4.4; all5120 expected outputs are nonzero, range
 [-2.6875,34.0], L2 norm35.74675615976486. Exact comparison was not a zero-output case.
+
+
+## P023 - 2026-10-23: successful SGLang VLM smoke and first real measurements
+
+The compiler/linker-fixed SGLang attempt completed startup warmup at23:02:56UTC.
+Process evidence before readiness showed active bounded FlashInfer SM120 FP4
+compilation, not a dead process or another OOM. Health/text/image smoke then
+completed exit0: health200, text4, imageRed. Prompt/completion counts were26/2 and
+93/2; the image response reports64 image tokens. Raw requests/responses are under
+results/references/sglang/smoke. This does not establish broad model quality.
+
+Added a real loopback streaming harness using continuous server cumulative token
+usage, not SSE chunk counts. It retains raw timestamped events, request hashes,
+errors, outputs, source identity and configuration provenance. Warmups run at each
+concurrency. Deterministic prompt nonces and one changed image pixel avoid result
+reuse while keeping identical requests reproducible across engines/workload seeds.
+NVML samples adapter-wide memory; sample timestamps and observed gaps are retained.
+The27 CPU tests include framing through a local HTTP fixture, failure-body retention,
+backward/missing token counts, batched arrivals, stable/unique images and CPU oracles.
+
+Pilot run1e1e765e98c9471ca4923342505d6e5d completed exit0 with two measured32-token
+requests per case: text median TTFT235.5008ms/decode11.8206tok/s, image246.6652ms/
+11.7469tok/s. These are exploratory measurements on the initial eager profile.
+
+Expanded run below completed exit0, eight measured32-token requests per cohort,
+one warmup wave at each concurrency, total context capacity4096. Configuration:
+SGLang0.5.22, Torch2.14.1+cu130, mixed checkpoint, BF16 KV/conv and F32 SSM;
+CUDA graph decode/prefill disabled, startup autotuning disabled. This is an initial
+reference profile, not a tuned fastest baseline or a valid2x comparison with Garnet.
+Garnet currently retains F32 state/cache arithmetic, so precision matching remains
+an explicit outstanding gate. Existing WorldSense services were preserved.
+
+Run ID: da2e6f2275164c5d8be1859f62fc26bf. All measured arrivals were single-token usage increments.
+
+| Case | Concurrency | Median TTFT ms | Median decode tok/s | Aggregate output tok/s | Sampled adapter peak GiB |
+|---|---:|---:|---:|---:|---:|
+| text | 1 | 242.277 | 11.625 | 8.599 | 29.0486 |
+| text | 2 | 315.826 | 11.420 | 20.756 | 29.0506 |
+| text | 4 | 439.623 | 11.239 | 40.819 | 29.0506 |
+| text | 8 | 370.987 | 11.442 | 82.926 | 29.0506 |
+| image | 1 | 237.095 | 11.855 | 11.144 | 29.0525 |
+| image | 2 | 393.318 | 11.228 | 20.304 | 29.0603 |
+| image | 4 | 373.803 | 11.788 | 43.049 | 29.0857 |
+| image | 8 | 462.719 | 10.996 | 77.242 | 29.0721 |
+
+The sampler requested20ms; actual median gaps were about31ms. The text/concurrency1
+cohort had a7.787s maximum sample gap and lower aggregate throughput; no outliers
+were removed. Its sampled peak cannot bound an unseen transient in that gap.
+Investigate repeatability/observer effects before treating these as publication
+measurements. All raw rows remain in benchmark-initial; the manifest embeds the
+frozen packages, compiler, startup script, checkpoint metadata and NVIDIA-SMI XML.
+
+SGLang supplied exact26 chat input IDs and generated[19,248046] for the arithmetic
+smoke. Stored text-token-oracle.json avoids guessing chat templates for native
+validation. Verified owned parent PID368 by executable prefix, checkpoint and port,
+sent SIGTERM; both signal job and server finished exit0. GPU returned106MiB idle.
+No unrelated process was stopped. D: free-space check showed1,050,915,160,064 bytes;
+all work continues under the fixed study root.
+
+## P024 - 2026-10-23: real decoder-layer parity and grouped-query build fix
+
+Added independent NumPy mixed-projection, GDN recurrence and full-attention
+oracles for real layers0/3, two stateful tokens each. Every hidden value is checked;
+state samples cover uniform positions plus every full-attention KV head's active
+prefix. The improved oracle SHA256 is
+fd7638cdbecf1db4814de0376514bc07fa82abde6cb086c02f2bdabcd3660107f.
+The original oracle2e196c3c6775a55bbdfbaf85db64b6a06b600f5b8162ff3195c83c991b267e74
+is preserved separately. These compare Garnet's declared mixed/F32 arithmetic,
+not an assumption of equality to Transformers' complete BF16 model.
+
+Layer0 passed at the first attempt. The original full-attention graph failed
+TensorRT build at64MiB with requested67,127,472 bytes, then at128MiB with requested
+134,236,336 bytes. Both failures remain in raw ledgers. Increasing the cap was
+insufficient. The verified27B graph now groups its six query heads within each KV
+head for matrix multiplication, instead of explicitly repeating K/V sixfold.
+Other attention geometries retain their previously validated graph. Removed the
+experimental cap override; final real-layer checks use the original64MiB limit.
+
+Combined job native-head-and-grouped-layer-validation completed exit0 on native
+Windows/SM120. Both decoder layers passed CPU hidden/state comparisons and replay:
+
+- Layer0 (linear_attention): maximum hidden absolute error0.0009765625, maximum relative L21.09443898e-05; sampled-state max absolute1.86264515e-09; captures1, replays6, failures0.
+
+- Layer3 (full_attention): maximum hidden absolute error0.0078125, maximum relative L27.63317594e-05; sampled-state max absolute4.76837158e-07; captures1, replays6, failures0.
+
+No model-level speedup follows from this correctness gate. Full64-layer and vision
+quality remain pending.
+
+## P025 - 2026-10-23: native W4A4 output head and memory accounting
+
+The existing packed head intentionally used BF16 activations (W4A16), which differs
+from the reference ModelOpt head. Added an explicit enable_nvfp4_head mode using
+checkpoint input calibration, GPU activation quantization, tiled packed scales and
+native FP4 cuBLASLt. Default W4A16 behavior remains available and tested; the initial
+Qwen3.8 factory explicitly enables W4A4. No full BF16 weight expansion is introduced.
+Owned-buffer accounting now includes the separate embedding/head and native head
+workspace, instead of counting only the tied embedding alias.
+
+The combined native job passed exact synthetic head outputs at batches1/3/8,
+mode disable/W4A16 preservation and invalid BF16-head mode rejection. Actual pinned
+head checks passed11 sparse rows against an independent activation-quantized oracle;
+its SHA256 is c89a092af70c2e8883fbd89b593ddedff49c163b92be3d2dd75bcc1f5151617d6.
+This is not complete language-model quality. Full64-layer token smoke is prepared
+and remains the next gate; no Garnet TTFT/decode/throughput benchmark exists yet.
+INT4/4B comparisons, tuned reference profiles and the2x target remain outstanding.

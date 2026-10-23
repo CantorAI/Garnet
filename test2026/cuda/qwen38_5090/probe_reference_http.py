@@ -4,10 +4,10 @@ from pathlib import Path
 from urllib.request import Request,urlopen
 
 
-def image_png():
+def image_png(seed=0):
     def chunk(kind,data):
         return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data)&0xffffffff)
-    rows=b''.join(b'\0'+b''.join(bytes((0,0,255) if x<56 and y<56 else (255,0,0)) for x in range(224)) for y in range(224))
+    rows=b''.join(b'\0'+b''.join(bytes(((seed&255,(seed>>8)&255,(seed>>16)&255) if seed and x==223 and y==223 else ((0,0,255) if x<56 and y<56 else (255,0,0)))) for x in range(224)) for y in range(224))
     return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',224,224,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(rows))+chunk(b'IEND',b'')
 
 

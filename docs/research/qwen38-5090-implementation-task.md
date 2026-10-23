@@ -1,13 +1,19 @@
 # Qwen3.8-27B on one RTX 5090: implementation task
 
-Status: compatibility audit and offline tests complete; integration, GPU correctness,
-and all performance results pending. No 5090 benchmark has been recorded.
-Update: a separate BF16 head prototype passes five native correctness checks on
-an RTX4080; this does not establish 27B inference or RTX5090 correctness. The
-dedicated model contract and all497 NVIDIA projection header layouts are verified.
-Audit date: 2026-10-23. Source: current working tree of Garnet at
-`5b0dc7ff8e5c1a77807138db310605bcd12aa390`, including pre-existing local edits.
-Do not reset those edits or mistake HEAD alone for the tested source identity.
+Status: pinned architecture/quantization audit, native SM120 build, NVFP4/FP8
+projection/plugin tests, real layer0 MLP parity, real GDN/full-attention decoder-layer
+parity at4K capacity, and native W4A4 head checks have passed. Both references have
+passed text/image smoke; SGLang's initial eager profile now has raw streaming and
+concurrency measurements. The27 CPU tests pass. Full64-layer/vision validation,
+serving integration, tuned matched comparisons and the2x target remain incomplete.
+No Garnet full-model timing or successful2x comparison is claimed.
+
+Audit date: 2026-10-23. The preserved source baseline was
+`5b0dc7ff8e5c1a77807138db310605bcd12aa390` plus inherited local edits, captured
+separately at2355fc4b5. Work continues on qwen38-5090; command ledgers retain exact
+commit/patch manifests. Do not reset the original checkout or infer tested source
+identity from a parent commit alone. Research method/failures are in the development
+log; no full-model throughput or successful2x comparison is claimed.
 
 ## Objective and acceptance
 
@@ -224,34 +230,51 @@ under the fixed remote root. Do not use the mixed-version first attempt as a
 validated performance environment.
 
 
-## Integration checkpoint after native packed projection work
+## Current integration checkpoint and next gates
 
-Native SM120 build, standalone packed NVFP4 projection, GPU activation quantization,
-TensorRT plugin serialization and graph replay have passed correctness checks.
-A synthetic captured residual MLP passed native NVFP4 exact outputs and replay
-counters. The explicit embedded-weight/refit fix passed both NVFP4 and BF16 synthetic regression with actual CUDA graph replay.
-Mixed plans currently embed compressed weights after TensorRT rejected stripped
-opaque INT8 constants. Do not admit two full-model plans until shared packed
-weights or a measured VRAM budget proves they fit. The projection plugin currently
-limits flattened rows to1024; 4096-token prefill needs explicit tiling or an extended
-validated bound. No hidden truncation is allowed.
+Native SM120 packed NVFP4 and FP8 projection/plugin checks passed, including GPU
+activation quantization, serialized engines and actual CUDA graph replay. The
+embedded-weight/refit fix preserves BF16 behavior. Actual layer0 MLP matches5120
+CPU-oracle outputs exactly. Actual decoder layers0 (GDN) and3 (full attention)
+passed two stateful tokens with all hidden values and sampled states checked.
+Grouped-query matrix multiplication removed explicit sixfold K/V expansion for
+the verified27B geometry and allowed the full-attention graph to build at64MiB;
+the old graph had failed at both64/128MiB. Native output-head W4A4 mode passed
+synthetic batches1/3/8 and11 actual sparse checkpoint rows, while preserving the
+separate W4A16 mode. Owned-buffer accounting includes untied heads/native workspace.
 
-Next acceptance gates: implement native FP8
-attention projections, compare real checkpoint MLP/layer outputs, admit the strict
-64-layer decoder and vision factory, then text/image parity. Reference startup
-must pass both engines' health and text/image smoke after compiler alignment.
-SGLang's previous warmup exhausted guest RAM/swap; recovery settings disable
-startup autotuning and bound build concurrency, and must be recorded distinctly.
-Only after these gates collect controlled benchmark distributions and compare
-INT4 W4A16 and Qwen3.5-4B. No measured2x speedup exists yet.
+Mixed plans embed compressed weights after TensorRT rejected stripped opaque
+INT8 constants. Do not retain separate full-model prefill/decode plans until
+shared packed bindings or measured memory admission proves they fit. FP4 projection
+rows are bounded to1024; use explicit tiling or validate a larger bound for wide
+prefill. Initial strict CUDA factories are batch1/capacity32..4096; general serving
+admission remains closed. Do not silently truncate context or lower the comparison
+capacity to fit larger batches.
 
-
-Native follow-up: FP8 projection/plugin serialization and replay checks passed at
-rows1/16/4096. Actual checkpoint layer0 NVFP4 MLP matched an independent CPU oracle
-exactly across5120 outputs. Initial strict batch1 CUDA factories now exist, while
-general serving admission remains closed pending full decoder and vision parity.
-Next gates are actual attention/layer and full-model construction, text/image
-quality, baseline smoke and real controlled measurements. FP4 projection rows
-remain bounded to1024; tiled prefill or an extended validated bound is still needed.
-SGLang's latest failure was missing unversioned cuBLAS linker names, now repaired
-with preserved hash provenance; the next startup attempt has not passed smoke yet.
+1. Construct/run the full64-layer decoder with4096 capacity, using the saved
+   reference26-token prompt and[19,248046] expected output. Validate image processing
+   and vision plus full VLM generation. The reference224x224 PNG smoke produced64
+   image tokens; inspect actual resize/normalization rather than assuming49.
+2. Establish text/image quality beyond basic smoke and record the precision
+   differences. Current Garnet state/cache arithmetic is F32; initial references
+   use BF16 KV/conv and F32 SSM. Close this matching gate before any2x claim.
+3. Add streaming/count accounting to Garnet's serving path and validate concurrency
+   profiles1/2/4/8 with real memory admission. Retain compressed weights shared
+   across profiles; inspect fused GDN/attention and resident control paths already
+   present in current Garnet before introducing another execution stack.
+4. Establish tuned vLLM/SGLang profiles, including feasible CUDA graph/kernel
+   options. Both initial profiles deliberately used eager startup for feasibility;
+   they are not evidence of the fastest attainable reference. Compiler/linker
+   failures and SGLang's first memory exhaustion are retained in the research log.
+5. Complete the separate INT4 W4A16 loader/kernel compatibility gate and4B comparison.
+   Do not label the mixed NVIDIA checkpoint as an INT4 baseline.
+6. Collect repeated text/image TTFT, decode, aggregate throughput and memory with
+   fixed4K total capacity and matched request hashes, quality, cache behavior,
+   output lengths and concurrency. The current32-token/eight-request SGLang data is
+   exploratory. Preserve longer runs, distributions and raw failures. The NVML
+   sampler requested20ms but measured about31ms typical gaps and one7.787s gap;
+   investigate timing/observer repeatability and report sampled peaks honestly.
+7. Optimize from measured bottlenecks, then test against twice the faster valid
+   reference for decode and throughput; seek half TTFT separately. Publish unmet
+   targets as measured. No automatic success follows from primitive correctness,
+   server process duration, a reduced workload or an untuned reference.
