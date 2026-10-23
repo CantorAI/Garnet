@@ -751,3 +751,24 @@ Three invalid pixel bounds were rejected. This exercises GPU JPEG preprocessing,
 temporal repetition and patch order on a constant fixture. It does not establish
 general resize parity, PNG support, vision-tower quality or end-to-end TTFT.
 All32 CPU study tests pass. Full vision and matched image workloads remain next.
+
+## P028 - 2026-10-23: preserve failed full-vision F32 comparison
+
+Prepared an independent Transformers5.19.0 CPU vision reference using all333
+actual pinned vision tensors, strict state loading, eager attention and F32 math.
+The deterministic256px JPEG was processed by the checkpoint's own image processor:
+grid[1,16,16], patches[256,1536], merged output[64,5120]. Raw patches, expected
+outputs, JPEG, source/config/index hashes and versions remain under results/vision-oracle.
+Native job native-full-vision-oracle built and ran all27 vision layers but exited1:
+maximum absolute error2.8424453735351562 exceeded the predeclared0.5 limit, although
+relative L2 error0.011373065543350613 was below0.02. All four executions agreed.
+This is a failed gate, not vision parity. The original result/oracle are retained.
+
+Garnet uses BF16 input/weight/output projections with separate F32 bias, norm,
+residual and attention math. A second diagnostic oracle retains Transformers'
+independent vision operations while explicitly rounding only those projections
+and patch convolution to BF16. It uses the same error thresholds and a separate
+result location; it does not overwrite or relabel the failed F32 comparison.
+Its result is pending. The replay fixture also needs five calls, including warmup,
+to observe two actual graph replays; the original four calls produced only one.
+No full VLM or performance success is claimed.
