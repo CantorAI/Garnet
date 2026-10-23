@@ -535,3 +535,63 @@ JSON results are native-mlp-checks.json and native-mlp-bf16-checks.json. Local18
 CPU study tests passed. Recovered WSL memory probe completed exit0 with48035912kB
 free RAM and all12582912kB swap free. SGLang recovery retry has started with the
 explicit bounded-JIT/no-autotune configuration; readiness remains pending.
+
+
+## P021 - 2026-10-23: native FP8 projections and actual NVFP4 MLP parity
+
+Added native GPU BF16-to-E4M3 activation quantization with checkpoint tensorwide
+input_scale, opaque E4M3 checkpoint constants and a strongly typed TensorRT FP8
+plugin. cuBLASLt uses FP32 accumulation and BF16 output; the product of the two
+scalar dequantization scales is alpha, with default unit matrix scale pointers.
+NVIDIA documentation explicitly defines null scale pointers as unit scales:
+https://docs.nvidia.com/cuda/cublas/index.html#cublasltmatmuldescattributes-t
+No full BF16 attention-weight expansion is introduced. Mixed lowering now routes
+FP8 attention matrices and NVFP4 MLP matrices separately; actual attention-layer
+parity is not yet established. Descriptor/heuristic creation per call remains an
+optimization opportunity; no hardware instruction trace has been collected.
+
+Native SM120 build passed. Job native-fp8-plugin-capture completed exit0: CPU-oracle
+comparisons (absolute0.0625 + relative1% tolerance), serialized-engine reload and
+explicit CUDA graph replay passed at flattened rows1,16,4096, including signed,
+small and saturated E4M3 input values. Synthetic FP8 captured MLP outputs exactly
+3.375 across256 outputs, with one graph capture, two cached replays, zero failures.
+This FP8 MLP is a lowering fixture, not the checkpoint's actual MLP precision.
+
+Added an independent bounded-memory NumPy oracle over actual checkpoint layer0
+NVFP4 MLP weights. It decodes packed E2M1 weights, E4M3 block16 scales, both global
+scales, BF16 rounding and dynamic activation block scales, then applies SiLU/gating
+and down projection. The oracle was checked against the independently GPU-verified
+identity case and rounding ties. Job actual-checkpoint-mlp completed exit0: all5120
+outputs matched exactly on five executions, with max absolute and relative L2 errors
+both0, one graph capture and two cached replays. Predeclared acceptance bounds were
+relative L2<=1% and maximum absolute<=0.05; no post-result tolerance change.
+Oracle SHA256 e5858797b5ea50034bd5fca8af808e6d02c885088aeb0e6f86ebf24984f6d92d.
+Raw results: results/real-mlp-oracle.json, real-mlp-checks.json and native-projections
+command ledger. This validates one real MLP, not decoder/image quality or speed.
+
+Added explicit Qwen3.8 CUDA decoder/vision factories with the exact architecture
+contract and initial mixed-checkpoint batch1/capacity32..4096 guard. They are not
+registered for general serving admission; full-model construction/parity is pending.
+The CPU study suite now passes21 tests. Existing unrelated ASR capture failure has
+not been resolved. INT4/4B, full VLM, controlled metrics and2x remain outstanding.
+
+## P022 - 2026-10-23: SGLang FP8 JIT linker failure isolated
+
+The bounded-JIT/no-autotune SGLang attempt loaded the model and started HTTP, but
+both smoke attempts failed health503. Process inspection showed a defunct scheduler
+while the parent listener remained alive; this was not a healthy baseline. The
+parent later exited9 with the actual worker traceback: FlashInfer FP8 GEMM linked
+-lcublas/-lcublasLt, but unified CUDA wheels provided only versioned .so.13 files.
+Guest memory had40GB available and cgroup oom counters0, unlike the earlier memory
+exhaustion. Do not characterize this later failure as another OOM.
+
+Verified installed versioned libraries, extended the guarded relative-link helper
+and saved a separate cuda-cublas-layout.json without replacing earlier provenance.
+Setup job sglang-cublas-linker-names completed exit0, retaining hashes for cudart,
+cublas and cublasLt. No packages or library binaries were replaced. Fresh job
+sglang-cublas-linker-fixed is running; text/image smoke remains pending. Installed
+SGLang explicitly rejects return_token_ids with streaming chat, so benchmark token
+accounting must use its supported protocol rather than assuming vLLM's extension.
+
+P021 oracle sanity: NumPy2.4.4; all5120 expected outputs are nonzero, range
+[-2.6875,34.0], L2 norm35.74675615976486. Exact comparison was not a zero-output case.

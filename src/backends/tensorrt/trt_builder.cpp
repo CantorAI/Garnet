@@ -4,6 +4,7 @@
 #include "trt_builder.h"
 #include <nlohmann/json.hpp>
 #include "modelopt_nvfp4_plugin.h"
+#include "modelopt_fp8_plugin.h"
 #include "trt_context_pool.h"
 #include "trt_memory_profile.h"
 #include "qwen35_lowering.h"
@@ -371,7 +372,7 @@ namespace Garnet {
                 cached.allocator = std::make_unique<TRTSyncAllocator>(device);
                 cached.runtime->setGpuAllocator(cached.allocator.get());
             }
-            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered()||!EnsureModelOptNVFP4PluginRegistered())return nullptr;
+            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered()||!EnsureModelOptNVFP4PluginRegistered()||!EnsureModelOptFP8PluginRegistered())return nullptr;
             LogTRTMemoryCheckpoint("before_engine_deserialize",enginePath);
             cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
             if (!cached.engine) {
@@ -3251,6 +3252,8 @@ namespace Garnet {
         DataType dataType;
         if(metadata->dataType=="U8"&&capturedWeightProfile=="modelopt_mixed")
             return GetModelOptNVFP4Weight(weightName,*metadata);
+        if((metadata->dataType=="F8_E4M3"||metadata->dataType=="F8_E4M3FN")&&capturedWeightProfile=="modelopt_mixed")
+            return GetModelOptFP8Weight(weightName,*metadata);
         if (metadata->dataType == "BF16") dataType = DataType::kBF16;
         else if (metadata->dataType == "F16") dataType = DataType::kHALF;
         else if (metadata->dataType == "F32") dataType = DataType::kFLOAT;
@@ -4491,7 +4494,7 @@ namespace Garnet {
         tensorMap.clear();
         constantTensors.clear();
         weightTensorMap.clear();
-        nativeNVFP4Weights.clear();nativeNVFP4ScaleStorage.clear();
+        nativeNVFP4Weights.clear();nativeNVFP4ScaleStorage.clear();nativeFP8Weights.clear();
         externalBF16Bindings.clear();
         scalarWeights.clear();
         bfloat16ScalarWeights.clear();

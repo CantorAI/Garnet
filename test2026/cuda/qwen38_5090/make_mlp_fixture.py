@@ -2,7 +2,7 @@
 import argparse,json,struct
 from pathlib import Path
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('output',type=Path);p.add_argument('--bf16',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('output',type=Path);p.add_argument('--bf16',action='store_true');p.add_argument('--fp8',action='store_true');a=p.parse_args();assert not(a.bf16 and a.fp8)
     width=256;entries={}
     for name in ['gate_proj','up_proj','down_proj']:
         prefix='model.language_model.layers.0.mlp.'+name
@@ -10,6 +10,13 @@ if __name__=='__main__':
             raw=bytearray(width*width*2)
             for row in range(width):raw[(row*width+row)*2:(row*width+row)*2+2]=b'\x80\x3f'
             entries[prefix+'.weight']=('BF16',[width,width],bytes(raw))
+            continue
+        if a.fp8:
+            weight=bytearray(width*width)
+            for row in range(width):weight[row*width+row]=56
+            entries[prefix+'.weight']=('F8_E4M3',[width,width],bytes(weight))
+            entries[prefix+'.weight_scale']=('F32',[],struct.pack('<f',1.))
+            entries[prefix+'.input_scale']=('F32',[],struct.pack('<f',1.))
             continue
         weight=bytearray(width*width//2)
         for row in range(width): weight[row*(width//2)+row//2]=2<<(4*(row%2))

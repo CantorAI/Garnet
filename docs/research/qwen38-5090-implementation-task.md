@@ -244,3 +244,14 @@ SGLang's previous warmup exhausted guest RAM/swap; recovery settings disable
 startup autotuning and bound build concurrency, and must be recorded distinctly.
 Only after these gates collect controlled benchmark distributions and compare
 INT4 W4A16 and Qwen3.5-4B. No measured2x speedup exists yet.
+
+
+Native follow-up: FP8 projection/plugin serialization and replay checks passed at
+rows1/16/4096. Actual checkpoint layer0 NVFP4 MLP matched an independent CPU oracle
+exactly across5120 outputs. Initial strict batch1 CUDA factories now exist, while
+general serving admission remains closed pending full decoder and vision parity.
+Next gates are actual attention/layer and full-model construction, text/image
+quality, baseline smoke and real controlled measurements. FP4 projection rows
+remain bounded to1024; tiled prefill or an extended validated bound is still needed.
+SGLang's latest failure was missing unversioned cuBLAS linker names, now repaired
+with preserved hash provenance; the next startup attempt has not passed smoke yet.

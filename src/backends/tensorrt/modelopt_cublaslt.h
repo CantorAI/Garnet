@@ -16,4 +16,11 @@ cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
     const void* weights,const void* weightScales,const void* input,const void* inputScales,
     void* output,int batch,int rows,int columns,float globalScale,
     void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept;
+// Tensorwide E4M3 X/W, FP32 accumulation, BF16 output; alpha includes both scales.
+cublasStatus_t RunModelOptFP8Matmul(cublasLtHandle_t handle,
+    const void* weights,const void* input,void* output,int batch,int rows,int columns,
+    float globalScale,void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept;
+cublasStatus_t RunModelOptFP8MatmulContext(const std::shared_ptr<void>& context,
+    const void* weights,const void* input,void* output,int batch,int rows,int columns,
+    float globalScale,void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept;
 }

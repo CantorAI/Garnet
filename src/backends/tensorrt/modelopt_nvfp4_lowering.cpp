@@ -64,7 +64,7 @@ ITensor* TRTBuilder::GetModelOptNVFP4Weight(const std::string& name,const SafeTe
     }catch(const std::exception& error){loweringError=error.what();return nullptr;}
 }
 ITensor* TRTBuilder::ProjectModelOptNVFP4(ITensor* input,ITensor* weight){
-    auto found=nativeNVFP4Weights.find(weight);if(found==nativeNVFP4Weights.end())return nullptr;
+    auto found=nativeNVFP4Weights.find(weight);if(found==nativeNVFP4Weights.end())return ProjectModelOptFP8(input,weight);
     const auto& p=found->second;auto shape=input->getDimensions();
     if(shape.nbDims<2||shape.d[shape.nbDims-1]!=p.columns)throw std::invalid_argument("Native NVFP4 projection shape mismatch");
     int64_t rows=1;

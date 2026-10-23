@@ -54,6 +54,17 @@ cublasStatus_t RunModelOptNVFP4MatmulContext(const std::shared_ptr<void>& opaque
             output,batch,rows,columns,globalScale,workspace,workspaceBytes,stream);
     }catch(...){return CUBLAS_STATUS_INTERNAL_ERROR;}
 }
+cublasStatus_t RunModelOptFP8MatmulContext(const std::shared_ptr<void>& opaque,
+    const void* weights,const void* input,void* output,int batch,int rows,int columns,
+    float globalScale,void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept {
+    if(!opaque)return CUBLAS_STATUS_NOT_INITIALIZED;
+    try{
+        auto context=std::static_pointer_cast<Context>(opaque);
+        std::lock_guard<std::mutex> lock(context->mutex);
+        return RunModelOptFP8Matmul(context->handle,weights,input,output,batch,rows,columns,
+            globalScale,workspace,workspaceBytes,stream);
+    }catch(...){return CUBLAS_STATUS_INTERNAL_ERROR;}
+}
 #define MODELOPT_LT_CHECK(call) do { const auto status=(call); if(status!=CUBLAS_STATUS_SUCCESS)return status; } while(false)
 cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
     const void* weights,const void* weightScales,const void* input,const void* inputScales,
@@ -77,6 +88,43 @@ cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
     // The column-major rowsxbatch result is the desired row-major batchxrows.
     MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.a,CUDA_R_4F_E2M1,columns,rows,columns));
     MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.b,CUDA_R_4F_E2M1,columns,batch,columns));
+    MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.c,CUDA_R_16BF,rows,batch,rows));
+    MODELOPT_LT_CHECK(cublasLtMatmulPreferenceCreate(&d.preference));
+    MODELOPT_LT_CHECK(cublasLtMatmulPreferenceSetAttribute(d.preference,CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTES,&workspaceBytes,sizeof(workspaceBytes)));
+    cublasLtMatmulHeuristicResult_t candidates[8]{};int count=0;
+    MODELOPT_LT_CHECK(cublasLtMatmulAlgoGetHeuristic(handle,d.operation,d.a,d.b,d.c,d.c,d.preference,8,candidates,&count));
+    if(!count)return CUBLAS_STATUS_NOT_SUPPORTED;
+    const float beta=0;
+    for(int i=0;i<count;++i){
+        if(candidates[i].state!=CUBLAS_STATUS_SUCCESS)continue;
+        const auto status=cublasLtMatmul(handle,d.operation,&globalScale,weights,d.a,input,d.b,&beta,output,d.c,
+            output,d.c,&candidates[i].algo,workspace,workspaceBytes,stream);
+        if(status==CUBLAS_STATUS_SUCCESS)return status;
+        if(status!=CUBLAS_STATUS_NOT_SUPPORTED)return status;
+    }
+    return CUBLAS_STATUS_NOT_SUPPORTED;
+#else
+    return CUBLAS_STATUS_NOT_SUPPORTED;
+#endif
+}
+cublasStatus_t RunModelOptFP8Matmul(cublasLtHandle_t handle,
+    const void* weights,const void* input,
+    void* output,int batch,int rows,int columns,float globalScale,
+    void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept {
+#if CUDART_VERSION >= 12080
+    if(!handle||!weights||!input||!output||batch<=0||rows<=0||
+        columns<=0||rows%16||columns%16||!std::isfinite(globalScale)||globalScale<=0||
+        (workspaceBytes&&!workspace))return CUBLAS_STATUS_INVALID_VALUE;
+    Descriptors d;
+    MODELOPT_LT_CHECK(cublasLtMatmulDescCreate(&d.operation,CUBLAS_COMPUTE_32F,CUDA_R_32F));
+    const cublasOperation_t transA=CUBLAS_OP_T,transB=CUBLAS_OP_N;
+    MODELOPT_LT_CHECK(cublasLtMatmulDescSetAttribute(d.operation,CUBLASLT_MATMUL_DESC_TRANSA,&transA,sizeof(transA)));
+    MODELOPT_LT_CHECK(cublasLtMatmulDescSetAttribute(d.operation,CUBLASLT_MATMUL_DESC_TRANSB,&transB,sizeof(transB)));
+    // Tensorwide scalar scales are combined in alpha. Null scale pointers mean1.
+    // Interpret W and X as column-major Kxrows and Kxbatch matrices.
+    // The column-major rowsxbatch result is the desired row-major batchxrows.
+    MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.a,CUDA_R_8F_E4M3,columns,rows,columns));
+    MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.b,CUDA_R_8F_E4M3,columns,batch,columns));
     MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.c,CUDA_R_16BF,rows,batch,rows));
     MODELOPT_LT_CHECK(cublasLtMatmulPreferenceCreate(&d.preference));
     MODELOPT_LT_CHECK(cublasLtMatmulPreferenceSetAttribute(d.preference,CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTES,&workspaceBytes,sizeof(workspaceBytes)));

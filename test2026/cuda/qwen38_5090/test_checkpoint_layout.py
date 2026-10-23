@@ -3,12 +3,19 @@ import copy, hashlib, json, unittest
 from pathlib import Path
 from preflight import audit
 from inspect_nvfp4 import validate_projection, audit_headers
-from xModel.qwen38.vl_27b.model import projection_shapes, validate_config
+from xModel.qwen38.vl_27b.model import projection_shapes, validate_config, validate_cuda_profile
 
 
 class LayoutTest(unittest.TestCase):
     def setUp(self):
         self.config = json.loads((Path(__file__).parent/'evidence/base-config.json').read_text())
+
+    def test_native_profile_rejects_unquantized_and_unvalidated_capacity(self):
+        with self.assertRaises(ValueError):validate_cuda_profile(self.config,4096)
+        mixed=json.loads((Path(__file__).parent/'evidence/nvfp4-config.json').read_text())
+        self.assertTrue(validate_cuda_profile(mixed,4096))
+        for capacity,batch in [(4097,1),(4096,4),(0,1)]:
+            with self.assertRaises(ValueError):validate_cuda_profile(mixed,capacity,batch)
 
     def test_architecture_and_distinct_gated_shapes(self):
         shapes = projection_shapes(self.config)

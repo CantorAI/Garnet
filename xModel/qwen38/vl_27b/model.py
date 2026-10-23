@@ -58,3 +58,26 @@ def projection_shapes(config):
             family = 'self_attn.'
         for name, shape in shapes.items(): result[prefix+family+name] = shape
     return result
+
+
+def validate_cuda_profile(config,capacity,batch=1):
+    """Initial native study admission; measured full-model gates remain separate."""
+    validate_config(config)
+    q=config.get('quantization_config',{})
+    if q.get('quant_method')!='modelopt' or q.get('quant_algo')!='MIXED_PRECISION':
+        raise ValueError('Initial RTX5090 profile requires verified ModelOpt mixed NVFP4/FP8 weights')
+    if batch!=1 or capacity<32 or capacity>4096:
+        raise ValueError('Initial Qwen3.8 CUDA profile requires batch1 and capacity32..4096')
+    return True
+
+
+def create_cuda_decoder(checkpoint,config,capacity,batch=1,chunk_size=1,fused_delta=False,fused_attention=False,projection_workspace_bytes=0,retain_linear_inputs=False):
+    validate_cuda_profile(config,capacity,batch)
+    from xModel.qwen35.vl_0_8b.cuda_decoder import CUDADecoder
+    return CUDADecoder(checkpoint,config['text_config'],batch,capacity,chunk_size,fused_delta,fused_attention,projection_workspace_bytes,retain_linear_inputs)
+
+
+def create_cuda_vision(checkpoint,config,gh,gw):
+    validate_cuda_profile(config,4096,1)
+    from xModel.qwen35.vl_0_8b.cuda_decoder import CUDAImageEncoder
+    return CUDAImageEncoder(checkpoint,config['vision_config'],gh,gw,1)
