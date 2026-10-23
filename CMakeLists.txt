@@ -504,7 +504,7 @@ endif()
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
-            cublas.lib "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib"
+            cublas.lib cublasLt.lib "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib"
             nppc.lib nppig.lib nvjpeg.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 
@@ -554,7 +554,7 @@ else()
         PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
     target_link_libraries(${PROJECT_NAME} pthread dl m
         "${GARNET_TENSORRT_LIBRARY}" CUDA::cudart CUDA::cuda_driver
-        CUDA::cublas CUDA::nppc CUDA::nppig CUDA::nvjpeg)
+        CUDA::cublas CUDA::cublasLt CUDA::nppc CUDA::nppig CUDA::nvjpeg)
     target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--no-undefined")
 endif()
 

@@ -35,3 +35,16 @@ target_include_directories(garnet_nvfp4_projection_test PRIVATE "${GARNET_STUDY_
 target_link_libraries(garnet_nvfp4_projection_test PRIVATE CUDA::cudart)
 set_target_properties(garnet_nvfp4_projection_test PROPERTIES CUDA_STANDARD 17 CXX_STANDARD 17)
 add_test(NAME garnet_nvfp4_projection COMMAND garnet_nvfp4_projection_test)
+add_executable(garnet_modelopt_trt_test modelopt_trt_test.cpp modelopt_trt_projection.cpp)
+target_include_directories(garnet_modelopt_trt_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}" "${GARNET_TENSORRT_ROOT}/include")
+target_link_libraries(garnet_modelopt_trt_test PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
+target_compile_definitions(garnet_modelopt_trt_test PRIVATE NOMINMAX)
+target_compile_features(garnet_modelopt_trt_test PRIVATE cxx_std_17)
+add_test(NAME garnet_modelopt_trt_projection COMMAND garnet_modelopt_trt_test)
+add_executable(garnet_modelopt_cublaslt_test modelopt_cublaslt_test.cpp
+    "${GARNET_STUDY_SOURCE}/src/backends/tensorrt/modelopt_cublaslt.cpp")
+target_include_directories(garnet_modelopt_cublaslt_test PRIVATE "${GARNET_STUDY_SOURCE}/src/backends/tensorrt")
+target_link_libraries(garnet_modelopt_cublaslt_test PRIVATE CUDA::cudart CUDA::cublasLt)
+target_compile_features(garnet_modelopt_cublaslt_test PRIVATE cxx_std_17)
+add_test(NAME garnet_modelopt_cublaslt_projection COMMAND garnet_modelopt_cublaslt_test)

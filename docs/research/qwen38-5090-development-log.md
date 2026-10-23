@@ -374,3 +374,59 @@ GPU/model load checks are pending. SGLang installation has not yet run.
 Remaining critical path: mixed FP8/NVFP4 text projection integration, Blackwell
 W4A4 tensor-core path,27B model/vision admission and parity, then measured
 reference engines and Garnet under the matched benchmark contract.
+
+## P016 — 2026-10-23: reference VLM smoke and native packed FP4 execution
+
+Both pinned reference environments installed successfully and passed actual CUDA
+smoke tests on the target RTX5090 SM120. vLLM0.32.0 resolved Torch2.13.0+cu130;
+SGLang0.5.22 resolved Torch2.14.1+cu130. Exact package freezes are retained under
+results/references. They are independent engine environments, not identical Torch
+builds. The uv cache is shared inside the study-owned WSL disk.
+
+The vLLM initial VLM server loaded the shared pinned checkpoint, TP1, context4096,
+max sequences8, BF16 KV and F32 SSM, eager mode, prefix caching disabled. Its
+observed selected backends were CutlassNvFp4LinearKernel, CutlassFP8ScaledMM,
+FlashAttention2, and FlashInfer GDN prefill. The server's model-loading report
+was19.83GiB, not a measured process peak. Text smoke answered4; image smoke
+answered red for a deterministic224x224 PNG with a small blue corner. Both
+requests completed HTTP200 with26/93 prompt tokens and2 completion tokens each.
+Raw requests/responses and image are in results/references/vllm/smoke. PNG SHA256:
+ad17ed2fc2311d796ef00f78cad2545ac9b9a3626c4a60e1c18919319336665e5.
+These are correctness smoke requests, not controlled timing or quality benchmarks.
+
+The initial TensorRT10.16 Q/DQ projection implementation exposed two build-time
+constraints: DynamicQuantizeV2 with a double scale rejected a vector block_shape,
+and FP4 block DQ with F32 scales could not directly output BF16. Scalar block-size
+DynamicQuantize and consistent scale/output types allowed execution; F32 DQ plus
+BF16 casts also executed. NVFP4 W4A4 and FP8 W8A8 arithmetic each matched2048
+exact synthetic outputs. However, actual engine inspection selected BF16 GEMM
+(sm80_xmma_gemm_bf16bf16...) and materialized decoded weights. Consequently this
+helper is retained only under the study tests as a numerical reference, not wired
+into deployment or advertised as native FP4 GEMM. Preserved inspector variants
+include modelopt-trt-bf16-fallback-nvfp4.json and modelopt-trt-f32-dq-nvfp4.json.
+All failed attempts and actual source hashes remain in the append-only ledger.
+
+Implemented a separate explicit cuBLASLt CUDA_R_4F_E2M1 path using block16 E4M3
+scales in128x4 tiled layout, BF16 output and F32 compute. Tensor-global scales
+are combined in alpha. The cold correctness helper currently creates descriptors
+and selects a heuristic per call; it is not a tuned serving implementation.
+Target job cublaslt-native-fp4 completed exit0 for batch1 and batch16, comparing
+256 and4096 outputs exactly against an independent scale-layout oracle, including
+multiple scale tiles and varying scales. This verifies packed FP4 cuBLASLt API
+execution on SM120 without a caller-allocated full BF16 matrix. Kernel-level
+hardware instruction tracing and performance validation remain pending.
+Primary layout/API sources consulted:
+https://docs.nvidia.com/cuda/cublas/index.html#d-block-scaling-factors-layout
+https://nvidia.github.io/cudnn-frontend/mxfp8-scale-factor-128x4-layout/
+https://github.com/NVIDIA/CUDALibrarySamples/tree/master/cuBLASLt/LtNvfp4Matmul
+
+Stopped only this study's verified vLLM server PID2795 with SIGTERM after smoke;
+its tracked job exited0 and device memory returned to106MiB. SGLang's initial
+VLM load is now active on a separate loopback port, with matching4K/eager/cache
+settings and explicit eight-state Mamba cache. Terminal/model-smoke results are
+pending. Garnet currently retains F32 attention/conv state, so these BF16-cache
+reference configurations are not yet a precision-matched2x comparison arm.
+No controlled TTFT, decode tok/s, concurrency throughput, model peak VRAM or
+measured2x result has been established. Next: activation quantization/scale
+repacking and retained native projection contexts/plugins, then mixed checkpoint
+loader and full27B decoder/vision correctness before the performance gate.
