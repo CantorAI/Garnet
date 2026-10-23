@@ -236,3 +236,29 @@ success still requires a subsequent native compile/runtime test. Two model
 shards and tokenizer are verified; the remaining shard continues downloading.
 Ubuntu installation still has a confirmed live job handle and no terminal
 result; do not start another distro installer solely because its log is empty.
+
+## P010 — 2026-10-23: model ready, target validation and packaging fixes
+
+The model downloader finished with exit0: all four CDN artifacts passed their
+declared byte counts and primary LFS SHA-256 checks. The three weight shards
+and tokenizer total21934506600 bytes. Small metadata remains a separate pinned
+archive/provenance set. No inference or memory-fit claim follows from download.
+
+Updated copied source verification reports6337 files with zero mismatches and
+commit1dd69410e. All18 CPU tests also pass on CD-RTX5090, with raw output and
+manifest identity retained in its command ledger. The additional18 copied
+SDK/runtime files passed hash verification. CUDA compiler reports13.2.78.
+
+Ubuntu installation finished with exit0. An actual root-shell GPU check reports
+Ubuntu24.04.5 LTS and RTX5090/32607MiB/driver617.14 inside WSL. This establishes
+GPU visibility, not framework baseline readiness or measured serving performance.
+
+First target native configure passed MSVC/CUDA compiler checks but failed in
+legacy FindCUDA because a backslash path was interpreted as an escape. Normalized
+the CUDA path and retried. The next configure found CUDA13.2 but exposed a
+runtime-packaging mismatch: official Windows wheels place cuBLAS DLLs under
+bin/x86_64, while Garnet searched bin and bin/x64. Added the x86_64 runtime
+discovery path, retaining the existing paths. Development import libraries
+missing from the wheels were supplied from the matching local CUDA13.2 SDK and
+checked by SHA-256. These are build/deployment changes, not an inference speedup.
+Both failed configure attempts are retained in the append-only target ledger.

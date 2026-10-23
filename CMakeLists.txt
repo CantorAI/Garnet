@@ -538,7 +538,8 @@ if(WIN32)
     foreach(pattern cublas64_*.dll nppig64_*.dll nvjpeg64_*.dll)
         file(GLOB matches
             "${CUDAToolkit_BIN_DIR}/${pattern}"
-            "${CUDAToolkit_BIN_DIR}/x64/${pattern}")
+            "${CUDAToolkit_BIN_DIR}/x64/${pattern}"
+            "${CUDAToolkit_BIN_DIR}/x86_64/${pattern}")
         if(NOT matches)
             message(FATAL_ERROR "Garnet runtime dependency not found: ${pattern}")
         endif()
