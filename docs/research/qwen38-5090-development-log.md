@@ -88,3 +88,20 @@ Garnet remains a native Windows build. WSL is reserved for reference engines.
 Outcome: baseline engines, native Release build, target GPU correctness,
 quantized model fit and timed measurements remain pending. Do not publish
 preparation timings as TTFT or claim the >=2x target is achieved.
+
+## P003 — 2026-10-23: setup failure and alternate method
+
+The initial CMake winget download failed with InternetOpenUrl error0x80072efd
+(recorded installer exit -2147012867). Preserve its original log and status.
+Stopped only this task's first setup process and its direct winget child to
+avoid competing installers. Retry uses official PyPI CMake/Ninja wheels in
+`tools/python` within the same study root, followed by native Visual Studio
+Build Tools installation with `--norestart`. Retry success remains pending.
+
+Remote `preparation-tests.log` records all9 CPU tests passing with exit0.
+The source archive and subsequent preparation patch were verified and extracted
+into the fixed study root. Preparation files are committed on the dedicated
+branch; inherited Qwen3.5 source edits remain separate and uncommitted. No GPU
+benchmark has run. A prior whole-tree whitespace check also reports inherited
+Qwen3.5 issues; those are not attributed to this task. The preparation manifest's
+own CRLF-only whitespace issue was fixed in a separate commit.
