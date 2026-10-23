@@ -275,3 +275,13 @@ older CUDA installation when loading the packaged Garnet runtime.
 
 No model inference benchmark has run. The next target step is a fresh native
 SM120 build, followed by the small head fixtures and quantized projection work.
+
+## P012 — 2026-10-23: target image development imports
+
+The SM120 configure attempt at commit36133e8ed verified6338 source files but
+failed generation because CUDA::nvjpeg was absent. The official runtime wheel
+contained nvjpeg.h and nvjpeg64_13.dll but no nvjpeg.lib. Added matching local
+CUDA13.2 development import libraries nvjpeg.lib, nppc.lib and nppig.lib to the
+existing three-library overlay. All six transferred files passed SHA256 checks;
+the transfer archive was removed. A fresh native build is recorded under label
+native-sm120-image-import-libraries. This records setup, not inference evidence.
