@@ -1,0 +1,111 @@
+diff --git a/src/backends/tensorrt/cuda_tensor_io.cpp b/src/backends/tensorrt/cuda_tensor_io.cpp
+index 075ac1891..966e1707a 100644
+--- a/src/backends/tensorrt/cuda_tensor_io.cpp
++++ b/src/backends/tensorrt/cuda_tensor_io.cpp
+@@ -56,6 +56,7 @@ bool SameShape(const X::Tensor& tensor,const std::vector<int64_t>& shape){
+ }
+ CUDATensorIO::~CUDATensorIO(){Close();}
+ void CUDATensorIO::CloseUnlocked(){table_=X::Tensor();headInput_=X::Tensor();headOutput_=X::Tensor();tokenHeadInput_=X::Tensor();tokenHeadOutput_=X::Tensor();
++    untiedHead_=X::Tensor();
+     candidateScratch_=candidateOutput_=indexedScores_=indexedIds_=indexedValues_=X::Tensor();projectionWeights_.clear();projectionWeightGroupMembers_.clear();projectionWeightGroups_.clear();projection_.reset();vocab_=width_=0;}
+ void CUDATensorIO::Close(){std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();}
+ bool CUDATensorIO::Open(const std::string& checkpoint){
+@@ -65,11 +66,35 @@ bool CUDATensorIO::Open(const std::string& checkpoint){
+     if(!entry||entry->dataType!="BF16"||entry->shape.size()!=2||entry->shape[0]<=0||entry->shape[1]<=0||
+         entry->shape[0]>INT_MAX||entry->shape[1]>INT_MAX||uint64_t(entry->shape[0])*uint64_t(entry->shape[1])*2!=entry->dataSize)
+         throw X::Error("Qwen3.5 tied embedding requires a valid BF16 matrix");
++    // A present output head is authoritative. Reject an unsupported packed head
++    // before allocating the embedding; silently tying it changes model logits.
++    const auto* head=index_.Find("lm_head.weight");
++    const auto checkpointPath=std::filesystem::path(checkpoint);
++    const auto configPath=(std::filesystem::is_directory(checkpointPath)?checkpointPath:checkpointPath.parent_path())/"config.json";
++    std::ifstream configFile(configPath);
++    if(configFile){
++        nlohmann::json config;
++        try{configFile>>config;}catch(...){throw X::Error("CUDA checkpoint config.json is invalid");}
++        auto declaresUntied=[](const nlohmann::json& value){
++            return value.is_object()&&value.contains("tie_word_embeddings")&&value["tie_word_embeddings"].is_boolean()&&!value["tie_word_embeddings"].get<bool>();
++        };
++        if(!head&&(declaresUntied(config)||(config.contains("text_config")&&declaresUntied(config["text_config"]))))
++            throw X::Error("CUDA untied checkpoint is missing lm_head.weight");
++    }
++    if(head&&(head->dataType!="BF16"||head->shape!=entry->shape||head->dataSize!=entry->dataSize))
++        throw X::Error("Separate CUDA output head requires matching BF16 shape; packed heads need quantized head integration");
+     SafeTensorsMappedFile mapping;if(!mapping.Open(entry->filePath,error))throw X::Error(error);
+     auto* bytes=mapping.DataAt(entry->dataOffset,entry->dataSize);if(!bytes)throw X::Error("embedding storage exceeds checkpoint");
+     auto table=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,entry->shape,bytes);
++    X::Tensor separateHead;
++    if(head){
++        SafeTensorsMappedFile headMapping;if(!headMapping.Open(head->filePath,error))throw X::Error(error);
++        const auto* headBytes=headMapping.DataAt(head->dataOffset,head->dataSize);
++        if(!headBytes)throw X::Error("Separate output head storage exceeds checkpoint");
++        separateHead=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,head->shape,headBytes);
++    }
+     auto projection=CreateBF16ProjectionContext();if(!projection)throw X::Error("CUDA tied head context initialization failed");
+-    table_=std::move(table);projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);return true;
++    table_=std::move(table);untiedHead_=std::move(separateHead);projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);return true;
+ }
+ X::Value CUDATensorIO::Zeros(X::Value shape){return TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,Shape(shape));}
+ X::Value CUDATensorIO::StorageView(X::Value source,X::Value dimensions){
+@@ -291,9 +316,9 @@ X::Value CUDATensorIO::LogitsUnlocked(X::Value hidden,bool reuse,bool tokens){
+     X::Tensor output;
+     if(reuse){if(!SameShape(outputBuffer,outShape))outputBuffer=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,outShape);output=outputBuffer;}
+     else output=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,outShape);
+-    auto use=TensorHelper::AcquireGPU({{input,X3_TENSOR_READ},{table_,X3_TENSOR_READ},{inputBuffer,X3_TENSOR_WRITE},{output,X3_TENSOR_WRITE}});
++    auto use=TensorHelper::AcquireGPU({{input,X3_TENSOR_READ},{HeadTable(),X3_TENSOR_READ},{inputBuffer,X3_TENSOR_WRITE},{output,X3_TENSOR_WRITE}});
+     Check(runConvertFP32ToBF16Async(static_cast<const float*>(a.data),static_cast<bfloat16*>(inputBuffer.Info().data),rows*width_,CurrentExecutionStream()));
+-    if(RunBF16Projection(projection_,inputBuffer.Info().data,table_.Info().data,output.Info().data,rows,width_,vocab_,CurrentExecutionStream()))
++    if(RunBF16Projection(projection_,inputBuffer.Info().data,HeadTable().Info().data,output.Info().data,rows,width_,vocab_,CurrentExecutionStream()))
+         throw X::Error("CUDA tied head projection failed");
+     use.Finish();return output;
+ }
+@@ -341,10 +366,10 @@ X::Value CUDATensorIO::PredictIndexed(X::Value hidden,X::Value candidates){
+     if(!SameShape(indexedScores_,scoreShape))indexedScores_=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,scoreShape);
+     if(!SameShape(indexedIds_,rowShape))indexedIds_=TensorHelper::CreateGPU(Host(),X3_TENSOR_INT64,rowShape);
+     if(!SameShape(indexedValues_,rowShape))indexedValues_=TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,rowShape);
+-    auto use=TensorHelper::AcquireGPU({{query,X3_TENSOR_READ},{indices,X3_TENSOR_READ},{table_,X3_TENSOR_READ},
++    auto use=TensorHelper::AcquireGPU({{query,X3_TENSOR_READ},{indices,X3_TENSOR_READ},{HeadTable(),X3_TENSOR_READ},
+         {indexedScores_,X3_TENSOR_WRITE},{indexedIds_,X3_TENSOR_WRITE},{indexedValues_,X3_TENSOR_WRITE}});
+     Qwen35IndexedHeadConfig c{int(a.shape[0]),width_,vocab_,int(b.shape[1])};
+-    if(RunQwen35IndexedHead(c,static_cast<const float*>(a.data),table_.Info().data,static_cast<const int*>(b.data),indexedScores_.Info().data,
++    if(RunQwen35IndexedHead(c,static_cast<const float*>(a.data),HeadTable().Info().data,static_cast<const int*>(b.data),indexedScores_.Info().data,
+         static_cast<long long*>(indexedIds_.Info().data),static_cast<float*>(indexedValues_.Info().data),CurrentExecutionStream()))throw X::Error("CUDA indexed proposal head failed");
+     std::vector<long long> ids(a.shape[0]);std::vector<float> values(a.shape[0]);
+     Check(cudaMemcpyAsync(ids.data(),indexedIds_.Info().data,ids.size()*8,cudaMemcpyDeviceToHost,CurrentExecutionStream()));
+@@ -373,7 +398,9 @@ std::string CUDATensorIO::MemoryJson() const{
+     for(const auto& item:projectionWeightGroups_)groupBytes+=bytes(item.second);
+     poolBytes=groupBytes;
+     for(const auto& item:projectionWeights_)if(!projectionWeightGroupMembers_.count(item.first))poolBytes+=bytes(item.second);
+-    return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_shared_bytes",bytes(table_)},{"head_input_bytes",bytes(headInput_)+bytes(tokenHeadInput_)},{"head_output_bytes",bytes(headOutput_)+bytes(tokenHeadOutput_)},
++    return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_tied",!untiedHead_.IsValid()},
++        {"embedding_table_bytes",bytes(table_)},{"untied_head_bytes",bytes(untiedHead_)},
++        {"embedding_head_shared_bytes",untiedHead_.IsValid()?0:bytes(table_)},{"head_input_bytes",bytes(headInput_)+bytes(tokenHeadInput_)},{"head_output_bytes",bytes(headOutput_)+bytes(tokenHeadOutput_)},
+         {"single_head_input_bytes",bytes(headInput_)},{"single_head_output_bytes",bytes(headOutput_)},
+         {"token_head_input_bytes",bytes(tokenHeadInput_)},{"token_head_output_bytes",bytes(tokenHeadOutput_)},
+         {"candidate_workspace_bytes",bytes(candidateScratch_)},{"candidate_index_bytes",bytes(candidateOutput_)},
+diff --git a/src/backends/tensorrt/cuda_tensor_io.h b/src/backends/tensorrt/cuda_tensor_io.h
+index 1511bf828..7ec29250d 100644
+--- a/src/backends/tensorrt/cuda_tensor_io.h
++++ b/src/backends/tensorrt/cuda_tensor_io.h
+@@ -9,11 +9,12 @@
+ #include <unordered_map>
+ #include <unordered_set>
+ namespace Garnet {
+-// GPU request tensors and one BF16 table shared by embedding and the tied head.
++// GPU request tensors, BF16 embedding and an optional independent output head.
+ // Only token IDs and small request metadata cross the host boundary.
+ class CUDATensorIO {
+     SafeTensorsIndex index_;
+     X::Tensor table_,headInput_,headOutput_,tokenHeadInput_,tokenHeadOutput_;
++    X::Tensor untiedHead_;
+     X::Tensor candidateScratch_,candidateOutput_,indexedScores_,indexedIds_,indexedValues_;
+     std::unordered_map<std::string,X::Tensor> projectionWeights_;
+     std::unordered_map<std::string,X::Tensor> projectionWeightGroups_;
+@@ -24,6 +25,7 @@ class CUDATensorIO {
+     X::Value LogitsUnlocked(X::Value input,bool reuse,bool tokens=false);
+     X::Value ArgmaxUnlocked(X::Value input,int maxRows=8);
+     void CloseUnlocked();
++    const X::Tensor& HeadTable() const { return untiedHead_.IsValid()?untiedHead_:table_; }
+ public:
+     ~CUDATensorIO();
+     bool Open(const std::string& checkpoint);

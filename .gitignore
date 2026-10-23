@@ -15,3 +15,7 @@ adapter_model.bin
 
 # Generated experiment outputs stay outside source control.
 /results/
+
+# Local dependencies and intermediate evidence for the RTX5090 study.
+/workbench/deps/xlang3/
+/workbench/qwen38-*

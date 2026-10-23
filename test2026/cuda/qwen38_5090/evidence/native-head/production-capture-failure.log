@@ -1,0 +1,75 @@
+Start testing: Oct 23 14:23 Pacific Daylight Time
+----------------------------------------------------------
+12/27 Testing: garnet_native_api
+12/27 Test: garnet_native_api
+Command: "D:/CantorAI/work/qwen38-5090/out/qwen38-native/bin/xlang3.exe" "D:/CantorAI/work/qwen38-5090/test/xlang3/native_api.py"
+Directory: D:/CantorAI/work/qwen38-5090/out/qwen38-native/bin
+"garnet_native_api" start time: Oct 23 14:23 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+garnet-native-api-cpu-passed
+garnet-native-api-cuda-passed
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"garnet_native_api" end time: Oct 23 14:23 Pacific Daylight Time
+"garnet_native_api" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/27 Testing: garnet_production_capture
+14/27 Test: garnet_production_capture
+Command: "D:/CantorAI/work/qwen38-5090/out/qwen38-native/bin/xlang3.exe" "D:/CantorAI/work/qwen38-5090/test/xlang3/models/run_production_capture.py"
+Directory: D:/CantorAI/work/qwen38-5090/out/qwen38-native/bin
+"garnet_production_capture" start time: Oct 23 14:23 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Traceback (most recent call last):
+  File "D:/CantorAI/work/qwen38-5090/test/xlang3/models/run_production_capture.py", line 186, in <module>
+    main()
+    ~~~~^^
+  File "D:/CantorAI/work/qwen38-5090/test/xlang3/models/run_production_capture.py", line 162, in main
+    one = capture(module, entry, 1)
+  File "D:/CantorAI/work/qwen38-5090/test/xlang3/models/run_production_capture.py", line 108, in capture
+    graph = getattr(module, entry)(*arguments)
+  File "D:\CantorAI\work\qwen38-5090\xModel\qwen3\asr_0_6b\prefill.py", line 77, in Qwen3ASRPrefill
+    x = input_ids * T.unary_op(
+                    ~~~~~~~~~~^
+        "embedding", weight_name="thinker.model.embed_tokens.weight")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: object is not callable
+garnet-production-modules-imported 29
+garnet-production-root-captured text_1_7b.prefill Qwen3Prefill 21 39
+garnet-production-root-captured text_1_7b.decode Qwen3Decode 20 37
+garnet-production-root-captured text_1_7b.decode_batch Qwen3DecodeBatch 21 39
+garnet-production-root-captured vl_2b_instruct.qwen_vl_model Qwen3VLModel 41 64
+garnet-production-root-captured vl_2b_instruct.qwen_vl_prefill Qwen3VLPrefill 47 76
+garnet-production-root-captured vl_2b_instruct.qwen_text_prefill Qwen3TextPrefill 21 39
+garnet-production-root-captured vl_2b_instruct.qwen_text_decode Qwen3TextDecode 20 37
+garnet-production-root-captured vl_2b_instruct.qwen_text_decode_batch Qwen3TextDecodeBatch 21 39
+garnet-production-root-captured vl_2b_instruct.debug_vision_pooler Qwen3VisionPoolerProbe 19 30
+<end of output>
+Test time =   0.15 sec
+----------------------------------------------------------
+Test Failed.
+"garnet_production_capture" end time: Oct 23 14:23 Pacific Daylight Time
+"garnet_production_capture" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/27 Testing: garnet_serving_python_defaults
+15/27 Test: garnet_serving_python_defaults
+Command: "D:/CantorAI/work/qwen38-5090/out/qwen38-native/bin/xlang3.exe" "D:/CantorAI/work/qwen38-5090/test/xlang3/serving_defaults.py"
+Directory: D:/CantorAI/work/qwen38-5090/out/qwen38-native/bin
+"garnet_serving_python_defaults" start time: Oct 23 14:23 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+garnet-serving-python-defaults-passed
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"garnet_serving_python_defaults" end time: Oct 23 14:23 Pacific Daylight Time
+"garnet_serving_python_defaults" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 23 14:23 Pacific Daylight Time

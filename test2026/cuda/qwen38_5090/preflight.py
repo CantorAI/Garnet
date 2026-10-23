@@ -1,7 +1,10 @@
 """Offline checkpoint contract audit. Does not load weights or claim runtime support."""
 import argparse
 import json
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from xModel.qwen38.vl_27b.model import validate_config
 
 
 def audit(config, batch=1, context=4096, cache_bytes=4):
@@ -9,26 +12,8 @@ def audit(config, batch=1, context=4096, cache_bytes=4):
         raise ValueError('Initial study requires batch 1/2/4/8 and context <=4096')
     if cache_bytes not in (2, 4):
         raise ValueError('Cache estimate supports 2 or 4 byte elements')
-    if config.get('architectures') != ['Qwen3_5ForConditionalGeneration'] or config.get('model_type') != 'qwen3_5':
-        raise ValueError('Unverified model architecture')
+    validate_config(config)
     t, v = config['text_config'], config['vision_config']
-    expected = {'hidden_size':5120, 'num_hidden_layers':64, 'intermediate_size':17408,
-                'num_attention_heads':24, 'num_key_value_heads':4, 'head_dim':256,
-                'linear_num_key_heads':16, 'linear_num_value_heads':48,
-                'linear_key_head_dim':128, 'linear_value_head_dim':128,
-                'linear_conv_kernel_dim':4, 'vocab_size':248320, 'tie_word_embeddings':False}
-    for key, value in expected.items():
-        if t.get(key) != value:
-            raise ValueError('27B text contract mismatch: '+key)
-    for key, value in {'depth':27, 'hidden_size':1152, 'intermediate_size':4304,
-                       'num_heads':16, 'out_hidden_size':5120, 'patch_size':16,
-                       'spatial_merge_size':2, 'temporal_patch_size':2}.items():
-        if v.get(key) != value:
-            raise ValueError('27B vision contract mismatch: '+key)
-    if t.get('layer_types') != (['linear_attention']*3+['full_attention'])*16:
-        raise ValueError('Unexpected hybrid layer schedule')
-    if len(t['layer_types']) != 64:
-        raise ValueError('Expected 64 layers')
     quant = config.get('quantization_config')
     # Only diagnose formats: never treat format recognition as runnable support.
     fmt = 'bf16' if not quant else quant.get('quant_method', 'unknown')
@@ -43,7 +28,7 @@ def audit(config, batch=1, context=4096, cache_bytes=4):
             'cache_estimate_bytes':{'attention_kv':kv, 'recurrent_fp32':recurrent, 'convolution_fp32':conv},
             'estimate_scope':'Single canonical state only; excludes weights, duplicate states, graphs, workspace, activations and vision. Not peak VRAM.',
             'quantization':quant and {'method':fmt, 'algorithm':quant.get('quant_algo'), 'producer':quant.get('producer')},
-            'blockers':['CUDA serving model admission and 27B factory missing',
+            'blockers':['CUDA serving model admission and 27B GPU validation pending',
                         'NVFP4/FP8 mixed loader and projection kernels unverified',
                         'INT4 captured-weight path does not establish external BF16 projection compatibility',
                         'Single RTX 5090 numerical, memory and performance validation pending']}

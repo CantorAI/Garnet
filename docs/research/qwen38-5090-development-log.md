@@ -105,3 +105,111 @@ branch; inherited Qwen3.5 source edits remain separate and uncommitted. No GPU
 benchmark has run. A prior whole-tree whitespace check also reports inherited
 Qwen3.5 issues; those are not attributed to this task. The preparation manifest's
 own CRLF-only whitespace issue was fixed in a separate commit.
+
+## P004 — 2026-10-23: reproducible inherited baseline and native build
+
+Committed the previously inherited CUDA working snapshot separately as
+`2355fc4b5`. This supersedes P000/P003's earlier uncommitted-baseline status;
+the original checkout is unchanged. The commit is baseline preservation, not
+a new optimization or performance result.
+
+Local full-source configuration initially failed because Cargo was absent from
+the build shell PATH. Adding the existing local Cargo installation allowed
+configuration. Compilation then failed at XLang3 `sre_module.cpp:5109`:
+`std::regex_constants::multiline` is unavailable in the installed MSVC STL.
+These initial failures are retained as observed diagnostic excerpts here;
+complete per-attempt raw logs were not preserved before the log path was reused.
+Future build logs must append or retain each attempt before reuse.
+
+Method change: an optional native-Windows CMake wrapper links Garnet against a
+preserved existing Release XLang3 DLL/import library and matching public SDK.
+It does not change or rebuild the VM. XLang3 executable SHA-256 is
+`2e2db12a2dbc1134a3a4c662c080b91d500b37af488661630d4d580e7684dc10`;
+runtime DLL SHA-256 is
+`8dabab841d460120b4e0b5c1539851e9ff17dbb0f5113beece4017f9f3fac4b3`.
+Record this binary dependency, not an unsupported claim that the captured VM
+source was rebuilt successfully. The wrapper copies the executable alongside
+Garnet for native package discovery. Its initial imported-executable path
+caused three module-discovery failures; corrected the path and reran those checks.
+
+## P005 — 2026-10-23: exact model and tensor-header contracts
+
+Added the dedicated Qwen3.8-27B contract and logical projection shapes under
+`xModel/qwen38/vl_27b`. The offline preflight uses that same contract. It checks
+the gated attention shape, untied head, 64-layer hybrid schedule, larger vision
+tower, multimodal rotary layout and token IDs. Runtime admission remains off.
+
+Method: bounded official HTTP range requests fetched the three pinned NVIDIA
+safetensors headers, without weight payloads. Preserve exact raw header bytes,
+their SHA-256 hashes, immutable source URLs, index and audit result in
+`test2026/cuda/qwen38_5090/evidence/nvfp4-headers`. All497 logical text projections
+match their physical tensor layouts:193 NVFP4,208 FP8 and96 BF16. NVFP4 matrices
+are U8 packed with half-width columns, FP8 block16 scales and FP32 scalar scale2;
+FP8 projections have scalar FP32 scales. BF16 in_proj_a/b remain unquantized.
+Indexed tensor payload is21921428072 bytes. This is checkpoint storage, not VRAM.
+Scale payload values, packing nibble arithmetic and GPU kernels remain unverified.
+
+## P006 — 2026-10-23: separate BF16 head correctness groundwork
+
+Problem: the prior CUDA I/O head always projected with the embedding table.
+The 27B checkpoint has an independent lm_head. Implemented a separate BF16 head
+when present; both full logits and indexed proposal heads use it. Missing untied
+heads and unsupported packed heads fail before embedding allocation, rather
+than silently changing the model. Accounting distinguishes shared embeddings
+and separate-head allocation. This does not yet implement the packed NVFP4 head.
+
+Method: native Windows Release build, CUDA13.2.78, TensorRT10.16.1.11, SM89,
+preserved XLang3 runtime above. Ran tiny independent exact-integer BF16 fixtures
+on local RTX4080 device1 (driver617.14), not the RTX5090. Five checks pass:
+distinct head logits/unchanged embeddings, tied behavior, reopening, packed-head
+rejection and missing-head rejection. Synthetic fixture outcomes, binary/source
+hashes and exact patch are in `evidence/native-head`. Tested Garnet DLL hash:
+`816648a65f5d7b162e29db95e3e7990fd689f3357fb143548d0af6ccb50d1e14`.
+
+Native API and serving-default CTests pass. Broader production capture does not
+pass: its initial stale27-module inventory was updated for the two already
+present helper modules; it now reaches29 imports and nine root captures before
+failing in ASR prefill with `TypeError: object is not callable` at T.unary_op.
+Retain the full failing gate log. Its baseline/runtime cause remains unresolved;
+do not describe the entire regression suite as passing or infer pretrained
+Qwen3.8 correctness from the small head fixtures.
+
+Sixteen CPU tests pass, including actual pinned header layout/hash validation,
+negative architecture and quantization cases, timing arithmetic and a synthetic
+download integrity/budget test. None is a benchmark measurement.
+
+## P007 — 2026-10-23: target setup and verified download route
+
+CMake4.4.4, Ninja1.13.2 and Visual Studio2022 Build Tools17.14.42 installed on
+CD-RTX5090. User explicitly approved restart; restarted and reconnected.
+WSL3.0.3 now responds. Ubuntu24.04 installation is running under a retained SSH
+job handle; the distro/GPU path is not yet verified. A pinned CUDA13.2/TensorRT
+10.16.1.11 Python-package toolchain install is also running in the fixed tools
+folder. It uses NVIDIA's official package index, including its nvidia.cn CDN.
+
+Direct Hugging Face access from the target timed out; a mirror returned403 and
+was not pursued. An official expiring public CDN URL resolved on the local
+machine succeeds from the target with a206 response and exact8-byte header.
+Prepared small metadata plus four official CDN artifact tasks for the pinned
+NVFP4 checkpoint. Download helper verifies primary LFS SHA-256 values and byte
+counts, uses partial files for resume, publishes only verified artifacts, and
+keeps signatures out of permanent provenance. One shared model directory is
+used; no BF16 base-model or duplicate framework model copies are requested.
+
+No text/image TTFT, decode speed, concurrency throughput, peak VRAM, pretrained
+quality comparison or >=2x performance result has been measured. These goals
+remain active; the native head change is correctness groundwork only.
+
+## P008 — 2026-10-23: download and SDK status correction
+
+The official-CDN model download is now live, with one1.97GB shard and tokenizer
+verified and both larger shards making progress. The permanent result is not
+complete until every declared artifact passes its primary SHA-256 check.
+Small metadata has been staged in the same shared model directory.
+
+The first native SDK install exited0, but pip selected CUDA13.4.92 CRT/NVRTC/NVVM
+components alongside the requested13.2 compiler/runtime. Installation success
+does not prove a consistent toolchain. Added a complete requirements lock and
+started replacement with `--no-deps`, preserving the first attempt log. Only
+the SDK folder generated by this task is replaced; models and deployment data
+are untouched. Validate final versions and compilation before any timed run.

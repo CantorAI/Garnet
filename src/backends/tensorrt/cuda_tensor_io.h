@@ -9,11 +9,12 @@
 #include <unordered_map>
 #include <unordered_set>
 namespace Garnet {
-// GPU request tensors and one BF16 table shared by embedding and the tied head.
+// GPU request tensors, BF16 embedding and an optional independent output head.
 // Only token IDs and small request metadata cross the host boundary.
 class CUDATensorIO {
     SafeTensorsIndex index_;
     X::Tensor table_,headInput_,headOutput_,tokenHeadInput_,tokenHeadOutput_;
+    X::Tensor untiedHead_;
     X::Tensor candidateScratch_,candidateOutput_,indexedScores_,indexedIds_,indexedValues_;
     std::unordered_map<std::string,X::Tensor> projectionWeights_;
     std::unordered_map<std::string,X::Tensor> projectionWeightGroups_;
@@ -24,6 +25,7 @@ class CUDATensorIO {
     X::Value LogitsUnlocked(X::Value input,bool reuse,bool tokens=false);
     X::Value ArgmaxUnlocked(X::Value input,int maxRows=8);
     void CloseUnlocked();
+    const X::Tensor& HeadTable() const { return untiedHead_.IsValid()?untiedHead_:table_; }
 public:
     ~CUDATensorIO();
     bool Open(const std::string& checkpoint);

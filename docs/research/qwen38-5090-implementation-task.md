@@ -2,6 +2,9 @@
 
 Status: compatibility audit and offline tests complete; integration, GPU correctness,
 and all performance results pending. No 5090 benchmark has been recorded.
+Update: a separate BF16 head prototype passes five native correctness checks on
+an RTX4080; this does not establish 27B inference or RTX5090 correctness. The
+dedicated model contract and all497 NVIDIA projection header layouts are verified.
 Audit date: 2026-10-23. Source: current working tree of Garnet at
 `5b0dc7ff8e5c1a77807138db310605bcd12aa390`, including pre-existing local edits.
 Do not reset those edits or mistake HEAD alone for the tested source identity.
@@ -202,3 +205,20 @@ python test2026/cuda/qwen38_5090/preflight.py test2026/cuda/qwen38_5090/evidence
 
 Published engine support is a candidate baseline, not evidence that a particular
 Windows/WSL package and consumer SM120 GPU have passed this workload.
+
+## Current native-build path
+
+The optional CMake wrapper in `test2026/cuda/qwen38_5090` accepts preserved
+XLang3 Release binaries and a matching public SDK. From a VS x64 developer
+shell, configure it with `XLANG3_RUNTIME_DIR`, `XLANG3_ROOT`,
+`GARNET_TENSORRT_ROOT`, `CMAKE_CUDA_COMPILER` and an explicit architecture.
+Use89 for the recorded local RTX4080 correctness build; use120 for the target
+RTX5090 build, which is still pending. Build target `garnet`. No VM sources
+are modified by this wrapper. Record executable/DLL/import-library and SDK
+hashes, as well as the complete compiler and dependency versions.
+
+`windows-sdk-requirements.txt` pins the whole native CUDA/TensorRT package set.
+Install it as one set with `--no-deps`; unconstrained transitive dependencies
+were observed selecting newer CUDA components. The study uses one SDK folder
+under the fixed remote root. Do not use the mixed-version first attempt as a
+validated performance environment.

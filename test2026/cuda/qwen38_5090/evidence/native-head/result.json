@@ -1,0 +1,44 @@
+{
+  "checks": [
+    {
+      "case": "untied",
+      "exact_logits": true,
+      "embedding_unchanged": true
+    },
+    {
+      "case": "tied",
+      "exact_logits": true,
+      "embedding_unchanged": true
+    },
+    {
+      "case": "untied",
+      "exact_logits": true,
+      "embedding_unchanged": true
+    },
+    {
+      "case": "packed_head_rejected_before_embedding_allocation"
+    },
+    {
+      "case": "missing_head_rejected_before_embedding_allocation"
+    }
+  ],
+  "scope": "tiny synthetic native correctness; no model or performance claim",
+  "environment": {
+    "os": "Windows",
+    "gpu": "RTX 4080",
+    "cuda_visible_devices": "1",
+    "cuda_compiler": "13.2.78",
+    "tensorrt": "10.16.1.11",
+    "driver": "617.14"
+  },
+  "hashes": {
+    "out/qwen38-native/bin/garnet.dll": "816648a65f5d7b162e29db95e3e7990fd689f3357fb143548d0af6ccb50d1e14",
+    "out/qwen38-native/bin/xlang3.exe": "2e2db12a2dbc1134a3a4c662c080b91d500b37af488661630d4d580e7684dc10",
+    "out/qwen38-native/bin/xlang3_runtime.dll": "8dabab841d460120b4e0b5c1539851e9ff17dbb0f5113beece4017f9f3fac4b3",
+    "src/backends/tensorrt/cuda_tensor_io.cpp": "9fc03e8a494c410582d5c9efac829b2856e1283a7b3a298cc3842a266363d543",
+    "src/backends/tensorrt/cuda_tensor_io.h": "5494e451d56970e49117c8e96ecd30215824ae1ffd1ac0ffb28ef22b4800d494",
+    "test2026/cuda/qwen38_5090/probe_untied_head.py": "a96e586b3f464e074f2e8f7edaca9936956bbbdf115b55d2ac4fded4ad0b887e",
+    "test2026/cuda/qwen38_5090/make_head_fixtures.py": "37eaa89b96f6dbcdd407e76c5ac59270e33b8c7f4fc207349ee03aca2177b70d"
+  },
+  "source_baseline": "2355fc4b5"
+}

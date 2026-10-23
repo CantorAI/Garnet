@@ -146,7 +146,15 @@ def main():
                 name = relative[:-3].replace("\\", ".").replace("/", ".")
                 importlib.import_module(name)
                 imported.append(name)
-    assert len(imported) == 27, str(imported)
+    # The current source includes these two later Qwen3-VL helper programs.
+    # Keep their import coverage explicit instead of treating them as an extra
+    # legacy source or dropping the existing graph-capture checks below.
+    later_helpers = {
+        'xModel.qwen3.vl_2b_instruct.debug_vision_pooler',
+        'xModel.qwen3.vl_2b_instruct.qwen_text_decode_batch',
+    }
+    assert later_helpers.issubset(set(imported)), str(imported)
+    assert len(imported) == 27 + len(later_helpers), str(imported)
     print("garnet-production-modules-imported", len(imported), flush=True)
     all_ops = set()
     for name, entry in ROOTS:
