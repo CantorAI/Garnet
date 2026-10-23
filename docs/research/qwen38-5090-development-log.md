@@ -285,3 +285,17 @@ CUDA13.2 development import libraries nvjpeg.lib, nppc.lib and nppig.lib to the
 existing three-library overlay. All six transferred files passed SHA256 checks;
 the transfer archive was removed. A fresh native build is recorded under label
 native-sm120-image-import-libraries. This records setup, not inference evidence.
+
+## P013 — 2026-10-23: native SM120 build and RTX5090 head correctness
+
+The native-sm120-image-import-libraries job completed exit0 after86 build steps,
+including linking bin/garnet.dll. The rtx5090-native-head-fixtures correctness
+job then completed exit0 and printed UNTIED_HEAD_NATIVE_CHECKS_PASS on the target
+GPU with CUDA_VISIBLE_DEVICES=0. This validates distinct untied logits, preserved
+embeddings, tied behavior, reopen behavior, and packed/missing head rejection
+before embedding allocation. Results are retained in results/rtx5090-head-checks.json
+and the append-only command ledger with the DLL hash.
+
+These are tiny synthetic correctness checks, not full Qwen3.8 inference or
+performance measurements. Packed NVFP4 output-head support is still pending;
+there is no measured2x speedup, TTFT, throughput, or peak-VRAM result yet.
