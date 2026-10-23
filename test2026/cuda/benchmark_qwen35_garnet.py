@@ -26,6 +26,8 @@ profile['sharedProjectionWeights']=os.environ.get('GARNET_QWEN35_SHARED_PROJECTI
 profile['packedDecoderProgram']=os.environ.get('GARNET_QWEN35_PACKED_DECODER_PROGRAM','0')=='1'
 profile['packPrompt']=os.environ.get('GARNET_QWEN35_PACK_PROMPT','0')=='1'
 profile['reuseVerifiedHead']=os.environ.get('GARNET_QWEN35_REUSE_VERIFIED_HEAD','0')=='1'
+join_decode_inputs=os.environ.get('GARNET_QWEN35_JOIN_DECODE_INPUT_PROJECTIONS','0')=='1'
+if join_decode_inputs:profile['joinDecodeInputProjections']=True
 profile['residentControls']=os.environ.get('GARNET_QWEN35_RESIDENT_CONTROLS','0')=='1'
 profile['serialGraphReuse']=os.environ.get('GARNET_QWEN35_SERIAL_GRAPH_REUSE','0')=='1'
 profile['serialTargetGraphReuse']=os.environ.get('GARNET_QWEN35_SERIAL_TARGET_GRAPH_REUSE','0')=='1'
@@ -48,6 +50,10 @@ print(json.dumps({'event':'load_begin','unix_seconds':time.time(),'engine':'garn
 model=Model(root,profile,name)
 print(json.dumps({'event':'load_complete','unix_seconds':time.time()}),flush=True)
 try:
+    if join_decode_inputs:
+        expected=model.config['text_config']['layer_types'].count('linear_attention');native=model.decoder.memory_info()
+        assert native['joined_projection_group_count']==expected
+        assert sum(g['joined_projection_inputs'] for g in native['graphs'])==expected
     actual_whole=all(g.get('qwen35_whole_program_cuda',False) for g in model.decoder.memory_info()['graphs'])
     assert actual_whole==(os.environ.get('GARNET_BENCHMARK_WHOLE_PROGRAM_CUDA')=='1'),'Benchmark build-policy label differs from actual DLL'
     for trial in range(rounds):
@@ -75,6 +81,7 @@ try:
                 'input_sha256':hashes,'workload_group':image_index,'matched_batch_inputs':matched_inputs,
                 'timing_scope':'Model.infer_batch: reset, JPEG/vision, tokenization, prefill/decode and output detokenization; load excluded'})
             result['io_memory']=json.loads(model.decoder.io.memory_json())
+            if join_decode_inputs:assert result['io_memory']['joined_projection_group_count']==expected
             if os.environ.get('GARNET_BENCHMARK_MEMORY')=='1':
                 result['owned_memory']=model.memory_info()
                 if profile['cudaGraph'] and trial>=2:

@@ -729,14 +729,158 @@ if read('reuse-verified-head-design.json'):
                 'Each aggregate first takes the median of two repeats for each group, then the median across groups. '
                 'Two repeats do not establish significance or causality; external competitors were not rerun in this study. '
                 'Derived decode throughput and phase medians are recorded with their scopes in '+link(study_name)+'.','']
-legacy_name='qwen3-vl-promptpack-dll-regression-fixed-root.json';legacy=read(legacy_name)
-legacy_exit=read('qwen3-vl-promptpack-dll-regression-fixed-root-exit.json')
+        comparison_name=f'packed-study-{size}-b{batch}-promptpack-reusehead-all-baselines.json'
+        comparison=read(comparison_name)
+        if comparison:
+            w=comparison['median_group_ms'];fastest=comparison['fastest_tested_baseline']
+            lines+=[f'Repeated {size.upper()} B{batch} versus all listed historical competitors on one '
+                f'{comparison["common_equal32_groups"]}-group equal-32 subset: Garnet C {w["garnet_c"]:.2f} ms, '
+                f'fastest tested baseline {fastest} {w[fastest]:.2f} ms, '
+                f'2× threshold {comparison["half_fastest_baseline_ms"]:.2f} ms. '
+                'Garnet uses per-group repeat medians; external cohorts were not rerun. '
+                'API/arithmetic/speculative differences and independent quality remain unresolved. '
+                'Evidence: '+link(comparison_name)+'.','']
+host_rows=[]
+for size,batch in (('2b',1),('4b',8)):
+    name=f'host-time-{size}-b{batch}-p64-d4-promptpack-headreuse-summary.json';d=read(name)
+    if d:
+        assert d['same_all28_input_prompt_output_stop_profile_signatures']
+        host_rows.append((size,batch,name,d))
+if host_rows:
+    lines+=['## Coarse host-clock diagnostic','',
+        'Separate instrumented cohorts preserve all 28 input/prompt/output/stop/profile signatures for each tested model. '
+        'Calling-thread CPU charges were observed in 15.625 ms steps; zero medians for short categories do not prove no CPU work. '
+        'Thread CPU includes native driver polling and excludes worker threads. Categories overlap and must not be summed. '
+        'The target-read wall interval waits for previously queued GPU work, so it is not standalone head cost. '
+        'These clocks do not establish a CPU bottleneck, recoverable time, or speedup.','']
+    for size,batch,name,d in host_rows:
+        lines+=[f'{size.upper()} B{batch}: instrumented Model wall median {d["median_request_wall_ms"]:.2f} ms; '
+            f'fresh target-read inclusive wall median {d["inclusive_categories_do_not_sum"]["target_read_fresh"]["median_inclusive_wall_ms"]:.2f} ms. '
+            'Instrumented timings are separate from primary performance evidence. Evidence: '+link(name)+'.','']
+    lines+=['Observed clock quantization: '+link('host-time-2b-b1-clock-quantization.json')+'.','']
+families=read('packed-node-kernel-family-summary.json')
+if families:
+    lines+=['## Latest matched-request node traces','',
+        'Both full 28-request diagnostic cohorts preserve input/prompt/output/stop/profile/speculation counters against saved study C1. '
+        'Only warmed request index 8 is traced; its queued tail is synchronized before stopping capture. '
+        'GPU kernel names identify BF16 GEMM families, including multiple body/vision/head operators. '
+        'This is a name-based aggregate, not attribution to one operator, continuous busy-time proof, or recoverable latency.','']
+    for size,batch in (('2b',1),('4b',8)):
+        d=families[size]
+        name=f'profile-packed-{size}-b{batch}-p64-d4-promptpack-headreuse-node-preservation.json'
+        lines+=[f'{size.upper()} B{batch}: named BF16 GEMM families sum {d["named_bf16_gemm_sum_ms"]:.2f} ms '
+            f'({d["named_bf16_gemm_fraction"]*100:.1f}% of summed kernel time); register-state kernels '
+            f'{d["register_state128_sum_ms"]:.2f} ms. Instrumented timings are not primary performance evidence. '
+            'Preservation: '+link(name)+'.','']
+lm_memory=read('memory-lmstudio-2b-b1-512-partitioned-summary.json')
+if lm_memory and read('matched-memory-2b1-packed-lm-input-control.json'):
+    lm=lm_memory['phases']['steady_after']['bytes']
+    gm=read('memory-combined-2b-b1-512-targetserial-aux0-deferred-nativecommit-arena-promptpack-summary.json')['phases']['steady_after']['bytes']
+    lines+=['## Matched 2B B1 isolated memory coverage','',
+        f'Garnet packed-input/head-off warm Windows dedicated+shared counters: {gm["TotalCommitted"]["median"]/1e9:.6f} GB; '
+        f'LM Studio partitioned 512-slot run: {lm["TotalCommitted"]["median"]/1e9:.6f} GB. '
+        'All six image-hash batches match. These separate sampled memory diagnostics are not true peak/residency measurements '
+        'or a fresh physical-memory measurement of head reuse. Evidence: '+link('matched-memory-2b1-packed-lm-input-control.json')+'.','']
+joined=read('joined-projection-screen-summary.json')
+if joined:
+    lines+=['## Same-input joined projection component screen','',
+        'A standalone component screen compares four separate qkv/z/beta/a GEMMs with one joined BF16 matrix, '
+        'using the unchanged production BF16 I/O / FP32-accumulation implementation. '
+        'All 16 2B/4B decode/prefill matrix cases pass the existing fixed FP64 error bound, input preservation, output guards '
+        'and exact output-split checks. Unfiltered memcheck reports zero errors and leaked bytes. '
+        'All eight decode fixtures are BF16-identical; 4B M64 prefill changes 217 BF16 values, retained explicitly.','',
+        'Including output splits, eviction-sweep component speed ratios for M4/8/16/32 are about 1.44–1.46× (2B) and '
+        '1.16–1.26× (4B). Nine rotated graph repetitions and a 256 MiB eviction sweep are synthetic evidence, '
+        'not verified L2 residency or a model speed prediction. The production candidate is default-off decode-only, '
+        'with shared original/joined weight ownership; it has not been accepted as the default. '
+        'Evidence: '+link('joined-projection-screen-summary.json')+', '+link('joined-decode-projection-production-design.json')+'.','']
+joined_identity=read('joined-decode-before-sanitizers-identity.json')
+if joined_identity:
+    sha=joined_identity['garnet_binary_sha256']
+    lines+=['## Joined decode production candidate — default off','',
+        'The packed/shared decodeChunk4 path groups qkv/z/beta/a checkpoint matrices into one BF16 allocation, '
+        'retains read-only original-member views for prefill, and uses one projection plus output slices during decode. '
+        'Ownership counts the group once. The native CUDA device fatbin is unchanged from the pushed checkpoint; '
+        'there is no arithmetic-precision change. DLL SHA256: `'+sha+'`.','',
+        'The first integrated fixture run failed on an undefined Python layer-kind variable. Its failure is retained; '
+        'the corrected source was archived before rerunning the gates. Grouped-weight byte preservation, cache/accounting, '
+        'read-only alias/lifetime and external-weight graph checks passed plain and unfiltered memcheck. '
+        'Full decoder state equivalence passed B1/2/4/8 plain and unfiltered memcheck.','',
+        '| Numerical suite | Completed passing profiles | Required profiles |','|---|---:|---:|']
+    for prefix in ('joined-regression','joined-decode'):
+        paths=list(root.glob(prefix+'-verifier-b*-c*-exit.json'))+list(root.glob(prefix+'-session-b*-p*-d4-exit.json'))
+        passes=sum((d:=json.loads(path.read_text()))['exit_code']==0 and d['garnet_dll_sha256']==sha for path in paths)
+        lines.append(f'| {prefix} | {passes} | 12 |')
+    lines+=['','| Joined sanitizer gate | Saved result | Scope |','|---|---|---|']
+    for tag in ('verifier-b8-memcheck','session-b8-memcheck','session-b8-racecheck','session-b8-synccheck'):
+        name='joined-decode-'+tag+'-exit.json';d=read(name)
+        status='pending' if d is None else 'pass' if d['exit_code']==0 and d['garnet_dll_sha256']==sha else 'failed or binary mismatch'
+        scope='unfiltered' if tag.endswith('memcheck') else 'packedCommit kernels only; not full integration'
+        lines.append(f'| {tag} | {status} | {scope} |')
+    lines+=['','Evidence: '+link('joined-decode-before-sanitizers-identity.json')+', '
+        +link('joined-decode-device-preservation.json')+'. Real-weight state preservation, full-request gain, '
+        'fresh isolated memory and repeated timings require separate evidence; fixture checks do not establish them.','']
+    real_rows=[];real_notes=[]
+    for size,batch,extra in (('2b',1,'-mtp3-cache128'),('4b',8,'')):
+        tag='packed-p64-d4-mtp3-k8192-replay-resident-serial-register128-flat-targetserial-aux0-deferred-nativecommit-arena-promptpack-headreuse-joineddecode'
+        name=f'matched512-{size}-b{batch}-{tag}{extra}-candidate.json';d=read(name)
+        state=read(f'joined-decode-pretrained-{size}-b{batch}-promptpack-headreuse-cross-prior-state-control.json')
+        if d and state and state['all_passed']:
+            w=d['median_group_ms'];owned=d['retained_owned_bytes']['candidate']
+            real_rows.append(f'| {size} B{batch} | {d["equal_32_four_way_groups"]} | {fmt(w["control"])} | {fmt(w["candidate"])} | {fmt(w["vllm"])} | {fmt(w["lmstudio"])} | {d["same_sequence_cases"]}/28 | {owned} |')
+            real_notes+=['',f'{size} B{batch} real probe: complete finite target states and outputs/stop signatures match the prior control. '
+                'Single-cohort timing uses historical controls/competitors; repeated same-build evidence remains separate. '
+                'Retained allocation is not sampled process memory or a true peak. Evidence: '+link(name)+'.','']
+        study_name=f'packed-study-{size}-b{batch}-joined-decode-summary.json';study=read(study_name)
+        if study:
+            w=study['aggregate_group_median_ms']
+            real_notes+=['',f'Joined ABBA {size} B{batch}: control **{w["a"]:.3f} ms**, candidate **{w["b"]:.3f} ms**, '
+                f'{100*study["comparisons"]["a_to_b"]["reduction_fraction"]:.2f}% latency reduction over all20 warm groups. '
+                'All28 input/prompt/output/stop signatures match across four fresh sequential processes on the same DLL. '
+                'Two repeats do not establish significance, causality or independent quality. Evidence: '+link(study_name)+'.','']
+        workload_name=f'joined-decode-{size}-b{batch}-all28-workload-control.json';workload=read(workload_name)
+        if workload and workload['all_passed']:
+            real_notes+=['',f'{size} B{batch}: all28 first-trial inputs, prompt IDs, outputs/stops, discrete MTP calls, '
+                'accepted-draft counts and iteration progress are unchanged; retained allocation is unchanged. '
+                'This rules out a changed speculative workload in that cohort, without proving independent quality. '
+                'Evidence: '+link(workload_name)+'.','']
+        baseline_name=f'packed-study-{size}-b{batch}-joined-decode-all-baselines.json';baseline=read(baseline_name)
+        if baseline:
+            w=baseline['median_group_ms'];fastest=baseline['fastest_tested_baseline']
+            real_notes+=['',f'{size} B{batch}, common {baseline["common_equal32_groups"]} equal32 groups across all listed engines: '
+                f'joined Garnet **{w["garnet_b"]:.3f} ms**, fastest saved competitor ({fastest}) **{w[fastest]:.3f} ms**, '
+                f'2x latency threshold **{baseline["half_fastest_baseline_ms"]:.3f} ms**. '
+                'Competitors are historical single cohorts; API/arithmetic/proposal differences remain. Evidence: '+link(baseline_name)+'.','']
+        memory_tag=f'memory-combined-{size}-b{batch}-512-targetserial-aux0-deferred-nativecommit-arena-promptpack-headreuse-joineddecode'
+        memory=read(memory_tag+'-summary.json');memory_control=read(memory_tag+'-workload-control.json')
+        if memory and memory_control and memory_control['all_six_input_hash_groups_exact'] and memory_control['all_six_garnet_output_stop_signatures_match_timing']:
+            values=memory['phases']['steady_after']['bytes']
+            real_notes+=['',f'{size} B{batch} joined isolated memory, warm Windows process-counter medians: dedicated '
+                f'**{values["DedicatedUsage"]["median"]/1e9:.6f} GB**, shared **{values["SharedUsage"]["median"]/1e9:.6f} GB**, '
+                f'total **{values["TotalCommitted"]["median"]/1e9:.6f} GB**. '
+                'All six memory inputs match the LM memory run and Garnet timing cohort; Garnet output/stop signatures and profiles match. '
+                'These sampled committed counters do not establish true peak memory or physical residency. Evidence: '+link(memory_tag+'-summary.json')+', '+link(memory_tag+'-workload-control.json')+'.','']
+        context=read(memory_tag+'-context-requirements.json')
+        if context:
+            real_notes+=['',f'{size} B{batch}: summed TensorRT context upper bounds '
+                f'**{context["sum_context_upper_bounds_bytes_not_measured_allocation"]/1e9:.6f} GB**, largest single-context bound '
+                f'**{context["largest_single_context_upper_bound_bytes"]/1e9:.6f} GB**. '
+                'These API bounds are not allocated-byte measurements or predicted savings; workspace sharing remains unimplemented. '
+                'Evidence: '+link(memory_tag+'-context-requirements.json')+'.','']
+    if real_rows:lines+=['| Real cohort | Equal-output groups | Prior control ms | Joined ms | vLLM ms | LM Studio ms | Same token sequences | Retained bytes |',
+        '|---|---:|---:|---:|---:|---:|---:|---:|']+real_rows+['']
+    lines+=real_notes
+legacy_tag='qwen3-vl-promptpack-dll-regression-joined-decode'
+legacy_exit=read(legacy_tag+'-exit.json')
+if not legacy_exit or legacy_exit['exit_code']!=0:legacy_tag='qwen3-vl-promptpack-dll-regression-fixed-root'
+legacy_name=legacy_tag+'.json';legacy=read(legacy_name);legacy_exit=read(legacy_tag+'-exit.json')
 if legacy and legacy_exit and legacy_exit['exit_code']==0:
     rows=legacy['rows']
     assert legacy['status']['ready'] and len(rows)==2 and rows[0]['text']==rows[1]['text']
     assert [row['output_tokens'] for row in rows]==[16,16]
-    lines+=['## Current-DLL Qwen3-VL regression smoke','',
-        'Qwen3-VL-2B-Instruct starts on the current native DLL and completes two matching 16-token requests with 77 visual tokens each. '
+    legacy_scope='joined-candidate' if legacy_tag.endswith('joined-decode') else 'pushed checkpoint'
+    lines+=['## Qwen3-VL regression smoke','',
+        f'Qwen3-VL-2B-Instruct starts on the {legacy_scope} native DLL and completes two matching 16-token requests with 77 visual tokens each. '
         'The existing regression cache folder is reused. This is a legacy serving/reset/vision smoke test, '
         'not broad independent quality, historical input-equivalence proof or matched speed acceptance. '
         'The first harness attempt passed a program file where the API requires an xModel directory; its failure is retained. '

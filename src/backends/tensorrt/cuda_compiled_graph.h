@@ -17,7 +17,7 @@ class CUDACompiledGraph {
     bool ready_=false,useCudaGraph_=false,serialGraphReuse_=false,externalOutput_=false;
     double compileMs_=0,lastMs_=0;
     unsigned long long builderWorkspaceBytes_=64ULL<<20;
-    size_t externalWeightCount_=0,externalWeightBytes_=0;
+    size_t externalWeightCount_=0,externalWeightBytes_=0,joinedProjectionInputs_=0;
     mutable std::mutex mutex_;
     void CloseUnlocked();
 public:

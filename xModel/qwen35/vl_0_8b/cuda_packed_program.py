@@ -41,11 +41,13 @@ def decoder_state_layout(config,batch,capacity):
     return result,offset
 
 class CUDAPackedDecoderProgram:
-    def __init__(self,checkpoint,config,io,batch=1,capacity=512,chunk_size=4,retain_linear_inputs=False,projection_workspace_bytes=0,register_delta_128=False,flat_concat=False):
+    def __init__(self,checkpoint,config,io,batch=1,capacity=512,chunk_size=4,retain_linear_inputs=False,projection_workspace_bytes=0,register_delta_128=False,flat_concat=False,join_input_projections=False):
         if batch not in (1,2,4,8) or not 32<=capacity<=8192 or chunk_size not in (4,8,16,32,64,128):raise ValueError('Unsupported packed decoder profile')
         if projection_workspace_bytes not in (0,16384):raise ValueError('Invalid projection workspace')
         self.config=config;self.io=io;self.batch=batch;self.capacity=capacity;self.size=chunk_size;self.retain=retain_linear_inputs
         self.register_delta_128=register_delta_128;self.flat_concat=flat_concat
+        self.join_input_projections=bool(join_input_projections)
+        if self.join_input_projections and chunk_size!=4:raise ValueError('Joined input projections require decode width4')
         self.workspace=projection_workspace_bytes;self.layout,self.state_width=decoder_state_layout(config,batch,capacity)
         self.hidden_width=chunk_size*config['hidden_size'];self.payload_width=0;self.weight_names=[];self.weight_layers=[];self.weights=[];self.graph=None
         symbols=[tensor.input('packed_hidden',shape=[batch,chunk_size,config['hidden_size']],dtype=tensor.float32),
@@ -56,12 +58,20 @@ class CUDAPackedDecoderProgram:
         for layer in self.layout:
             index=layer['index'];kind=layer['kind'];p='model.language_model.layers.'+str(index)+'.'
             suffixes=['mlp.gate_proj.weight','mlp.up_proj.weight','mlp.down_proj.weight']
-            suffixes+=['linear_attn.'+name+'.weight' for name in ('in_proj_qkv','in_proj_z','in_proj_b','in_proj_a','out_proj')] if kind=='linear_attention' else ['self_attn.'+name+'.weight' for name in ('q_proj','k_proj','v_proj','o_proj')]
+            joined=None;joined_name=p+'linear_attn.in_proj_joined.weight'
+            if kind=='linear_attention' and self.join_input_projections:
+                joined=io.group_weights([p+'linear_attn.'+name+'.weight' for name in ('in_proj_qkv','in_proj_z','in_proj_b','in_proj_a')])
+                suffixes+=['linear_attn.in_proj_joined.weight','linear_attn.out_proj.weight']
+            else:suffixes+=['linear_attn.'+name+'.weight' for name in ('in_proj_qkv','in_proj_z','in_proj_b','in_proj_a','out_proj')] if kind=='linear_attention' else ['self_attn.'+name+'.weight' for name in ('q_proj','k_proj','v_proj','o_proj')]
             indices=[]
             for suffix in suffixes:
-                name=p+suffix;info=json.loads(io.weight_info(name))
+                name=p+suffix
+                if joined is not None and name==joined_name:
+                    rows=2*config['linear_num_key_heads']*config['linear_key_head_dim']+2*config['linear_num_value_heads']*config['linear_value_head_dim']+2*config['linear_num_value_heads']
+                    info={'dtype':'BF16','shape':[rows,config['hidden_size']]};value=joined
+                else:info=json.loads(io.weight_info(name));value=io.weight(name)
                 if info['dtype']!='BF16' or len(info['shape'])!=2:raise ValueError('Packed decoder requires BF16 matrix weights')
-                indices.append(len(self.weight_names));self.weight_names.append(name);self.weights.append(io.weight(name))
+                indices.append(len(self.weight_names));self.weight_names.append(name);self.weights.append(value)
                 symbols.append(tensor.input('packed_weight_'+str(len(self.weight_names)),shape=info['shape'],dtype=tensor.bfloat16))
             self.weight_layers.append(indices)
             layer['payload_width']=0
@@ -84,7 +94,7 @@ class CUDAPackedDecoderProgram:
                 first=packed_view(state,offset,w1,layer['state1_shape']);second=packed_view(state,offset+w1,w2,layer['state2_shape'])
                 external={self.weight_names[i]:weights[i] for i in indices}
                 packed=Qwen35CUDAChunk(hidden,first,second,active,positions,slots,config,layer['index'],layer['kind'],True,True,
-                    self.workspace,self.retain,external,self.register_delta_128)
+                    self.workspace,self.retain,external,self.register_delta_128,self.join_input_projections and layer['kind']=='linear_attention')
                 hidden=packed_view(packed,0,t*h,[b,t,h])
                 state_outputs.append(packed_view(packed,t*h,w1+w2,[b,w1+w2]))
                 if layer['payload_width']:
@@ -101,7 +111,7 @@ class CUDAPackedDecoderProgram:
 
     def memory_info(self):
         if self.graph is None:raise ValueError('Packed decoder program is closed')
-        return {'graph':json.loads(self.graph.stats_json()),'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'state_width':self.state_width,'hidden_width':self.hidden_width,
+        return {'graph':json.loads(self.graph.stats_json()),'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'joined_input_projections':self.join_input_projections,'state_width':self.state_width,'hidden_width':self.hidden_width,
             'payload_width':self.payload_width,'external_weight_count':len(self.weights),'fp32_layer_barriers':max(0,len(self.layout)-1),
             'scope':'Program graph only; canonical state, request buffers and the one projection pool belong to caller. Not process peak.'}
 

@@ -67,6 +67,11 @@ namespace Garnet {
         }
         void SetCapturedStrictFP32(bool value) { capturedStrictFP32 = value; }
         size_t ExternalBF16WeightInputs() const { return externalBF16Bindings.size(); }
+        size_t JoinedProjectionInputs() const {
+            size_t count=0;for(const auto& item:externalBF16Bindings)
+                if(item.first.find(".linear_attn.in_proj_joined.weight")!=std::string::npos)++count;
+            return count;
+        }
         size_t ExternalBF16WeightBytes() const {
             size_t bytes=0;for(const auto& item:externalBF16Bindings)bytes+=item.second.second;return bytes;
         }

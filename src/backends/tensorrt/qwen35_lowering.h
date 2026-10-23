@@ -291,21 +291,29 @@ public:
         return cat({output,reshape(core[1],{batch,channels*kernel}),reshape(core[2],{batch,vh*kd*vd})},1);
     }
     T* linearDecoderChunk(T* x,T* history,T* state,T* active,const std::string& layer,
-        int kh,int vh,int kd,int vd,float eps,bool fusedDelta=false,bool retainInputs=false,bool register128=false) {
+        int kh,int vh,int kd,int vd,float eps,bool fusedDelta=false,bool retainInputs=false,bool register128=false,bool joinedInputs=false) {
         if(retainInputs&&!fusedDelta)throw std::invalid_argument("Qwen3.5 retained projections require fused delta");
         if(register128&&(!fusedDelta||kd!=128||vd!=128||kh>64||vh>64))throw std::invalid_argument("Register delta requires fused128 dimensions and bounded heads");
         auto xs=shape(x),hs=shape(history);
         if(xs.size()!=3||xs[1]>128||hs.size()!=3||kh<=0||vh<=0||vh%kh||kd<=0||vd<=0)
             throw std::invalid_argument("Qwen3.5 linear chunk dimensions invalid");
         const int batch=xs[0],tokens=xs[1],hidden=xs[2],channels=2*kh*kd+vh*vd,kernel=hs[2];
+        if(joinedInputs&&(tokens!=4||(batch!=1&&batch!=2&&batch!=4&&batch!=8)))throw std::invalid_argument("Joined input projections require decode width4 and batch1/2/4/8");
         require(active,{batch,tokens});
         x=select(reshape(active,{batch,tokens,1}),x,scalar(0,3));
         T* normalized=norm(x,layer+".input_layernorm.weight",eps);
         const auto prefix=layer+".linear_attn";
         auto w=[&](const char* suffix){return weight(prefix+suffix);};
-        T* qkv=project(normalized,w(".in_proj_qkv.weight"));
-        T* z=project(normalized,w(".in_proj_z.weight"));
-        T* beta=project(normalized,w(".in_proj_b.weight"));T* a=project(normalized,w(".in_proj_a.weight"));
+        T *qkv=nullptr,*z=nullptr,*beta=nullptr,*a=nullptr;
+        if(joinedInputs){
+            auto* matrix=w(".in_proj_joined.weight");require(matrix,{channels+vh*vd+2*vh,hidden});
+            auto* values=project(normalized,matrix);
+            qkv=slice(values,2,0,channels);z=slice(values,2,channels,vh*vd);
+            beta=slice(values,2,channels+vh*vd,vh);a=slice(values,2,channels+vh*vd+vh,vh);
+        }else{
+            qkv=project(normalized,w(".in_proj_qkv.weight"));z=project(normalized,w(".in_proj_z.weight"));
+            beta=project(normalized,w(".in_proj_b.weight"));a=project(normalized,w(".in_proj_a.weight"));
+        }
         auto token=[&](T* input,int index){auto s=shape(input);return reshape(slice(input,1,index,1),{batch,s[2]});};
         std::vector<T*> outputs;T* coreOutput=nullptr;
         if(fusedDelta){

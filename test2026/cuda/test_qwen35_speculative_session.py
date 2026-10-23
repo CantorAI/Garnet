@@ -20,9 +20,10 @@ deferred_state=len(sys.argv)>15 and sys.argv[15]=='1'
 native_prefix=len(sys.argv)>16 and sys.argv[16]=='1'
 shared_output=len(sys.argv)>17 and sys.argv[17]=='1'
 reuse_verified_head=len(sys.argv)>18 and sys.argv[18]=='1'
+join_decode_inputs=len(sys.argv)>19 and sys.argv[19]=='1'
 if packed_program:
     from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
-    model=CUDAPackedDecoder(fixture['checkpoint'],fixture['config'],b,128,wide or chunk,chunk,retain_linear_inputs=prefix_replay,register_delta_128=register_delta,flat_concat=flat_concat,deferred_state_commit=deferred_state,shared_output_storage=shared_output)
+    model=CUDAPackedDecoder(fixture['checkpoint'],fixture['config'],b,128,wide or chunk,chunk,retain_linear_inputs=prefix_replay,register_delta_128=register_delta,flat_concat=flat_concat,deferred_state_commit=deferred_state,shared_output_storage=shared_output,join_decode_input_projections=join_decode_inputs)
 elif wide:
     from xModel.qwen35.vl_0_8b.cuda_hybrid import CUDAHybridDecoder
     model=CUDAHybridDecoder(fixture['checkpoint'],fixture['config'],b,128,wide,chunk,retain_linear_inputs=prefix_replay,register_delta_128=register_delta)
@@ -33,6 +34,8 @@ model.serial_target_graph_reuse=len(sys.argv)>14 and sys.argv[14]=='1'
 model.native_prefix_commit=native_prefix
 model.reuse_verified_head=reuse_verified_head
 model.enable_cuda_graph(True);session=CUDASpeculativeSession(model,fixture['checkpoint'],[],depth,head_candidates,prefix_replay)
+if join_decode_inputs:
+    assert sum(g['joined_projection_inputs'] for g in model.memory_info()['graphs'])==fixture['config']['layer_types'].count('linear_attention')
 prompt_count=67 if wide else len(fixture['prompt_steps'])
 tokens=[]
 for t in range(prompt_count):
@@ -112,6 +115,6 @@ try:
     session.close();model.reset();model.step(tokens[0],[1]*b)
     assert model.slots==[1]*b,'Session close broke borrowed decoder'
     with open(output,'w') as stream:json.dump({'batch':b,'chunk':chunk,'prefill_chunk':wide or chunk,'prompt_tokens':prompt_count,'draft_depth':depth,'head_candidates':head_candidates,'prefix_replay':prefix_replay,'packed_program':packed_program,'resident_controls':model.resident_controls,'serial_graph_reuse':model.serial_graph_reuse,'serial_target_graph_reuse':model.serial_target_graph_reuse,'deferred_state_commit':deferred_state,'target_memory':target_memory,'flat_concat':flat_concat,'register_delta_128':register_delta,'records':records,'memory':memory,
-        'native_prefix_commit':native_prefix,'shared_output_storage':shared_output,'reuse_verified_head':reuse_verified_head,'all_passed':True,'scope':'Synthetic native correctness; includes explicit oracle proposals for branch coverage, never performance evidence'},stream,indent=2)
+        'native_prefix_commit':native_prefix,'shared_output_storage':shared_output,'reuse_verified_head':reuse_verified_head,'join_decode_input_projections':join_decode_inputs,'all_passed':True,'scope':'Synthetic native correctness; includes explicit oracle proposals for branch coverage, never performance evidence'},stream,indent=2)
     print('QWEN35_SPECULATIVE_SESSION_COMPLETE','batch',b,'chunk',chunk,'depth',depth,'cases',len(records),flush=True)
 finally:session.close();model.close()

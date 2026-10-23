@@ -50,6 +50,14 @@ result['candidate_native_prefix_commit']=candidate_profile.get('nativePackedPref
 if result['candidate_native_prefix_commit']:
     assert all(r['owned_memory']['speculative']['target_verifier']['native_prefix_commit']['ready'] and r['owned_memory']['speculative']['target_verifier']['packed_replay_graph'] is None for r in data['candidate'].values())
 result['candidate_shared_output_storage']=candidate_profile.get('sharePackedOutputStorage',False)
+result['candidate_pack_prompt']=candidate_profile.get('packPrompt',False)
+result['candidate_reuse_verified_head']=candidate_profile.get('reuseVerifiedHead',False)
+result['candidate_join_decode_input_projections']=candidate_profile.get('joinDecodeInputProjections',False)
+if result['candidate_join_decode_input_projections']:
+    counts={r['io_memory']['joined_projection_group_count'] for r in data['candidate'].values()}
+    native_counts={sum(g['joined_projection_inputs'] for g in r['owned_memory']['decoder']['graphs']) for r in data['candidate'].values()}
+    assert counts==native_counts=={18 if a.model=='2b' else 24},'Joined projection labels differ from actual native graphs'
+    result['candidate_actual_joined_projection_groups']=sorted(counts)
 build_modes={g['qwen35_whole_program_cuda'] for r in data['candidate'].values() for g in r['owned_memory']['decoder']['graphs'] if 'qwen35_whole_program_cuda' in g}
 assert len(build_modes)<=1
 result['candidate_whole_program_cuda']=next(iter(build_modes)) if build_modes else None

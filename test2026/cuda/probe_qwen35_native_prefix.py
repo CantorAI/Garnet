@@ -17,6 +17,7 @@ whole_program=len(sys.argv)>6 and sys.argv[6]=='1'
 finite_bytes=len(sys.argv)>7 and sys.argv[7]=='1'
 pack_prompt=len(sys.argv)>8 and sys.argv[8]=='1'
 reuse_head=len(sys.argv)>9 and sys.argv[9]=='1'
+join_decode_inputs=len(sys.argv)>10 and sys.argv[10]=='1'
 record=json.loads(Path(source).read_text())[index];b=record['batch']
 _,images=batch_inputs(record['dataset'],record['trial'],record['workload_group'],b,True)
 assert input_hashes(images)==record['input_sha256']
@@ -25,6 +26,7 @@ profile=dict(record['profile']);profile.update({'deferPackedStateCommit':True,'n
     'serialTargetGraphReuse':True,'retainLinearInputs':True,'sharePackedOutputStorage':shared_output})
 if pack_prompt:profile['packPrompt']=True
 if reuse_head:profile['reuseVerifiedHead']=True
+if join_decode_inputs:profile['joinDecodeInputProjections']=True
 assert profile['speculativeMTP']==3 and profile['packedDecoderProgram'] and profile['registerDelta128']
 
 def hashes(model):
@@ -54,6 +56,10 @@ print('NATIVE_PREFIX_LOAD_BEGIN',time.time(),b,flush=True)
 model=Model(checkpoint,profile,record['model'])
 try:
     print('NATIVE_PREFIX_LOAD_COMPLETE',time.time(),flush=True)
+    if join_decode_inputs:
+        expected=model.config['text_config']['layer_types'].count('linear_attention');native=model.decoder.memory_info()
+        assert native['joined_projection_group_count']==expected
+        assert sum(g['joined_projection_inputs'] for g in native['graphs'])==expected
     actual_whole=all(g.get('qwen35_whole_program_cuda',False) for g in model.decoder.memory_info()['graphs'])
     assert actual_whole==whole_program,'Pretrained build-policy label differs from actual DLL'
     for trial in range(2):

@@ -9,6 +9,7 @@ sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspat
 import garnet,tensor
 from xModel.qwen35.vl_0_8b.decoder_layer import T
 fixture=json.load(open(sys.argv[1]));output=sys.argv[2];checkpoint=fixture['checkpoint']
+group_mlp=len(sys.argv)>3 and sys.argv[3]=='1'
 prefix='model.language_model.layers.0.mlp';names=[prefix+'.'+kind+'.weight' for kind in ('gate_proj','up_proj','down_proj')]
 io=garnet.cuda_tensor_io();io.open(checkpoint);graphs=[];records=[]
 def cpu_bits(t):
@@ -37,9 +38,11 @@ def build(rows,external,invalid=None):
     except:graph.close();raise
     graphs.append(graph);return graph
 try:
+    if group_mlp:io.group_weights(names[:2])
     weights=[io.weight(name) for name in names];pool=json.loads(io.memory_json())
     expected=sum(json.loads(io.weight_info(name))['bytes'] for name in names)
     assert pool['projection_weight_pool_bytes']==expected and pool['projection_weight_pool_entries']==3
+    if group_mlp:assert pool['joined_projection_group_count']==1 and pool['joined_projection_member_count']==2
     for name in ('model.language_model.embed_tokens.weight','missing.weight','model.language_model.layers.0.input_layernorm.weight'):
         rejected=False
         try:io.weight(name)
@@ -76,7 +79,7 @@ try:
     # Caller-retained readonly views own their allocations after the pool closes.
     assert cpu_bits(graphs[-1].run_device([hidden]+weights))==expected_bits
     graphs[-1].close()
-    result={'records':records,'owned_weight_pool_bytes':expected,'all_passed':True,'invalid_binding_rejections':rejections,
+    result={'records':records,'owned_weight_pool_bytes':expected,'all_passed':True,'grouped_mlp_weights':group_mlp,'invalid_binding_rejections':rejections,
         'retained_views_survive_pool_close':True,
         'scope':'Standalone native constant/external equality and one caller pool, no independent math/full-model or speed acceptance'}
     with open(output,'w') as stream:json.dump(result,stream,indent=2)

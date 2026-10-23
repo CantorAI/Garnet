@@ -12,13 +12,15 @@ from .cuda_decoder import CUDADecoder
 from .cuda_packed_program import CUDAPackedDecoderProgram
 
 class CUDAPackedDecoder:
-    def __init__(self,checkpoint,config,batch=1,capacity=512,prefill_chunk=64,decode_chunk=4,projection_workspace_bytes=0,retain_linear_inputs=False,register_delta_128=False,flat_concat=False,deferred_state_commit=False,shared_output_storage=False):
+    def __init__(self,checkpoint,config,batch=1,capacity=512,prefill_chunk=64,decode_chunk=4,projection_workspace_bytes=0,retain_linear_inputs=False,register_delta_128=False,flat_concat=False,deferred_state_commit=False,shared_output_storage=False,join_decode_input_projections=False):
         if decode_chunk not in (4,8,16) or prefill_chunk not in (4,8,16,32,64,128) or prefill_chunk<decode_chunk:
             raise ValueError('Packed decoder requires bounded prefill>=decode chunk')
         self.config=config;self.batch=batch;self.capacity=capacity;self.checkpoint=str(checkpoint)
         self.prefill_chunk_size=prefill_chunk;self.decode_chunk_size=decode_chunk;self.prefill_mode=False
         self.projection_workspace_bytes=projection_workspace_bytes;self.retain_linear_inputs=retain_linear_inputs
         self.register_delta_128=register_delta_128;self.flat_concat=flat_concat
+        self.join_decode_input_projections=bool(join_decode_input_projections)
+        if self.join_decode_input_projections and decode_chunk!=4:raise ValueError('Joined decode input projections require width4')
         self.deferred_state_commit=bool(deferred_state_commit)
         if self.deferred_state_commit and not retain_linear_inputs:raise ValueError('Deferred state requires retained projections and the packed replay verifier')
         self.state_transaction=None;self.transaction_thread=None;self.verification_chunk_allowed=False
@@ -29,7 +31,7 @@ class CUDAPackedDecoder:
         try:
             self.io.open(checkpoint)
             for size in dict.fromkeys((decode_chunk,prefill_chunk)):
-                program=CUDAPackedDecoderProgram(checkpoint,config,self.io,batch,capacity,size,retain_linear_inputs and size==decode_chunk,projection_workspace_bytes,register_delta_128,flat_concat)
+                program=CUDAPackedDecoderProgram(checkpoint,config,self.io,batch,capacity,size,retain_linear_inputs and size==decode_chunk,projection_workspace_bytes,register_delta_128,flat_concat,self.join_decode_input_projections and size==decode_chunk)
                 self.programs[size]=program
                 if self.state is None:self.state=self.io.zeros([batch,program.state_width])
                 self.requests[size]=[self.io.zeros(shape) for shape in ([batch,size,config['hidden_size']],[batch,size],[batch,size,3],[batch,size])]
@@ -157,7 +159,8 @@ class CUDAPackedDecoder:
             'embedding_head_shared_bytes':info['embedding_head_shared_bytes'],'head_input_bytes':info['head_input_bytes'],'head_output_bytes':info['head_output_bytes'],
             'proposal_io_bytes':proposal,'projection_weight_pool_bytes':info.get('projection_weight_pool_bytes',0),'projection_weight_pool_entries':info.get('projection_weight_pool_entries',0),
             'trt_runtime_allocator_live_bytes':runtime,'owned_decoder_bytes':states+requests+outputs+proposal+shared+runtime if tracked else None,
-            'packed_profiles':{'prefill':self.prefill_chunk_size,'decode':self.decode_chunk_size,'single_canonical_state':True,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'deferred_state_commit':self.deferred_state_commit,'shared_output_storage':self.shared_output_storage},
+            'joined_projection_group_count':info.get('joined_projection_group_count',0),'joined_projection_group_bytes':info.get('joined_projection_group_bytes',0),
+            'packed_profiles':{'prefill':self.prefill_chunk_size,'decode':self.decode_chunk_size,'single_canonical_state':True,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'deferred_state_commit':self.deferred_state_commit,'shared_output_storage':self.shared_output_storage,'join_decode_input_projections':self.join_decode_input_projections},
             'scope':'Retained canonical state, request/output buffers, one readonly projection pool/table and tracked TRT runtime. Excludes builder/driver/library/transient allocations; not process peak.'}
 
     def close(self):

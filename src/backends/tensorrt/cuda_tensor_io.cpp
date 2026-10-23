@@ -56,7 +56,7 @@ bool SameShape(const X::Tensor& tensor,const std::vector<int64_t>& shape){
 }
 CUDATensorIO::~CUDATensorIO(){Close();}
 void CUDATensorIO::CloseUnlocked(){table_=X::Tensor();headInput_=X::Tensor();headOutput_=X::Tensor();tokenHeadInput_=X::Tensor();tokenHeadOutput_=X::Tensor();
-    candidateScratch_=candidateOutput_=indexedScores_=indexedIds_=indexedValues_=X::Tensor();projectionWeights_.clear();projection_.reset();vocab_=width_=0;}
+    candidateScratch_=candidateOutput_=indexedScores_=indexedIds_=indexedValues_=X::Tensor();projectionWeights_.clear();projectionWeightGroupMembers_.clear();projectionWeightGroups_.clear();projection_.reset();vocab_=width_=0;}
 void CUDATensorIO::Close(){std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();}
 bool CUDATensorIO::Open(const std::string& checkpoint){
     std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();std::string error;
@@ -369,13 +369,18 @@ X::Value CUDATensorIO::PrepareImage(const std::string& path,int pixels){
 std::string CUDATensorIO::MemoryJson() const{
     std::lock_guard<std::mutex> lock(mutex_);size_t free=0,total=0;Check(cudaMemGetInfo(&free,&total));
     auto bytes=[](const X::Tensor& t)->uint64_t{return t.IsValid()?t.Info().byte_size:0;};
-    uint64_t poolBytes=0;for(const auto& item:projectionWeights_)poolBytes+=bytes(item.second);
+    uint64_t poolBytes=0,groupBytes=0;
+    for(const auto& item:projectionWeightGroups_)groupBytes+=bytes(item.second);
+    poolBytes=groupBytes;
+    for(const auto& item:projectionWeights_)if(!projectionWeightGroupMembers_.count(item.first))poolBytes+=bytes(item.second);
     return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_shared_bytes",bytes(table_)},{"head_input_bytes",bytes(headInput_)+bytes(tokenHeadInput_)},{"head_output_bytes",bytes(headOutput_)+bytes(tokenHeadOutput_)},
         {"single_head_input_bytes",bytes(headInput_)},{"single_head_output_bytes",bytes(headOutput_)},
         {"token_head_input_bytes",bytes(tokenHeadInput_)},{"token_head_output_bytes",bytes(tokenHeadOutput_)},
         {"candidate_workspace_bytes",bytes(candidateScratch_)},{"candidate_index_bytes",bytes(candidateOutput_)},
         {"indexed_head_buffers_bytes",bytes(indexedScores_)+bytes(indexedIds_)+bytes(indexedValues_)},
         {"projection_weight_pool_bytes",poolBytes},{"projection_weight_pool_entries",projectionWeights_.size()},
+        {"joined_projection_group_count",projectionWeightGroups_.size()},{"joined_projection_group_bytes",groupBytes},
+        {"joined_projection_member_count",projectionWeightGroupMembers_.size()},
         {"device_used_bytes",total-free},{"scope","owned I/O buffers plus whole-device snapshot; engine weights/state and process peak are separate"}}.dump();
 }
 int64_t CUDATensorIO::TensorBytes(X::Value value){

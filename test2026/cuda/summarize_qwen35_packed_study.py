@@ -2,8 +2,9 @@
 import argparse,hashlib,json,statistics
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('--model',choices=('2b','4b'),required=True)
-p.add_argument('--batch',type=int,choices=(1,2,4,8),required=True);p.add_argument('--reuse-head',action='store_true');a=p.parse_args()
-study='promptpack-reusehead' if a.reuse_head else 'promptpack';root=a.root
+p.add_argument('--batch',type=int,choices=(1,2,4,8),required=True)
+feature=p.add_mutually_exclusive_group();feature.add_argument('--reuse-head',action='store_true');feature.add_argument('--joined-decode',action='store_true');a=p.parse_args()
+study='joined-decode' if a.joined_decode else 'promptpack-reusehead' if a.reuse_head else 'promptpack';root=a.root
 roles=('a1','b1','c1','c2','b2','a2') if a.reuse_head else ('a1','b1','b2','a2')
 output=root/f'packed-study-{a.model}-b{a.batch}-{study}-summary.json';assert not output.exists(),'Preserve study summary'
 data={};sources={};binary=set()
@@ -19,17 +20,25 @@ base=data['a1'];keys=[k for k,r in base.items() if not r['warmup']];assert len(k
 sig=lambda r:{k:r[k] for k in ('generated_token_ids','sampled_tokens_including_stop','finish_reasons','stop_token_ids')}
 for role,rows in data.items():
     assert rows.keys()==base.keys()
-    expected_pack=not role.startswith('a');expected_reuse=role.startswith('c')
+    expected_pack=a.joined_decode or not role.startswith('a');expected_reuse=a.joined_decode or role.startswith('c')
+    expected_join=a.joined_decode and role.startswith('b')
     for k,r in rows.items():
         assert r['input_sha256']==base[k]['input_sha256'] and r['prompt_token_ids']==base[k]['prompt_token_ids']
         assert sig(r)==sig(base[k]),('Changed output/stop signature',role,k)
         assert r['batch']==a.batch and r['request_output_limit']==32
         assert r['profile'].get('packPrompt',False)==expected_pack
         assert r['profile'].get('reuseVerifiedHead',False)==expected_reuse
+        assert r['profile'].get('joinDecodeInputProjections',False)==expected_join
+        assert r['warmup']==base[k]['warmup']
         original=dict(base[k]['profile']);current=dict(r['profile'])
-        for feature in ('packPrompt','reuseVerifiedHead'):original.pop(feature,None);current.pop(feature,None)
+        transitions=('joinDecodeInputProjections',) if a.joined_decode else ('packPrompt','reuseVerifiedHead')
+        for feature in transitions:original.pop(feature,None);current.pop(feature,None)
         assert original==current,('Other profile parameters differ',role,k)
         assert r['cache_policy']=={'prefix':False,'image':False,'answer':False}
+        if a.joined_decode:
+            expected_groups=(18 if a.model=='2b' else 24) if expected_join else 0
+            assert r['io_memory']['joined_projection_group_count']==expected_groups
+            assert sum(g['joined_projection_inputs'] for g in r['owned_memory']['decoder']['graphs'])==expected_groups
     if expected_reuse:assert sum(rows[k]['speculative_metrics'].get('target_head_reuses',0) for k in keys)>0
 
 def med(values):return statistics.median(values)
@@ -50,8 +59,10 @@ for before,after in (('a','b'),('b','c'),('a','c')):
             'reduction_fraction':1-aggregates[after]/aggregates[before],
             'median_per_group_speed_ratio':med(groups[before][k]/groups[after][k] for k in keys)}
 result={'sources':sources,'garnet_dll_sha256':next(iter(binary)),'order':roles,'model':a.model,'batch':a.batch,
-    'profiles':{'a':'native-prefix/arena D4; prompt packing off; head reuse off',
-        'b':'same with prompt packing on','c':'same with prompt packing and verified-head reuse on'},
+    'profiles':({'a':'native-prefix/arena D4; prompt packing and verified-head reuse on; joined decode projections off',
+        'b':'same with joined decode input projections on'} if a.joined_decode else
+        {'a':'native-prefix/arena D4; prompt packing off; head reuse off',
+        'b':'same with prompt packing on','c':'same with prompt packing and verified-head reuse on'}),
     'warm_groups':keys,'same_all_28_input_prompt_output_stop_signatures':True,'per_run':run_metrics,
     'per_group_repeated_median_ms':{letter:[{'trial':k[0],'workload_group':k[1],'ms':v} for k,v in values.items()] for letter,values in groups.items()},
     'aggregate_group_median_ms':aggregates,'comparisons':comparisons,

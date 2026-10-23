@@ -29,6 +29,9 @@ class Model:
         self.shared_projection=bool(profile.get('sharedProjectionWeights',False))
         self.packed_program=bool(profile.get('packedDecoderProgram',False))
         self.pack_prompt=bool(profile.get('packPrompt',False))
+        self.join_decode_input_projections=bool(profile.get('joinDecodeInputProjections',False))
+        if self.join_decode_input_projections and not (self.packed_program and self.shared_projection and self.decode_chunk==4):
+            raise ValueError('Joined decode projections require packed/shared decode width4')
         if self.pack_prompt and not self.packed_program:raise ValueError('Packed prompt inputs require the packed decoder profile')
         self.register_delta_128=bool(profile.get('registerDelta128',False));self.flat_packed_concat=bool(profile.get('flatPackedConcat',False))
         if self.register_delta_128 and (not self.shared_projection or not profile.get('fusedDelta',False) or self.config['text_config']['linear_key_head_dim']!=128 or self.config['text_config']['linear_value_head_dim']!=128):
@@ -78,7 +81,7 @@ class Model:
             if self.packed_program:
                 from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
                 self.decoder=CUDAPackedDecoder(root,self.config['text_config'],self.batch,self.capacity,self.prefill_chunk,self.decode_chunk,
-                    int(profile.get('projectionWorkspaceBytes',0)),self.speculative_replay or bool(profile.get('retainLinearInputs',False)),self.register_delta_128,self.flat_packed_concat,self.deferred_state_commit,self.shared_output_storage)
+                    int(profile.get('projectionWorkspaceBytes',0)),self.speculative_replay or bool(profile.get('retainLinearInputs',False)),self.register_delta_128,self.flat_packed_concat,self.deferred_state_commit,self.shared_output_storage,self.join_decode_input_projections)
             elif self.shared_projection:
                 from xModel.qwen35.vl_0_8b.cuda_hybrid import CUDAHybridDecoder
                 self.decoder=CUDAHybridDecoder(root,self.config['text_config'],self.batch,self.capacity,self.prefill_chunk,self.decode_chunk,

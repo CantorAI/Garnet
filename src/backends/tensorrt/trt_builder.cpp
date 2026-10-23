@@ -6039,15 +6039,32 @@ namespace Garnet {
                         X::Value key,value;if(!bindings->second.DictEntry(i,key,value)||!key.IsString()||!IsTensor(value))
                             throw std::invalid_argument("External weight bindings require checkpoint names and tensor inputs");
                         const auto name=key.ToString();auto* metadata=capturedWeightIndex?capturedWeightIndex->Find(name):nullptr;
+                        std::vector<int64_t> expectedShape;size_t expectedBytes=0;
+                        if(metadata&&metadata->dataType=="BF16"&&metadata->shape.size()==2){expectedShape=metadata->shape;expectedBytes=size_t(metadata->dataSize);}
+                        else if(opName=="qwen35_linear_decoder_chunk"&&keywordInt("joined_input_projections",0)==1&&
+                            name==keywordText("layer_prefix")+".linear_attn.in_proj_joined.weight"){
+                            int64_t total=0,inner=0;
+                            for(const char* suffix:{".in_proj_qkv.weight",".in_proj_z.weight",".in_proj_b.weight",".in_proj_a.weight"}){
+                                const auto original=keywordText("layer_prefix")+".linear_attn"+suffix;
+                                auto* entry=capturedWeightIndex?capturedWeightIndex->Find(original):nullptr;
+                                if(!entry||entry->dataType!="BF16"||entry->shape.size()!=2||entry->shape[0]<1||entry->shape[0]>32768||
+                                    entry->shape[1]<1||entry->shape[1]>16384||(inner&&inner!=entry->shape[1])||
+                                    uint64_t(entry->shape[0])*uint64_t(entry->shape[1])*2!=entry->dataSize)
+                                    throw std::invalid_argument("Joined external projection metadata invalid: "+original);
+                                total+=entry->shape[0];inner=entry->shape[1];expectedBytes+=size_t(entry->dataSize);
+                            }
+                            if(total>32768||expectedBytes>(512ULL<<20))throw std::invalid_argument("Joined external projection exceeds bounded matrix size");
+                            expectedShape={total,inner};
+                        }
                         X::Tensor tensor(value);auto info=tensor.Info();
                         auto declared=tensorMap.find(TensorId(value));
-                        if(!metadata||metadata->dataType!="BF16"||metadata->shape.size()!=2||info.dtype!=X3_TENSOR_BFLOAT16||info.rank!=2||declared==tensorMap.end()||
-                            info.shape[0]!=metadata->shape[0]||info.shape[1]!=metadata->shape[1])
+                        if(expectedShape.size()!=2||info.dtype!=X3_TENSOR_BFLOAT16||info.rank!=2||declared==tensorMap.end()||
+                            info.shape[0]!=expectedShape[0]||info.shape[1]!=expectedShape[1])
                             throw std::invalid_argument("External BF16 matrix input must match its checkpoint metadata: "+name);
                         auto previous=externalBF16Bindings.find(name);
                         if(previous!=externalBF16Bindings.end()&&previous->second.first!=TensorId(value))
                             throw std::invalid_argument("One checkpoint weight cannot bind multiple tensor inputs");
-                        externalBF16Bindings[name]={TensorId(value),size_t(metadata->dataSize)};external[name]=declared->second;
+                        externalBF16Bindings[name]={TensorId(value),expectedBytes};external[name]=declared->second;
                     }
                 }
                 Qwen35TRTOps ops(*network,vectorWeights,[&](const std::string& name){
@@ -6083,7 +6100,7 @@ namespace Garnet {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.linearDecoderChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
                         b["qwen35_conv_bind_active"],keywordText("layer_prefix"),keywordInt("key_heads",0),keywordInt("value_heads",0),
-                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0);
+                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0,keywordInt("joined_input_projections",0)!=0);
                 }else if(opName=="qwen35_linear_replay_chunk") {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.linearReplayChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
