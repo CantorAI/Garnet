@@ -4,7 +4,7 @@ Status: pinned architecture/quantization audit, native SM120 build, NVFP4/FP8
 projection/plugin tests, real layer0 MLP parity, real GDN/full-attention decoder-layer
 parity at4K capacity, and native W4A4 head checks have passed. Both references have
 passed text/image smoke; SGLang's initial eager profile now has raw streaming and
-concurrency measurements. The31 CPU tests pass. Full64-layer native text smoke
+concurrency measurements. The32 CPU tests pass. Full64-layer native text smoke
 also reproduces the reference token IDs. Vision validation,
 serving integration, tuned matched comparisons and the2x target remain incomplete.
 No Garnet full-model timing or successful2x comparison is claimed.
@@ -223,7 +223,7 @@ XLang3 Release binaries and a matching public SDK. From a VS x64 developer
 shell, configure it with `XLANG3_RUNTIME_DIR`, `XLANG3_ROOT`,
 `GARNET_TENSORRT_ROOT`, `CMAKE_CUDA_COMPILER` and an explicit architecture.
 Use89 for the recorded local RTX4080 correctness build; use120 for the target
-RTX5090 build, which has passed native build and primitive correctness checks. Full-model execution remains pending. Build target `garnet`. No VM sources
+RTX5090 build, which has passed native build, component correctness and the full64-layer text smoke. Full VLM execution remains pending. Build target `garnet`. No VM sources
 are modified by this wrapper. Record executable/DLL/import-library and SDK
 hashes, as well as the complete compiler and dependency versions.
 

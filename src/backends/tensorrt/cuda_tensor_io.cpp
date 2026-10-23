@@ -460,10 +460,13 @@ X::Value CUDATensorIO::PredictIndexed(X::Value hidden,X::Value candidates){
     for(size_t i=0;i<ids.size();++i){if(ids[i]<0||!std::isfinite(values[i]))throw X::Error("No finite indexed proposal");result.Append(X::Value(int64_t(ids[i])));}return result;
 }
 X::Value CUDATensorIO::PrepareImage(const std::string& path,int pixels){
-    if(pixels<1024)throw X::Error("Qwen3.5 image pixel budget must fit a merged 32x32 patch");
-    if(pixels<1024||pixels>1048576)throw X::Error("CUDA image pixel budget outside admitted range");
+    return PrepareImageProfile(path,1024,pixels);
+}
+X::Value CUDATensorIO::PrepareImageProfile(const std::string& path,int minPixels,int maxPixels){
+    if(minPixels<1024||minPixels>maxPixels||maxPixels>1048576)
+        throw X::Error("CUDA image pixel bounds outside admitted range");
     void* memory=nullptr;size_t bytes=0;long long grid[3]{};int sh=0,sw=0,rh=0,rw=0,patches=0,features=0;char error[1024]{};
-    if(GarnetQwenVLPreprocessJpegFileDevice(path.c_str(),1024,pixels,&memory,&bytes,grid,&sh,&sw,&rh,&rw,&patches,&features,error,sizeof(error)))throw X::Error(error);
+    if(GarnetQwenVLPreprocessJpegFileDevice(path.c_str(),minPixels,maxPixels,&memory,&bytes,grid,&sh,&sw,&rh,&rw,&patches,&features,error,sizeof(error)))throw X::Error(error);
     try{
         if(grid[0]!=1||grid[1]<=0||grid[2]<=0||patches!=grid[1]*grid[2]||features!=1536||bytes!=size_t(patches)*features*4)
             throw X::Error("CUDA JPEG frontend returned inconsistent Qwen3.5 patches");

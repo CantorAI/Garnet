@@ -3,10 +3,20 @@ import copy, hashlib, json, unittest
 from pathlib import Path
 from preflight import audit
 from inspect_nvfp4 import validate_projection, audit_headers
-from xModel.qwen38.vl_27b.model import projection_shapes, validate_config, validate_cuda_profile
+from xModel.qwen38.vl_27b.model import projection_shapes, validate_config, validate_cuda_profile, validate_image_processor
 
 
 class LayoutTest(unittest.TestCase):
+    def test_pinned_image_processor_and_bounds(self):
+        processor=json.loads((Path(__file__).parent/'evidence/nvfp4-preprocessor-config.json').read_text())
+        self.assertEqual(validate_image_processor(processor),(65536,1048576))
+        changed=copy.deepcopy(processor);changed['size']['shortest_edge']=1024
+        with self.assertRaises(ValueError):validate_image_processor(changed)
+        changed=copy.deepcopy(processor);changed['image_mean']=[0,0,0]
+        with self.assertRaises(ValueError):validate_image_processor(changed)
+        for maximum in [65535,1048577]:
+            with self.assertRaises(ValueError):validate_image_processor(processor,maximum)
+
     def setUp(self):
         self.config = json.loads((Path(__file__).parent/'evidence/base-config.json').read_text())
 

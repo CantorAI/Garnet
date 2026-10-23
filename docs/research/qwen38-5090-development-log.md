@@ -734,3 +734,20 @@ Vision preprocessing still needs its own correctness gate: the pinned processor'
 minimum65536 pixels differs from Garnet's existing JPEG caller minimum1024.
 The initial reference224x224 PNG yields64 image tokens; do not silently compare
 against49 native tokens or substitute a different encoded image in a matched run.
+
+## P027 - 2026-10-23: explicit checkpoint JPEG preprocessing bounds
+
+Added prepare_image_profile(path,minPixels,maxPixels) to the current native
+CUDA tensor I/O. The existing two-argument method retains its original1024
+minimum. The Qwen3.8 helper validates pinned normalization/patch parameters and
+pixel bounds before requesting minimum65536. This is an experimental factory
+helper; general serving admission is still closed.
+
+Native build plus job native-image-profile-check completed exit0. The same
+constant224px JPEG produced legacy14x14 and checkpoint16x16 patch grids, hence64
+merged checkpoint image tokens. All393216 normalized patch values were finite;
+maximum error against decoded RGB[254,0,0] with mean/std.5 was5.955789603717676e-7.
+Three invalid pixel bounds were rejected. This exercises GPU JPEG preprocessing,
+temporal repetition and patch order on a constant fixture. It does not establish
+general resize parity, PNG support, vision-tower quality or end-to-end TTFT.
+All32 CPU study tests pass. Full vision and matched image workloads remain next.

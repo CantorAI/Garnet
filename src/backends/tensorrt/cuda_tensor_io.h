@@ -69,6 +69,7 @@ public:
     X::Value Weight(const std::string& name);
     X::Value GroupWeights(X::Value names);
     X::Value PrepareImage(const std::string& path,int pixels);
+    X::Value PrepareImageProfile(const std::string& path,int minPixels,int maxPixels);
     std::string MemoryJson() const;
     int64_t TensorBytes(X::Value value);
     BEGIN_PACKAGE(CUDATensorIO)
@@ -108,6 +109,7 @@ public:
         APISET().AddFunc<1>("weight",&CUDATensorIO::Weight);
         APISET().AddFunc<1>("group_weights",&CUDATensorIO::GroupWeights);
         APISET().AddFunc<2>("prepare_image",&CUDATensorIO::PrepareImage);
+        APISET().AddFunc<3>("prepare_image_profile",&CUDATensorIO::PrepareImageProfile);
         APISET().AddFunc<0>("memory_json",&CUDATensorIO::MemoryJson);
         APISET().AddFunc<1>("tensor_bytes",&CUDATensorIO::TensorBytes);
     END_PACKAGE

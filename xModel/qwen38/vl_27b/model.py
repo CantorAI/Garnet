@@ -86,3 +86,26 @@ def create_cuda_vision(checkpoint,config,gh,gw):
     validate_cuda_profile(config,4096,1)
     from xModel.qwen35.vl_0_8b.cuda_decoder import CUDAImageEncoder
     return CUDAImageEncoder(checkpoint,config['vision_config'],gh,gw,1)
+
+
+def validate_image_processor(processor,max_pixels=1048576):
+    """Initial still-image JPEG profile; reject incompatible preprocessing."""
+    expected={'patch_size':16,'temporal_patch_size':2,'merge_size':2,
+              'image_mean':[.5,.5,.5],'image_std':[.5,.5,.5]}
+    for key,value in expected.items():
+        if processor.get(key)!=value:
+            raise ValueError('Qwen3.8 image processor mismatch: '+key)
+    size=processor.get('size',{})
+    if size.get('shortest_edge')!=65536 or size.get('longest_edge')!=16777216:
+        raise ValueError('Qwen3.8 image processor pixel bounds mismatch')
+    if max_pixels<65536 or max_pixels>1048576:
+        raise ValueError('Initial Qwen3.8 JPEG profile requires65536..1048576 max pixels')
+    return 65536,max_pixels
+
+
+def prepare_cuda_image(io,checkpoint,path,max_pixels=1048576):
+    import json,os
+    with open(os.path.join(checkpoint,'preprocessor_config.json')) as f:
+        processor=json.load(f)
+    low,high=validate_image_processor(processor,max_pixels)
+    return io.prepare_image_profile(path,low,high)
