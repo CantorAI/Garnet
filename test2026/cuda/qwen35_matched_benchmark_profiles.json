@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "status": "Planned matched-capacity cohorts; not measured results",
+  "models": ["Qwen3.5-2B", "Qwen3.5-4B"],
+  "batches": [1, 2, 4, 8],
+  "context_capacity": 512,
+  "garnet_max_input_tokens": 384,
+  "garnet_max_output_tokens": 128,
+  "request_output_limit": 32,
+  "image_pixels": 65536,
+  "visual_tokens": 60,
+  "workload": "inputs/matched512-batches: round/group/row paths; same exact JPEG hashes across engines; distinct decoded image per invocation",
+  "transform": "RGB bilinear320x192; unique8x8 corner tile; JPEG95; original source hashes retained",
+  "precision": "BF16 source weights; record each engine's intermediate arithmetic",
+  "warmup_rounds": 2,
+  "measured_rounds": 5,
+  "scheduling": "One model/engine/profile resident at a time; batch rows may run concurrently inside that engine",
+  "acceptance": "Verify actual context and prompt/image/output work; report per-request latency and aggregate throughput separately; cache settings and runtime logs require audit",
+  "historical_scope": "Earlier384-vs512 cohorts remain unchanged and retain their limitations"
+}

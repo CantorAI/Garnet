@@ -34,7 +34,7 @@ class Model:
         self.prefill_chunk = int(profile.get('prefillChunk', 16))
         if self.prefill_chunk not in (2, 4, 8, 16, 32, 64):
             raise ValueError('Unsupported Metal prefillChunk')
-        self.share_vision_weights = bool(profile.get('shareVisionWeights', self.xmodel == 'vl_4b'))
+        self.share_vision_weights = bool(profile.get('shareVisionWeights', self.xmodel in ('vl_2b','vl_4b')))
         if self.visual:
             with open(os.path.join(root, 'preprocessor_config.json')) as stream:
                 processor = json.loads(stream.read())
@@ -61,8 +61,11 @@ class Model:
         if self.visual and self.prefill_chunk * self.text_config['hidden_size'] > packed_limit:
             raise ValueError('Metal prefill chunk times hidden size exceeds the packed width limit')
         self.model_factory = None
-        if self.visual and self.xmodel == 'vl_4b':
-            from xModel.qwen35.vl_4b import model
+        if self.visual and self.xmodel in ('vl_2b','vl_4b'):
+            if self.xmodel == 'vl_2b':
+                from xModel.qwen35.vl_2b import model
+            else:
+                from xModel.qwen35.vl_4b import model
             self.model_factory = model
             self.decoder = model.create_decoder(checkpoint, self.config, self.capacity)
         else:

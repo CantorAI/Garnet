@@ -1,0 +1,155 @@
+{
+  "recorded_utc": "2026-10-23T20:02:50.107930+00:00",
+  "purpose": "WorldSense development checkpoint; continue optimization from this source snapshot",
+  "hardware": "RTX4080 GPU0 16GiB / Windows / CUDA13.2 / SM89",
+  "garnet_dll_sha256": "371953ad1770e1170e1a9202203529fa51e4b56f921b25a8b01d04cd6d5b4b81",
+  "xlang3_sha256": "59db0f87c4b5c0b50430420ea8b0f9e0a0be9c81c9d956419264451faa4cac6f",
+  "xlang3_runtime_sha256": "5b442cbd05bec7539b5300efb76b47867acc132e54e5b966505d0ea9c0d6d107",
+  "checkpoint_2b_sha256": "aa33250c4fc64891ddfaba3a314fd9542ea371843c387178b425fbcc5ed680b1",
+  "checkpoint_4b_sha256": {
+    "model.safetensors-00001-of-00002.safetensors": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61",
+    "model.safetensors-00002-of-00002.safetensors": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+  },
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "0",
+    "GARNET_TRT_SYNC_ALLOCATOR": "1",
+    "GARNET_TRT_ZERO_AUX_STREAMS": "1",
+    "GARNET_TRT_REUSE_STATIC_BINDINGS": "0",
+    "GARNET_TRT_SYNC_TEMPORARY_ALLOCATOR": "0",
+    "GARNET_TRT_ALLOC_TRACE": "0"
+  },
+  "profiles": {
+    "2b-b1": {
+      "model_id": "Qwen3.5-2B",
+      "profile": {
+        "batch": 1,
+        "maxInputTokens": 384,
+        "maxOutputTokens": 128,
+        "imagePixels": 65536,
+        "imageGrid": [
+          12,
+          20
+        ],
+        "prefillChunk": 64,
+        "decodeChunk": 4,
+        "sharedProjectionWeights": true,
+        "packedDecoderProgram": true,
+        "packPrompt": true,
+        "reuseVerifiedHead": true,
+        "residentControls": true,
+        "serialGraphReuse": true,
+        "serialTargetGraphReuse": true,
+        "deferPackedStateCommit": true,
+        "nativePackedPrefixCommit": true,
+        "sharePackedOutputStorage": true,
+        "registerDelta128": true,
+        "flatPackedConcat": true,
+        "cudaGraph": true,
+        "fusedDelta": true,
+        "fusedAttention": true,
+        "projectionWorkspaceBytes": 0,
+        "speculativeMTP": 3,
+        "speculativeHeadCandidates": 8192,
+        "speculativePrefixReplay": true
+      }
+    },
+    "4b-b8": {
+      "model_id": "Qwen3.5-4B",
+      "profile": {
+        "batch": 8,
+        "maxInputTokens": 384,
+        "maxOutputTokens": 128,
+        "imagePixels": 65536,
+        "imageGrid": [
+          12,
+          20
+        ],
+        "prefillChunk": 64,
+        "decodeChunk": 4,
+        "sharedProjectionWeights": true,
+        "packedDecoderProgram": true,
+        "packPrompt": true,
+        "reuseVerifiedHead": true,
+        "residentControls": true,
+        "serialGraphReuse": true,
+        "serialTargetGraphReuse": true,
+        "deferPackedStateCommit": true,
+        "nativePackedPrefixCommit": true,
+        "sharePackedOutputStorage": true,
+        "registerDelta128": true,
+        "flatPackedConcat": true,
+        "cudaGraph": true,
+        "fusedDelta": true,
+        "fusedAttention": true,
+        "projectionWorkspaceBytes": 0,
+        "speculativeMTP": 3,
+        "speculativeHeadCandidates": 8192,
+        "speculativePrefixReplay": true
+      }
+    }
+  },
+  "metrics": [
+    {
+      "model": "2b",
+      "batch": 1,
+      "common_equal32_groups": 17,
+      "median_group_ms": {
+        "control": 199.03010000416543,
+        "candidate": 186.1399000044912,
+        "vllm": 203.27382100003888,
+        "lmstudio": 302.20900000131223
+      },
+      "same_saved_output_sequences": 28,
+      "total_requests": 28,
+      "kept_gpu_allocation_bytes": [
+        4749211752
+      ],
+      "all20_warm_sampled_tokens_per_second": 171.5002508714268,
+      "all20_warm_median_derived_post_first_sample_tokens_per_second": 207.1688292343198,
+      "summary_file": "matched512-2b-b1-packed-p64-d4-mtp3-k8192-replay-resident-serial-register128-flat-targetserial-aux0-deferred-nativecommit-arena-promptpack-headreuse-mtp3-cache128-candidate.json",
+      "raw_file": "matched512-garnet-2b-b1-packed-p64-d4-mtp3-k8192-replay-resident-serial-register128-flat-targetserial-aux0-deferred-nativecommit-arena-promptpack-headreuse.json",
+      "cache_policy": {
+        "prefix": false,
+        "image": false,
+        "answer": false
+      }
+    },
+    {
+      "model": "4b",
+      "batch": 8,
+      "common_equal32_groups": 15,
+      "median_group_ms": {
+        "control": 698.5165999940364,
+        "candidate": 678.3774000068661,
+        "vllm": 665.6472650029173,
+        "lmstudio": 1348.2737000013003
+      },
+      "same_saved_output_sequences": 28,
+      "total_requests": 28,
+      "kept_gpu_allocation_bytes": [
+        12705559484
+      ],
+      "all20_warm_sampled_tokens_per_second": 374.47423550318894,
+      "all20_warm_median_derived_post_first_sample_tokens_per_second": 563.136309361834,
+      "summary_file": "matched512-4b-b8-packed-p64-d4-mtp3-k8192-replay-resident-serial-register128-flat-targetserial-aux0-deferred-nativecommit-arena-promptpack-headreuse-candidate.json",
+      "raw_file": "matched512-garnet-4b-b8-packed-p64-d4-mtp3-k8192-replay-resident-serial-register128-flat-targetserial-aux0-deferred-nativecommit-arena-promptpack-headreuse.json",
+      "cache_policy": {
+        "prefix": false,
+        "image": false,
+        "answer": false
+      }
+    }
+  ],
+  "evidence_directory": "D:/CantorAI/work/qwen35-cuda",
+  "source_archive": "paired-head-before-study-source-runtime.zip",
+  "limitations": [
+    "Single latest timing cohorts; fresh same-build ABCCBA repetitions were in progress at checkpoint.",
+    "Kept GPU allocations are not process peak, physical residency, or isolated head-reuse memory measurements.",
+    "Historical external baselines use different APIs, intermediate arithmetic and speculative settings; LM2B MTP observed, LM4B unresolved.",
+    "Derived post-first-sample rate includes host/stop overhead; it is not an isolated kernel decode rate.",
+    "Independent pretrained teacher agreement, fresh current-source Metal build preservation, all-batch optimization, comparator coverage, and standalone packaging verification remain incomplete.",
+    "Default-off experimental options are explicit in these profiles. D8 and NoRDC speed trials were not selected."
+  ],
+  "goal_2x_achieved": false,
+  "independent_quality_accepted": false
+}

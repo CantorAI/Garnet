@@ -65,6 +65,11 @@ namespace Garnet {
         void SetCapturedOptimizationLevel(int level) {
             capturedOptimizationLevel = level;
         }
+        void SetCapturedStrictFP32(bool value) { capturedStrictFP32 = value; }
+        size_t ExternalBF16WeightInputs() const { return externalBF16Bindings.size(); }
+        size_t ExternalBF16WeightBytes() const {
+            size_t bytes=0;for(const auto& item:externalBF16Bindings)bytes+=item.second.second;return bytes;
+        }
         void SetCapturedWeightProfile(const std::string& profile) {
             capturedWeightProfile = profile;
         }
@@ -128,6 +133,9 @@ namespace Garnet {
             const SafeTensorsIndex* weightIndex,
             std::string& errorMessage);
         static void ReleaseCachedExecutions(const std::string& cacheRoot);
+        static std::string RetainedExecutionStats(const std::shared_ptr<void>& execution);
+        static bool CapturedOutputCompatible(const std::shared_ptr<void>& execution,
+            X::Value output,std::string& errorMessage);
         static std::shared_ptr<void> RetainCachedExecution(
             const std::string& enginePath,
             const SafeTensorsIndex* weightIndex,
@@ -139,7 +147,8 @@ namespace Garnet {
             X::Value reusableOutput,
             bool enableCudaGraph,
             std::string& errorMessage,
-            const std::vector<TensorInputShapeRange>& inputShapeRanges = {});
+            const std::vector<TensorInputShapeRange>& inputShapeRanges = {},
+            bool serialGraphReuse = false);
         X::Value RunCapturedPartitions(
             const std::vector<EnginePartitionSpec>& partitions,
             X::Value inputs,
@@ -167,8 +176,11 @@ namespace Garnet {
         nvinfer1::ICudaEngine* engine = nullptr;
 
         std::unordered_map<unsigned long long, nvinfer1::ITensor*> tensorMap;
+        std::unordered_map<unsigned long long,
+            std::unordered_map<std::string,nvinfer1::ITensor*>> qwen35Bindings;
         unsigned long long capturedWorkspaceBytes = 64ULL << 20;
         int capturedOptimizationLevel = 3;
+        bool capturedStrictFP32 = false;
         std::unordered_map<std::string, nvinfer1::ITensor*> weightTensorMap;
         std::deque<float> scalarWeights;
         std::deque<unsigned short> bfloat16ScalarWeights;
@@ -185,6 +197,7 @@ namespace Garnet {
             std::string,
             std::shared_ptr<QuantizedWeight>> capturedQuantizedWeights;
         std::string capturedWeightProfile = "bf16";
+        std::unordered_map<std::string,std::pair<unsigned long long,size_t>> externalBF16Bindings;
         nvinfer1::ITensor* lastOutput = nullptr;
         nvinfer1::ITensor* pendingKVKeyPages = nullptr;
         nvinfer1::ITensor* pendingKVValuePages = nullptr;

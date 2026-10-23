@@ -121,11 +121,13 @@ namespace
             }
             for (const char* key : {
                      "backend", "precision", "frontend", "engine_path",
-                     "cache_directory"}) {
+                     "cache_directory", "profile_json"}) {
                 if (FindField(runtimeStatus, key).IsValid()) {
                     status[key] = FindField(runtimeStatus, key).ToString();
                 }
             }
+            if (FindField(runtimeStatus, "batch").IsValid())
+                status["batch"] = FindField(runtimeStatus, "batch").ToInt64();
         }
         return status;
     }
@@ -1914,6 +1916,68 @@ namespace Garnet
         const std::string requestedModelId = params.size() > 4
             ? params[4].ToString()
             : std::string();
+        if (requestedModelId == "Qwen3.5-2B" || requestedModelId == "Qwen3.5-4B") {
+            try {
+                const json profile = params.size() > 3 && !params[3].ToString().empty()
+                    ? json::parse(params[3].ToString()) : json::object();
+                if (!profile.is_object()) throw std::runtime_error("Qwen3.5 profile must be an object");
+                const int deviceId = profile.value("deviceId", 0);
+                int deviceCount = 0;
+                if (cudaGetDeviceCount(&deviceCount) != cudaSuccess || deviceId < 0 || deviceId >= deviceCount)
+                    throw std::runtime_error("requested CUDA device is unavailable");
+                // Find the packaged Python runtime from the explicitly supplied
+                // xModel tree. The source checkout is a development fallback.
+                fs::path sourceRoot;
+                for (auto candidate = fs::absolute(xmodelRoot).lexically_normal(); !candidate.empty();) {
+                    if (fs::is_regular_file(candidate / "runtime" / "cuda_serving.py")) {
+                        sourceRoot = candidate; break;
+                    }
+                    auto parent = candidate.parent_path();
+                    if (parent == candidate) break;
+                    candidate = parent;
+                }
+                if (sourceRoot.empty()) {
+                    const auto candidate = fs::path(__FILE__).parent_path().parent_path().parent_path();
+                    if (fs::is_regular_file(candidate / "runtime" / "cuda_serving.py")) sourceRoot = candidate;
+                }
+                if (sourceRoot.empty()) throw std::runtime_error("Qwen3.5 CUDA serving runtime was not found beside xModel");
+                const std::string profileJson = profile.dump();
+                const std::string root = fs::absolute(modelRoot).lexically_normal().string();
+                std::lock_guard<std::mutex> guard(m_servingMutex);
+                auto found = m_servingInstances.find(requestedModelId);
+                if (found != m_servingInstances.end()) {
+                    auto instance = found->second;
+                    if (!instance->qwen35CUDA || instance->modelRoot != root || instance->servingProfile != profileJson)
+                        return NativeValue(Host(), GarnetJsonError("model_instance_conflict",
+                            "Stop the loaded model before changing its root or batch/shape profile"));
+                    std::lock_guard<std::mutex> instanceGuard(instance->mutex);
+                    m_defaultServingModelId = requestedModelId;
+                    return NativeValue(Host(), GarnetServingStatus(instance->model, root, requestedModelId,
+                        instance->inputCapability, instance->error, rt).dump());
+                }
+                const auto runtimeRoot = sourceRoot / "runtime";
+                if (x3_runtime_add_import_root(rt, sourceRoot.string().c_str()) != X3_STATUS_OK ||
+                    x3_runtime_add_import_root(rt, runtimeRoot.string().c_str()) != X3_STATUS_OK)
+                    throw std::runtime_error(x3_runtime_last_error(rt));
+                CudaDeviceScope deviceScope(deviceId);
+                X::Module serving(Host(), "cuda_serving");
+                auto instance = std::make_shared<ServingInstance>();
+                instance->model = CallChecked(serving["create_serving_model"],
+                    NativeValue(Host(), root), NativeValue(Host(), profileJson), NativeValue(Host(), requestedModelId));
+                if (!instance->model.IsValid()) throw std::runtime_error("Qwen3.5 serving constructor returned no model");
+                instance->modelRoot = root; instance->modelId = requestedModelId;
+                instance->qwen35CUDA = true; instance->servingProfile = profileJson;
+                instance->inputCapability = "vision"; instance->deviceId = deviceId;
+                instance->maxOutputTokens = profile.value("maxOutputTokens", 128);
+                m_servingInstances[requestedModelId] = instance;
+                m_defaultServingModelId = requestedModelId;
+                return NativeValue(Host(), GarnetServingStatus(instance->model, root, requestedModelId,
+                    instance->inputCapability, instance->error, rt).dump());
+            }
+            catch (const std::exception& exception) {
+                return NativeValue(Host(), GarnetJsonError("model_load_failed", exception.what()));
+            }
+        }
         const bool asrModel = requestedModelId == "Qwen3-ASR-0.6B";
         const bool tts06Model = requestedModelId ==
             "Qwen3-TTS-12Hz-0.6B-CustomVoice";
@@ -2189,6 +2253,16 @@ namespace Garnet
         }
         std::lock_guard<std::mutex> guard(instance->mutex);
         CudaDeviceScope deviceScope(instance->deviceId);
+        if (instance->qwen35CUDA) {
+            try {
+                const int limit = requestedMaxNewTokens > 0 ? requestedMaxNewTokens : instance->maxOutputTokens;
+                return CallChecked(instance->model["infer_json"], params[0],
+                    imageSource.IsValid() ? imageSource : NativeValue(Host(), std::string()), X::Value(limit));
+            }
+            catch (const std::exception& exception) {
+                return NativeValue(Host(), GarnetJsonError("inference_failed", exception.what()));
+            }
+        }
         if (instance->inputCapability == "vision" &&
             !hasImageBinary && !hasImagePath) {
             retValue = NativeValue(Host(), GarnetJsonError("request_invalid",

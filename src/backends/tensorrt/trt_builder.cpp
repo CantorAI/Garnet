@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "trt_builder.h"
+#include <nlohmann/json.hpp>
 #include "trt_context_pool.h"
+#include "trt_memory_profile.h"
+#include "qwen35_lowering.h"
 #include "operator_execution_group.h"
 #include "trt_sync_allocator.h"
 #include "weight_streaming_policy.h"
@@ -187,6 +190,35 @@ namespace Garnet {
         std::mutex g_trtLayerProfileMutex;
         std::unordered_set<std::string> g_profiledTRTEngines;
 
+        void TraceCapturedAllocations(cudaGraph_t graph,const std::string& enginePath,int depth=0){
+            const char* trace=std::getenv("GARNET_TRT_ALLOC_TRACE");
+            if(!trace||*trace!='1'||depth>8)return;
+            size_t count=0;if(cudaGraphGetNodes(graph,nullptr,&count)!=cudaSuccess)return;
+            std::vector<cudaGraphNode_t> nodes(count);if(cudaGraphGetNodes(graph,nodes.data(),&count)!=cudaSuccess)return;
+            size_t allocations=0,frees=0,children=0;
+            for(auto node:nodes){
+                cudaGraphNodeType type;if(cudaGraphNodeGetType(node,&type)!=cudaSuccess)continue;
+                if(type==cudaGraphNodeTypeMemAlloc){
+                    ++allocations;cudaMemAllocNodeParams parameters{};
+                    if(cudaGraphMemAllocNodeGetParams(node,&parameters)==cudaSuccess)
+                        std::fprintf(stderr,"TRT_CAPTURE_ALLOC depth=%d node=%p pointer=%p bytes=%zu engine=%s\n",depth,static_cast<void*>(node),parameters.dptr,parameters.bytesize,enginePath.c_str());
+                }else if(type==cudaGraphNodeTypeMemFree){
+                    ++frees;void* pointer=nullptr;
+                    if(cudaGraphMemFreeNodeGetParams(node,&pointer)==cudaSuccess)
+                        std::fprintf(stderr,"TRT_CAPTURE_FREE depth=%d node=%p pointer=%p engine=%s\n",depth,static_cast<void*>(node),pointer,enginePath.c_str());
+                }else if(type==cudaGraphNodeTypeGraph){
+                    ++children;cudaGraph_t child=nullptr;
+                    if(cudaGraphChildGraphNodeGetGraph(node,&child)==cudaSuccess)TraceCapturedAllocations(child,enginePath,depth+1);
+                }
+            }
+            std::fprintf(stderr,"TRT_CAPTURE_NODES depth=%d nodes=%zu allocations=%zu frees=%zu children=%zu engine=%s\n",depth,count,allocations,frees,children,enginePath.c_str());
+            if(depth==0)if(const char* directory=std::getenv("GARNET_TRT_CAPTURE_DOT_DIR");directory&&std::filesystem::is_directory(directory)){
+                const auto path=std::filesystem::path(directory)/("capture-"+std::filesystem::path(enginePath).parent_path().filename().string()+".dot");
+                const auto status=cudaGraphDebugDotPrint(graph,path.string().c_str(),cudaGraphDebugDotFlagsVerbose);
+                std::fprintf(stderr,"TRT_CAPTURE_DOT status=%d path=%s\n",int(status),path.string().c_str());
+            }
+        }
+
         bool EnqueueTRTWithOptionalCudaGraph(
             const std::string& enginePath,
             nvinfer1::IExecutionContext* context,
@@ -217,6 +249,7 @@ namespace Garnet {
             }
             state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
             if (state.executable) {
+                ++state.graphReplays;
                 if(resource && std::getenv("GARNET_TRT_LOG_OPERATOR_GRAPH"))
                     std::fprintf(stderr,"OPERATOR_GROUP_GRAPH_REPLAY phase=%d rank=%d\n",state.operatorPhase,state.operatorRank);
                 return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
@@ -227,21 +260,25 @@ namespace Garnet {
             }
 
             cudaError_t status = cudaStreamBeginCapture(stream, cudaStreamCaptureModeThreadLocal);
-            if (status != cudaSuccess) return context->enqueueV3(stream);
+            if (status != cudaSuccess) {++state.graphCaptureFailures;return context->enqueueV3(stream);}
             const bool enqueued = context->enqueueV3(stream);
             status = cudaStreamEndCapture(stream, &state.graph);
             if (!enqueued || status != cudaSuccess || !state.graph) {
+                ++state.graphCaptureFailures;
                 if (state.graph) cudaGraphDestroy(state.graph);
                 state.graph = nullptr;
                 return context->enqueueV3(stream);
             }
+            TraceCapturedAllocations(state.graph,enginePath);
             status = cudaGraphInstantiate(&state.executable, state.graph, 0);
             if (status != cudaSuccess || !state.executable) {
+                ++state.graphCaptureFailures;
                 cudaGraphDestroy(state.graph);
                 state.graph = nullptr;
                 state.executable = nullptr;
                 return context->enqueueV3(stream);
             }
+            ++state.graphCaptures;
             if(resource && std::getenv("GARNET_TRT_LOG_OPERATOR_GRAPH"))
                 std::fprintf(stderr,"OPERATOR_GROUP_GRAPH_CAPTURE phase=%d rank=%d\n",state.operatorPhase,state.operatorRank);
             return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
@@ -333,11 +370,15 @@ namespace Garnet {
                 cached.allocator = std::make_unique<TRTSyncAllocator>(device);
                 cached.runtime->setGpuAllocator(cached.allocator.get());
             }
+            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered())return nullptr;
+            LogTRTMemoryCheckpoint("before_engine_deserialize",enginePath);
             cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
             if (!cached.engine) {
                 std::cout << "[TRTBuilder] deserializeCudaEngine failed for cached engine: " << enginePath << std::endl;
                 return nullptr;
             }
+            LogTRTMemoryCheckpoint("after_engine_deserialize",enginePath,
+                cached.engine->getDeviceMemorySizeV2());
             if (streamingPolicy.Enabled() && cached.engine->getStreamableWeightsSize() > 0) {
                 // Before refit and before any execution context. V2 includes
                 // streaming scratch in the subsequently queried context size.
@@ -351,6 +392,8 @@ namespace Garnet {
                     << " context_device_memory_bytes=" << cached.engine->getDeviceMemorySizeV2()
                     << " engine=" << enginePath << std::endl;
             }
+            LogTRTMemoryCheckpoint("before_engine_refit",enginePath,
+                cached.engine->getDeviceMemorySizeV2());
             if (weightIndex && weightIndex->TensorCount() > 0) {
                 std::unique_ptr<nvinfer1::IRefitter> refitter(
                     nvinfer1::createInferRefitter(*cached.engine, gLogger));
@@ -478,7 +521,9 @@ namespace Garnet {
                     << " engine=" << enginePath << std::endl;
             }
 #endif
-            cached.contexts = std::make_unique<TRTContextPool>(cached.engine);
+            LogTRTMemoryCheckpoint("after_engine_refit",enginePath,
+                cached.engine->getDeviceMemorySizeV2());
+            cached.contexts = std::make_unique<TRTContextPool>(cached.engine,8,enginePath);
 
             std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
             g_trtExecutionCache[enginePath] = owner;
@@ -489,9 +534,9 @@ namespace Garnet {
             std::shared_ptr<CachedTRTExecution> owner;
             TRTContextPool::Lease slot;
             explicit CachedExecutionUse(const std::string& path,
-                const SafeTensorsIndex* weights = nullptr, bool enabled = true)
+                const SafeTensorsIndex* weights = nullptr, bool enabled = true,const std::vector<void*>* serialGraphBindings=nullptr)
                 : owner(enabled ? GetCachedTRTEngine(path, weights) : nullptr),
-                  slot(owner ? owner->contexts->Acquire(CurrentExecutionStream()) : TRTContextPool::Lease{}) {}
+                  slot(owner ? owner->contexts->Acquire(CurrentExecutionStream(),serialGraphBindings) : TRTContextPool::Lease{}) {}
             nvinfer1::IExecutionContext* Context() const { return slot ? slot->context : nullptr; }
             nvinfer1::ICudaEngine* Engine() const { return owner ? owner->engine : nullptr; }
         };
@@ -716,6 +761,47 @@ namespace Garnet {
         }
     }
 
+    std::string TRTBuilder::RetainedExecutionStats(const std::shared_ptr<void>& execution) {
+        if(!execution)return "{}";
+        auto owner=std::static_pointer_cast<CachedTRTExecution>(execution);
+        auto counts=owner->contexts->GraphCounts();
+        return nlohmann::json{{"allocator_tracking_enabled",bool(owner->allocator)},
+            {"trt_allocator_live_bytes",owner->allocator?nlohmann::json(owner->allocator->LiveBytes()):nlohmann::json(nullptr)},
+            {"trt_allocator_peak_bytes",owner->allocator?nlohmann::json(owner->allocator->PeakBytes()):nlohmann::json(nullptr)},
+            {"trt_allocator_allocations",owner->allocator?nlohmann::json(owner->allocator->Outstanding()):nlohmann::json(nullptr)},
+            {"contexts",owner->contexts->Size()},{"aux_streams",owner->engine->getNbAuxStreams()},{"graph_captures",counts[0]},
+            {"graph_replays",counts[1]},{"graph_capture_failures",counts[2]},
+            {"serial_graph_reuses",counts[3]},{"pending_graph_reuses",counts[4]},{"serial_graph_warmup_waits",counts[5]},
+            {"scope","TensorRT runtime allocator (engine/context), excludes builder workspace, driver and external library allocations"}}.dump();
+    }
+    bool TRTBuilder::CapturedOutputCompatible(const std::shared_ptr<void>& execution,
+        X::Value output,std::string& errorMessage) {
+        try {
+            if(!execution||!X::Tensor::IsTensor(output))throw std::invalid_argument("External CUDA output requires a built engine and tensor");
+            auto owner=std::static_pointer_cast<CachedTRTExecution>(execution);
+            X::Tensor value(output);auto info=value.Info();auto dims=owner->engine->getTensorShape("output_0");
+            int device=-1;
+            if(cudaGetDevice(&device)!=cudaSuccess||info.symbolic||info.readonly||!info.data||reinterpret_cast<uintptr_t>(info.data)%256||
+                info.device_type!=TensorHelper::CudaDevice||info.device_id!=device||int(info.rank)!=dims.nbDims||dims.nbDims<1)
+                throw std::invalid_argument("External CUDA output device/readiness/rank mismatch");
+            auto type=owner->engine->getTensorDataType("output_0");X3TensorDType wanted;
+            if(type==DataType::kFLOAT)wanted=X3_TENSOR_FLOAT32;
+            else if(type==DataType::kBF16)wanted=X3_TENSOR_BFLOAT16;
+            else if(type==DataType::kINT32)wanted=X3_TENSOR_INT32;
+            else if(type==DataType::kINT64)wanted=X3_TENSOR_INT64;
+            else throw std::invalid_argument("External CUDA output dtype unsupported");
+            if(info.dtype!=wanted)throw std::invalid_argument("External CUDA output dtype mismatch");
+            uint64_t bytes=TensorHelper::ItemSize(wanted);
+            for(int i=dims.nbDims-1;i>=0;--i){
+                if(dims.d[i]<1||info.shape[i]!=dims.d[i]||(info.strides&&info.strides[i]!=int64_t(bytes))||
+                    bytes>uint64_t(INT64_MAX)/uint64_t(dims.d[i]))
+                    throw std::invalid_argument("External CUDA output requires exact static contiguous shape");
+                bytes*=uint64_t(dims.d[i]);
+            }
+            if(info.byte_size<bytes)throw std::invalid_argument("External CUDA output storage too small");
+            errorMessage.clear();return true;
+        }catch(const std::exception& error){errorMessage=error.what();return false;}
+    }
     void TRTBuilder::ReleaseCachedExecutions(const std::string& cacheRoot) {
         if (cacheRoot.empty()) return;
         const std::filesystem::path normalizedRoot =
@@ -4401,6 +4487,7 @@ namespace Garnet {
         tensorMap.clear();
         constantTensors.clear();
         weightTensorMap.clear();
+        externalBF16Bindings.clear();
         scalarWeights.clear();
         bfloat16ScalarWeights.clear();
         integerWeights.clear();
@@ -4442,6 +4529,8 @@ namespace Garnet {
             (1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kSTRONGLY_TYPED));
         network = builder->createNetworkV2(flags);
         config = builder->createBuilderConfig();
+        if(config && capturedStrictFP32)config->clearFlag(BuilderFlag::kTF32);
+        if(config)if(const char* policy=std::getenv("GARNET_TRT_ZERO_AUX_STREAMS");policy&&*policy=='1')config->setMaxAuxStreams(0);
         if (!network || !config) {
             errorMessage = "TensorRT network/config creation failed";
             delete config;
@@ -4886,7 +4975,8 @@ namespace Garnet {
         X::Value reusableOutput,
         bool enableCudaGraph,
         std::string& errorMessage,
-        const std::vector<TensorInputShapeRange>& inputShapeRanges) {
+        const std::vector<TensorInputShapeRange>& inputShapeRanges,
+        bool serialGraphReuse) {
         if (!EnsurePagedKVDecodePluginRegistered()) {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
             return X::Value();
@@ -4896,7 +4986,16 @@ namespace Garnet {
             return X::Value();
         }
 
-        CachedExecutionUse cachedUse(enginePath, weightIndex);
+        std::vector<void*> serialBindings;
+        const char* graphEnvironment=std::getenv("GARNET_DECODE_CUDA_GRAPH");
+        bool serialEligible=serialGraphReuse&&enableCudaGraph&&inputShapeRanges.empty()&&!CurrentOperatorExecutionOwner()&&
+            !std::getenv("GARNET_PROFILE_DECODE_LAYERS")&&!(graphEnvironment&&std::string(graphEnvironment)=="0")&&IsTensor(reusableOutput);
+        if(serialEligible){
+            for(uint64_t i=0;i<inputsValue.Size();++i){auto value=inputsValue.Get(i);if(!IsTensor(value)){serialEligible=false;break;}
+                X::Tensor input(value);auto info=input.Info();if(info.device_type!=TensorHelper::CudaDevice||!info.data||!IsContiguousTensor(input)){serialEligible=false;break;}serialBindings.push_back(info.data);}
+            if(serialEligible){X::Tensor output(reusableOutput);auto info=output.Info();if(info.device_type!=TensorHelper::CudaDevice||!info.data||!IsContiguousTensor(output))serialEligible=false;else serialBindings.push_back(info.data);}
+        }
+        CachedExecutionUse cachedUse(enginePath, weightIndex,true,serialEligible?&serialBindings:nullptr);
         ICudaEngine* cachedEngine = cachedUse.Engine();
         IExecutionContext* cachedContext = cachedUse.Context();
         if (!cachedContext) {
@@ -4906,6 +5005,11 @@ namespace Garnet {
 
         X::Value inputs(inputsValue);
         ExecutionInputs execution;
+        // Diagnostic opt-in to test capture without redundant context updates.
+        // Query the actual context binding, rather than trusting a cached graph
+        // signature that could be stale after an uncaptured invocation.
+        const char* staticBindingPolicy=std::getenv("GARNET_TRT_REUSE_STATIC_BINDINGS");
+        const bool reuseStaticBindings=inputShapeRanges.empty()&&staticBindingPolicy&&std::string(staticBindingPolicy)=="1";
         std::vector<void*> bindingSignature;
         bindingSignature.reserve(static_cast<size_t>(inputs.Size()) + 1);
         std::vector<int64_t> shapeSignature;
@@ -4957,6 +5061,13 @@ namespace Garnet {
             }
             void* devicePointer = TensorHelper::GetGPUMemory(input);
             const std::string name = "input_" + std::to_string(index);
+            if((serialGraphReuse||reuseStaticBindings)&&inputShapeRanges.empty()){
+                auto expected=cachedEngine->getTensorShape(name.c_str());
+                const auto type=info.dtype==X3_TENSOR_FLOAT32?DataType::kFLOAT:info.dtype==X3_TENSOR_BFLOAT16?DataType::kBF16:info.dtype==X3_TENSOR_INT32?DataType::kINT32:DataType::kINT64;
+                bool valid=cachedEngine->getTensorDataType(name.c_str())==type&&expected.nbDims==int(info.rank);
+                for(int axis=0;valid&&axis<expected.nbDims;++axis)valid=expected.d[axis]>0&&expected.d[axis]==info.shape[axis];
+                if(!valid){errorMessage="Serial graph reuse requires exact static input dtype/shape";return X::Value();}
+            }
             if (!inputShapeRanges.empty()) {
                 Dims dimensions{};
                 dimensions.nbDims = static_cast<int>(info.rank);
@@ -4985,7 +5096,8 @@ namespace Garnet {
                     return X::Value();
                 }
             }
-            if (!devicePointer || !cachedContext->setTensorAddress(name.c_str(), devicePointer)) {
+            if (!devicePointer || ((!reuseStaticBindings||cachedContext->getTensorAddress(name.c_str())!=devicePointer)&&
+                !cachedContext->setTensorAddress(name.c_str(), devicePointer))) {
                 errorMessage = "failed to bind TensorRT input " + name;
                 return X::Value();
             }
@@ -5091,7 +5203,8 @@ namespace Garnet {
             cachedContext->setEnqueueEmitsProfile(true);
         }
         bindingSignature.push_back(outputDevicePointer);
-        if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
+        if (((!reuseStaticBindings||cachedContext->getTensorAddress("output_0")!=outputDevicePointer)&&
+                !cachedContext->setTensorAddress("output_0", outputDevicePointer)) ||
             !EnqueueTRTWithOptionalCudaGraph(
                 enginePath, cachedContext, *cachedUse.slot.operator->(), bindingSignature, enableCudaGraph,
                 CurrentExecutionStream(), shapeSignature)) {
@@ -5378,6 +5491,35 @@ namespace Garnet {
         }
         if (!loweringActive) {
             return X::Value(true);
+        }
+        if(opName.rfind("qwen35_",0)==0) {
+            try {
+                auto* left=GetOrCreateTRTTensor(input1);
+                auto* right=GetOrCreateTRTTensor(input2);
+                Qwen35TRTOps ops(*network,vectorWeights,[&](const std::string& name){return GetOrCreateTRTWeight(name);},ownedPlugins);
+                if(!left||!right)throw std::invalid_argument("Qwen3.5 binary input is missing");
+                auto bindings=qwen35Bindings[TensorId(input1)];
+                const std::set<std::string> allowed={"qwen35_conv_bind_state","qwen35_conv_bind_active",
+                    "qwen35_delta_bind_state","qwen35_attention_bind_key","qwen35_attention_bind_value",
+                    "qwen35_attention_bind_positions","qwen35_attention_bind_slots","qwen35_attention_bind_active",
+                    "qwen35_mtp_bind_embedding","qwen35_cache_bind_backup","qwen35_cache_bind_spans"};
+                if(allowed.count(opName)) {
+                    bindings[opName]=right;qwen35Bindings[TensorId(output)]=std::move(bindings);lastOutput=left;
+                } else if(opName=="qwen35_mask_rows")lastOutput=ops.maskRows(left,right);
+                else if(opName=="qwen35_concat_packed") {
+                    auto a=ops.shape(left),b=ops.shape(right);
+                    if(a.size()!=2||b.size()!=2||a[0]!=b[0]||left->getType()!=DataType::kFLOAT||right->getType()!=DataType::kFLOAT||a[1]>INT_MAX-b[1])
+                        throw std::invalid_argument("Qwen3.5 packed concatenation dimensions/type invalid");
+                    lastOutput=ops.cat({left,right},1);
+                }
+                else if(opName=="qwen35_replace_packed_hidden") {
+                    auto* item=FindKeyword(kwParams,"hidden_dim");int hidden=item?int(item->second.ToLongLong()):0;
+                    auto shape=ops.shape(left);if(shape.size()!=2||hidden<=0||shape[1]<=hidden)
+                        throw std::invalid_argument("Qwen3.5 packed hidden replacement dimensions invalid");
+                    ops.require(right,{shape[0],hidden});lastOutput=ops.cat({right,ops.slice(left,1,hidden,shape[1]-hidden)},1);
+                }else throw std::invalid_argument("unsupported Qwen3.5 CUDA binary operation: "+opName);
+                tensorMap[TensorId(output)]=lastOutput;return X::Value(true);
+            }catch(const std::exception& e){loweringError=e.what();return X::Value();}
         }
         const bool isLinear =
             opName == "linear" || opName == "qkv_linear" ||
@@ -5888,7 +6030,127 @@ namespace Garnet {
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
 
-        if (opName.rfind("gpt_oss_", 0) == 0) {
+        if(opName.rfind("qwen35_",0)==0) {
+            try {
+                std::unordered_map<std::string,ITensor*> external;std::set<std::string> usedExternal;
+                if(auto* bindings=FindKeyword(kwParams,"external_weights")){
+                    if(!bindings->second.IsDict()||capturedWeightProfile!="bf16")throw std::invalid_argument("External weights require a BF16 tensor dictionary");
+                    for(uint64_t i=0;i<bindings->second.Size();++i){
+                        X::Value key,value;if(!bindings->second.DictEntry(i,key,value)||!key.IsString()||!IsTensor(value))
+                            throw std::invalid_argument("External weight bindings require checkpoint names and tensor inputs");
+                        const auto name=key.ToString();auto* metadata=capturedWeightIndex?capturedWeightIndex->Find(name):nullptr;
+                        X::Tensor tensor(value);auto info=tensor.Info();
+                        auto declared=tensorMap.find(TensorId(value));
+                        if(!metadata||metadata->dataType!="BF16"||metadata->shape.size()!=2||info.dtype!=X3_TENSOR_BFLOAT16||info.rank!=2||declared==tensorMap.end()||
+                            info.shape[0]!=metadata->shape[0]||info.shape[1]!=metadata->shape[1])
+                            throw std::invalid_argument("External BF16 matrix input must match its checkpoint metadata: "+name);
+                        auto previous=externalBF16Bindings.find(name);
+                        if(previous!=externalBF16Bindings.end()&&previous->second.first!=TensorId(value))
+                            throw std::invalid_argument("One checkpoint weight cannot bind multiple tensor inputs");
+                        externalBF16Bindings[name]={TensorId(value),size_t(metadata->dataSize)};external[name]=declared->second;
+                    }
+                }
+                Qwen35TRTOps ops(*network,vectorWeights,[&](const std::string& name){
+                    auto found=external.find(name);if(found==external.end())return GetOrCreateTRTWeight(name);
+                    usedExternal.insert(name);return found->second;
+                },ownedPlugins);
+                auto number=[&](const char* name,double fallback){auto* item=FindKeyword(kwParams,name);return item?item->second.ToDouble():fallback;};
+                ops.SetProjectionWorkspace(keywordInt("projection_workspace_bytes",0));
+                if(opName=="qwen35_packed_view") {
+                    auto s=ops.shape(source);int start=keywordInt("start",-1),width=keywordInt("width",0);auto requested=IntegerAttribute(kwParams,"shape");
+                    if(s.size()!=2||source->getType()!=DataType::kFLOAT||start<0||width<1||start>s[1]||width>s[1]-start||requested.empty()||requested.size()>4||requested[0]!=s[0])
+                        throw std::invalid_argument("Qwen3.5 packed view dimensions/type invalid");
+                    std::vector<int> shape;size_t elements=1;
+                    for(auto d:requested){if(d<1||d>INT_MAX||elements>size_t(INT_MAX)/size_t(d))throw std::invalid_argument("Qwen3.5 packed view shape overflow");elements*=size_t(d);shape.push_back(int(d));}
+                    if(elements!=size_t(s[0])*width)throw std::invalid_argument("Qwen3.5 packed view element count mismatch");
+                    lastOutput=ops.reshape(ops.slice(source,1,start,width),shape);
+                }else if(opName=="qwen35_concat_parts") {
+                    auto item=FindKeyword(kwParams,"parts");auto s=ops.shape(source);
+                    if(!item||!item->second.IsList()||item->second.Size()>128||s.size()!=2||s[0]>8||source->getType()!=DataType::kFLOAT)
+                        throw std::invalid_argument("Qwen3.5 variadic packed concatenation profile invalid");
+                    std::vector<ITensor*> parts{source};int width=s[1];
+                    for(uint64_t i=0;i<item->second.Size();++i){auto value=item->second.Get(i);if(!IsTensor(value))throw std::invalid_argument("Packed concatenation parts must be tensors");
+                        auto* part=GetOrCreateTRTTensor(value);auto shape=ops.shape(part);
+                        if(shape.size()!=2||shape[0]!=s[0]||part->getType()!=DataType::kFLOAT||shape[1]>INT_MAX-width)throw std::invalid_argument("Packed concatenation part shape/type/width invalid");
+                        width+=shape[1];parts.push_back(part);}
+                    lastOutput=parts.size()==1?source:ops.cat(parts,1);
+                }else if(opName=="qwen35_f32_barrier")lastOutput=ops.f32Barrier(source);
+                else if(opName=="qwen35_restore_kv_prefix") {
+                    auto b=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.restoreKVPrefix(source,b["qwen35_cache_bind_backup"],b["qwen35_cache_bind_spans"]);
+                }
+                else if(opName=="qwen35_linear_decoder_chunk") {
+                    auto b=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.linearDecoderChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
+                        b["qwen35_conv_bind_active"],keywordText("layer_prefix"),keywordInt("key_heads",0),keywordInt("value_heads",0),
+                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0);
+                }else if(opName=="qwen35_linear_replay_chunk") {
+                    auto b=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.linearReplayChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
+                        b["qwen35_conv_bind_active"],keywordText("layer_prefix"),keywordInt("hidden_dim",0),keywordInt("tokens",0),
+                        keywordInt("key_heads",0),keywordInt("value_heads",0),keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("register_delta_128",0)!=0);
+                }else if(opName=="qwen35_full_decoder_chunk") {
+                    auto b=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.fullDecoderChunk(source,b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],
+                        b["qwen35_attention_bind_positions"],b["qwen35_attention_bind_slots"],b["qwen35_attention_bind_active"],
+                        keywordText("layer_prefix"),keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),
+                        keywordInt("rotary_dim",0),{keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},
+                        float(number("rope_theta",1e7)),float(number("eps",1e-6)),keywordInt("fused_attention",0)!=0);
+                }else if(opName=="qwen35_mtp_decoder_chunk") {
+                    auto b=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.mtpChunk(source,b["qwen35_mtp_bind_embedding"],b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],
+                        b["qwen35_attention_bind_positions"],b["qwen35_attention_bind_slots"],b["qwen35_attention_bind_active"],
+                        keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),keywordInt("rotary_dim",0),
+                        {keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},
+                        float(number("rope_theta",1e7)),float(number("eps",1e-6)));
+                }else if(opName=="qwen35_vision_encoder")lastOutput=ops.vision(source,keywordInt("grid_h",0),keywordInt("grid_w",0),
+                    keywordInt("hidden_size",0),keywordInt("num_heads",0),keywordInt("depth",0),keywordInt("patch_size",0),
+                    keywordInt("temporal_patch_size",0),keywordInt("in_channels",0),keywordInt("spatial_merge_size",0),
+                    keywordInt("num_position_embeddings",0),keywordInt("out_hidden_size",0),float(number("rope_theta",10000)));
+                else if(opName=="qwen35_rms_norm")lastOutput=ops.norm(source,keywordText("weight_name"),float(number("eps",1e-6)));
+                else if(opName=="qwen35_rms_norm_packed") {
+                    auto s=ops.shape(source);
+                    if(s.size()!=3||s[0]<1||s[0]>8||s[1]<1||s[1]>128||s[2]<1||s[2]>INT_MAX/s[1])
+                        throw std::invalid_argument("Qwen3.5 packed norm profile invalid");
+                    lastOutput=ops.reshape(ops.norm(source,keywordText("weight_name"),float(number("eps",1e-6))),{s[0],s[1]*s[2]});
+                }
+                else if(opName=="qwen35_mlp")lastOutput=ops.mlp(source,keywordText("weight_prefix"));
+                else if(opName=="qwen35_attention_step") {
+                    auto b=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.attentionStep(source,b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],
+                        b["qwen35_attention_bind_positions"],b["qwen35_attention_bind_slots"],b["qwen35_attention_bind_active"],
+                        keywordText("weight_prefix"),keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),
+                        keywordInt("rotary_dim",0),{keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},
+                        float(number("rope_theta",1e7)),float(number("eps",1e-6)));
+                }else if(opName=="qwen35_attention_output"||opName=="qwen35_attention_key_cache"||opName=="qwen35_attention_value_cache") {
+                    int hidden=keywordInt("hidden_dim",0),kv=keywordInt("num_kv_heads",0),capacity=keywordInt("capacity",0),dim=keywordInt("head_dim",0);
+                    auto shape=ops.shape(source);int width=kv*capacity*dim;
+                    if(shape.size()!=2||hidden<=0||kv<=0||capacity<=0||dim<=0||shape[1]!=hidden+2*width)
+                        throw std::invalid_argument("Qwen3.5 packed full attention dimensions invalid");
+                    if(opName=="qwen35_attention_output")lastOutput=ops.slice(source,1,0,hidden);
+                    else lastOutput=ops.reshape(ops.slice(source,1,hidden+(opName=="qwen35_attention_value_cache"?width:0),width),{shape[0],kv,capacity,dim});
+                }
+                else if(opName=="qwen35_linear_step") {
+                    auto bindings=qwen35Bindings[TensorId(input)];
+                    lastOutput=ops.linearStep(source,bindings["qwen35_conv_bind_state"],bindings["qwen35_delta_bind_state"],
+                        bindings["qwen35_conv_bind_active"],keywordText("weight_prefix"),keywordInt("key_heads",0),
+                        keywordInt("value_heads",0),keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)));
+                }else if(opName=="qwen35_linear_output"||opName=="qwen35_linear_conv_state"||opName=="qwen35_linear_recurrent_state") {
+                    int hidden=keywordInt("hidden_dim",0),kh=keywordInt("key_heads",0),vh=keywordInt("value_heads",0);
+                    int kd=keywordInt("key_dim",0),vd=keywordInt("value_dim",0),kernel=keywordInt("kernel_size",0);
+                    auto shape=ops.shape(source);
+                    if(shape.size()!=2||hidden<=0||kh<=0||vh<=0||kd<=0||vd<=0||kernel<=0)
+                        throw std::invalid_argument("Qwen3.5 packed linear dimensions invalid");
+                    const int channels=2*kh*kd+vh*vd,conv=channels*kernel,state=vh*kd*vd;
+                    if(shape[1]!=hidden+conv+state)throw std::invalid_argument("Qwen3.5 packed linear width mismatch");
+                    if(opName=="qwen35_linear_output")lastOutput=ops.slice(source,1,0,hidden);
+                    else if(opName=="qwen35_linear_conv_state")lastOutput=ops.reshape(ops.slice(source,1,hidden,conv),{shape[0],channels,kernel});
+                    else lastOutput=ops.reshape(ops.slice(source,1,hidden+conv,state),{shape[0],vh,kd,vd});
+                }else throw std::invalid_argument("unsupported Qwen3.5 CUDA unary operation: "+opName);
+                if(usedExternal.size()!=external.size())throw std::invalid_argument("External weight binding is unused by the requested Qwen3.5 operation");
+            }catch(const std::exception& e){loweringError=e.what();return X::Value();}
+        }
+        else if (opName.rfind("gpt_oss_", 0) == 0) {
             lastOutput = LowerGptOss(opName, source, nullptr, kwParams);
         }
         else if (opName == "neg" || opName == "exp") {

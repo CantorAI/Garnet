@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "purpose": "Sequential real-image CUDA benchmark cohorts; not an unvalidated serving capability declaration",
+  "models": ["Qwen3.5-2B", "Qwen3.5-4B"],
+  "engines": ["garnet-cuda", "lmstudio-llama-cuda", "vllm-cuda"],
+  "device": 0,
+  "precision": "bf16",
+  "thinking": false,
+  "temperature": 0,
+  "image_cache": false,
+  "prefix_cache": false,
+  "speculative_decoding": false,
+  "warmup_rounds": 2,
+  "measured_rounds": 5,
+  "profiles": [
+    {"name": "batch-1", "batch": 1, "image_pixels": 65536, "max_input_tokens": 256, "max_output_tokens": 128, "context_capacity": 384},
+    {"name": "batch-2", "batch": 2, "image_pixels": 65536, "max_input_tokens": 256, "max_output_tokens": 128, "context_capacity": 384},
+    {"name": "batch-4", "batch": 4, "image_pixels": 65536, "max_input_tokens": 256, "max_output_tokens": 128, "context_capacity": 384},
+    {"name": "batch-8", "batch": 8, "image_pixels": 65536, "max_input_tokens": 256, "max_output_tokens": 128, "context_capacity": 384}
+  ],
+  "admission": "Reject profiles that do not fit; never silently reduce image/token work, quantize weights, spill to host, or load a second engine concurrently"
+}

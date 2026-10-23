@@ -175,6 +175,27 @@ if(GARNET_BUILD_GPT_OSS_OPS)
     add_subdirectory(plugins/gpt_oss)
 endif()
 
+# These state-kernel units contain all their device functions and host launch
+# wrappers. Keep the experiment scoped; other CUDA units retain separable code.
+option(GARNET_QWEN35_WHOLE_PROGRAM_CUDA "Compile self-contained Qwen3.5 state kernels without relocatable device code" OFF)
+if(GARNET_QWEN35_WHOLE_PROGRAM_CUDA)
+    set(GARNET_QWEN35_STATE_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/qwen35_delta.cu"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/qwen35_packed_commit.cu")
+    list(REMOVE_ITEM Cuda_SRC ${GARNET_QWEN35_STATE_SOURCES})
+    add_library(garnet_qwen35_state_kernels OBJECT ${GARNET_QWEN35_STATE_SOURCES})
+    set_target_properties(garnet_qwen35_state_kernels PROPERTIES
+        CUDA_SEPARABLE_COMPILATION OFF
+        CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}"
+        POSITION_INDEPENDENT_CODE ON)
+    target_compile_definitions(garnet_qwen35_state_kernels PRIVATE
+        GARNET_SERVING_EXPORTS=1 XLANG3_USE_SHARED NOMINMAX)
+    if(MSVC)
+        target_compile_options(garnet_qwen35_state_kernels PRIVATE
+            $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor,/utf-8>)
+    endif()
+endif()
+
 # Create the shared library target.
 add_library(${PROJECT_NAME} 
     SHARED
@@ -190,6 +211,9 @@ add_library(${PROJECT_NAME}
     ${Tokenizer_SRC}
     ${Backend_SRC}
 )
+if(GARNET_QWEN35_WHOLE_PROGRAM_CUDA)
+    target_sources(${PROJECT_NAME} PRIVATE $<TARGET_OBJECTS:garnet_qwen35_state_kernels>)
+endif()
 
 if(GARNET_BUILD_GPT_OSS_OPS)
     add_dependencies(${PROJECT_NAME} garnet_gpt_oss_ops)

@@ -3,21 +3,14 @@ from pathlib import Path
 import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'pi5b'))
 from reference_decoder import linear_block,attention_block
+from qwen35_weight_reference import read_checkpoint_weights
 folder=Path(sys.argv[4]);config=json.loads((folder/'config.json').read_text())['text_config']
 checkpoint=folder/'model.safetensors';rng=np.random.default_rng(456)
+if not checkpoint.exists():checkpoint=folder
 common=dict(input_norm='input_layernorm.weight',post_norm='post_attention_layernorm.weight',
  mlp_gate='mlp.gate_proj.weight',mlp_up='mlp.up_proj.weight',mlp_down='mlp.down_proj.weight')
 def read_weights(names,layer):
- weights={}
- with checkpoint.open('rb') as stream,mmap.mmap(stream.fileno(),0,access=mmap.ACCESS_READ) as mapping:
-  length=struct.unpack_from('<Q',mapping)[0];header=json.loads(mapping[8:8+length]);start=8+length
-  for name,suffix in names.items():
-   info=header['model.language_model.layers.'+str(layer)+'.'+suffix];a,b=info['data_offsets'];count=np.prod(info['shape'])
-   if info['dtype']=='BF16':data=(np.frombuffer(mapping,dtype='<u2',count=int(count),offset=start+a).astype(np.uint32)<<16).view(np.float32)
-   elif info['dtype']=='F32':data=np.frombuffer(mapping,dtype='<f4',count=int(count),offset=start+a).copy()
-   else:raise ValueError('Unexpected pretrained weight dtype')
-   weights[name]=data.reshape(info['shape'])
- return weights
+ return read_checkpoint_weights(folder,{name:'model.language_model.layers.'+str(layer)+'.'+suffix for name,suffix in names.items()})
 for kind in ('linear','attention'):
  for layer in ((0,config['num_hidden_layers']-2) if kind=='linear' else (3,config['num_hidden_layers']-1)):
   names=common.copy();d=config['hidden_size'];capacity=256

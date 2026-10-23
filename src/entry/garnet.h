@@ -7,6 +7,10 @@
 #include "model.h"
 #include "../model/greedy_batch_state.h"
 #include "log.h"
+#include "../backends/tensorrt/cuda_compiled_graph.h"
+#include "../backends/tensorrt/cuda_tensor_io.h"
+#include "../backends/tensorrt/cuda_packed_prefix.h"
+#include "../backends/cpu/tokenizer_api.h"
 #include <string>
 #include <deque>
 #include <memory>
@@ -136,6 +140,8 @@ namespace Garnet
 			int maxPixels = 1280 * 28 * 28;
 			int maxOutputTokens = 256;
 			int deviceId = 0;
+			bool qwen35CUDA = false;
+			std::string servingProfile;
 			mutable std::mutex mutex;
 		};
 		std::unordered_map<std::string, std::shared_ptr<ServingInstance>> m_servingInstances;
@@ -178,7 +184,11 @@ namespace Garnet
 			APISET().AddVarFunc("device_paged_kv_write", &GarnetAPI::DevicePagedKVWriteTensor);
 			APISET().AddVarFunc("device_paged_kv_attention", &GarnetAPI::DevicePagedKVAttentionTensor);
 			APISET().AddVarFunc("tensor_add", &GarnetAPI::TensorAdd);
-			APISET().AddVarFunc("embedding", &GarnetAPI::Embedding);
+            APISET().AddVarFunc("embedding", &GarnetAPI::Embedding);
+            APISET().AddClass<0,CUDACompiledGraph>("compiled_graph");
+            APISET().AddClass<0,CUDATensorIO>("cuda_tensor_io");
+            APISET().AddClass<0,CUDAPackedPrefix>("cuda_packed_prefix");
+            APISET().AddClass<0,CPUTokenizer>("tokenizer");
 			APISET().AddVarFunc("replace_rows_by_mask", &GarnetAPI::ReplaceRowsByMask);
 			APISET().AddVarFunc("tensor_last_row", &GarnetAPI::TensorLastRow);
 			APISET().AddVarFunc("gelu_tanh", &GarnetAPI::GeluTanh);
