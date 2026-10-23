@@ -1,0 +1,33 @@
+{
+  "checkpoints": [
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3.8-27B/resolve/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/config.json",
+      "id": "Qwen/Qwen3.8-27B",
+      "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+      "file": "base-config.json",
+      "sha256": "191e0af232104ed8b65258cf3fb2b842e288008baca7633c11b82a1ac7203aab"
+    },
+    {
+      "url": "https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4/resolve/482ca0f3832238542f8f5295dde86b5f22711d80/config.json",
+      "id": "nvidia/Qwen3.8-27B-NVFP4",
+      "revision": "482ca0f3832238542f8f5295dde86b5f22711d80",
+      "file": "nvfp4-config.json",
+      "sha256": "71fa01bb64de20971045cd82a82c0ebb25a54e1b0a3f09ef23cf5479e9c54df8"
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3.5-4B/resolve/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/config.json",
+      "id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "file": "comparison-config.json",
+      "sha256": "ddc63e1c717afa86c865bb5e01313d89d72bb53b97ad4a8a03ba8510c0621670"
+    },
+    {
+      "id": "pearsonkyle/Qwen3.8-27B-GPTQ-W4A16",
+      "revision": "4e2c2d8f592d5641beefa6a75357f43cf3756392",
+      "url": "https://huggingface.co/pearsonkyle/Qwen3.8-27B-GPTQ-W4A16/resolve/4e2c2d8f592d5641beefa6a75357f43cf3756392/config.json",
+      "sha256": "d586c45ed25c0159b117a45920dab150cdb1d88aa903b86334b8eaf92518ede6",
+      "file": "int4-config.json"
+    }
+  ],
+  "verified_date": "2026-10-23"
+}
