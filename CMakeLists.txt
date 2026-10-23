@@ -535,7 +535,7 @@ if(WIN32)
         message(FATAL_ERROR "TensorRT builder resource DLLs were not found")
     endif()
     list(APPEND GARNET_VENDOR_DLLS ${GARNET_TENSORRT_BUILDER_DLLS})
-    foreach(pattern cublas64_*.dll nppig64_*.dll nvjpeg64_*.dll)
+    foreach(pattern cudart64_*.dll cublas64_*.dll cublasLt64_*.dll nppc64_*.dll nppig64_*.dll nvjpeg64_*.dll)
         file(GLOB matches
             "${CUDAToolkit_BIN_DIR}/${pattern}"
             "${CUDAToolkit_BIN_DIR}/x64/${pattern}"

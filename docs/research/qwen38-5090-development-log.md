@@ -262,3 +262,16 @@ discovery path, retaining the existing paths. Development import libraries
 missing from the wheels were supplied from the matching local CUDA13.2 SDK and
 checked by SHA-256. These are build/deployment changes, not an inference speedup.
 Both failed configure attempts are retained in the append-only target ledger.
+
+## P011 — 2026-10-23: image runtime and portable dependency closure
+
+Completed the SDK's image dependency set with NPP13.1.0.48 and nvJPEG13.1.0.48,
+matching the component versions in the local CUDA13.2 version.json. The wheel
+merger checked member hashes, refused conflicting existing files, installed44
+files and removed temporary wheel downloads. Its actual setup job exited0.
+Added both packages to the SDK lock. The build/runtime discovery now also
+includes cuBLASLt, NPP core and CUDA runtime DLLs, avoiding reliance on a global
+older CUDA installation when loading the packaged Garnet runtime.
+
+No model inference benchmark has run. The next target step is a fresh native
+SM120 build, followed by the small head fixtures and quantized projection work.
