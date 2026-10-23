@@ -790,3 +790,50 @@ The pinned INT4 candidate download completed exit0: four LFS artifacts totaling
 The extracted small metadata separately verified for all three checkpoints:
 NVFP4=15 files,4B=11,INT4=12. Payload verification remains the downloader's full
 SHA256 gate; the metadata audit does not imply runtime/quality/kernel support.
+
+## P030 - 2026-10-23: prefix diagnostics and bounded F32 structural check
+
+Explicit F32 accumulation on rounded BF16 CPU projection operands still failed
+the retained full27-layer output comparison: max absolute5.0, relative L2
+0.01854415012578696. No threshold was relaxed. Native prefix towers plus the real
+merger also completed exit1 against the original absolute limit, while retaining
+all three observations before assertion:
+
+| Prefix depth | Maximum absolute error | Relative L2 error |
+| --- | --- | --- |
+| 1 | 2.0 | 0.0011233083247052845 |
+| 3 | 4.0 | 0.001983842689693945 |
+| 9 | 4.0 | 0.0029497819085522333 |
+
+These do not establish the cause or whole-VLM quality. A bounded diagnostic
+attribute now requests F32 vision projection constants/operators, leaving the
+default BF16 path unchanged. It is restricted to batch1, at most256 patches,
+hidden1152/out5120 and at most27 blocks. The existing captured strict-F32 policy
+disables TF32. The diagnostic compares against the original untouched full-F32
+Transformers oracle with predeclared tighter max0.05/relative0.001 limits. Its
+result is pending; this extra F32 vision weight storage is not a serving profile,
+an NVFP4/INT4 arm, or a performance claim.
+
+The first native evidence archive preserves the full text smoke, JPEG gate,
+both failed full-vision comparisons, CPU fixtures, binary hashes and raw command
+ledgers. SHA256 b582054dbe3866a1e3c22b3f35c1e41a9ba3b564052693598d06fc53274e2781,
+3,658,541 bytes,31 entries, verified after transfer. Later prefix/F32 structural
+diagnostics are separate artifacts and are not silently represented as part of
+that immutable archive.
+
+## P031 - 2026-10-23: full F32 vision structure and CUDA replay pass
+
+Job native-fp32-vision-structure completed exit0 on CD-RTX5090, with all27 real
+vision blocks, the real merger and the original untouched F32 Transformers oracle.
+Across five executions, maximum absolute error was0.000576019287109375 and relative
+L2 error2.874012096435269e-6. The tighter0.05/0.001 limits and at least two actual
+CUDA graph replays passed. This supports the structural vision implementation;
+it does not retrospectively pass the separate BF16 comparisons or establish
+whole-VLM quality. The only requested arithmetic change in this diagnostic is
+F32 vision constants/projections; the ordinary BF16 path remains the default.
+No vision timing, serving benchmark or2x result follows from this check.
+
+Next: validate complete native image-to-text behavior against matched reference
+requests, investigate/quantify low-precision output agreement and broader quality,
+then admit the experimental batch1/4K serving profile and measure it. INT4/4B
+runtime arms, tuned baselines, precision matching and the2x objective remain open.

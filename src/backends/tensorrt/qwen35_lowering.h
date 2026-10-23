@@ -460,15 +460,21 @@ public:
         return cat({reshape(normalized,{s[0],hiddenWidth}),slice(packed,1,hiddenWidth,2*cacheWidth)},1);
     }
     T* vision(T* patches,int gh,int gw,int hidden,int heads,int depth,int patch,
-        int temporal,int channels,int merge,int positions,int outHidden,float theta) {
+        int temporal,int channels,int merge,int positions,int outHidden,float theta,int diagnosticFP32=0) {
         if(gh<=0||gw<=0||merge<=0||gh%merge||gw%merge||hidden<=0||heads<=0||hidden%heads||
             (hidden/heads)%4||depth<=0||patch<=0||temporal<=0||channels<=0||positions<=0||outHidden<=0||!(theta>0))
             throw std::invalid_argument("Qwen3.5 vision profile invalid");
         const int count=gh*gw,feature=channels*temporal*patch*patch,dim=hidden/heads,unit=merge*merge;
         auto ps=shape(patches);if(ps.size()!=3)throw std::invalid_argument("Qwen3.5 vision patches require rank three");
         int batch=ps[0];require(patches,{batch,count,feature});
+        if(diagnosticFP32<0||diagnosticFP32>1||
+            (diagnosticFP32&&(batch!=1||count>256||hidden!=1152||outHidden!=5120||depth>27)))
+            throw std::invalid_argument("FP32 vision diagnostic requires the bounded Qwen3.8 study profile");
         int side=int(std::sqrt(positions));if(side*side!=positions)throw std::invalid_argument("Qwen3.5 vision position table must be square");
-        auto w=[&](const std::string& name){return weight("model.visual."+name);};
+        auto w=[&](const std::string& name){
+            auto* value=weight("model.visual."+name);
+            return diagnosticFP32?cast(value,nvinfer1::DataType::kFLOAT):value;
+        };
         auto linear=[&](T* input,const std::string& prefix){return add(project(input,w(prefix+".weight")),cast(w(prefix+".bias")));};
         auto ln=[&](T* input,const std::string& prefix){
             auto s=shape(input);auto* centered=sub(input,reduce(input,-1,true,true));

@@ -8,9 +8,11 @@ concurrency measurements. The33 CPU tests pass. Full64-layer native text smoke
 also reproduces the reference token IDs. Vision validation,
 serving integration, tuned matched comparisons and the2x target remain incomplete.
 No Garnet full-model timing or successful2x comparison is claimed.
-The full vision tower executes but has failed both the F32 and mixed-projection
-CPU comparison limits. Keep serving admission closed and retain both failures;
-intermediate vision diagnostics are the next correctness gate.
+The full BF16-projection vision tower executes but has failed both the F32 and
+mixed-projection CPU comparison limits. A separate full27-layer F32-projection
+structural diagnostic passed with max error0.000576 and relative L2 error2.874e-6.
+Keep serving admission closed and retain the BF16 failures. Complete VLM output
+and low-precision quality validation are the next gates.
 
 Audit date: 2026-10-23. The preserved source baseline was
 `5b0dc7ff8e5c1a77807138db310605bcd12aa390` plus inherited local edits, captured

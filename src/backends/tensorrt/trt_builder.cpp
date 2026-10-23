@@ -6133,7 +6133,7 @@ namespace Garnet {
                 }else if(opName=="qwen35_vision_encoder")lastOutput=ops.vision(source,keywordInt("grid_h",0),keywordInt("grid_w",0),
                     keywordInt("hidden_size",0),keywordInt("num_heads",0),keywordInt("depth",0),keywordInt("patch_size",0),
                     keywordInt("temporal_patch_size",0),keywordInt("in_channels",0),keywordInt("spatial_merge_size",0),
-                    keywordInt("num_position_embeddings",0),keywordInt("out_hidden_size",0),float(number("rope_theta",10000)));
+                    keywordInt("num_position_embeddings",0),keywordInt("out_hidden_size",0),float(number("rope_theta",10000)),keywordInt("diagnostic_fp32_projections",0));
                 else if(opName=="qwen35_rms_norm")lastOutput=ops.norm(source,keywordText("weight_name"),float(number("eps",1e-6)));
                 else if(opName=="qwen35_rms_norm_packed") {
                     auto s=ops.shape(source);
