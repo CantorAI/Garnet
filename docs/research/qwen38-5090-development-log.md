@@ -491,3 +491,47 @@ bin and CUDA_HOME for FlashInfer discovery; vLLM's existing environment must be
 aligned with the same compiler lock before that modified script is rerun.
 Original smoke results remain valid for their earlier recorded configuration.
 No controlled benchmark has been collected, and the2x target remains unproven.
+
+## P019 - 2026-10-23: native packed projection integration
+
+Strongly typed TensorRT NVFP4 plugin checks passed B1/B16 CPU-oracle comparisons,
+serialization, explicit CUDA graph replay and invalid metadata rejection. Initial
+weakly typed format negotiation failed; production uses strongly typed networks.
+TensorRT10.16 asserted when stripping opaque INT8 packed constants. Mixed plans
+currently embed compressed constants; sharing weights across engines remains pending.
+The integrated mixed MLP passed exact outputs and graph counters (1 capture,
+2 cached replays, 0 failures). Earlier three-call probes captured without replay;
+the probe now uses five calls and asserts counters. No speed claim follows.
+
+BF16 regression testing caught that isRefittable() cannot determine whether the
+existing stripped BF16 engine needs refitting. Skipping refit returned residual-only
+outputs. Unconditional refit then rejected the embedded mixed engine. An explicit
+embeddedWeights flag now preserves existing callers' refit behavior; its fresh
+remote two-precision regression is pending. The scoped Qwen TensorCompat fix assigns
+the native factory before invocation. No VM change. ASR capture remains unresolved.
+
+## P020 - 2026-10-23: reference startup recovery
+
+Both reference compiler alignments completed exit0 with CUDA13.0.88/CCCL13.0.85.
+SGLang then failed -lcuda discovery; LIBRARY_PATH now includes verified WSL driver
+libraries. The retry loaded shards but exhausted guest RAM/swap during warmup/JIT:
+MemAvailable=0, SwapFree=64kB, MemTotal=49139552kB, SwapTotal=12582912kB.
+This is a startup failure, not a benchmark. Terminating only study Ubuntu completed
+exit0; a fresh health probe is pending. No global .wslconfig or unrelated process
+changes. The next script bounds compilation jobs to2 and disables FlashInfer startup
+autotuning; record this separately from subsequent optimized baseline settings.
+
+SGLang text/image smoke, fresh aligned vLLM smoke, full Garnet VLM, FP8 attention,
+INT4/4B comparisons and controlled measurements remain pending. The2x target is
+unproven. Source hashes, failed attempts and raw command logs are retained.
+
+
+P019/P020 follow-up: explicit-embedded-weight-mlp-regression completed exit0 on
+CD-RTX5090. Both profiles produced exact256 outputs (NVFP4=3.4296875,
+BF16=3.3359375), each with graph_captures=1, graph_replays=2 and failures=0.
+Both engines reported engine_refittable=false, confirming that the diagnostic is
+not a sufficient refit policy. Raw ledger is results/native-projections/commands.*;
+JSON results are native-mlp-checks.json and native-mlp-bf16-checks.json. Local18
+CPU study tests passed. Recovered WSL memory probe completed exit0 with48035912kB
+free RAM and all12582912kB swap free. SGLang recovery retry has started with the
+explicit bounded-JIT/no-autotune configuration; readiness remains pending.

@@ -78,6 +78,7 @@ namespace Garnet {
         void SetCapturedWeightProfile(const std::string& profile) {
             capturedWeightProfile = profile;
         }
+        size_t NativeNVFP4WeightCount() const { return nativeNVFP4Weights.size(); }
 
         X::Value ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape);
         X::Value RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue);
@@ -144,7 +145,7 @@ namespace Garnet {
         static std::shared_ptr<void> RetainCachedExecution(
             const std::string& enginePath,
             const SafeTensorsIndex* weightIndex,
-            std::string& errorMessage);
+            std::string& errorMessage,bool embeddedWeights=false);
         X::Value RunCapturedEngine(
             const std::string& enginePath,
             X::Value inputs,
@@ -187,6 +188,13 @@ namespace Garnet {
         int capturedOptimizationLevel = 3;
         bool capturedStrictFP32 = false;
         std::unordered_map<std::string, nvinfer1::ITensor*> weightTensorMap;
+        struct NativeNVFP4Weight {
+            nvinfer1::ITensor* scales=nullptr;
+            int rows=0,columns=0;
+            float weightScale=0,inputScale=0;
+        };
+        std::unordered_map<nvinfer1::ITensor*,NativeNVFP4Weight> nativeNVFP4Weights;
+        std::deque<std::vector<unsigned char>> nativeNVFP4ScaleStorage;
         std::deque<float> scalarWeights;
         std::deque<unsigned short> bfloat16ScalarWeights;
         std::deque<long long> integerWeights;
@@ -229,6 +237,8 @@ namespace Garnet {
 
         nvinfer1::ITensor* GetOrCreateTRTTensor(X::Value garnetTensorVal);
         nvinfer1::ITensor* GetOrCreateTRTWeight(const std::string& weightName);
+        nvinfer1::ITensor* GetModelOptNVFP4Weight(const std::string&,const SafeTensorMetadata&);
+        nvinfer1::ITensor* ProjectModelOptNVFP4(nvinfer1::ITensor*,nvinfer1::ITensor*);
         nvinfer1::ITensor* GetOrCreateTRTWeightFP32(const std::string& weightName);
         nvinfer1::ITensor* BroadcastLastDimension(
             nvinfer1::ITensor* tensor,

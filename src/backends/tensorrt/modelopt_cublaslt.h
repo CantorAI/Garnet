@@ -2,7 +2,13 @@
 #pragma once
 #include <cublasLt.h>
 #include <cstddef>
+#include <memory>
 namespace Garnet {
+std::shared_ptr<void> CreateModelOptNVFP4Context();
+cublasStatus_t RunModelOptNVFP4MatmulContext(const std::shared_ptr<void>& context,
+    const void* weights,const void* weightScales,const void* input,const void* inputScales,
+    void* output,int batch,int rows,int columns,float globalScale,
+    void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept;
 // X[batch,K] @ W[rows,K]^T, packed E2M1 input/weights, BF16 output.
 // Scale arrays use cuBLASLt's 128x4 tiled E4M3 layout; tensor scales
 // are combined in globalScale. Caller owns stream, workspace and handle.

@@ -11,10 +11,14 @@ class TensorCompat:
         return getattr(self._native_tensor, name)
 
     def unary_op(self, name, **attributes):
-        return self._native_tensor.unary_op(name, **attributes)
+        # The preserved runtime's direct property-call fast path rejects the
+        # native factory. Materializing the callable uses its supported path.
+        factory = self._native_tensor.unary_op
+        return factory(name, **attributes)
 
     def binary_op(self, name, **attributes):
-        return self._native_tensor.binary_op(name, **attributes)
+        factory = self._native_tensor.binary_op
+        return factory(name, **attributes)
 
 
 def tensor():

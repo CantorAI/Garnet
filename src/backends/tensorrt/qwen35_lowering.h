@@ -28,11 +28,13 @@ class Qwen35TRTOps {
     std::function<T*(const std::string&)> lookup;
     std::vector<nvinfer1::IPluginV2*>& plugins;
     bool projectionWorkspace_=false;
+    std::function<T*(T*,T*)> nativeProjection_;
     static T* checked(nvinfer1::ILayer* l) {
         if(!l||!l->getOutput(0))throw std::runtime_error("Qwen3.5 TensorRT layer creation failed");
         return l->getOutput(0);
     }
 public:
+    void SetNativeProjection(std::function<T*(T*,T*)> projection){nativeProjection_=std::move(projection);}
     void SetProjectionWorkspace(int bytes){
         if(bytes!=0&&bytes!=16384)throw std::invalid_argument("Qwen3.5 projection workspace requires0 or16384bytes");
         projectionWorkspace_=bytes!=0;
@@ -131,6 +133,7 @@ public:
         T* t=lookup(name);if(!t)throw std::invalid_argument("Qwen3.5 missing checkpoint weight: "+name);return t;
     }
     T* project(T* x,T* w) {
+        if(nativeProjection_)if(auto* result=nativeProjection_(x,w))return cast(result);
         auto xs=shape(x),ws=shape(w);
         if(ws.size()!=2||xs.back()!=ws[1])throw std::invalid_argument("Qwen3.5 projection shape mismatch");
         auto type=w->getType();

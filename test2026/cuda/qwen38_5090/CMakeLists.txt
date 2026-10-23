@@ -51,3 +51,13 @@ target_link_libraries(garnet_modelopt_cublaslt_test PRIVATE CUDA::cudart CUDA::c
 target_compile_features(garnet_modelopt_cublaslt_test PRIVATE cxx_std_17)
 set_target_properties(garnet_modelopt_cublaslt_test PROPERTIES CUDA_STANDARD 17)
 add_test(NAME garnet_modelopt_cublaslt_projection COMMAND garnet_modelopt_cublaslt_test)
+add_executable(garnet_modelopt_plugin_test modelopt_plugin_test.cpp
+    "${GARNET_STUDY_SOURCE}/src/backends/tensorrt/modelopt_nvfp4_plugin.cpp"
+    "${GARNET_STUDY_SOURCE}/src/backends/tensorrt/modelopt_cublaslt.cpp"
+    "${GARNET_STUDY_SOURCE}/src/cuda/modelopt_nvfp4.cu")
+target_include_directories(garnet_modelopt_plugin_test PRIVATE "${GARNET_STUDY_SOURCE}/src/backends/tensorrt"
+    "${GARNET_STUDY_SOURCE}/src/cuda" "${GARNET_TENSORRT_ROOT}/include")
+target_link_libraries(garnet_modelopt_plugin_test PRIVATE CUDA::cudart CUDA::cublasLt "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
+target_compile_features(garnet_modelopt_plugin_test PRIVATE cxx_std_17)
+set_target_properties(garnet_modelopt_plugin_test PROPERTIES CUDA_STANDARD 17)
+add_test(NAME garnet_modelopt_native_plugin COMMAND garnet_modelopt_plugin_test)

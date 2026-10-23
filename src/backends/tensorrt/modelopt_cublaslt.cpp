@@ -2,8 +2,19 @@
 #include "modelopt_cublaslt.h"
 #include <cuda_runtime_api.h>
 #include <cmath>
+#include <mutex>
+#include <unordered_map>
 namespace Garnet {
 namespace {
+struct Context {
+    int device=-1;cublasLtHandle_t handle=nullptr;std::mutex mutex;
+    ~Context(){
+        int previous=-1;cudaGetDevice(&previous);cudaSetDevice(device);
+        if(handle)cublasLtDestroy(handle);if(previous>=0)cudaSetDevice(previous);
+    }
+};
+std::mutex contextsMutex;
+std::unordered_map<int,std::weak_ptr<Context>> contexts;
 struct Descriptors {
     cublasLtMatmulDesc_t operation=nullptr;
     cublasLtMatrixLayout_t a=nullptr,b=nullptr,c=nullptr;
@@ -16,6 +27,32 @@ struct Descriptors {
         if(operation)cublasLtMatmulDescDestroy(operation);
     }
 };
+}
+std::shared_ptr<void> CreateModelOptNVFP4Context(){
+#if CUDART_VERSION >= 12080
+    int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return {};
+    std::lock_guard<std::mutex> lock(contextsMutex);
+    if(auto owner=contexts[device].lock())return owner;
+    cudaDeviceProp properties{};
+    if(cudaGetDeviceProperties(&properties,device)!=cudaSuccess||properties.major<10)return {};
+    auto owner=std::make_shared<Context>();owner->device=device;
+    if(cublasLtCreate(&owner->handle)!=CUBLAS_STATUS_SUCCESS)return {};
+    contexts[device]=owner;return owner;
+#else
+    return {};
+#endif
+}
+cublasStatus_t RunModelOptNVFP4MatmulContext(const std::shared_ptr<void>& opaque,
+    const void* weights,const void* weightScales,const void* input,const void* inputScales,
+    void* output,int batch,int rows,int columns,float globalScale,
+    void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept {
+    if(!opaque)return CUBLAS_STATUS_NOT_INITIALIZED;
+    try{
+        auto context=std::static_pointer_cast<Context>(opaque);
+        std::lock_guard<std::mutex> lock(context->mutex);
+        return RunModelOptNVFP4Matmul(context->handle,weights,weightScales,input,inputScales,
+            output,batch,rows,columns,globalScale,workspace,workspaceBytes,stream);
+    }catch(...){return CUBLAS_STATUS_INTERNAL_ERROR;}
 }
 #define MODELOPT_LT_CHECK(call) do { const auto status=(call); if(status!=CUBLAS_STATUS_SUCCESS)return status; } while(false)
 cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,

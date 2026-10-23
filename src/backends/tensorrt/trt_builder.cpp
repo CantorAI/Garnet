@@ -3,6 +3,7 @@
 
 #include "trt_builder.h"
 #include <nlohmann/json.hpp>
+#include "modelopt_nvfp4_plugin.h"
 #include "trt_context_pool.h"
 #include "trt_memory_profile.h"
 #include "qwen35_lowering.h"
@@ -312,7 +313,7 @@ namespace Garnet {
 
         std::shared_ptr<CachedTRTExecution> GetCachedTRTEngine(
             const std::string& enginePath,
-            const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
+            const Garnet::SafeTensorsIndex* weightIndex = nullptr,bool embeddedWeights=false) {
             int device = -1;
             if (cudaGetDevice(&device) != cudaSuccess) return nullptr;
             const auto streamingPolicy = ReadTRTWeightStreamingPolicy();
@@ -370,7 +371,7 @@ namespace Garnet {
                 cached.allocator = std::make_unique<TRTSyncAllocator>(device);
                 cached.runtime->setGpuAllocator(cached.allocator.get());
             }
-            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered())return nullptr;
+            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered()||!EnsureModelOptNVFP4PluginRegistered())return nullptr;
             LogTRTMemoryCheckpoint("before_engine_deserialize",enginePath);
             cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
             if (!cached.engine) {
@@ -394,7 +395,7 @@ namespace Garnet {
             }
             LogTRTMemoryCheckpoint("before_engine_refit",enginePath,
                 cached.engine->getDeviceMemorySizeV2());
-            if (weightIndex && weightIndex->TensorCount() > 0) {
+            if (weightIndex && weightIndex->TensorCount() > 0 && !embeddedWeights) {
                 std::unique_ptr<nvinfer1::IRefitter> refitter(
                     nvinfer1::createInferRefitter(*cached.engine, gLogger));
                 if (!refitter) {
@@ -534,8 +535,8 @@ namespace Garnet {
             std::shared_ptr<CachedTRTExecution> owner;
             TRTContextPool::Lease slot;
             explicit CachedExecutionUse(const std::string& path,
-                const SafeTensorsIndex* weights = nullptr, bool enabled = true,const std::vector<void*>* serialGraphBindings=nullptr)
-                : owner(enabled ? GetCachedTRTEngine(path, weights) : nullptr),
+                const SafeTensorsIndex* weights = nullptr, bool enabled = true,const std::vector<void*>* serialGraphBindings=nullptr,bool embeddedWeights=false)
+                : owner(enabled ? GetCachedTRTEngine(path, weights,embeddedWeights) : nullptr),
                   slot(owner ? owner->contexts->Acquire(CurrentExecutionStream(),serialGraphBindings) : TRTContextPool::Lease{}) {}
             nvinfer1::IExecutionContext* Context() const { return slot ? slot->context : nullptr; }
             nvinfer1::ICudaEngine* Engine() const { return owner ? owner->engine : nullptr; }
@@ -742,13 +743,13 @@ namespace Garnet {
     std::shared_ptr<void> TRTBuilder::RetainCachedExecution(
         const std::string& enginePath,
         const SafeTensorsIndex* weightIndex,
-        std::string& errorMessage) {
+        std::string& errorMessage,bool embeddedWeights) {
         try {
             if (!EnsurePagedKVDecodePluginRegistered()) {
                 errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
                 return {};
             }
-            CachedExecutionUse execution(enginePath, weightIndex);
+            CachedExecutionUse execution(enginePath, weightIndex,true,nullptr,embeddedWeights);
             if (!execution.Context()) {
                 errorMessage = "failed to prepare captured engine " + enginePath;
                 return {};
@@ -766,6 +767,7 @@ namespace Garnet {
         auto owner=std::static_pointer_cast<CachedTRTExecution>(execution);
         auto counts=owner->contexts->GraphCounts();
         return nlohmann::json{{"allocator_tracking_enabled",bool(owner->allocator)},
+            {"engine_refittable",owner->engine->isRefittable()},
             {"trt_allocator_live_bytes",owner->allocator?nlohmann::json(owner->allocator->LiveBytes()):nlohmann::json(nullptr)},
             {"trt_allocator_peak_bytes",owner->allocator?nlohmann::json(owner->allocator->PeakBytes()):nlohmann::json(nullptr)},
             {"trt_allocator_allocations",owner->allocator?nlohmann::json(owner->allocator->Outstanding()):nlohmann::json(nullptr)},
@@ -3247,6 +3249,8 @@ namespace Garnet {
             return nullptr;
         }
         DataType dataType;
+        if(metadata->dataType=="U8"&&capturedWeightProfile=="modelopt_mixed")
+            return GetModelOptNVFP4Weight(weightName,*metadata);
         if (metadata->dataType == "BF16") dataType = DataType::kBF16;
         else if (metadata->dataType == "F16") dataType = DataType::kHALF;
         else if (metadata->dataType == "F32") dataType = DataType::kFLOAT;
@@ -3350,7 +3354,7 @@ namespace Garnet {
             return nullptr;
         }
         if (!network->setWeightsName(weights, weightName.c_str()) ||
-            !network->markWeightsRefittable(weightName.c_str())) {
+            (capturedWeightProfile!="modelopt_mixed"&&!network->markWeightsRefittable(weightName.c_str()))) {
             loweringError = "TensorRT could not mark checkpoint weight refittable: " + weightName;
             return nullptr;
         }
@@ -4487,6 +4491,7 @@ namespace Garnet {
         tensorMap.clear();
         constantTensors.clear();
         weightTensorMap.clear();
+        nativeNVFP4Weights.clear();nativeNVFP4ScaleStorage.clear();
         externalBF16Bindings.clear();
         scalarWeights.clear();
         bfloat16ScalarWeights.clear();
@@ -4547,7 +4552,7 @@ namespace Garnet {
         if (streamingPolicy.Enabled()) {
             config->setFlag(BuilderFlag::kWEIGHT_STREAMING);
         }
-        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
+        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0 && capturedWeightProfile!="modelopt_mixed") {
             config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
             config->setFlag(BuilderFlag::kSTRIP_PLAN);
         }
@@ -5497,6 +5502,7 @@ namespace Garnet {
                 auto* left=GetOrCreateTRTTensor(input1);
                 auto* right=GetOrCreateTRTTensor(input2);
                 Qwen35TRTOps ops(*network,vectorWeights,[&](const std::string& name){return GetOrCreateTRTWeight(name);},ownedPlugins);
+                ops.SetNativeProjection([&](ITensor* x,ITensor* w){return ProjectModelOptNVFP4(x,w);});
                 if(!left||!right)throw std::invalid_argument("Qwen3.5 binary input is missing");
                 auto bindings=qwen35Bindings[TensorId(input1)];
                 const std::set<std::string> allowed={"qwen35_conv_bind_state","qwen35_conv_bind_active",
@@ -6071,6 +6077,7 @@ namespace Garnet {
                     auto found=external.find(name);if(found==external.end())return GetOrCreateTRTWeight(name);
                     usedExternal.insert(name);return found->second;
                 },ownedPlugins);
+                ops.SetNativeProjection([&](ITensor* x,ITensor* w){return ProjectModelOptNVFP4(x,w);});
                 auto number=[&](const char* name,double fallback){auto* item=FindKeyword(kwParams,name);return item?item->second.ToDouble():fallback;};
                 ops.SetProjectionWorkspace(keywordInt("projection_workspace_bytes",0));
                 if(opName=="qwen35_packed_view") {

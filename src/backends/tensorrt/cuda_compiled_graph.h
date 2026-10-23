@@ -18,6 +18,8 @@ class CUDACompiledGraph {
     double compileMs_=0,lastMs_=0;
     unsigned long long builderWorkspaceBytes_=64ULL<<20;
     size_t externalWeightCount_=0,externalWeightBytes_=0,joinedProjectionInputs_=0;
+    size_t nativeNVFP4WeightCount_=0;
+    std::string weightPrecision_="bf16";
     mutable std::mutex mutex_;
     void CloseUnlocked();
 public:

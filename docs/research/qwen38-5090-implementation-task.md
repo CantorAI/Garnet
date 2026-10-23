@@ -213,7 +213,7 @@ XLang3 Release binaries and a matching public SDK. From a VS x64 developer
 shell, configure it with `XLANG3_RUNTIME_DIR`, `XLANG3_ROOT`,
 `GARNET_TENSORRT_ROOT`, `CMAKE_CUDA_COMPILER` and an explicit architecture.
 Use89 for the recorded local RTX4080 correctness build; use120 for the target
-RTX5090 build, which is still pending. Build target `garnet`. No VM sources
+RTX5090 build, which has passed native build and primitive correctness checks. Full-model execution remains pending. Build target `garnet`. No VM sources
 are modified by this wrapper. Record executable/DLL/import-library and SDK
 hashes, as well as the complete compiler and dependency versions.
 
@@ -222,3 +222,25 @@ Install it as one set with `--no-deps`; unconstrained transitive dependencies
 were observed selecting newer CUDA components. The study uses one SDK folder
 under the fixed remote root. Do not use the mixed-version first attempt as a
 validated performance environment.
+
+
+## Integration checkpoint after native packed projection work
+
+Native SM120 build, standalone packed NVFP4 projection, GPU activation quantization,
+TensorRT plugin serialization and graph replay have passed correctness checks.
+A synthetic captured residual MLP passed native NVFP4 exact outputs and replay
+counters. The explicit embedded-weight/refit fix passed both NVFP4 and BF16 synthetic regression with actual CUDA graph replay.
+Mixed plans currently embed compressed weights after TensorRT rejected stripped
+opaque INT8 constants. Do not admit two full-model plans until shared packed
+weights or a measured VRAM budget proves they fit. The projection plugin currently
+limits flattened rows to1024; 4096-token prefill needs explicit tiling or an extended
+validated bound. No hidden truncation is allowed.
+
+Next acceptance gates: implement native FP8
+attention projections, compare real checkpoint MLP/layer outputs, admit the strict
+64-layer decoder and vision factory, then text/image parity. Reference startup
+must pass both engines' health and text/image smoke after compiler alignment.
+SGLang's previous warmup exhausted guest RAM/swap; recovery settings disable
+startup autotuning and bound build concurrency, and must be recorded distinctly.
+Only after these gates collect controlled benchmark distributions and compare
+INT4 W4A16 and Qwen3.5-4B. No measured2x speedup exists yet.
