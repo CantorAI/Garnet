@@ -27,6 +27,11 @@ class LayoutTest(unittest.TestCase):
         for capacity,batch in [(4097,1),(4096,4),(0,1)]:
             with self.assertRaises(ValueError):validate_cuda_profile(mixed,capacity,batch)
 
+    def test_rejects_unsupported_vision_math(self):
+        for key,value in [('hidden_act','gelu'),('in_channels',1),('num_position_embeddings',1024)]:
+            changed=copy.deepcopy(self.config);changed['vision_config'][key]=value
+            with self.assertRaises(ValueError):validate_config(changed)
+
     def test_architecture_and_distinct_gated_shapes(self):
         shapes = projection_shapes(self.config)
         self.assertEqual(len(shapes),497)

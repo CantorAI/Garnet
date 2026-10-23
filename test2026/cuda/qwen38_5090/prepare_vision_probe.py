@@ -13,7 +13,11 @@ def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('checkpoint',type=Path);p.add_argument('output',type=Path)
-    p.add_argument('--mixed-projections',action='store_true');a=p.parse_args()
+    p.add_argument('--mixed-projections',action='store_true')
+    p.add_argument('--f32-projection-accumulation',action='store_true')
+    p.add_argument('--stage-depths',type=int,nargs='*',default=[]);a=p.parse_args()
+    if a.f32_projection_accumulation and not a.mixed_projections:p.error('Explicit accumulation requires mixed projections')
+    if any(d not in range(1,28) for d in a.stage_depths):p.error('Invalid diagnostic depth')
     a.output.mkdir(parents=True,exist_ok=True);torch.set_num_threads(8)
     cp=a.checkpoint;config=json.loads((cp/'config.json').read_text())
     index=json.loads((cp/'model.safetensors.index.json').read_text())['weight_map']
@@ -31,12 +35,17 @@ def main():
     if a.mixed_projections:
         # Match the declared native arithmetic, while retaining Transformers'
         # independent attention, position, normalization and activation code.
+        def project(value,weight):
+            value=value.bfloat16();weight=weight.bfloat16()
+            if a.f32_projection_accumulation:
+                return torch.nn.functional.linear(value.float(),weight.float()).bfloat16().float()
+            return torch.nn.functional.linear(value,weight).float()
         def linear(module,value):
-            projected=torch.nn.functional.linear(value.bfloat16(),module.weight.bfloat16()).float()
+            projected=project(value,module.weight)
             return projected+module.bias.float() if module.bias is not None else projected
         def patch(module,value):
             if list(value.shape[1:])!=[3,2,16,16]:raise ValueError('Unexpected patch Conv3D geometry')
-            projected=torch.nn.functional.linear(value.reshape(-1,1536).bfloat16(),module.weight.reshape(-1,1536).bfloat16()).float()
+            projected=project(value.reshape(-1,1536),module.weight.reshape(-1,1536))
             if module.bias is not None:projected=projected+module.bias.float()
             return projected.reshape(-1,module.out_channels,1,1,1)
         for module in model.modules():
@@ -49,7 +58,16 @@ def main():
     inputs=processor(images=Image.open(image_path).convert('RGB'),return_tensors='pt')
     patches=inputs['pixel_values'].float();grid=inputs['image_grid_thw']
     if grid.tolist()!=[[1,16,16]] or list(patches.shape)!=[256,1536]:raise ValueError('Unexpected pinned processor shape')
+    stages={};hooks=[]
+    def observe(depth):
+        def hook(module,args,value):
+            path=a.output/('expected-depth-'+str(depth)+'.f32')
+            model.merger(value).float().numpy().astype('<f4').tofile(path)
+            stages[str(depth)]={'file':path.name,'sha256':digest(path)}
+        return hook
+    for depth in a.stage_depths:hooks.append(model.blocks[depth-1].register_forward_hook(observe(depth)))
     with torch.inference_mode():output=model(patches,grid_thw=grid).pooler_output.float()
+    for hook in hooks:hook.remove()
     if list(output.shape)!=[64,5120] or not torch.isfinite(output).all():raise ValueError('Invalid vision oracle')
     patches.numpy().astype('<f4').tofile(a.output/'patches.f32')
     output.numpy().astype('<f4').tofile(a.output/'expected.f32')
@@ -58,6 +76,8 @@ def main():
     manifest={'grid':grid.tolist()[0],'patch_shape':[1,256,1536],'output_shape':[1,64,5120],
         'vision_weights':len(names),'reference_dtype':('BF16 input/weight/output projections, F32 bias/residual/norm/attention; eager CPU Transformers' if a.mixed_projections else 'CPU float32 on decoded original BF16 weights; eager attention'),
         'mixed_projection_count':mixed_count,
+        'projection_accumulation':('explicit F32 on rounded BF16 operands' if a.f32_projection_accumulation else 'Torch backend for selected dtype'),
+        'diagnostic_stages':stages,
         'versions':{n:importlib.metadata.version(n) for n in ['torch','transformers','safetensors','pillow']},
         'model_source_sha256':digest(source),'config_sha256':digest(cp/'config.json'),
         'index_sha256':digest(cp/'model.safetensors.index.json'),

@@ -19,7 +19,9 @@ def validate_config(config):
             raise ValueError('Qwen3.8-27B text contract mismatch: '+key)
     for key, value in {'depth':27, 'hidden_size':1152, 'intermediate_size':4304,
                        'num_heads':16, 'out_hidden_size':5120, 'patch_size':16,
-                       'spatial_merge_size':2, 'temporal_patch_size':2}.items():
+                       'spatial_merge_size':2, 'temporal_patch_size':2,
+                       'in_channels':3,'num_position_embeddings':2304,
+                       'hidden_act':'gelu_pytorch_tanh'}.items():
         if vision.get(key) != value:
             raise ValueError('Qwen3.8-27B vision contract mismatch: '+key)
     if text.get('layer_types') != (['linear_attention']*3+['full_attention'])*16:

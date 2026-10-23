@@ -772,3 +772,21 @@ result location; it does not overwrite or relabel the failed F32 comparison.
 Its result is pending. The replay fixture also needs five calls, including warmup,
 to observe two actual graph replays; the original four calls produced only one.
 No full VLM or performance success is claimed.
+
+## P029 - 2026-10-23: mixed vision diagnostic also fails; INT4 bytes verified
+
+The mixed CPU oracle completed exit0 with111 patched projections. Native job
+native-mixed-full-vision-oracle completed exit1 against the unchanged error limits:
+max absolute8.0, relative L20.02335669132205647. Raw full outputs are retained as
+native-vision-mixed-checks.json.f32, alongside the JSON and both CPU oracles.
+The second diagnostic does not explain away the first failure. Native vision
+admission remains closed while intermediate arithmetic is investigated.
+The mixed expected maximum magnitude was115.25390625, native116.75390625;
+at element39834, F32 expected=-81.833984375, mixed expected=-74.75390625,
+native=-82.75390625. Do not infer whole-VLM quality from these observations.
+
+The pinned INT4 candidate download completed exit0: four LFS artifacts totaling
+19,437,778,517 verified bytes. No duplicate checkout or checkpoint copy was made.
+The extracted small metadata separately verified for all three checkpoints:
+NVFP4=15 files,4B=11,INT4=12. Payload verification remains the downloader's full
+SHA256 gate; the metadata audit does not imply runtime/quality/kernel support.

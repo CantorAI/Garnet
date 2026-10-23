@@ -4,10 +4,13 @@ Status: pinned architecture/quantization audit, native SM120 build, NVFP4/FP8
 projection/plugin tests, real layer0 MLP parity, real GDN/full-attention decoder-layer
 parity at4K capacity, and native W4A4 head checks have passed. Both references have
 passed text/image smoke; SGLang's initial eager profile now has raw streaming and
-concurrency measurements. The32 CPU tests pass. Full64-layer native text smoke
+concurrency measurements. The33 CPU tests pass. Full64-layer native text smoke
 also reproduces the reference token IDs. Vision validation,
 serving integration, tuned matched comparisons and the2x target remain incomplete.
 No Garnet full-model timing or successful2x comparison is claimed.
+The full vision tower executes but has failed both the F32 and mixed-projection
+CPU comparison limits. Keep serving admission closed and retain both failures;
+intermediate vision diagnostics are the next correctness gate.
 
 Audit date: 2026-10-23. The preserved source baseline was
 `5b0dc7ff8e5c1a77807138db310605bcd12aa390` plus inherited local edits, captured

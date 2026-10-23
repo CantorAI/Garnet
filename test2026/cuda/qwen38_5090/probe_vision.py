@@ -13,7 +13,10 @@ try:
     encoder=create_cuda_vision(checkpoint,config,oracle['grid'][1],oracle['grid'][2]);reports=[]
     for enabled in [False,True,True,True,True]:
         encoder.graph.enable_cuda_graph(enabled)
-        actual=garnet.tensor_to_cpu(encoder.encode_patches(patches)).tolist()
+        features=encoder.encode_patches(patches)
+        if not reports:
+            with open(output+'.f32','wb') as f:f.write(io.finite_f32_bytes(features))
+        actual=garnet.tensor_to_cpu(features).tolist()
         assert len(actual)==len(expected) and all(math.isfinite(v) for v in actual)
         errors=[abs(a-b) for a,b in zip(actual,expected)]
         rel=(sum(v*v for v in errors)/max(1e-20,sum(v*v for v in expected)))**.5
