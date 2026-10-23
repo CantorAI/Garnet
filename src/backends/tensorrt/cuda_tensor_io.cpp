@@ -6,9 +6,11 @@
 #include "cuda_lib.h"
 #include "../../cuda/qwen35_indexed_head.cuh"
 #include "../../cuda/qwen35_prefix_commit.cuh"
+#include "../../cuda/modelopt_nvfp4.cuh"
 #include <nlohmann/json.hpp>
 #include <climits>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <vector>
@@ -56,7 +58,7 @@ bool SameShape(const X::Tensor& tensor,const std::vector<int64_t>& shape){
 }
 CUDATensorIO::~CUDATensorIO(){Close();}
 void CUDATensorIO::CloseUnlocked(){table_=X::Tensor();headInput_=X::Tensor();headOutput_=X::Tensor();tokenHeadInput_=X::Tensor();tokenHeadOutput_=X::Tensor();
-    untiedHead_=X::Tensor();
+    untiedHead_=packedHead_=packedHeadScales_=X::Tensor();packedHeadScale2_=0;
     candidateScratch_=candidateOutput_=indexedScores_=indexedIds_=indexedValues_=X::Tensor();projectionWeights_.clear();projectionWeightGroupMembers_.clear();projectionWeightGroups_.clear();projection_.reset();vocab_=width_=0;}
 void CUDATensorIO::Close(){std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();}
 bool CUDATensorIO::Open(const std::string& checkpoint){
@@ -66,35 +68,73 @@ bool CUDATensorIO::Open(const std::string& checkpoint){
     if(!entry||entry->dataType!="BF16"||entry->shape.size()!=2||entry->shape[0]<=0||entry->shape[1]<=0||
         entry->shape[0]>INT_MAX||entry->shape[1]>INT_MAX||uint64_t(entry->shape[0])*uint64_t(entry->shape[1])*2!=entry->dataSize)
         throw X::Error("Qwen3.5 tied embedding requires a valid BF16 matrix");
-    // A present output head is authoritative. Reject an unsupported packed head
+    // A present output head is authoritative. Reject unsupported packed layouts
     // before allocating the embedding; silently tying it changes model logits.
     const auto* head=index_.Find("lm_head.weight");
     const auto checkpointPath=std::filesystem::path(checkpoint);
     const auto configPath=(std::filesystem::is_directory(checkpointPath)?checkpointPath:checkpointPath.parent_path())/"config.json";
     std::ifstream configFile(configPath);
+    bool modelopt=false;
     if(configFile){
         nlohmann::json config;
         try{configFile>>config;}catch(...){throw X::Error("CUDA checkpoint config.json is invalid");}
+        if(config.contains("quantization_config")&&config["quantization_config"].is_object()){
+            const auto& q=config["quantization_config"];
+            modelopt=q.value("quant_method",std::string())=="modelopt"&&
+                (q.value("quant_algo",std::string())=="MIXED_PRECISION"||q.value("quant_algo",std::string())=="NVFP4");
+        }
         auto declaresUntied=[](const nlohmann::json& value){
             return value.is_object()&&value.contains("tie_word_embeddings")&&value["tie_word_embeddings"].is_boolean()&&!value["tie_word_embeddings"].get<bool>();
         };
         if(!head&&(declaresUntied(config)||(config.contains("text_config")&&declaresUntied(config["text_config"]))))
             throw X::Error("CUDA untied checkpoint is missing lm_head.weight");
     }
-    if(head&&(head->dataType!="BF16"||head->shape!=entry->shape||head->dataSize!=entry->dataSize))
+    const bool packed=head&&head->dataType=="U8"&&modelopt;
+    const SafeTensorMetadata* scales=nullptr;
+    SafeTensorsMappedFile scalesMapping;
+    const void* scaleBytes=nullptr;float headScale2=0;
+    if(packed){
+        const auto rows=entry->shape[0],width=entry->shape[1];
+        scales=index_.Find("lm_head.weight_scale");
+        const auto* scale2=index_.Find("lm_head.weight_scale_2");
+        const auto* inputScale=index_.Find("lm_head.input_scale");
+        auto scalar=[&](const SafeTensorMetadata* v){
+            if(!v||v->dataType!="F32"||!v->shape.empty()||v->dataSize!=4)throw X::Error("Invalid NVFP4 head scalar scale");
+            SafeTensorsMappedFile map;if(!map.Open(v->filePath,error))throw X::Error(error);
+            const auto* p=map.DataAt(v->dataOffset,4);if(!p)throw X::Error("NVFP4 scale exceeds checkpoint");
+            float value;std::memcpy(&value,p,4);
+            if(!std::isfinite(value)||value<=0)throw X::Error("NVFP4 scale must be finite and positive");return value;
+        };
+        if(width%16||head->shape!=std::vector<long long>{rows,width/2}||head->dataSize!=uint64_t(rows)*width/2||
+            !scales||(scales->dataType!="F8_E4M3"&&scales->dataType!="F8_E4M3FN")||
+            scales->shape!=std::vector<long long>{rows,width/16}||scales->dataSize!=uint64_t(rows)*width/16)
+            throw X::Error("Invalid ModelOpt NVFP4 head layout");
+        headScale2=scalar(scale2);scalar(inputScale); // W4A16 uses the weights but does not quantize activations.
+        if(!scalesMapping.Open(scales->filePath,error))throw X::Error(error);
+        scaleBytes=scalesMapping.DataAt(scales->dataOffset,scales->dataSize);
+        if(!scaleBytes)throw X::Error("NVFP4 block scale storage exceeds checkpoint");
+        const auto* codes=static_cast<const unsigned char*>(scaleBytes);
+        for(uint64_t i=0;i<scales->dataSize;++i)if(codes[i]>126)throw X::Error("NVFP4 block scale must be nonnegative finite E4M3");
+    }
+    if(head&&!packed&&(head->dataType!="BF16"||head->shape!=entry->shape||head->dataSize!=entry->dataSize))
         throw X::Error("Separate CUDA output head requires matching BF16 shape; packed heads need quantized head integration");
     SafeTensorsMappedFile mapping;if(!mapping.Open(entry->filePath,error))throw X::Error(error);
     auto* bytes=mapping.DataAt(entry->dataOffset,entry->dataSize);if(!bytes)throw X::Error("embedding storage exceeds checkpoint");
     auto table=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,entry->shape,bytes);
-    X::Tensor separateHead;
+    X::Tensor separateHead,packedWeight,packedScales;
     if(head){
         SafeTensorsMappedFile headMapping;if(!headMapping.Open(head->filePath,error))throw X::Error(error);
         const auto* headBytes=headMapping.DataAt(head->dataOffset,head->dataSize);
         if(!headBytes)throw X::Error("Separate output head storage exceeds checkpoint");
-        separateHead=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,head->shape,headBytes);
+        if(packed){
+            packedWeight=TensorHelper::CreateGPU(Host(),X3_TENSOR_UINT8,head->shape,headBytes);
+            packedScales=TensorHelper::CreateGPU(Host(),X3_TENSOR_UINT8,scales->shape,scaleBytes);
+        }else separateHead=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,head->shape,headBytes);
     }
     auto projection=CreateBF16ProjectionContext();if(!projection)throw X::Error("CUDA tied head context initialization failed");
-    table_=std::move(table);untiedHead_=std::move(separateHead);projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);return true;
+    table_=std::move(table);untiedHead_=std::move(separateHead);packedHead_=std::move(packedWeight);
+    packedHeadScales_=std::move(packedScales);packedHeadScale2_=headScale2;
+    projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);return true;
 }
 X::Value CUDATensorIO::Zeros(X::Value shape){return TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,Shape(shape));}
 X::Value CUDATensorIO::StorageView(X::Value source,X::Value dimensions){
@@ -316,9 +356,16 @@ X::Value CUDATensorIO::LogitsUnlocked(X::Value hidden,bool reuse,bool tokens){
     X::Tensor output;
     if(reuse){if(!SameShape(outputBuffer,outShape))outputBuffer=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,outShape);output=outputBuffer;}
     else output=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,outShape);
-    auto use=TensorHelper::AcquireGPU({{input,X3_TENSOR_READ},{HeadTable(),X3_TENSOR_READ},{inputBuffer,X3_TENSOR_WRITE},{output,X3_TENSOR_WRITE}});
+    const bool packed=packedHead_.IsValid();
+    std::vector<std::pair<X::Tensor,X3TensorAccess>> accesses{{input,X3_TENSOR_READ},{packed?packedHead_:HeadTable(),X3_TENSOR_READ},
+        {inputBuffer,X3_TENSOR_WRITE},{output,X3_TENSOR_WRITE}};
+    if(packed)accesses.push_back({packedHeadScales_,X3_TENSOR_READ});
+    auto use=TensorHelper::AcquireGPU(accesses);
     Check(runConvertFP32ToBF16Async(static_cast<const float*>(a.data),static_cast<bfloat16*>(inputBuffer.Info().data),rows*width_,CurrentExecutionStream()));
-    if(RunBF16Projection(projection_,inputBuffer.Info().data,HeadTable().Info().data,output.Info().data,rows,width_,vocab_,CurrentExecutionStream()))
+    if(packed)Check(RunModelOptNVFP4Projection(inputBuffer.Info().data,
+        static_cast<const unsigned char*>(packedHead_.Info().data),static_cast<const unsigned char*>(packedHeadScales_.Info().data),
+        packedHeadScale2_,output.Info().data,int(rows),vocab_,width_,CurrentExecutionStream()));
+    else if(RunBF16Projection(projection_,inputBuffer.Info().data,HeadTable().Info().data,output.Info().data,rows,width_,vocab_,CurrentExecutionStream()))
         throw X::Error("CUDA tied head projection failed");
     use.Finish();return output;
 }
@@ -359,6 +406,7 @@ X::Value CUDATensorIO::HeadCandidates(X::Value selectedRows,int64_t count,bool t
 }
 X::Value CUDATensorIO::PredictIndexed(X::Value hidden,X::Value candidates){
     std::lock_guard<std::mutex> lock(mutex_);X::Tensor query(hidden),indices(candidates);auto a=query.Info(),b=indices.Info();
+    if(packedHead_.IsValid())throw X::Error("Indexed NVFP4 head is not implemented; use full-head prediction");
     Require(a,X3_TENSOR_FLOAT32);Require(b,X3_TENSOR_INT32);
     if(!table_.IsValid()||a.rank!=2||b.rank!=2||a.shape[0]<1||a.shape[0]>8||a.shape[1]!=width_||a.shape[0]!=b.shape[0]||b.shape[1]>65536||b.shape[1]>vocab_)
         throw X::Error("CUDA indexed proposal head shape invalid");
@@ -398,9 +446,10 @@ std::string CUDATensorIO::MemoryJson() const{
     for(const auto& item:projectionWeightGroups_)groupBytes+=bytes(item.second);
     poolBytes=groupBytes;
     for(const auto& item:projectionWeights_)if(!projectionWeightGroupMembers_.count(item.first))poolBytes+=bytes(item.second);
-    return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_tied",!untiedHead_.IsValid()},
-        {"embedding_table_bytes",bytes(table_)},{"untied_head_bytes",bytes(untiedHead_)},
-        {"embedding_head_shared_bytes",untiedHead_.IsValid()?0:bytes(table_)},{"head_input_bytes",bytes(headInput_)+bytes(tokenHeadInput_)},{"head_output_bytes",bytes(headOutput_)+bytes(tokenHeadOutput_)},
+    return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_tied",!untiedHead_.IsValid()&&!packedHead_.IsValid()},
+        {"embedding_table_bytes",bytes(table_)},{"untied_head_bytes",bytes(untiedHead_)+bytes(packedHead_)+bytes(packedHeadScales_)},
+        {"head_precision",packedHead_.IsValid()?"modelopt_nvfp4_w4a16":"bf16"},
+        {"embedding_head_shared_bytes",untiedHead_.IsValid()||packedHead_.IsValid()?0:bytes(table_)},{"head_input_bytes",bytes(headInput_)+bytes(tokenHeadInput_)},{"head_output_bytes",bytes(headOutput_)+bytes(tokenHeadOutput_)},
         {"single_head_input_bytes",bytes(headInput_)},{"single_head_output_bytes",bytes(headOutput_)},
         {"token_head_input_bytes",bytes(tokenHeadInput_)},{"token_head_output_bytes",bytes(tokenHeadOutput_)},
         {"candidate_workspace_bytes",bytes(candidateScratch_)},{"candidate_index_bytes",bytes(candidateOutput_)},

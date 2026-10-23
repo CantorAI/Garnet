@@ -330,3 +330,47 @@ These upstream claims are not target measurements. WSL Python prerequisite
 installation is active; reference package installation and model load remain
 unverified. Separate engine environments share a uv cache within the single
 study-owned WSL disk; neither script downloads a second model copy.
+
+## P015 — 2026-10-23: integrated packed output head and actual checkpoint probe
+
+Connected the direct NVFP4 W4A16 primitive to CUDATensorIO full-head logits and
+prediction. Admission requires ModelOpt config, exact packed geometry, block16
+E4M3 scales, finite positive scalar scales and nonnegative finite block scales.
+Unsupported indexed packed-head execution explicitly rejects instead of falling
+back to embeddings. Close/reopen clears packed state. Memory reporting labels
+head_precision=modelopt_nvfp4_w4a16 and counts compressed weights plus scales.
+This is an explicit W4A16 execution arm of the mixed checkpoint; it must not be
+reported as equivalent to the checkpoint's W4A4 activation recipe.
+
+Caught a source-sync timestamp defect before claiming the integration passed:
+ZIP timestamps carry no time zone, and sender/target zones differ by15 hours.
+Two logged builds therefore reported success without rebuilding the changed C++
+object. Preserved those attempts. Forced affected source timestamps on the target;
+nvfp4-head-target-clock-rebuild actually compiled cuda_tensor_io.cpp and linked
+successfully. Source transfer now records epoch mtime_ns, restored after SHA256
+verification, avoiding reliance on ZIP local time. Future evidence should retain
+both source and binary hashes and verify behavior, not infer it from build exit0.
+
+rtx5090-nvfp4-head-integration completed exit0: original five tied/untied/rejection
+cases plus valid packed head exact logits and invalid scalar rejection. The18
+CPU preparation/metrics/ledger tests also passed after these source changes.
+
+actual-checkpoint-nvfp4-head completed exit0 against the pinned downloaded real
+NVIDIA checkpoint. It opened the248320x5120 head without BF16 weight expansion,
+computed full logits for a sparse four-coordinate hidden vector, and checked11
+rows across the vocabulary against independently decoded checkpoint byte slices.
+All11 passed the1% relative or1e-6 absolute criterion (BF16 output rounding);
+raw expected/actual values and exact source bytes are retained in
+results/real-head-oracle.json and results/real-head-checks.json.
+Oracle SHA256: efdfca5e97984e7e36b778b25dc957924ac6fb56a4798b4f41887e756c6af36d.
+Tested Garnet DLL SHA256: 212cb70e9e810d6ee325dbe00e715e8b746600e693e854548cc5538fc21ef2eaa.
+Owned embedding allocation2542796800 bytes; packed head plus scales715161600
+bytes. These are component allocations, not model peak VRAM. No full-model
+quality, TTFT, decode speed, throughput or2x result is established by this probe.
+
+WSL Python prerequisite setup completed exit0. vLLM0.32.0 installation is now
+active in the study-owned WSL disk with shared uv cache; its terminal result and
+GPU/model load checks are pending. SGLang installation has not yet run.
+Remaining critical path: mixed FP8/NVFP4 text projection integration, Blackwell
+W4A4 tensor-core path,27B model/vision admission and parity, then measured
+reference engines and Garnet under the matched benchmark contract.

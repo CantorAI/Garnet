@@ -18,7 +18,15 @@ try:
         assert info['untied_head_bytes'] == (0 if kind == 'tied' else 4096)
         checks.append({'case':kind,'exact_logits':True,'embedding_unchanged':True})
         io.close()
-    for kind in ('packed','missing'):
+    io.open(os.path.join(root,'nvfp4'))
+    hidden=io.from_host([2.,3.]+[0.]*62,[1,64])
+    assert garnet.tensor_to_cpu(io.logits(hidden)).tolist()==[-2.]*32
+    info=json.loads(io.memory_json())
+    assert not info['embedding_head_tied'] and info['head_precision']=='modelopt_nvfp4_w4a16'
+    assert info['untied_head_bytes']==1152
+    checks.append({'case':'nvfp4_head','exact_logits':True,'packed_bytes':1152})
+    io.close()
+    for kind in ('packed','missing','bad_scale'):
         rejected = False
         try: io.open(os.path.join(root,kind))
         except Exception: rejected = True

@@ -15,6 +15,8 @@ class CUDATensorIO {
     SafeTensorsIndex index_;
     X::Tensor table_,headInput_,headOutput_,tokenHeadInput_,tokenHeadOutput_;
     X::Tensor untiedHead_;
+    X::Tensor packedHead_,packedHeadScales_;
+    float packedHeadScale2_=0;
     X::Tensor candidateScratch_,candidateOutput_,indexedScores_,indexedIds_,indexedValues_;
     std::unordered_map<std::string,X::Tensor> projectionWeights_;
     std::unordered_map<std::string,X::Tensor> projectionWeightGroups_;
