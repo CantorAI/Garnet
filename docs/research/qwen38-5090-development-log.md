@@ -471,3 +471,23 @@ Both attempts append to sglang-server.log. Its text/image smoke is not yet prove
 
 The integration/performance goal remains incomplete. There are no controlled
 benchmarks or measured2x speedup results yet.
+
+## P018 — 2026-10-23: consistent Linux reference compiler lock
+
+The SGLang linker-fixed retry terminated exit9 after loading all three shards.
+Its next FlashInfer JIT failed a CUDA compiler/header compatibility check:
+automatic dependency resolution had installed nvcc/CRT/NVVM13.4.92 alongside
+framework CUDA13.0 runtime headers. This was not a model architecture failure.
+Verified official package availability and added an explicit Linux compiler lock:
+nvcc/CRT/NVVM13.0.88 plus CCCL13.0.85. The alignment script preserves original
+freezes and writes a separate freeze-cuda13.0.txt and nvcc-cuda13.0.txt after
+successful completion. The installed framework runtime pin is retained.
+
+Job sglang-align-cuda13-compiler is active, downloading the pinned compiler
+components. Its final result and a fresh SGLang model retry are still pending.
+The installer now applies the compiler lock and verified linker-layout helper
+before freezing the environment. Future vLLM starts also expose their environment
+bin and CUDA_HOME for FlashInfer discovery; vLLM's existing environment must be
+aligned with the same compiler lock before that modified script is rerun.
+Original smoke results remain valid for their earlier recorded configuration.
+No controlled benchmark has been collected, and the2x target remains unproven.

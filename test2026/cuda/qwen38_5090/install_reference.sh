@@ -20,6 +20,8 @@ fi
 uv="$runtime/bootstrap/bin/uv"
 "$uv" venv --python /usr/bin/python3 "$runtime/$engine"
 "$uv" pip install --python "$runtime/$engine/bin/python" "$requirement"
+"$uv" pip install --python "$runtime/$engine/bin/python" -r "$(dirname "$0")/linux-reference-compiler-requirements.txt"
+"$runtime/$engine/bin/python" "$(dirname "$0")/fix_reference_cuda_layout.py" "$engine"
 "$uv" pip freeze --python "$runtime/$engine/bin/python" > "$study/results/references/$engine/freeze.txt"
 "$runtime/$engine/bin/python" - <<'PY'
 import json,torch,importlib.metadata

@@ -4,6 +4,8 @@ study=/mnt/d/CantorAI/5090-study-20261023
 export HF_HUB_OFFLINE=1
 export HF_HOME=/opt/cantorai5090/huggingface
 export CUDA_VISIBLE_DEVICES=0
+export PATH="/opt/cantorai5090/vllm/bin:$PATH"
+export CUDA_HOME=/opt/cantorai5090/vllm/lib/python3.12/site-packages/nvidia/cu13
 export VLLM_CACHE_ROOT=/opt/cantorai5090/vllm-cache
 export TRITON_CACHE_DIR=/opt/cantorai5090/triton-cache
 printf '\n=== vLLM initial NVFP4 VLM load, %s ===\n' "$(date -u +%FT%TZ)" >> "$study/results/vllm-server.log"
