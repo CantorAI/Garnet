@@ -1,3 +1,4 @@
 # Preserve exact downloaded header bytes and recorded patch provenance.
 test2026/cuda/qwen38_5090/evidence/nvfp4-headers/*.header.json -text -diff
+test2026/cuda/qwen38_5090/evidence/int4-headers/*.header.json -text -diff
 test2026/cuda/qwen38_5090/evidence/native-head/source.patch -text -diff

@@ -11,6 +11,12 @@ from urllib.request import Request, urlopen
 MODEL = 'nvidia/Qwen3.8-27B-NVFP4'
 REVISION = '482ca0f3832238542f8f5295dde86b5f22711d80'
 
+PINS = {
+    MODEL:(REVISION,24*1024**3),
+    'Qwen/Qwen3.5-4B':('851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a',12*1024**3),
+    'pearsonkyle/Qwen3.8-27B-GPTQ-W4A16':('4e2c2d8f592d5641beefa6a75357f43cf3756392',36*1024**3),
+}
+
 
 def digest(path):
     h = hashlib.sha256()
@@ -26,12 +32,14 @@ def main():
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text())
     args.manifest.unlink()
-    if manifest['model'] != MODEL or manifest['revision'] != REVISION:
-        raise ValueError('Only the verified pinned checkpoint is admitted')
+    model,revision=manifest['model'],manifest['revision']
+    pin=PINS.get(model)
+    if pin is None or revision!=pin[0]:
+        raise ValueError('Only verified study checkpoint revisions are admitted')
     root = args.output
     root.mkdir(parents=True,exist_ok=True)
     total = sum(item['bytes'] for item in manifest['files'])
-    if total > 24*1024**3: raise ValueError('Manifest exceeds the initial download budget')
+    if total > pin[1]: raise ValueError('Manifest exceeds the checkpoint-specific download budget')
     if shutil.disk_usage(root).free < total+2*1024**3:
         raise ValueError('Insufficient free disk for this single checkpoint')
     progress, completed, lock = {}, [], threading.Lock()
@@ -39,7 +47,7 @@ def main():
         with lock:
             progress[name] = {'bytes':size,'status':status}
             temp = root/'download-progress.tmp'
-            temp.write_text(json.dumps({'model':MODEL,'revision':REVISION,'files':progress},indent=2))
+            temp.write_text(json.dumps({'model':model,'revision':revision,'files':progress},indent=2))
             os.replace(temp,root/'download-progress.json')
     def download(item):
         name = item['name']
@@ -92,8 +100,8 @@ def main():
                 time.sleep(2)
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         for result in pool.map(download,manifest['files']): completed.append(result)
-    provenance = {'model':MODEL,'revision':REVISION,'files':completed,
-                  'primary_metadata_source':'https://huggingface.co/api/models/'+MODEL+'/revision/'+REVISION,
+    provenance = {'model':model,'revision':revision,'files':completed,
+                  'primary_metadata_source':'https://huggingface.co/api/models/'+model+'/revision/'+revision,
                   'scope':'Artifact bytes verified; inference and performance unverified'}
     (root/'download-provenance.json').write_text(json.dumps(provenance,indent=2))
     print(json.dumps({'status':'verified','files':len(completed),'bytes':sum(x['bytes'] for x in completed)}))

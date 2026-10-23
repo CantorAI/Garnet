@@ -700,3 +700,37 @@ its SHA256 is c89a092af70c2e8883fbd89b593ddedff49c163b92be3d2dd75bcc1f5151617d6.
 This is not complete language-model quality. Full64-layer token smoke is prepared
 and remains the next gate; no Garnet TTFT/decode/throughput benchmark exists yet.
 INT4/4B comparisons, tuned reference profiles and the2x target remain outstanding.
+
+## P026 - 2026-10-23: full native text and comparison artifact gates
+
+Job native-full64-text-smoke completed exit0 on CD-RTX5090. All64 decoder layers
+were constructed at batch1/capacity4096 with native W4A4 head. The saved26-token
+SGLang prompt produced exact token IDs[19,248046], decoded text4. The I/O report
+recorded whole-device usage28,230,221,824 bytes while live; this is a snapshot,
+not peak VRAM. Compilation and smoke duration are not TTFT or decode measurements.
+Full VLM, broader quality, serving and performance gates remain open.
+
+The pinned Qwen3.5-4B download completed exit0 in the same fixed study folder:
+three LFS artifacts totaling9,332,636,078 bytes verified against upstream hashes.
+This establishes artifact integrity, not loaded VRAM or inference performance.
+
+Correction to the earlier INT4 config-only interpretation: actual pinned index,
+bounded safetensors headers and I64 shape payload show all496 text projections,
+including GDN qkv/z/a/b/out, are packed INT4. The config ignore list naming parent
+containers does not establish exclusion of their child projections. lm_head,
+embedding, vision and MTP remain unquantized. Packed tensors are I32[n,k/8],
+scales BF16[n,k/128], shapes I64[2]; no g_idx/zero_point tensors were found.
+Shape payload SHA256429e9656efdf3b7b321624eb3ecf23e3c3a51b964e35fba8d94ac56dfb9eef5d.
+The installed compressed-tensors0.18.0 CPU fixture passed offset-binary low-lane-first
+packing/roundtrip, helper SHA2563fe695db3e38ee665d5c459ddce366df3e2dfed51be70058bcc6a9838117477d.
+No actual INT4 weight numerical/kernel test or benchmark has passed yet.
+This candidate has both model.safetensors and a sidecar index; a future loader
+must open the index explicitly to include vision/MTP sidecars.
+
+Comparison download admission now uses an explicit pinned registry and per-model
+disk caps, rejects unknown revisions before network/output, and preserves public
+hash provenance without signed transport URLs. All31 CPU study tests pass.
+Vision preprocessing still needs its own correctness gate: the pinned processor's
+minimum65536 pixels differs from Garnet's existing JPEG caller minimum1024.
+The initial reference224x224 PNG yields64 image tokens; do not silently compare
+against49 native tokens or substitute a different encoded image in a matched run.

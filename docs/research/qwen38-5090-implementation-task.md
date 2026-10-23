@@ -4,7 +4,8 @@ Status: pinned architecture/quantization audit, native SM120 build, NVFP4/FP8
 projection/plugin tests, real layer0 MLP parity, real GDN/full-attention decoder-layer
 parity at4K capacity, and native W4A4 head checks have passed. Both references have
 passed text/image smoke; SGLang's initial eager profile now has raw streaming and
-concurrency measurements. The27 CPU tests pass. Full64-layer/vision validation,
+concurrency measurements. The31 CPU tests pass. Full64-layer native text smoke
+also reproduces the reference token IDs. Vision validation,
 serving integration, tuned matched comparisons and the2x target remain incomplete.
 No Garnet full-model timing or successful2x comparison is claimed.
 
@@ -39,10 +40,13 @@ Pinned configs, revisions, URLs and SHA-256 values are in
   `4e2c2d8f592d5641beefa6a75357f43cf3756392`.
 
 The INT4 candidate config uses compressed-tensors pack-quantized, symmetric
-group128 INT4 weights and unquantized activations (W4A16). It ignores linear
-attention, vision, MTP and lm_head; it is not an all-layer4-bit checkpoint.
-Availability/config are verified; tensor packing, image inference, SM120 kernel
-dispatch and Garnet compatibility remain unverified. Keep it a candidate until
+group128 INT4 weights and unquantized activations (W4A16). Actual index/header
+inspection proves all496 text projections, including linear attention, are packed;
+lm_head, embedding, vision and MTP remain unquantized. The earlier config-only
+inference about ignored linear attention was incorrect. Installed compressed-tensors
+0.18.0 passes the CPU packing fixture: eight offset-binary nibbles per int32,
+low lane first, decoded value nibble minus8. Actual-weight numerical checks,
+image inference, SM120 kernel dispatch and Garnet compatibility remain unverified. Keep it a candidate until
 these pass. Do not compare quantization recipes as if identical.
 
 The 27B config uses `Qwen3_5ForConditionalGeneration`, model_type `qwen3_5`.
@@ -251,8 +255,9 @@ prefill. Initial strict CUDA factories are batch1/capacity32..4096; general serv
 admission remains closed. Do not silently truncate context or lower the comparison
 capacity to fit larger batches.
 
-1. Construct/run the full64-layer decoder with4096 capacity, using the saved
-   reference26-token prompt and[19,248046] expected output. Validate image processing
+1. Full64-layer decoder smoke passed with4096 capacity, the saved reference26-token
+   prompt and exact[19,248046] output. This is not broad quality or a benchmark.
+   Next validate image processing
    and vision plus full VLM generation. The reference224x224 PNG smoke produced64
    image tokens; inspect actual resize/normalization rather than assuming49.
 2. Establish text/image quality beyond basic smoke and record the precision
