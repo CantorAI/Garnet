@@ -79,3 +79,9 @@ target_include_directories(garnet_int4_trt_test PRIVATE "${GARNET_TENSORRT_ROOT}
 target_link_libraries(garnet_int4_trt_test PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
 target_compile_definitions(garnet_int4_trt_test PRIVATE NOMINMAX)
 target_compile_features(garnet_int4_trt_test PRIVATE cxx_std_17)
+
+add_executable(garnet_ct_int4_test ct_int4_test.cu "${GARNET_STUDY_SOURCE}/src/cuda/ct_int4.cu")
+target_include_directories(garnet_ct_int4_test PRIVATE "${GARNET_STUDY_SOURCE}/src/cuda")
+target_link_libraries(garnet_ct_int4_test PRIVATE CUDA::cudart)
+set_target_properties(garnet_ct_int4_test PROPERTIES CUDA_STANDARD 17 CXX_STANDARD 17)
+add_test(NAME garnet_ct_int4_arithmetic COMMAND garnet_ct_int4_test)
