@@ -99,13 +99,17 @@ with zipfile.ZipFile(archive) as z:
     assert len(run['cohorts']) == 8
     samples = [json.loads(line) for line in z.read(prefix+manifest['run_id']+'-vram.jsonl').decode().splitlines()]
     measured = 0
+    dispatch_by_cohort = {}
+    dispatch_index = {request_id:index for index,group in enumerate(dispatch) for request_id in group["request_ids"]}
     for cohort in manifest['cohorts']:
         assert cohort['concurrency'] in (1,2,4,8) and len(cohort['request_keys']) == 8
         phase = cohort['case']+'-c'+str(cohort['concurrency'])
         rows = [s for s in samples if s['phase'] == phase][:cohort['samples']]
         assert len(rows) == cohort['samples'] and max(s['used_bytes'] for s in rows) == cohort['sampled_peak_adapter_used_bytes']
+        cohort_native_ids=[]
         for key in cohort['request_keys']:
             event = final(prefix+key+'-events.jsonl'); work = workers[event['id']]
+            cohort_native_ids.append(event['id'])
             assert event['response_token_ids'] == work['generated_ids'] and len(work['generated_ids']) == 128
             assert event['prompt_token_ids'] == work['prompt_ids']
             assert event['study']['generation_mode'] == work['generation_mode'] == 'greedy_target'
@@ -113,6 +117,12 @@ with zipfile.ZipFile(archive) as z:
             if cohort['case'] == 'image':
                 assert sha(base64.b64decode(body['messages'][0]['content'][0]['image_url']['url'].split(',',1)[1])) == work['image_sha256']
             measured += 1
+        indices={dispatch_index[key] for key in cohort_native_ids}
+        groups=[dispatch[index] for index in indices]
+        assert {key for group in groups for key in group['request_ids']}==set(cohort_native_ids)
+        dispatch_by_cohort[phase]={'physical_capacity':2,'groups':len(groups),
+            'single_real_row_groups':sum(g['real_rows']==1 for g in groups),
+            'two_real_row_groups':sum(g['real_rows']==2 for g in groups)}
     assert measured == 64
     metadata = doc(native+'metadata.json')
     assert metadata['ready'] == ready[0] and metadata['physical_batch'] == 2 and metadata['grouping_delay_ms'] == 2
@@ -139,6 +149,7 @@ with zipfile.ZipFile(archive) as z:
     assert resource['sampled_memory']['sampled_peak_adapter_used_bytes'] == max(v['used_bytes'] for v in lifetime)
     result = {'status':'batch_http_pilot_independently_verified','archive_sha256':sha(archive.read_bytes()),
         'library_sha256':evidence['library_sha256'],'files_verified':len(evidence['files']),'serialization_regression_captures':4,'measured_sse_worker_pairs':measured,'physical_batch':2,
+        'actual_dispatch_by_cohort':dispatch_by_cohort,
         'dispatch_group_sizes':{str(n):sum(g['real_rows']==n for g in dispatch) for n in (1,2)},
         'run':run,'references':references,'comparison':compare(run,references),'raw_cohorts':manifest['cohorts'],
         'two_x_established':False,'scope':'One B2 MTP0 fixed-batch pilot; C4/8 queue physical B2 groups. Bounded quality; ordinary references, tuning/repeats/4K/broad quality pending.'}
