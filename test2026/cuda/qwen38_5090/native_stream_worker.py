@@ -27,6 +27,7 @@ try:
         decoder=create_cuda_packed_decoder(checkpoint,config,4096,retain_linear_inputs=mtp_depth>0)
     else:decoder=create_cuda_decoder(checkpoint,config,4096,chunk_size=16,fused_delta=True,fused_attention=True)
     decoder.enable_cuda_graph(True);vision.graph.enable_cuda_graph(True)
+    decoder.resident_controls=profile['resident_controls']
     vision_policy='1' if profile['resident'] else '0'
     if vision_policy not in ('0','1'):raise ValueError('Invalid resident vision profile')
     if vision_policy=='1':vision.enable_resident_input(decoder.io)
@@ -38,7 +39,7 @@ try:
         speculative=create_cuda_mtp_session(decoder,checkpoint,config,stops,mtp_depth,draft_chunk_size=mtp_chunk)
     shared_pool=json.loads(decoder.io.memory_json()) if profile['shared'] else {}
     shared_counts={key:shared_pool.get(key) for key in ('compressed_projection_pool_entries','compressed_nvfp4_entries','compressed_fp8_entries')} if profile['shared'] else None
-    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'reuse_verified_head':bool(speculative is not None and speculative.verifier.reuse_verified_head),'joined_mlp_projections':bool(getattr(decoder,'joined_mlp_projections',False)),'shared_compressed_pool':shared_counts,'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
+    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'resident_request_controls':bool(decoder.resident_controls),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'reuse_verified_head':bool(speculative is not None and speculative.verifier.reuse_verified_head),'joined_mlp_projections':bool(getattr(decoder,'joined_mlp_projections',False)),'shared_compressed_pool':shared_counts,'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
     for item in requests():
         key=item['id'];body=item['body'];started=time.monotonic()
         try:

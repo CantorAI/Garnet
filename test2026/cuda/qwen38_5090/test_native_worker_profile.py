@@ -24,6 +24,14 @@ class WorkerProfileTests(unittest.TestCase):
             values=dict(base,GARNET_STUDY_JOINED_MLP='1');values.update(override)
             with self.subTest(override=override),self.assertRaises(ValueError):resolve_profile(values)
 
+    def test_resident_controls_are_explicit_and_bounded(self):
+        base={'GARNET_STUDY_PACKED':'1','GARNET_STUDY_SHARED_COMPRESSED':'1','GARNET_STUDY_MTP_DEPTH':'3','GARNET_STUDY_JOINED_MLP':'1'}
+        self.assertFalse(resolve_profile(base)['resident_controls'])
+        self.assertTrue(resolve_profile(dict(base,GARNET_STUDY_RESIDENT_CONTROLS='1'))['resident_controls'])
+        for override in ({'GARNET_STUDY_RESIDENT_CONTROLS':'yes'},{'GARNET_STUDY_JOINED_MLP':'0'},{'GARNET_STUDY_MTP_DEPTH':'0'},{'GARNET_STUDY_SHARED_COMPRESSED':'0'},{'GARNET_STUDY_REUSE_VERIFIED_HEAD':'1'}):
+            values=dict(base,GARNET_STUDY_RESIDENT_CONTROLS='1');values.update(override)
+            with self.subTest(override=override),self.assertRaises(ValueError):resolve_profile(values)
+
     def test_legacy_defaults(self):
         self.assertEqual(resolve_profile({})['decode_chunk'],16)
         self.assertEqual(resolve_profile({'GARNET_STUDY_PACKED':'1','GARNET_STUDY_MTP_DEPTH':'7'})['draft_chunk'],16)
