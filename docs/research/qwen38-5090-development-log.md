@@ -2063,3 +2063,33 @@ Downloaded joined-full-evidence.zip,37681702 bytes,SHA256 b3dbb9267baa35a197b28a
 Installed Python-only HTTP source e154b6291 after verifying6515 prior source files and the exact qualified2d9027 DLL. Installer forbids native/CMake changes; source package contains20 Python/launcher/method/log updates. Native build remains846b1e12f and no rebuild occurred. Retained prior source/manifests and current DLL under build/qualified-before-joined-http. Confirmed no listener on18082 before starting.
 
 Original server handle native-mtp3-shared-joined-server is running on helper95279. Original driver native-mtp3-shared-joined-http-workflow is running on helper48577, waiting for actual ready profile before20 self-target/MTP pairs,six pinned goldens,same-binary full-model gates,real SSE and one matched B1 pilot. Do not synchronize source,rebuild,start another GPU job or restart these handles solely on an observation timeout. Success-only cleanup watcher joined-pilot-success-cleanup on helper48577 waits for terminal successful pilot/manifest,then identity-guards the exact study bridge process tree before shutdown. A failed pilot is retained for inspection and does not trigger this success-only cleanup. No benchmark result yet;2x remains unmet.
+
+
+### P143 — joined MLP matched B1 pilot verified: small observed difference,2x unmet
+
+Original native-mtp3-shared-joined-http-workflow completed exit0;20 exact target/MTP pairs,6 original profile goldens,same-binary full-model gates and2 real SSE gates passed. Run7471e2a5a057487d9389a8139f0b80f1,application e154b6291,native846b1e12f,DLL2d902723b85f4353db3c3feccf2088b2ab412af6deb23b529caa3bb089d7708c. Actual worker joined=true,head reuse=false,336 mixed matrices,prefill128/decode4,MTP3/draft4,direct vision. Per cohort8 measured requests,128 outputs,text41/image104 prompt tokens,IPv4. This is short-context with4096 capacity,not a4096-token prompt.
+
+[
+  {
+    "case": "text",
+    "concurrency": 1,
+    "ttft_median_ms": 64.71939999755705,
+    "decode_median_tokens_per_second": 72.25899562353953,
+    "output_tokens_per_second": 69.18361242908233,
+    "sampled_peak_adapter_used_bytes": 28357025792
+  },
+  {
+    "case": "image",
+    "concurrency": 1,
+    "ttft_median_ms": 103.71515000224463,
+    "decode_median_tokens_per_second": 74.1574261696415,
+    "output_tokens_per_second": 67.90184904425222,
+    "sampled_peak_adapter_used_bytes": 28363317248
+  }
+]
+
+Offline archive verification completed: native-mtp3-shared-joined-evidence.zip1072905 bytes,SHA256 19bafb0f2cf8f518ad199677ad509c66e903abbecd94eb122b498048a437081f. CRC/all193 manifest file hashes,committed producer sources,full-model archive linkage,20 diagnostic pairs,all16 measured full SSE token lists versus retained ordinary target,head reuse OFF/evaluation counters,2 stream gates,raw memory maxima,terminal workflow0 and identity-guarded successful shutdown checked. Server ledger exit1 is intentional taskkill after terminal pilot,not a benchmark failure. No study server/GPU worker remains live. Native/source remain2d9027/e154 on remote.
+
+Relative to prior separate original-MLP shared pilot: decode ratios1.03283795(text),1.03158304(image);aggregate1.03097673/1.02653677;TTFT ratios0.90806526/0.98704796. Relative to faster supplied ordinary vLLM/SGLang baseline: decode1.05515503/1.08262861;aggregate1.08740609/1.07412061;TTFT0.42477626/0.66320968. Request bytes,transport and counts match. These are separate single pilots on different source revisions;no controlled causal attribution,repeated-confidence or fastest tuned-reference claim. Text TTFT is below half the ordinary reference in this trial;image is not.2x decode/concurrency remains unmet.
+
+Generated and visually checked outputs/Garnet-Joined-MLP-vs-References-B1.png/.svg,with reproducible plot/data and clear2x/half-TTFT lines and scope. Keep joined MLP opt-in. Next quantify same-binary A/B repeat variability and investigate actual cuBLASLt algorithm/workspace/kernel efficiency,with cold-weight component and full-model gates. Consult the installed-version constraints before trying operand/layout changes: NVIDIA cuBLAS13.2.1 documentation https://docs.nvidia.com/cuda/archive/13.2.1/cublas/index.html ; FP4 block-scaled matmul has transpose/scaling/alignment restrictions,so arbitrary layout support or speed must not be assumed. No alternate layout or algorithm benchmark exists yet. INT4 and4B serving/reference comparisons,native batching correctness,full context,broad quality and tuned-reference/MTP baselines remain open.
