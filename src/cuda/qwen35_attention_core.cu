@@ -88,12 +88,12 @@ __global__ void context(Qwen35AttentionCoreConfig c,const float* value,const flo
 }
 // Research candidate: one block per query, scores and softmax only over visible keys.
 // Keep the original three-stage kernel available for correctness/performance A/B.
-__global__ void compact(Qwen35AttentionCoreConfig c,const float* query,const float* key,
+template<bool tiled> __global__ void compact(Qwen35AttentionCoreConfig c,const float* query,const float* key,
  const float* value,const float* gate,const float* slots,const float* active,float* output){
- const int row=blockIdx.x,b=row/(c.tokens*c.heads),t=(row/c.heads)%c.tokens;
- if(active[b*c.tokens+t]==0){if(threadIdx.x<c.dim)output[size_t(row)*c.dim+threadIdx.x]=0;return;}
+ const int row=tiled?blockIdx.y:blockIdx.x,b=row/(c.tokens*c.heads),t=(row/c.heads)%c.tokens;
+ if(active[b*c.tokens+t]==0){if(tiled){if(threadIdx.x<32)output[size_t(row)*c.dim+blockIdx.x*32+threadIdx.x]=0;}else if(threadIdx.x<c.dim)output[size_t(row)*c.dim+threadIdx.x]=0;return;}
  const int end=min(c.capacity,int(slots[b*c.tokens+t])+1);
- if(end<1){if(threadIdx.x<c.dim)output[size_t(row)*c.dim+threadIdx.x]=0;return;}
+ if(end<1){if(tiled){if(threadIdx.x<32)output[size_t(row)*c.dim+blockIdx.x*32+threadIdx.x]=0;}else if(threadIdx.x<c.dim)output[size_t(row)*c.dim+threadIdx.x]=0;return;}
  const int head=row%c.heads,kh=head/(c.heads/c.kv),lane=threadIdx.x%32,warp=threadIdx.x/32;
  __shared__ float values[8192],temporary[8],result,partial[8][32];
  for(int position=warp;position<end;position+=8){
@@ -108,7 +108,7 @@ __global__ void compact(Qwen35AttentionCoreConfig c,const float* query,const flo
  total=blockReduce(total,false,temporary,&result);
  for(int k=threadIdx.x;k<end;k+=256)values[k]/=total;
  __syncthreads();
- for(int tile=0;tile<c.dim/32;++tile){
+ for(int tile=tiled?int(blockIdx.x):0;tile<(tiled?int(blockIdx.x)+1:c.dim/32);++tile){
   const int d=tile*32+lane;float sum=0;
   for(int k=warp;k<end;k+=8)sum=fmaf(values[k],value[((size_t(b)*c.kv+kh)*c.capacity+k)*c.dim+d],sum);
   partial[warp][lane]=sum;__syncthreads();
@@ -148,7 +148,21 @@ int RunQwen35AttentionCompact(const Qwen35AttentionCoreConfig& c,const void* con
     cudaMemcpyAsync(out[2],in[5],bytes,cudaMemcpyDeviceToDevice,stream)!=cudaSuccess)return 1;
  int updates=c.batch*c.tokens*c.kv*c.dim,rows=c.batch*c.tokens*c.heads;
  writeKeys<<<(updates+255)/256,256,0,stream>>>(c,(const float*)in[1],(const float*)in[2],(const float*)in[6],(const float*)in[7],(float*)out[1],(float*)out[2]);
- compact<<<rows,256,0,stream>>>(c,(const float*)in[0],(const float*)out[1],(const float*)out[2],(const float*)in[3],(const float*)in[6],(const float*)in[7],(float*)out[0]);
+ compact<false><<<rows,256,0,stream>>>(c,(const float*)in[0],(const float*)out[1],(const float*)out[2],(const float*)in[3],(const float*)in[6],(const float*)in[7],(float*)out[0]);
+ return cudaPeekAtLastError()==cudaSuccess?0:1;
+}
+
+int RunQwen35AttentionCompactTiled(const Qwen35AttentionCoreConfig& c,const void* const* in,
+ void* const* out,void*,cudaStream_t stream) noexcept {
+ if(!valid(c)||!in||!out)return 1;
+ for(int i=0;i<8;++i)if(!in[i])return 1;
+ for(int i=0;i<3;++i)if(!out[i])return 1;
+ size_t bytes=size_t(c.batch)*c.kv*c.capacity*c.dim*sizeof(float);
+ if(cudaMemcpyAsync(out[1],in[4],bytes,cudaMemcpyDeviceToDevice,stream)!=cudaSuccess||
+    cudaMemcpyAsync(out[2],in[5],bytes,cudaMemcpyDeviceToDevice,stream)!=cudaSuccess)return 1;
+ int updates=c.batch*c.tokens*c.kv*c.dim,rows=c.batch*c.tokens*c.heads;
+ writeKeys<<<(updates+255)/256,256,0,stream>>>(c,(const float*)in[1],(const float*)in[2],(const float*)in[6],(const float*)in[7],(float*)out[1],(float*)out[2]);
+ compact<true><<<dim3(c.dim/32,rows),256,0,stream>>>(c,(const float*)in[0],(const float*)out[1],(const float*)out[2],(const float*)in[3],(const float*)in[6],(const float*)in[7],(float*)out[0]);
  return cudaPeekAtLastError()==cudaSuccess?0:1;
 }
 

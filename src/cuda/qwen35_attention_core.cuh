@@ -18,4 +18,8 @@ int RunQwen35AttentionCore(const Qwen35AttentionCoreConfig&,const void* const*,
 int RunQwen35AttentionCompact(const Qwen35AttentionCoreConfig&,const void* const*,
     void* const*,void*,cudaStream_t) noexcept;
 
+// Separate output-tiled candidate; replicates scores to expose more query work.
+int RunQwen35AttentionCompactTiled(const Qwen35AttentionCoreConfig&,const void* const*,
+    void* const*,void*,cudaStream_t) noexcept;
+
 }
