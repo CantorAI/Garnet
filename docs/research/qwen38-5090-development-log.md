@@ -2743,3 +2743,8 @@ Original supervised protocol job completed exit0; archive9024b81cccd60a3953b5c29
 ### Matched B2 MTP HTTP replay preparation (2026-10-24; pilot live)
 
 Local archive/replay methods retain the strict MTP source/workspace lineage and independent streaming proof alongside raw HTTP/SSE, worker tokens, dispatch groups, resource samples and ordinary vLLM/SGLang archives. In this equal-limit HTTP corpus, each two-real-row dispatch must record verified_mtp and valid MTP counters; single dispatches must record greedy_target. Each measured SSE completion must match worker IDs and generation mode. Per-cohort results explicitly count MTP versus greedy requests as well as actual physical group sizes. Metric replay and identical request-byte comparisons reuse the prior verified path. The current original pilot remains live; these methods are syntax-checked only and no performance is admitted until terminal archival and both independent replays.
+
+
+### Guarded physical B4 T8 launch preparation (2026-10-24; not launched)
+
+The earlier unrun B4 T8 retained-ID probe now has a fixed-folder launcher and lifecycle wrapper. It requires the current B2 MTP HTTP pilot to be terminal and independently verified with a hash-matching archive, plus unchanged native DLL/five build-source hashes and prior canonical numerical gates. GPU idle and owned SSD scratch checks remain mandatory. This prevents overlapping the live HTTP worker or moving to a larger batch without preserving its measurements. B4 T8 remains a separate unqualified numerical/memory candidate; only syntax and launch-argument checks have run.
