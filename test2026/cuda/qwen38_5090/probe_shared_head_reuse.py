@@ -1,5 +1,5 @@
 """Real full-model head-cache qualification followed by instrumented stage tracing."""
-import base64,ctypes,hashlib,json,os,sys,time
+import base64,hashlib,json,os,sys,time
 from pathlib import Path
 sys.path.insert(0,os.environ['GARNET_RUNTIME_ROOT']);sys.path.insert(0,os.getcwd())
 import garnet
@@ -11,7 +11,7 @@ if path.exists():raise FileExistsError('Preserve prior head reuse attempt')
 checkpoint=root/'models/Qwen3.8-27B-NVFP4';config=json.loads((checkpoint/'config.json').read_text())
 diagnostic=root/'results/shared-mtp-sequence-diagnostic';keys=['red','green','blue','bottom-blue']+['s3-'+case+'-c1-r'+str(i) for case in ('text','image') for i in range(8)]
 report={'status':'constructing','source':source_identity(),'cases':[],'stage_traces':[],
- 'scope':'Full shared T4/T128 MTP3, head reuse off/on compared against all twenty retained ordinary-target sequences. Only after correctness, instrumented device-wide-synchronized API stage wall traces. Not HTTP or kernel-only timing, no benchmark/2x claim.'}
+ 'scope':'Full shared T4/T128 MTP3, head reuse off/on compared against all twenty retained ordinary-target sequences. Only after correctness, instrumented native-stream-synchronized API stage wall traces. Not HTTP or kernel-only timing, no benchmark/2x claim.'}
 decoder=vision=session=None
 def save():path.write_text(json.dumps(report,indent=2))
 save()
@@ -61,14 +61,14 @@ try:
   if key not in ('red','green','blue','bottom-blue'):assert b['target_head_reuses']>0
   report['cases'].extend([reference,candidate]);save();print('SHARED_HEAD_REUSE_EXACT',key,flush=True)
  report['status']='correctness_passed_tracing';save()
- runtime=ctypes.WinDLL('cudart64_13.dll');sync=runtime.cudaDeviceSynchronize;sync.argtypes=[];sync.restype=ctypes.c_int
+ # Existing bounded native readback synchronizes the same execution stream.
+ # A single-word retained view keeps diagnostic copy overhead explicit/small.
+ barrier_tensor=io.storage_view(decoder.last_hidden,[1,1])
  def barrier():
-  code=sync()
-  if code:raise RuntimeError('cudaDeviceSynchronize failed: '+str(code))
- buffer=ctypes.create_unicode_buffer(32768)
- assert ctypes.windll.kernel32.GetModuleFileNameW(ctypes.c_void_p(runtime._handle),buffer,len(buffer))
- runtime_path=Path(buffer.value);report['profiling_runtime']={'path':str(runtime_path),'sha256':hashlib.sha256(runtime_path.read_bytes()).hexdigest(),
-  'scope':'Device-wide sync before/after each disjoint stage. Wall duration includes CPU, GPU and synchronization overhead; instrumentation alters scheduling. Not isolated CUDA kernel duration or production throughput.'}
+  raw=bytes(io.finite_f32_bytes(barrier_tensor))
+  if len(raw)!=4:raise RuntimeError('Diagnostic barrier must read exactly one F32 word')
+ report['profiling_barrier']={'operation':'finite_f32_bytes on retained first-word view of decoder.last_hidden','readback_bytes':4,
+  'scope':'Native current-execution-stream synchronization through four-byte diagnostic D2H readback before/after each disjoint stage. Wall duration includes CPU, GPU, readback and synchronization overhead; instrumentation alters scheduling. Not isolated CUDA kernel duration, device-wide synchronization or production throughput.'}
  original=[];current_trace=None
  def instrument(owner,name,label):
   method=getattr(owner,name);original.append((owner,name,method))
