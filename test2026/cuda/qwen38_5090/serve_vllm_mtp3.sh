@@ -11,6 +11,7 @@ export LIBRARY_PATH="/usr/lib/wsl/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
 export VLLM_CACHE_ROOT=/opt/cantorai5090/vllm-cache
 export TRITON_CACHE_DIR=/opt/cantorai5090/triton-cache
 printf '\n=== vLLM MTP3 decode-graph NVFP4 VLM candidate, %s ===\n' "$(date -u +%FT%TZ)" >> "$log"
+# MTP3 verifies4 query tokens per request; token buckets4/8/16/32 cover C1/2/4/8.
 # Candidate only: actual graph replay, admission, quality and timing must pass.
 # Explicit cache budget is not evidence of eight full4K admissions; inspect
 # resolved cache capacity and test admission before claiming that profile.
@@ -24,6 +25,6 @@ exec /opt/cantorai5090/vllm/bin/vllm serve "$study/models/Qwen3.8-27B-NVFP4" \
   --dtype bfloat16 --kv-cache-dtype bfloat16 --mamba-ssm-cache-dtype float32 \
   --no-enable-prefix-caching --kv-cache-memory-bytes 4294967296 \
   --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
-  --max-cudagraph-capture-size 8 \
-  --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,4,8]}' \
+  --max-cudagraph-capture-size 32 \
+  --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[4,8,16,32]}' \
   >> "$log" 2>&1
