@@ -1,11 +1,12 @@
 """Strict native4B HTTP smoke/repeats/streaming before a B1 pilot; no invented lengths."""
 from pathlib import Path
-import base64,hashlib,json,subprocess,sys,time,zipfile
+import argparse,base64,hashlib,json,subprocess,sys,time,zipfile
 from urllib.request import urlopen
 r=Path('D:/CantorAI/5090-study-20261023');p=r/'Garnet/test2026/cuda/qwen38_5090';sys.path.insert(0,str(p))
 from benchmark_stream import payload,request
 from validate_native_mtp_http import post
 from run_logged import source_identity
+parser=argparse.ArgumentParser();parser.add_argument('--quality-only',action='store_true');options=parser.parse_args()
 out=r/'results/native-4b-http-pilot';out.mkdir(exist_ok=False);url='http://127.0.0.1:18082';model='qwen35-4b-bf16'
 archive=r/'results/qwen35-4b-grid16-evidence.zip';assert hashlib.sha256(archive.read_bytes()).hexdigest()=='beb80c6e2aa69997eac5a96b03fa53ca8cd58674b654cb51a49652cceeb03c1b'
 with zipfile.ZipFile(archive) as z:old=json.loads(z.read('results/qwen35-4b-grid16-smoke/report.json'))
@@ -54,4 +55,5 @@ except Exception as error:report['status']='failed';report['error']=repr(error);
 files=[config,archive,r/'build/bin/garnet.dll',r/'build/bin/xlang3.exe',r/'serve-native-4b-http-worker.bat',r/'run-native-4b-http-pilot.py',p/'native_4b_stream_worker.py']
 metadata={'source':source_identity(),'health':health,'checkpoint_revision':old['checkpoint_revision'],'quality_gates':{'old_smoke_repeats':4,'vlm_semantics':4,'full128_repeat_pairs':16,'actual_sse_gates':2},'file_sha256':{str(f):hashlib.sha256(f.read_bytes()).hexdigest() for f in files},'scope':'4B BF16 target-only B1 short-prompt pilot after retained smoke/repeat/SSE gates. Not quality parity with27B, tuned references, GPU batching or2x admission.'}
 path=out/'metadata.json';path.write_text(json.dumps(metadata,indent=2),encoding='utf8');print('NATIVE_4B_HTTP_SMOKE_FULL128_REPEATS_AND_SSE_PASS',flush=True)
+if options.quality_only:raise SystemExit(0)
 subprocess.run([sys.executable,str(p/'benchmark_stream.py'),'--url',url,'--engine','garnet','--model',model,'--output',str(out/'benchmark'),'--metadata',str(path),'--concurrency','1','--requests','8','--warmups','2','--max-tokens','128','--workload-seed','3','--image-format','jpeg','--image-order','image-first','--image-nonce-pattern','binary-grid'],check=True)
