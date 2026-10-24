@@ -837,3 +837,14 @@ Next: validate complete native image-to-text behavior against matched reference
 requests, investigate/quantify low-precision output agreement and broader quality,
 then admit the experimental batch1/4K serving profile and measure it. INT4/4B
 runtime arms, tuned baselines, precision matching and the2x objective remain open.
+
+## P032 - 2026-10-23: diagnostics archive transfer verified
+
+The separate vision-diagnostics-evidence.zip contains24 entries and9,967,800
+bytes: prefix failures/raw outputs, the explicit-accumulation CPU oracle,
+successful full-F32 structural outputs, exact tested source snapshot, binary
+hashes and command ledgers. Remote/local SHA256 matches:
+6fe4ce494cfc12b512150f33ed1f5f76ba6fb25af51941f19a6ea125dba32d4e.
+Local ZIP integrity check passed. Both immutable native archives and the initial
+SGLang raw archive are available with an evidence index in the chat outputs.
+No GPU benchmark/reference server was left running by these diagnostics.
