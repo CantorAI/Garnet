@@ -1067,3 +1067,21 @@ Native HTTP worker10972 remains live under the retained server handle. CPU time 
 Updated the implementation task to remove stale pending statements for the completed fused16 and SGLang graph experiments. Added a raw HTTP comparison verifier that replays saved SSE cumulative usage/timestamps/text, recomputes request digests and per-cohort summaries, then checks identical request bytes and actual prompt/output lengths before presenting provisional ratios. It never infers model quality, arithmetic equivalence or an established2x win from accounting alone. Missing vLLM/SGLang coverage and unavailable single-token decode rates remain explicit.
 
 Ran it against the verified SGLang graph archive directly: all8 cohorts and64 measured requests replayed successfully from actual request/event/result files, with summary agreement. The derived accounting report is exported separately; it does not replace raw evidence. Two corruption/matching CPU fixtures pass, and all44 CPU study tests pass. Full native HTTP output and paired ratios remain pending. General serving, native concurrency, tuned vLLM, INT4,4B and the2x objective remain incomplete.
+
+
+## P044 - 2026-10-23: first native HTTP pilot completed; target missed
+
+Source4023c78c73e30c33d5fac4430dfd5be813be3185 completed the full-model HTTP regression/streaming/pilot driver exit0. All four original JPEG bodies retain exact reference prompt IDs and original native fused16 output IDs; semantic4/4, SGLang exact parity3/4 remains unchanged. Both text/image actual single-token SSE usage gates passed before timing. Runcd8086d19d6a4118a888f93f598b9f6e used one native slot, capacity4096, seed3, JPEG/image-first,128-token maximum, eight measured requests and two excluded warmups per case.
+
+|case|TTFT median ms|decode median tokens/s|cohort output tokens/s|actual output tokens|sampled peak bytes|
+|---|---:|---:|---:|---:|---:|
+|text|104.84710000037012|36.09678993226741|35.22800604463035|1024|27806748672|
+|image|250.95925000005082|36.02435445492287|33.82502845918804|1024|27810942976|
+
+Raw replay verifies both native cohorts and compares against the archived SGLang graph run. Text request bytes, prompt counts and actual output counts match exactly; provisional native/reference ratios are0.554846642 decode,0.576637316 output throughput and0.738860671 TTFT. Image request bytes match but output lengths differ (native1024 versus reference910 total tokens). Image ratios are therefore not length-matched. Native and reference precision/quality/repetition gates remain open, and vLLM graph data is absent. Neither2x speed nor halfTTFT is achieved; no win is claimed.
+
+Native NVML errors were empty; median observed gaps about31.99ms/max33.87ms, with adapter-wide sampled maxima scoped to measured cohorts. Readiness/build/correctness memory is separate. The HTTP controller was stopped only after validation completed, using verified bridge PID15296/parent14396 and exact study command checks. Its parent ledger records intentional operator termination4294967295; this is not the benchmark's exit0. Native child10972 subsequently disappeared and GPU memory returned106MiB/0%. Original unrelated processes were untouched.
+
+Verified native-http-b1-evidence.zip:87 entries,573373bytes, SHA256 bdd034d97d5beb7a65c8a1eaf161e15abcb1ee67566c6607a3d142036d8ff3ae. Contains raw requests/SSE/token IDs, controller/native logs, sampled memory, before-stop metadata, source snapshot and operator-stop identity. The separate replay/comparison report preserves all unmatched gates.
+
+Next optimization is based on current Garnet's existing packed whole-decoder program rather than another execution stack. Inspection shows its current readonly projection input pool requires BF16; embedding the verified mixed compressed projection constants into one bounded program would reuse existing NVFP4/FP8 lowering and avoid64 per-layer graph submissions. This is a candidate, not demonstrated speedup. Start with a four-layer serial-versus-packed hidden/state/replay regression; only after it passes attempt full64 with a single16-token profile, preserving one weight set and4K capacity. Do not instantiate separate embedded prefill/decode copies. Native batching/memory admission, MTP, tuned vLLM, INT4 and4B remain required work.
