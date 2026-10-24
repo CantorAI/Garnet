@@ -1,0 +1,125 @@
+"""Versioned shared-profile golden gate; historical T16 gate remains unchanged."""
+import argparse,hashlib,json,subprocess,sys,zipfile
+from pathlib import Path
+GOLDEN_SHA256='634e6200658aa74467b575c8d4b5e8dde58bb7522d4de1e5ca813da7576acf4b'
+COLORS={'red':'red','green':'green','blue':'blue','bottom-blue':'blue'}
+KEYS=list(COLORS)+['s3-'+case+'-c1-r'+str(i) for case in ('text','image') for i in range(8)]
+
+def verify_records(golden,records,require_head_reuse=False):
+    if (golden.get('status'),golden.get('batch'),golden.get('capacity'),golden.get('prefill_chunk'),golden.get('decode_chunk'))!=('smoke_passed',1,4096,128,4):raise ValueError('Wrong golden profile')
+    if set(records)!=set(KEYS):raise ValueError('All twenty target/MTP pairs required')
+    for key,pair in records.items():
+        teacher,trial=pair
+        a,b=teacher['choices'][0],trial['choices'][0]
+        if not a['response_token_ids'] or a['response_token_ids']!=b['response_token_ids'] or a['prompt_token_ids']!=b['prompt_token_ids']:raise ValueError('Target/MTP token mismatch: '+key)
+        if teacher.get('study',{}).get('generation_mode')!='greedy_target' or trial.get('study',{}).get('generation_mode')!='verified_mtp' or not isinstance(trial.get('study',{}).get('speculative_metrics'),dict):raise ValueError('Actual target/MTP execution required')
+        if key in COLORS:
+            if any(r['choices'][0]['message']['content'].strip().lower().rstrip('.')!=COLORS[key] for r in pair):raise ValueError('VLM semantic failure')
+        else:
+            if len(b['response_token_ids'])!=128:raise ValueError('Full128 output required')
+            if require_head_reuse:
+                m=trial['study']['speculative_metrics']
+                fields=('target_head_reuses','target_head_evaluations','target_verification_calls','target_prefix_replays')
+                if any(type(m.get(field)) is not int or m[field]<0 for field in fields):raise ValueError('Actual verified-head counters required')
+                if not (m['target_head_reuses']>0 and m['target_head_reuses']==m['target_prefix_replays'] and m['target_head_evaluations']==m['target_verification_calls']):raise ValueError('Verified head reuse was not exercised as qualified')
+    names=list(COLORS)+['s3-text-c1-r0-greedy','s3-image-c1-r0-greedy']
+    if len(golden['cases'])!=12 or {row['key'] for row in golden['cases']}!=set(names):raise ValueError('Complete retained golden required')
+    for name in names:
+        rows=sorted((row for row in golden['cases'] if row['key']==name),key=lambda row:row['repeat'])
+        if [row['repeat'] for row in rows]!=[0,1] or any(rows[0][field]!=rows[1][field] for field in ('prompt_ids','generated_ids','normalized_sha256')):raise ValueError('Retained golden repeats differ')
+        key=name.removesuffix('-greedy')
+        for response in records[key]:
+            choice=response['choices'][0]
+            if choice['prompt_token_ids']!=rows[0]['prompt_ids'] or choice['response_token_ids']!=rows[0]['generated_ids']:raise ValueError('Retained same-profile golden mismatch: '+name)
+    return {'target_mtp_pairs':20,'full128_pairs':16,'retained_profile_goldens':6,'vlm_semantic_cases':4}
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument('study',type=Path);parser.add_argument('output',type=Path)
+    parser.add_argument('--diagnostic',type=Path);parser.add_argument('--reuse-verified-head',action='store_true');parser.add_argument('--joined-mlp',action='store_true');a=parser.parse_args()
+    root,out=a.study,a.output;out.mkdir(exist_ok=True)
+    if any(out.iterdir()):raise FileExistsError('Preserve candidate attempt')
+    sys.path.insert(0,str(root/'Garnet/test2026/cuda/qwen38_5090'))
+    from validate_native_mtp_http import validate_worker_profile
+    from benchmark_stream import payload,request
+    from run_logged import source_identity
+    from urllib.request import urlopen
+    url='http://127.0.0.1:18082';diagnostic=a.diagnostic or root/'results/shared-mtp-sequence-diagnostic'
+    golden_path=root/'results/shared-decoder-full-qualification/report.json';raw=golden_path.read_bytes()
+    if hashlib.sha256(raw).hexdigest()!=GOLDEN_SHA256:raise ValueError('Unqualified golden identity')
+    golden=json.loads(raw);prior=json.loads((diagnostic/'report.json').read_text(encoding='utf8'))
+    if prior['status']!='diagnostic_passed':raise ValueError('Diagnostic did not complete')
+    with urlopen(url+'/health',timeout=5) as response:health=json.load(response)
+    validate_worker_profile(health,3,4,'direct',4,128,True,True if a.reuse_verified_head else False if a.joined_mlp else None,True if a.joined_mlp else None)
+    if health!=prior['health']:raise ValueError('Worker profile changed after diagnosis')
+    records={};files=[golden_path,diagnostic/'report.json',root/'build/bin/garnet.dll',root/'build/bin/xlang3.exe',root/'models/Qwen3.8-27B-NVFP4/config.json']
+    for key in KEYS:
+        responses=[];bodies=[]
+        for mode in ('target','mtp'):
+            p=diagnostic/(key+'-'+mode+'-response.json');files.append(p);responses.append(json.loads(p.read_text(encoding='utf8')))
+            p=diagnostic/(key+'-'+mode+'-request.json');files.append(p);body=json.loads(p.read_text(encoding='utf8'));body.pop('study_target_only',None);bodies.append(body)
+        if bodies[0]!=bodies[1]:raise ValueError('Target/MTP requests differ')
+        records[key]=responses
+        name=key if key in COLORS else key+'-greedy'
+        matched=[row for row in golden['cases'] if row['key']==name]
+        if matched:
+            original=root/'results/native-mtp3-http'/(name+'-request.json');files.append(original)
+            if hashlib.sha256(original.read_bytes()).hexdigest()!=matched[0]['request_sha256']:raise ValueError('Retained request identity changed')
+            body=json.loads(original.read_text(encoding='utf8'));body.pop('study_target_only',None)
+            if body!=bodies[0]:raise ValueError('Golden request differs')
+    model_gates=None
+    if a.joined_mlp:
+        from joined_model_gates import validate_joined_model_gates
+        state=root/'results/nvfp4-decode-only-full-qualification/state'
+        paths=[state/'original-report.json',state/'joined-report.json',root/'results/nvfp4-decode-only-full-qualification/candidate/report.json']
+        original,joined,full=[json.loads(p.read_text(encoding='utf8')) for p in paths]
+        model_gates=validate_joined_model_gates(original,joined,full,golden,hashlib.sha256((root/'build/bin/garnet.dll').read_bytes()).hexdigest())
+        files.extend(paths)
+        for case in ('text','image'):
+            saved=state/(case+'-input.f32');files.append(saved)
+            if hashlib.sha256(saved.read_bytes()).hexdigest()!=original['inputs'][case]['sha256']:raise ValueError('Retained state input changed')
+    independent=root/'results/nvfp4-decode-only-full-independent-verification.json'
+    qualified=json.loads(independent.read_text(encoding='utf8'))
+    full_archive=root/'results/nvfp4-decode-only-full-evidence.zip'
+    if qualified['status']!='verified' or qualified['archive_sha256']!=hashlib.sha256(full_archive.read_bytes()).hexdigest():raise ValueError('Independent full-model proof required')
+    files.extend([independent,root/'serve-nvfp4-decode-only-worker.bat',root/'run-nvfp4-decode-only-http-candidate.py'])
+    previous=root/'results/native-mtp3-shared-joined-evidence.zip'
+    if hashlib.sha256(previous.read_bytes()).hexdigest()!='19bafb0f2cf8f518ad199677ad509c66e903abbecd94eb122b498048a437081f':raise ValueError('Prior twenty-pair archive identity changed')
+    with zipfile.ZipFile(previous) as history:
+        for key in KEYS:
+            old_body=json.loads(history.read('results/shared-joined-mlp-http-diagnostic/'+key+'-target-request.json'))
+            current_body=json.loads((diagnostic/(key+'-target-request.json')).read_text(encoding='utf8'))
+            if old_body!=current_body:raise ValueError('Prior qualified request bytes/semantics changed: '+key)
+            old=history.read('results/shared-joined-mlp-http-diagnostic/'+key+'-target-response.json')
+            expected=json.loads(old)['choices'][0]
+            for current in records[key]:
+                choice=current['choices'][0]
+                if any(choice[field]!=expected[field] for field in ('prompt_token_ids','response_token_ids')):raise ValueError('Prior qualified twenty-pair token identity changed: '+key)
+    files.append(previous)
+    gates=verify_records(golden,records,require_head_reuse=a.reuse_verified_head)
+    for index,case in enumerate(('text','image')):
+        key='s3-'+case+'-c1-r0';body,_=payload(case,key,301000+index*20000,'qwen38-27b-nvfp4',128,'jpeg','image-first','binary-grid')
+        stem='stream-gate-'+case;result=request(url,body,out,stem,128)
+        if result['status']!='completed' or result['generated_tokens']!=128 or result['prompt_tokens']!=(41 if case=='text' else 104):raise ValueError('SSE/count gate failed')
+        events=[json.loads(line)['data'] for line in (out/(stem+'-events.jsonl')).read_text(encoding='utf8').splitlines()]
+        final=next(json.loads(value) for value in reversed(events) if value!='[DONE]')
+        if final['response_token_ids']!=records[key][1]['choices'][0]['response_token_ids']:raise ValueError('Streamed full IDs differ')
+    from concurrent.futures import ThreadPoolExecutor
+    from validate_native_mtp_http import post
+    controls=['s3-'+case+'-c1-r'+str(i) for case in ('text','image') for i in range(4)]
+    def queued_control(key):
+        body=json.loads((diagnostic/(key+'-mtp-request.json')).read_text(encoding='utf8'))
+        response=post(url,body,out,'queued-control-'+key)
+        expected=records[key][1]['choices'][0];choice=response['choices'][0]
+        if any(choice[field]!=expected[field] for field in ('prompt_token_ids','response_token_ids')):raise ValueError('Queued client output isolation failed: '+key)
+        return key
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        if set(pool.map(queued_control,controls))!=set(controls):raise ValueError('Queued client control incomplete')
+    for key in controls:
+        files.extend([out/('queued-control-'+key+'-'+kind+'.json') for kind in ('request','response')])
+    metadata={'source':source_identity(),'health':health,'same_profile_gates':gates,'prior_qualified_twenty_pair_ids':20,'queued_client_controls':8,'concurrency_mode':'Single native B1 research slot; concurrent HTTP callers queue under bridge lock. Not CUDA batching qualification.','native_candidate_policy':'v3 decode-only tag2','joined_model_gates':model_gates,'golden_sha256':GOLDEN_SHA256,
+        'file_sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
+        'scope':'Offered-loadC1/2/4/8 pilot after full model gates,20 exact target/MTP pairs,20 prior qualified identities,2 SSE gates and8 queued-client controls. One native B1 slot serializes concurrent callers. Not CUDA batching, broad quality, full-context, tuned reference or2x qualification.'}
+    path=out/'metadata.json';path.write_text(json.dumps(metadata,indent=2));print('V3_EXACT_GOLDENS_MTP_SSE_AND_QUEUED_ISOLATION_GATES_PASSED',flush=True)
+    subprocess.run([sys.executable,str(root/'Garnet/test2026/cuda/qwen38_5090/benchmark_stream.py'),'--url',url,'--engine','garnet','--output',str(out/'benchmark'),'--metadata',str(path),'--concurrency','1,2,4,8','--requests','8','--warmups','2','--max-tokens','128','--workload-seed','3','--image-format','jpeg','--image-order','image-first','--image-nonce-pattern','binary-grid'],check=True)
+
+if __name__=='__main__':main()
