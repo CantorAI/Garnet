@@ -2790,3 +2790,8 @@ A separate HTTP candidate is prepared but not launched. It requires independent 
 ### B4 HTTP archival/metric replay preparation (2026-10-24; not run)
 
 While the original B4 streaming worker remains live, local HTTP archival/replay methods were prepared. They require the independently verified B4 streaming and retained-ID archives,13 HTTP quality requests, two stream oracles and four serialization regression captures. Native ready metadata must be physicalB4/T8/MTP0. The replay checks real dispatch membership and records occupancy1/2/3/4 per cohort, requires at least one actual four-row dispatch, checks every measured SSE completion against native IDs/greedy mode, and replays all raw metrics/resource samples plus identical requests versus ordinary references. Client concurrency is not treated as physical occupancy. Both methods are syntax-checked only; no B4 HTTP measurements exist yet.
+
+
+### B4 streaming independently verified; HTTP pilot launched (2026-10-24)
+
+Original protocol job completed exit0. Archive9da7cd2d64ca72439b1a7b0061fe1badba9f1deeb27f934146f8054a31f1d3dd retains43 files/138,958 bytes. Independent replay passed on both machines for seven groups/seventeen requests, exact prompt/output IDs, image hashes, partial-row isolation/no dummy events and sampled resource/terminal records. Sampled adapter-wide peak31,365,058,560 bytes is not instantaneous or process-attributed. Native DLL unchanged3c3207. Only after both replays and original closure, guarded batch4-http-pilot-attempt1 was launched in the existing fixed study folder. It requires13 same-worker HTTP quality cases and the unchanged stream/serialization regression gates before timing. No B4 speed result is available at launch.
