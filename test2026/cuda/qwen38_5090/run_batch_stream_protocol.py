@@ -1,4 +1,4 @@
-"""Run primary-gated first-attention stage witness on the guarded diagnostic build."""
+"""Run actual B2 worker protocol gates after shared full-model ID qualification."""
 from pathlib import Path
 import hashlib
 import json
@@ -59,12 +59,12 @@ launcher = root / "test-batch-stream-protocol.bat"
 probe = methods / "probe_batch_stream_protocol.py"
 workflow = {"status": "running", "library_sha256": digest,
     "probe_sha256": hashlib.sha256(probe.read_bytes()).hexdigest(),
-    "scope": "Shared external mixed weights full64 ragged text/image/earlyEOS B2 IDs, repeated resets against retained B1 oracles; no HTTP/MTP/performance admission."}
+    "scope": "Actual B2 JSON-line worker: full/partial groups, mixed text/image, reset and early completion against retained B1 IDs; no HTTP or performance admission."}
 (out / "workflow.json").write_text(json.dumps(workflow, indent=2), encoding="utf8")
 code = run([sys.executable, str(methods / "monitor_native_probe.py"), "--study", str(root),
     "--output", str(out / "resources"), "--", "cmd.exe", "/d", "/c", str(launcher),
     str(out / "native"), str(cache)], out / "ledger", "correctness", "first-attention-real-stage-primary-gate",
-    [library, launcher, probe, proof, receipt, control_path, stage_path, full_path, shared_path, failure, Path(__file__),
+    [library, launcher, probe, methods / "native_batch_stream_worker.py", root / "serve-native-batch2-shared-worker.bat", proof, receipt, control_path, stage_path, full_path, shared_path, failure, Path(__file__),
      build_path, root / "results/first-attention-stage-witness/manifest.json"])
 workflow["exit_code"] = code
 workflow["status"] = "process_failed" if code else "completed_needs_independent_replay"
