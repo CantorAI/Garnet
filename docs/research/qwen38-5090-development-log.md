@@ -2835,3 +2835,8 @@ C8 text83.409857/image52.382222 tok/s is below the earlier B2 MTP pilot97.993738
 ### B4 T4 conditional streaming candidate (2026-10-24; not run)
 
 Original shared-full-b4-t4-attempt1 remains live and unqualified. A separate local stream candidate changes only the guarded retained-ID proof and target graph/ready token dimensions from8 to4 relative to the B4 T8 greedy worker. It retains the same seven-group/seventeen-request protocol, dummy-row inactivity, reset/early-stop handling and exact prompt/output-ID requirements. The wrapper requires successful terminal original T4 job and independent T4 ID proof before construction. Native DLL, quantization, image path, capacity4096 and request corpus are unchanged. Syntax checks passed; no source is deployed over the live worker and no T4 stream/timing result is claimed.
+
+
+### Physical B4 T4 retained-ID gate independently passed (2026-10-24)
+
+Original supervised T4 job completed exit0. Archive503ec1c0cf56f85af02d3e159660b8b818cf07bea227bf3bbfb4286edcbc9712 retains37 files/105,373 bytes. Independent replay on both machines passed all eight row/repeat output-ID comparisons against retained B1 oracles, the declared source transformation, linked prior archives and native runtime/source/resource/terminal lineage. This gate does not establish full target-state equality, broad quality or performance. After both replays and original closure, guarded batch4-t4-stream-protocol-attempt1 was launched using the prepared seventeen-request corpus. No T4 streaming or timing result exists at launch.
