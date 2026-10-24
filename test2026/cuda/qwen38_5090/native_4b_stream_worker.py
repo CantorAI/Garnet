@@ -13,6 +13,7 @@ profile={'batch':1,'maxInputTokens':3968,'maxOutputTokens':128,'imagePixels':655
 model=None
 try:
  model=Model(checkpoint,profile,'Qwen3.5-4B')
+ model.vision.graph.enable_cuda_graph(True)
  emit({'event':'ready','research_only':True,'model':'qwen35-4b-bf16','batch':1,'capacity':4096,'chunk':16,
   'precision':'BF16 weights/projections; FP32 residuals/state','quality_gate':'pending','memory':model.memory_info()})
  for item in requests():

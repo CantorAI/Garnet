@@ -1,5 +1,5 @@
 """Actual4B through current Model API; exploratory smoke, not matched benchmarking."""
-import os,sys,json,hashlib
+import os,sys,json,hashlib,time
 from pathlib import Path
 sys.path.insert(0,os.environ['GARNET_RUNTIME_ROOT']);sys.path.insert(0,os.getcwd())
 import garnet
@@ -22,15 +22,31 @@ report_path.write_text(json.dumps(report,indent=2));model=None
 try:
  model=Model(str(checkpoint),profile,'Qwen3.5-4B')
  assert model.capacity==4096 and len(model.decoder.layers)==32 and len(model.vision.graph.stats_json())>0
+ model.vision.graph.enable_cuda_graph(True)
  report['loaded_memory']=model.memory_info();report['status']='loaded';report_path.write_text(json.dumps(report,indent=2))
  cases=[('text','What is 2 + 2? Answer with the number only.',''),('image','What is the dominant color in this image? Answer with one color word.',str(image)),
         ('text-repeat','What is 2 + 2? Answer with the number only.',''),('image-repeat','What is the dominant color in this image? Answer with one color word.',str(image))]
  for key,prompt,path in cases:
-  result=model.infer(prompt,path,16)
+  events=[]
+  def notify(row,token,count,prompt_count):
+   assert row==0 and count==len(events)+1
+   events.append({'row':row,'token':token,'sampled':count,'prompt_tokens':prompt_count,'monotonic':time.monotonic()})
+  streaming=not key.endswith('-repeat')
+  try:result=model.infer(prompt,path,16,on_token=notify if streaming else None)
+  except Exception:
+   report['in_flight_failure']={'key':key,'actual_token_events':events,'streaming_callback':streaming}
+   report_path.write_text(json.dumps(report,indent=2));raise
+  report.setdefault('raw_cases',[]).append({'key':key,'actual_token_events':events,'streaming_callback':streaming,'result':result})
+  report_path.write_text(json.dumps(report,indent=2))
+  if streaming:
+   expected=list(result['generated_token_ids'][0])
+   if result['stop_token_ids'][0] is not None:expected.append(result['stop_token_ids'][0])
+   assert [e['token'] for e in events]==expected and len(events)==result['sampled_tokens_including_stop'][0]
+   assert all(e['prompt_tokens']==result['prompt_tokens'][0] for e in events)
   assert result['status']=='ok' and result['prompt_tokens'][0]+16<=4096 and result['sampled_tokens_including_stop'][0]>0
   if path:assert result['visual_tokens_per_row']==[64]
   normalized=result['text'].strip().lower().strip('.!')
-  item={'key':key,'prompt':prompt,'image_sha256':report['files'].get(str(image)) if path else None,'result':result,'basic_semantic_check':normalized==('red' if path else '4')}
+  item={'key':key,'actual_token_events':events,'streaming_callback':streaming,'prompt':prompt,'image_sha256':report['files'].get(str(image)) if path else None,'result':result,'basic_semantic_check':normalized==('red' if path else '4')}
   report['cases'].append(item);report_path.write_text(json.dumps(report,indent=2));print('ACTUAL_4B_SMOKE',key,json.dumps({'text':result['text'],'sampled':result['sampled_tokens_including_stop'],'basic_semantic_check':item['basic_semantic_check']}),flush=True)
  assert report['cases'][0]['result']['generated_token_ids']==report['cases'][2]['result']['generated_token_ids']
  assert report['cases'][1]['result']['generated_token_ids']==report['cases'][3]['result']['generated_token_ids']
