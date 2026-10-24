@@ -475,7 +475,7 @@ This is a backend optimization candidate motivated by concrete current-source
 constraints; it neither replaces unresolved B2 correctness work nor shrinks the
 remaining reference, INT4,4B,quality,concurrency and repetition requirements.
 
-Current status, 2026-10-23: exact packed/tiled bytes and retained-owner lifetime
+Current status, 2026-10-24: exact packed/tiled bytes and retained-owner lifetime
 passed for actual NVFP4 and FP8 matrices. Ten synthetic plugin cases and the
 actual MLP at T4/T128 passed embedded-versus-external full-output checks. Both
 static full64-layer shared engines now construct with 400 matrices in one pool.
@@ -483,11 +483,24 @@ Twelve untimed full-model runs passed repeat determinism and four VLM semantic
 smokes. Text/image long IDs differ from the old T16 profile; this is recorded,
 and full numerical equivalence is not established by those smokes.
 
-Next gates: preserve the full-model raw evidence; check complete same-profile
-arithmetic/quality and verified MTP against its own ordinary target; retain the
-sixteen full-sequence and streaming checks before any new HTTP timing. Separate
-construction memory from serving memory. Continue reference MTP/tuning and
+Full same-profile T128 arithmetic now matches embedded lowering across every
+packed hidden/state chunk for text/image and three repeats. MTP3/draft4 matches
+its own target on20pairs, including16full128-token sequences. Six pinned retained
+shared-profile goldens and real SSE/ID checks passed. The old T16 VLM gate rejected
+bottom-blue because old output was blue and shared output Blue; preserve that
+rejection and explicit versioned-golden policy, not a silent relaxation.
+
+First matched shared B1 pilot: text/image TTFT71.27/105.08ms, decode69.96/71.89tok/s,
+aggregate67.10/66.15tok/s. Raw SSE and sampled memory were independently replayed.
+Relative to the faster supplied ordinary reference, decode1.022x/1.049x and
+TTFT0.468x/0.672x. Text meets half ordinary-reference TTFT in this one short-prompt
+trial; image and2xdecode/concurrency do not. No fastest-tuned or broad-quality claim.
+
+Next: profile decode/verification costs and improve actual decode and native
+batching, not just first-token delay. Preserve all regressions and repeat trials.
+Separate construction memory from serving memory. Continue reference MTP/tuning and
 precision/kernel audits, including native F32 KV storage versus reference BF16
 KV, broader quality, actual long-context admission, INT4/4B measurements, native
-GPU concurrency and repeated trials. No new shared-candidate speed is measured;
-the 2x decode/concurrency and half-TTFT objectives remain unmet.
+GPU concurrency and repeated trials. Full INT4 smoke producer is prepared but
+not yet qualified. The overall2xdecode/concurrency and half-TTFT objectives remain
+unproven; no goal completion is claimed.
