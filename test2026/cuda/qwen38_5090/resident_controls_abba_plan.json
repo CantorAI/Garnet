@@ -1,0 +1,36 @@
+{
+  "status": "prepared_before_execution",
+  "order": [
+    {
+      "leg": "a1",
+      "resident_controls": false,
+      "prefix": "native-controls-abba-a1",
+      "order": 1
+    },
+    {
+      "leg": "b1",
+      "resident_controls": true,
+      "prefix": "native-controls-abba-b1",
+      "order": 2
+    },
+    {
+      "leg": "b2",
+      "resident_controls": true,
+      "prefix": "native-controls-abba-b2",
+      "order": 3
+    },
+    {
+      "leg": "a2",
+      "resident_controls": false,
+      "prefix": "native-controls-abba-a2",
+      "order": 4
+    }
+  ],
+  "workload": "seed3/JPEG/image-first/binary-grid; identical41/104inputIDs and128outputs; batch1,capacity4096,8requests/cohort,2warmups/cohort",
+  "gates": "independent14model/48transport proof,20current target/MTP plus20retained full IDs and2SSE gates in each leg before timing",
+  "source_sha256": {
+    "Garnet/test2026/cuda/qwen38_5090/native_stream_worker.py": "5eaac79524cbd402039275e6388f1277b6dc67c496f3de818194a3201bd4944d",
+    "Garnet/test2026/cuda/qwen38_5090/native_worker_profile.py": "a7febda1ccafdb23ee79fc9ed9d6f4d12cf3a618cd7aeb577b695def2ac831f4"
+  },
+  "scope": "Four fresh uninstrumented legs A(false),B(true),B(true),A(false). Prior exploratory pilot excluded from this planned sequence. Same native binary, source, checkpoint,graphs/profile and request corpus; separate processes perleg. Capture construction separately. Thermal/environment controls and confidence limits must be assessed from raw evidence; no2x ortrueGPUconcurrency claim."
+}

@@ -1,0 +1,42 @@
+{
+  "base_files": [
+    "run-native-resident-controls-http-server.py",
+    "run-native-resident-controls-http-workflow.py",
+    "run-native-resident-controls-http-candidate.py",
+    "serve-native-resident-controls-worker.bat",
+    "stop-native-resident-controls-http-worker.py",
+    "archive-native-resident-controls-http.py"
+  ],
+  "legs": [
+    {
+      "leg": "a1",
+      "resident_controls": false,
+      "prefix": "native-controls-abba-a1",
+      "order": 1
+    },
+    {
+      "leg": "b1",
+      "resident_controls": true,
+      "prefix": "native-controls-abba-b1",
+      "order": 2
+    },
+    {
+      "leg": "b2",
+      "resident_controls": true,
+      "prefix": "native-controls-abba-b2",
+      "order": 3
+    },
+    {
+      "leg": "a2",
+      "resident_controls": false,
+      "prefix": "native-controls-abba-a2",
+      "order": 4
+    }
+  ],
+  "package_sha256": "0c64aa19cae247caa514d38f3aa38599636415dc00400a5838341b8d716165f6",
+  "source_sha256": {
+    "Garnet/test2026/cuda/qwen38_5090/native_stream_worker.py": "5eaac79524cbd402039275e6388f1277b6dc67c496f3de818194a3201bd4944d",
+    "Garnet/test2026/cuda/qwen38_5090/native_worker_profile.py": "a7febda1ccafdb23ee79fc9ed9d6f4d12cf3a618cd7aeb577b695def2ac831f4"
+  },
+  "scope": "Four fresh uninstrumented legs A(false),B(true),B(true),A(false). Prior exploratory pilot excluded from this planned sequence. Same native binary, source, checkpoint,graphs/profile and request corpus; separate processes perleg. Capture construction separately. Thermal/environment controls and confidence limits must be assessed from raw evidence; no2x ortrueGPUconcurrency claim."
+}
