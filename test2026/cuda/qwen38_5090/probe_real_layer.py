@@ -6,7 +6,8 @@ from xModel.qwen35.vl_0_8b.decoder_layer import T,Qwen35LinearDecoderLayer,Qwen3
 checkpoint,oracle_path,output=sys.argv[1:4]
 diagnostic=len(sys.argv)>4 and sys.argv[4]=='diagnostic'
 with open(oracle_path) as f:oracle=json.load(f)
-with open(os.path.join(checkpoint,'config.json')) as f:config=json.load(f)['text_config']
+config_root=checkpoint if os.path.isdir(checkpoint) else os.path.dirname(checkpoint)
+with open(os.path.join(config_root,'config.json')) as f:config=json.load(f)['text_config']
 width=config['hidden_size'];reports=[]
 def compare(actual,expected):
     assert len(actual)==len(expected) and all(math.isfinite(v) for v in actual)
@@ -26,6 +27,11 @@ for item in oracle['layers']:
             if kind=='linear_attention':return Qwen35LinearDecoderLayer(*args,config,idx)
             return Qwen35FullDecoderLayer(*args,config,idx,oracle['capacity'])
         graph.build(forward(*symbols),symbols,checkpoint)
+        if oracle.get('expected_weight_precision')=='ct_int4_g128':
+            stats=json.loads(graph.stats_json())
+            assert stats['checkpoint_weight_precision']=='ct_int4_g128' and stats['native_int4_g128_projection_weights']==(8 if kind=='linear_attention' else 7),stats
+            assert not stats['engine_refittable'] and stats['external_bf16_weight_inputs']==0 and stats['native_nvfp4_projection_weights']==0 and stats['native_fp8_projection_weights']==0,stats
+
         args=[io.zeros(shape) for shape in shapes];io.update(args[-1],[1]);hidden=io.zeros([1,width]);cases=[]
         for step,case in enumerate(item['cases']):
             io.update(args[0],case['input'])
