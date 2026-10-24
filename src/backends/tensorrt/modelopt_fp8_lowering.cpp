@@ -44,7 +44,7 @@ ITensor* TRTBuilder::GetModelOptFP8Weight(const std::string& name,const SafeTens
     }catch(const std::exception& error){loweringError=error.what();return nullptr;}
 }
 ITensor* TRTBuilder::ProjectModelOptFP8(ITensor* input,ITensor* weight){
-    auto found=nativeFP8Weights.find(weight);if(found==nativeFP8Weights.end())return nullptr;
+    auto found=nativeFP8Weights.find(weight);if(found==nativeFP8Weights.end())return ProjectCTInt4(input,weight);
     const auto& p=found->second;auto shape=input->getDimensions();
     if(shape.nbDims<2||shape.d[shape.nbDims-1]!=p.columns)throw std::invalid_argument("Native FP8 projection shape mismatch");
     int64_t rows=1;

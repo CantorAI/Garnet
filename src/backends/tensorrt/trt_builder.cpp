@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include "modelopt_nvfp4_plugin.h"
 #include "modelopt_fp8_plugin.h"
+#include "ct_int4_plugin.h"
 #include "trt_context_pool.h"
 #include "trt_memory_profile.h"
 #include "qwen35_lowering.h"
@@ -372,7 +373,7 @@ namespace Garnet {
                 cached.allocator = std::make_unique<TRTSyncAllocator>(device);
                 cached.runtime->setGpuAllocator(cached.allocator.get());
             }
-            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered()||!EnsureModelOptNVFP4PluginRegistered()||!EnsureModelOptFP8PluginRegistered())return nullptr;
+            if(!EnsureBF16ProjectionPluginRegistered()||!EnsureQwen35DeltaPluginRegistered()||!EnsureModelOptNVFP4PluginRegistered()||!EnsureModelOptFP8PluginRegistered()||!EnsureCTInt4G128PluginRegistered())return nullptr;
             LogTRTMemoryCheckpoint("before_engine_deserialize",enginePath);
             cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
             if (!cached.engine) {
@@ -3245,6 +3246,7 @@ namespace Garnet {
             return nullptr;
         }
         const SafeTensorMetadata* metadata = capturedWeightIndex->Find(weightName);
+        if (!metadata && capturedWeightProfile=="ct_int4_g128") return GetCTInt4Weight(weightName);
         if (!metadata) {
             loweringError = "weight is absent from safetensors index: " + weightName;
             return nullptr;
@@ -3357,7 +3359,7 @@ namespace Garnet {
             return nullptr;
         }
         if (!network->setWeightsName(weights, weightName.c_str()) ||
-            (capturedWeightProfile!="modelopt_mixed"&&!network->markWeightsRefittable(weightName.c_str()))) {
+            (capturedWeightProfile!="modelopt_mixed"&&capturedWeightProfile!="ct_int4_g128"&&!network->markWeightsRefittable(weightName.c_str()))) {
             loweringError = "TensorRT could not mark checkpoint weight refittable: " + weightName;
             return nullptr;
         }
@@ -4494,7 +4496,7 @@ namespace Garnet {
         tensorMap.clear();
         constantTensors.clear();
         weightTensorMap.clear();
-        nativeNVFP4Weights.clear();nativeNVFP4ScaleStorage.clear();nativeFP8Weights.clear();
+        nativeNVFP4Weights.clear();nativeNVFP4ScaleStorage.clear();nativeFP8Weights.clear();nativeCTInt4Weights.clear();
         externalBF16Bindings.clear();
         scalarWeights.clear();
         bfloat16ScalarWeights.clear();
@@ -4555,7 +4557,7 @@ namespace Garnet {
         if (streamingPolicy.Enabled()) {
             config->setFlag(BuilderFlag::kWEIGHT_STREAMING);
         }
-        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0 && capturedWeightProfile!="modelopt_mixed") {
+        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0 && capturedWeightProfile!="modelopt_mixed"&&capturedWeightProfile!="ct_int4_g128") {
             config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
             config->setFlag(BuilderFlag::kSTRIP_PLAN);
         }
@@ -6156,6 +6158,10 @@ namespace Garnet {
                         throw std::invalid_argument("Qwen3.5 packed full attention dimensions invalid");
                     if(opName=="qwen35_attention_output")lastOutput=ops.slice(source,1,0,hidden);
                     else lastOutput=ops.reshape(ops.slice(source,1,hidden+(opName=="qwen35_attention_value_cache"?width:0),width),{shape[0],kv,capacity,dim});
+                }
+                else if(opName=="qwen35_checkpoint_projection") {
+                    if(capturedWeightProfile!="ct_int4_g128")throw std::invalid_argument("Research checkpoint projection requires INT4 G128 profile");
+                    lastOutput=ops.project(source,ops.weight(keywordText("weight_name")));
                 }
                 else if(opName=="qwen35_linear_step") {
                     auto bindings=qwen35Bindings[TensorId(input)];

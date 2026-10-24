@@ -18,7 +18,7 @@ CUDACompiledGraph::CUDACompiledGraph() {
     enginePath_=cacheRoot_+"model.engine";
 }
 CUDACompiledGraph::~CUDACompiledGraph(){Close();}
-void CUDACompiledGraph::CloseUnlocked(){deviceOutput_=X::Value();externalOutput_=false;execution_.reset();TRTBuilder::ReleaseCachedExecutions(cacheRoot_);ready_=false;externalWeightCount_=externalWeightBytes_=joinedProjectionInputs_=nativeFP8WeightCount_=nativeNVFP4WeightCount_=0;weightPrecision_="bf16";}
+void CUDACompiledGraph::CloseUnlocked(){deviceOutput_=X::Value();externalOutput_=false;execution_.reset();TRTBuilder::ReleaseCachedExecutions(cacheRoot_);ready_=false;externalWeightCount_=externalWeightBytes_=joinedProjectionInputs_=nativeFP8WeightCount_=nativeNVFP4WeightCount_=nativeCTInt4WeightCount_=0;weightPrecision_="bf16";}
 void CUDACompiledGraph::Close(){std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();}
 bool CUDACompiledGraph::Ready() const{std::lock_guard<std::mutex> lock(mutex_);return ready_;}
 double CUDACompiledGraph::CompileMs() const{std::lock_guard<std::mutex> lock(mutex_);return compileMs_;}
@@ -48,6 +48,7 @@ std::string CUDACompiledGraph::StatsJson() const{
     info["checkpoint_weight_precision"]=weightPrecision_;
     info["native_nvfp4_projection_weights"]=nativeNVFP4WeightCount_;
     info["native_fp8_projection_weights"]=nativeFP8WeightCount_;
+    info["native_int4_g128_projection_weights"]=nativeCTInt4WeightCount_;
     info["joined_projection_inputs"]=joinedProjectionInputs_;
     info["external_bf16_weight_bytes"]=externalWeightBytes_;
     info["external_weight_scope"]="Caller-owned symbolic BF16 inputs; excluded from graph-owned allocations";
@@ -77,6 +78,16 @@ bool CUDACompiledGraph::Build(X::Value graph,X::Value symbols,const std::string&
                 const auto& q=config["quantization_config"];
                 if(q.value("quant_method",std::string())=="modelopt"&&q.value("quant_algo",std::string())=="MIXED_PRECISION")
                     weightPrecision_="modelopt_mixed";
+                if(q.value("quant_method",std::string())=="compressed-tensors"){
+                    const auto& groups=q.at("config_groups");const auto& group=groups.at("group_0");const auto& w=group.at("weights");
+                    if(groups.size()!=1||q.value("format",std::string())!="pack-quantized"||group.value("format",std::string())!="pack-quantized"||
+                       !group.at("input_activations").is_null()||!group.at("output_activations").is_null()||
+                       w.value("num_bits",0)!=4||w.value("group_size",0)!=128||!w.value("symmetric",false)||w.value("dynamic",true)||
+                       w.value("type",std::string())!="int"||w.value("strategy",std::string())!="group")throw X::Error("Unsupported compressed-tensors CUDA recipe");
+                    weightPrecision_="ct_int4_g128";
+                    if(std::filesystem::is_directory(path)&&!weights_.Open(path/"model.safetensors.index.json",error))throw X::Error(error);
+                }
+
             }
         }catch(...){throw X::Error("Invalid CUDA checkpoint quantization config");}
     }
@@ -88,12 +99,13 @@ bool CUDACompiledGraph::Build(X::Value graph,X::Value symbols,const std::string&
     auto start=std::chrono::steady_clock::now();
     if(!builder.BuildCapturedGraph(graph,X::Value(),arguments,inputs,&weights_,enginePath_,{},error))
         throw X::Error(error);
-    execution_=TRTBuilder::RetainCachedExecution(enginePath_,&weights_,error,weightPrecision_=="modelopt_mixed");
+    execution_=TRTBuilder::RetainCachedExecution(enginePath_,&weights_,error,weightPrecision_=="modelopt_mixed"||weightPrecision_=="ct_int4_g128");
     if(!execution_)throw X::Error(error);
     externalWeightCount_=builder.ExternalBF16WeightInputs();externalWeightBytes_=builder.ExternalBF16WeightBytes();
     joinedProjectionInputs_=builder.JoinedProjectionInputs();
     nativeNVFP4WeightCount_=builder.NativeNVFP4WeightCount();
     nativeFP8WeightCount_=builder.NativeFP8WeightCount();
+    nativeCTInt4WeightCount_=builder.NativeCTInt4WeightCount();
     compileMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
     ready_=true;return true;
 }

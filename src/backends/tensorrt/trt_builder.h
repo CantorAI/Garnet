@@ -78,6 +78,7 @@ namespace Garnet {
         void SetCapturedWeightProfile(const std::string& profile) {
             capturedWeightProfile = profile;
         }
+        size_t NativeCTInt4WeightCount() const { return nativeCTInt4Weights.size(); }
         size_t NativeFP8WeightCount() const { return nativeFP8Weights.size(); }
         size_t NativeNVFP4WeightCount() const { return nativeNVFP4Weights.size(); }
 
@@ -198,6 +199,8 @@ namespace Garnet {
         std::deque<std::vector<unsigned char>> nativeNVFP4ScaleStorage;
         struct NativeFP8Weight {int rows,columns;float weightScale,inputScale;};
         std::unordered_map<nvinfer1::ITensor*,NativeFP8Weight> nativeFP8Weights;
+        struct NativeCTInt4Weight {nvinfer1::ITensor* scales;int rows,columns;};
+        std::unordered_map<nvinfer1::ITensor*,NativeCTInt4Weight> nativeCTInt4Weights;
         std::deque<float> scalarWeights;
         std::deque<unsigned short> bfloat16ScalarWeights;
         std::deque<long long> integerWeights;
@@ -240,6 +243,8 @@ namespace Garnet {
 
         nvinfer1::ITensor* GetOrCreateTRTTensor(X::Value garnetTensorVal);
         nvinfer1::ITensor* GetOrCreateTRTWeight(const std::string& weightName);
+        nvinfer1::ITensor* GetCTInt4Weight(const std::string&);
+        nvinfer1::ITensor* ProjectCTInt4(nvinfer1::ITensor*,nvinfer1::ITensor*);
         nvinfer1::ITensor* GetModelOptFP8Weight(const std::string&,const SafeTensorMetadata&);
         nvinfer1::ITensor* ProjectModelOptFP8(nvinfer1::ITensor*,nvinfer1::ITensor*);
         nvinfer1::ITensor* GetModelOptNVFP4Weight(const std::string&,const SafeTensorMetadata&);

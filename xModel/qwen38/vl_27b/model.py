@@ -162,3 +162,36 @@ def prepare_cuda_image(io,checkpoint,path,max_pixels=1048576):
         processor=json.load(f)
     low,high=validate_image_processor(processor,max_pixels)
     return io.prepare_image_profile(path,low,high)
+
+
+def validate_cuda_int4_profile(config,capacity,batch=1):
+    """Research-only compressed-tensors recipe; no general serving admission."""
+    validate_config(config)
+    q=config.get('quantization_config',{});groups=q.get('config_groups',{});g=groups.get('group_0',{});w=g.get('weights',{})
+    if (q.get('quant_method')!='compressed-tensors' or q.get('format')!='pack-quantized' or set(groups)!={'group_0'} or
+        g.get('format')!='pack-quantized' or g.get('input_activations') is not None or g.get('output_activations') is not None or
+        w.get('num_bits')!=4 or w.get('group_size')!=128 or w.get('symmetric') is not True or w.get('dynamic') is not False or
+        w.get('type')!='int' or w.get('strategy')!='group'):
+        raise ValueError('Research INT4 requires verified symmetric packed G128 W4A16 recipe')
+    if batch!=1 or not 32<=capacity<=4096:raise ValueError('Initial INT4 study requires batch1/capacity32..4096')
+    return True
+
+
+def create_cuda_int4_decoder(checkpoint,config,capacity=4096):
+    """Explicit index preserves BF16 vision/MTP sidecars; all496 text projections stay packed."""
+    import json
+    from pathlib import Path
+    validate_cuda_int4_profile(config,capacity)
+    index=Path(checkpoint)/'model.safetensors.index.json'
+    if not index.is_file():raise ValueError('INT4 study requires explicit verified shard index')
+    from xModel.qwen35.vl_0_8b.cuda_decoder import CUDADecoder
+    decoder=CUDADecoder(str(index),config['text_config'],1,capacity,16,True,True)
+    try:
+        graphs=[json.loads(layer['graph'].stats_json()) for layer in decoder.layers]
+        if (sum(g.get('native_int4_g128_projection_weights',0) for g in graphs)!=496 or
+            any(g.get('external_bf16_weight_inputs',0) or g.get('checkpoint_weight_precision')!='ct_int4_g128' for g in graphs)):
+            raise ValueError('INT4 decoder must retain all496 packed projections without BF16 input fallback')
+        if json.loads(decoder.io.memory_json())['head_precision']!='bf16':raise ValueError('Pinned INT4 head must remain BF16')
+        return decoder
+    except:
+        decoder.close();raise
