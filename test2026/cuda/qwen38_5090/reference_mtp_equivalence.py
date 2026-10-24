@@ -40,6 +40,7 @@ def main():
                 key='s3-'+case+'-c1-r'+str(i)
                 body,_=payload(case,key,301000+case_index*20000+i,'qwen38-27b-nvfp4',128,'jpeg','image-first','binary-grid')
                 body['stream']=False
+                body.pop('stream_options',None)
                 digest=hashlib.sha256(json.dumps(body,sort_keys=True,separators=(',',':')).encode()).hexdigest()
                 body['return_token_ids']=True
                 if a.engine=='sglang':body['return_prompt_token_ids']=True
