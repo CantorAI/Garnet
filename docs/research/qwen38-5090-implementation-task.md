@@ -444,15 +444,15 @@ P096 update: complete chunk/state evidence confirms tiny first-layer hidden diff
 
 ## Structural TTFT candidate: shared compressed weights across static profiles
 
-Source evidence: current mixed packed factory embeds weights and requires one
+Original constraint: the legacy mixed packed factory embeds weights and requires one
 shared prefill/decode chunk profile. At T16,41-token text uses3 target calls and
 104-token image uses7. This is a call-count fact, not a measured attribution of
 latency. The native NVFP4 lowering itself notes external packed bindings are
-needed to share compressed constants across prefill/decode engines. Existing
-external weight bindings admit BF16 only, which cannot safely stand in for this
+needed to share compressed constants across prefill/decode engines. The earlier
+external weight bindings admitted BF16 only, which cannot safely stand in for this
 mixed checkpoint within the32GB target budget.
 
-Concrete candidate, not implemented or qualified:
+Implementation sequence (opt-in code now present; qualification remains staged):
 1. Add an IO-owned readonly packed matrix/scale pool retaining exact checkpoint
    bytes and validated logical dimensions/scalars; repack NVFP4 block scales once.
    Keep FP8 and NVFP4 recipes separate and reject BF16 expansion/fallback.
@@ -460,7 +460,7 @@ Concrete candidate, not implemented or qualified:
    declared input types, physical shapes, calibration metadata and single-owner
    lifetime. Record external compressed bytes separately from embedded weights
    and existing externalBF16 statistics; do not double-count shared storage.
-3. Build static wider-prefill and T16-decode programs against one pool/canonical
+3. Build static wider-prefill and T4-decode programs against one pool/canonical
    state/head, initially B1/4096 with bounded prefillT128. Reuse existing MTP wide
    prefill normalization/slicing rather than adding a second draft weight copy.
 4. Qualify exact raw packed storage and same-profile component outputs versus
@@ -474,3 +474,20 @@ Concrete candidate, not implemented or qualified:
 This is a backend optimization candidate motivated by concrete current-source
 constraints; it neither replaces unresolved B2 correctness work nor shrinks the
 remaining reference, INT4,4B,quality,concurrency and repetition requirements.
+
+Current status, 2026-10-23: exact packed/tiled bytes and retained-owner lifetime
+passed for actual NVFP4 and FP8 matrices. Ten synthetic plugin cases and the
+actual MLP at T4/T128 passed embedded-versus-external full-output checks. Both
+static full64-layer shared engines now construct with 400 matrices in one pool.
+Twelve untimed full-model runs passed repeat determinism and four VLM semantic
+smokes. Text/image long IDs differ from the old T16 profile; this is recorded,
+and full numerical equivalence is not established by those smokes.
+
+Next gates: preserve the full-model raw evidence; check complete same-profile
+arithmetic/quality and verified MTP against its own ordinary target; retain the
+sixteen full-sequence and streaming checks before any new HTTP timing. Separate
+construction memory from serving memory. Continue reference MTP/tuning and
+precision/kernel audits, including native F32 KV storage versus reference BF16
+KV, broader quality, actual long-context admission, INT4/4B measurements, native
+GPU concurrency and repeated trials. No new shared-candidate speed is measured;
+the 2x decode/concurrency and half-TTFT objectives remain unmet.
