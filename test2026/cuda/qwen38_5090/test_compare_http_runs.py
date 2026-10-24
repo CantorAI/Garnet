@@ -11,7 +11,7 @@ class ComparisonEvidenceTests(unittest.TestCase):
   for n,t in [(1,2.),(2,3.)]:events.append({'monotonic':t,'data':json.dumps({'choices':[{'delta':{'content':'a' if n==1 else 'b'},'finish_reason':'length' if n==2 else None}],'usage':{'prompt_tokens':3,'completion_tokens':n}})})
   events.append({'monotonic':3.1,'data':'[DONE]'});data[key+'-events.jsonl']='\n'.join(json.dumps(e) for e in events).encode()
   cohort=summarize([row]);cohort.update(case='text',concurrency=1,request_keys=[key])
-  manifest={'status':'completed','run_id':'run','engine':'garnet','cohorts':[cohort]}
+  manifest={'status':'completed','run_id':'run','engine':'garnet','cohorts':[cohort],'argv':['benchmark_stream.py','--url','http://127.0.0.1:18082']}
   return manifest,data,key
  def test_replay_rejects_corrupted_request_and_token_counts(self):
   m,d,k=self.fixture();verified=verify_run(m,d.__getitem__);self.assertEqual(verified['cohorts']['text-c1']['metrics']['generated_tokens'],2)
@@ -24,4 +24,15 @@ class ComparisonEvidenceTests(unittest.TestCase):
   self.assertTrue(report['cohorts'][0]['identical_request_bytes']);self.assertFalse(report['two_x_established']);self.assertFalse(report['has_vllm_and_sglang'])
   r['cohorts']['text-c1']['requests']['s3-text-c1-r0']['sha256']='different'
   self.assertFalse(compare(n,[r])['cohorts'][0]['identical_request_bytes'])
+ def test_transport_mismatch_or_missing_evidence_blocks_ratios(self):
+  m,d,k=self.fixture();native=verify_run(m,d.__getitem__)
+  reference=copy.deepcopy(m);reference['engine']='sglang';reference['argv'][-1]='http://127.0.0.1:18081'
+  matched=compare(native,[verify_run(reference,d.__getitem__)])['cohorts'][0]
+  self.assertTrue(matched['identical_transport']);self.assertTrue(matched['ratios_to_best_supplied_reference'])
+  reference['argv'][-1]='http://localhost:18081'
+  different=compare(native,[verify_run(reference,d.__getitem__)])['cohorts'][0]
+  self.assertTrue(different['identical_request_bytes']);self.assertFalse(different['identical_transport']);self.assertEqual(different['ratios_to_best_supplied_reference'],{})
+  reference.pop('argv')
+  unknown=compare(native,[verify_run(reference,d.__getitem__)])['cohorts'][0]
+  self.assertFalse(unknown['identical_transport']);self.assertEqual(unknown['ratios_to_best_supplied_reference'],{})
 if __name__=='__main__':unittest.main()

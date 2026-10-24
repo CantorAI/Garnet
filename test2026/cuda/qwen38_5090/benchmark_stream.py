@@ -121,7 +121,7 @@ def main():
     p.add_argument('--image-nonce-pattern',choices=['pixel','binary-grid'],default='binary-grid')
     p.add_argument('--workload-seed',type=int,default=1);p.add_argument('--max-tokens',type=int,default=128);p.add_argument('--cases',nargs='+',choices=['text','image'],default=['text','image']);a=p.parse_args()
     parsed=urlsplit(a.url)
-    if parsed.scheme!='http' or parsed.hostname not in ('127.0.0.1','localhost') or parsed.path not in ('','/') or parsed.username:raise ValueError('Study requires loopback HTTP')
+    if parsed.scheme!='http' or parsed.hostname!='127.0.0.1' or parsed.path not in ('','/') or parsed.username:raise ValueError('Timing requires literal127.0.0.1 loopback HTTP to avoid hostname/IPv6 fallback differences')
     if not 1<=a.workload_seed<=100 or not 1<=a.requests<=256 or not 2<=a.max_tokens<=1024 or a.warmups<1 or any(c not in (1,2,4,8) or c>a.requests for c in a.concurrency):raise ValueError('Invalid study profile')
     a.output.mkdir(parents=True,exist_ok=True);run=uuid.uuid4().hex;root=a.output;prefix=run+'-';cohorts=[]
     metadata=json.loads(a.metadata.read_text());manifest={'run_id':run,'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'engine':a.engine,

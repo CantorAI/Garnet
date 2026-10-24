@@ -4,8 +4,20 @@ This verifies accounting/workload evidence, not model quality or arithmetic equi
 """
 import argparse,hashlib,json,math
 from pathlib import Path
+from urllib.parse import urlsplit
 from benchmark_stream import TokenEvents
 from metrics import summarize
+
+def transport_identity(manifest):
+    """Ports differ by engine; hostname spelling can change connection behavior."""
+    argv=manifest.get('argv',[])
+    if not isinstance(argv,list) or not all(isinstance(x,str) for x in argv) or argv.count('--url')!=1:return None
+    try:url=urlsplit(argv[argv.index('--url')+1])
+    except (ValueError,IndexError):return None
+    if url.scheme!='http' or url.hostname not in ('127.0.0.1','localhost') or url.username or url.password or url.query or url.fragment or url.path not in ('','/'):
+        return None
+    return {'scheme':url.scheme,'hostname':url.hostname,'path':'/'}
+
 
 def verify_run(manifest,read):
     if manifest['status']!='completed':raise ValueError('Completed run required')
@@ -33,24 +45,25 @@ def verify_run(manifest,read):
         name=cohort['case']+'-c'+str(cohort['concurrency'])
         if name in verified:raise ValueError('Duplicate cohort')
         verified[name]={'metrics':recomputed,'requests':requests}
-    return {'run_id':manifest['run_id'],'engine':manifest['engine'],'cohorts':verified,'scope':'Raw SSE counts/timestamps/text and request bytes verified; does not establish quality/arithmetic equivalence'}
+    return {'run_id':manifest['run_id'],'engine':manifest['engine'],'transport':transport_identity(manifest),'cohorts':verified,'scope':'Raw SSE counts/timestamps/text and request bytes verified; does not establish quality/arithmetic equivalence'}
 
 def compare(native,references):
     result=[]
+    same_transport=bool(native.get('transport')) and bool(references) and all(native['transport']==r.get('transport') for r in references)
     for name,n in native['cohorts'].items():
         refs=[r['cohorts'][name] for r in references if name in r['cohorts']]
         same_requests=len(refs)==len(references) and bool(refs) and all(set(n['requests'])==set(r['requests']) and all(n['requests'][k]['sha256']==r['requests'][k]['sha256'] for k in n['requests']) for r in refs)
         same_lengths=same_requests and all(n['requests']==r['requests'] for r in refs)
         ratios={}
-        if same_requests:
+        if same_requests and same_transport:
             for metric in ('decode_median_tokens_per_second','output_tokens_per_second'):
                 values=[n['metrics'][metric]]+[r['metrics'][metric] for r in refs]
                 ratios[metric]=values[0]/max(values[1:]) if all(isinstance(v,(int,float)) and math.isfinite(v) and v>0 for v in values) else None
             values=[n['metrics']['ttft_median_ms']]+[r['metrics']['ttft_median_ms'] for r in refs]
             ratios['ttft_vs_fastest_reference']=values[0]/min(values[1:]) if all(v>0 for v in values) else None
-        result.append({'cohort':name,'identical_request_bytes':same_requests,'identical_prompt_output_counts':same_lengths,'ratios_to_best_supplied_reference':ratios})
+        result.append({'cohort':name,'identical_request_bytes':same_requests,'identical_transport':same_transport,'identical_prompt_output_counts':same_lengths,'ratios_to_best_supplied_reference':ratios})
     return {'cohorts':result,'has_vllm_and_sglang':{'vllm','sglang'}<={r['engine'] for r in references},'two_x_established':False,
-        'scope':'Provisional arithmetic only. Quality/precision/repetition/tuned-reference gates are not proven by request/count matching; no automatic2x claim.'}
+        'scope':'Provisional arithmetic only. Quality/precision/repetition/tuned-reference gates are not proven by request/count/transport matching; no automatic2x claim.'}
 
 def load_directory(path):
     manifest=json.loads(path.read_text());return verify_run(manifest,lambda name:(path.parent/name).read_bytes())
