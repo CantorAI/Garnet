@@ -49,15 +49,16 @@ try:
    try:io.compressed_scales(name)
    except Exception:pass
    else:raise AssertionError('FP8 block scales admitted')
-  loaded=json.loads(io.compressed_weight_info(name));assert loaded['resident_packed_readonly'] and (scale is None or loaded['resident_scales_readonly'])
+  loaded=json.loads(io.compressed_weight_info(name));item['resident_metadata']=loaded;assert loaded['resident_packed_readonly'] and (scale is None or loaded['resident_scales_readonly'])
   try:io.copy_into(packed,packed)
-  except Exception:pass
+  except Exception as error:item['writable_copy_rejection']=str(error)
   else:raise AssertionError('Readonly compressed tensor accepted by writable copy API')
   before=counters()
   for repeat in range(3):
    again=io.compressed_weight(name)
    if scale is not None:io.compressed_scales(name)
    assert counters()==before,'Repeat lookup changed resident accounting'
+  item['accounting_before_repeats']=before;item['accounting_after_repeats']=counters()
   assert raw_tensor(again)==expected
   held.append((packed,scale,item['packed_sha256'],item.get('tiled_scale_sha256')));report['cases'].append(item);save()
  final=counters();assert final['compressed_projection_weight_bytes']==total_packed and final['compressed_projection_scale_bytes']==total_scales
