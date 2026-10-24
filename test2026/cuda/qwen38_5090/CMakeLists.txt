@@ -72,3 +72,10 @@ target_link_libraries(garnet_modelopt_fp8_plugin_test PRIVATE CUDA::cudart CUDA:
 target_compile_features(garnet_modelopt_fp8_plugin_test PRIVATE cxx_std_17)
 set_target_properties(garnet_modelopt_fp8_plugin_test PROPERTIES CUDA_STANDARD 17)
 add_test(NAME garnet_modelopt_fp8_native_plugin COMMAND garnet_modelopt_fp8_plugin_test)
+
+# Separate prequantized group128 W4A16 compatibility diagnostic.
+add_executable(garnet_int4_trt_test int4_trt_test.cpp)
+target_include_directories(garnet_int4_trt_test PRIVATE "${GARNET_TENSORRT_ROOT}/include")
+target_link_libraries(garnet_int4_trt_test PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
+target_compile_definitions(garnet_int4_trt_test PRIVATE NOMINMAX)
+target_compile_features(garnet_int4_trt_test PRIVATE cxx_std_17)
