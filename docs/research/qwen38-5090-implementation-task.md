@@ -401,9 +401,10 @@ Neither measured profile establishes2x or real native GPU batched concurrency.
 Optional resident vision input now passes six full raw output equality pairs,
 actual graph replay0->4 and wrong-shape rejection, using1.5MiB extra input storage.
 It is allocation staging, with fresh image preprocessing on every call. No
-end-to-end TTFT benefit has yet been measured. B2 packed backend qualification is
-currently live under frozen sourcecbb2388b3; await its actual raw ID/memory result.
-Next: archive B2 result, qualify B4 where feasible, implement/test actual native
+end-to-end TTFT benefit has yet been measured. Initial B2 packed backend qualification failed full B1-ID equality, with first
+divergences at text token0 and image token8; preserve the strict gate and raw IDs.
+Fixed-B2 prefill row-isolation diagnostics are now live under source3ef07624c.
+Next: resolve the divergence before qualifying B4 or enabling actual native
 HTTP batching, then measure matched concurrency. Repeat end-to-end image timing
 with qualified resident input, and continue full INT4/4B reference and stronger
 SGLang/vLLM ordinary/MTP tuning/quality comparisons. Source edits stay on the
