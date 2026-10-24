@@ -13,6 +13,8 @@
 struct Logger: nvinfer1::ILogger {void log(Severity s,const char* m) noexcept override {if(s<=Severity::kWARNING)fprintf(stderr,"TRT: %s\n",m);}};
 void CUDA(cudaError_t e){if(e!=cudaSuccess)throw std::runtime_error(cudaGetErrorString(e));}
 template<class T> std::unique_ptr<T> Own(T* p){if(!p)throw std::runtime_error("TensorRT object creation failed");return std::unique_ptr<T>(p);}
+struct PluginDestroy{void operator()(nvinfer1::IPluginV2* p) const noexcept{if(p)p->destroy();}};
+template<class T> std::unique_ptr<T,PluginDestroy> OwnPlugin(T* p){if(!p)throw std::runtime_error("TensorRT plugin creation failed");return std::unique_ptr<T,PluginDestroy>(p);}
 size_t Offset(int row,int col,int columns){return size_t(row/128)*128*columns+size_t(col/4)*512+(row%32)*16+((row%128)/32)*4+col%4;}
 int main(int argc,char** argv){try{
     using namespace nvinfer1;Logger logger;
@@ -22,7 +24,7 @@ int main(int argc,char** argv){try{
         if(std::strcmp(legacy.getPluginVersion(),"1")||legacy.getSerializationSize()!=16||std::strcmp(candidate.getPluginVersion(),"2")||candidate.getSerializationSize()!=20)throw std::runtime_error("Plugin wire/version contract changed");
         std::vector<unsigned char> wire(20);candidate.serialize(wire.data());
         std::unique_ptr<Garnet::ModelOptNVFP4Plugin> restored(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),wire.size()));
-        auto clone=Own(candidate.clone());
+        auto clone=OwnPlugin(candidate.clone());
         if(!restored||std::strcmp(restored->getPluginVersion(),"2")||std::strcmp(clone->getPluginVersion(),"2"))throw std::runtime_error("Candidate policy lost on clone/reload");
         std::vector<unsigned char> again(20);restored->serialize(again.data());if(again!=wire)throw std::runtime_error("Candidate serialization not stable");
         for(int batch:{1,2,4,128}){
@@ -34,7 +36,7 @@ int main(int argc,char** argv){try{
         if(!oldCreator||!newCreator||oldCreator->deserializePlugin("wrong",wire.data(),20))throw std::runtime_error("Legacy creator admitted candidate wire");
         std::vector<unsigned char> oldWire(16);legacy.serialize(oldWire.data());
         if(newCreator->deserializePlugin("wrong",oldWire.data(),16))throw std::runtime_error("Candidate creator admitted legacy wire");
-        auto old=Own(oldCreator->deserializePlugin("legacy",oldWire.data(),16));auto current=Own(newCreator->deserializePlugin("candidate",wire.data(),20));
+        auto old=OwnPlugin(oldCreator->deserializePlugin("legacy",oldWire.data(),16));auto current=OwnPlugin(newCreator->deserializePlugin("candidate",wire.data(),20));
         if(std::strcmp(old->getPluginVersion(),"1")||std::strcmp(current->getPluginVersion(),"2"))throw std::runtime_error("Creator changed serialized selection policy");
         if(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),19))throw std::runtime_error("Truncated candidate wire admitted");
         std::fill(wire.begin()+16,wire.end(),0);if(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),20))throw std::runtime_error("Unknown candidate policy admitted");
