@@ -4,7 +4,7 @@ Status: pinned architecture/quantization audit, native SM120 build, NVFP4/FP8
 projection/plugin tests, real layer0 MLP parity, real GDN/full-attention decoder-layer
 parity at4K capacity, and native W4A4 head checks have passed. Both references have
 passed text/image smoke; SGLang's initial eager profile now has raw streaming and
-concurrency measurements. The33 CPU tests pass. Full64-layer native text smoke
+concurrency measurements. The34 CPU tests pass. Full64-layer native text smoke
 also reproduces the reference token IDs. Four native VLM color/spatial answers
 are semantically correct; strict reference token parity is2/4 due to capitalization.
 Broader vision/precision validation,
@@ -269,6 +269,8 @@ capacity to fit larger batches.
    give4/4 semantic colors and2/4 exact token sequences. Preserve those separate
    outcomes and broaden quality checks. Test existing fused chunks4/16 with real
    layers, state continuation, inactive masks and replay before a full-model pilot.
+   Those fused4/16 gates now pass with the corrected native-order FP8 CPU oracle;
+   the first full fused16 pilot is the next performance experiment.
 2. Establish text/image quality beyond basic smoke and record the precision
    differences. Current Garnet state/cache arithmetic is F32; initial references
    use BF16 KV/conv and F32 SSM. Close this matching gate before any2x claim.

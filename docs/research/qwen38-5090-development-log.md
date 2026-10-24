@@ -976,3 +976,26 @@ is preserved and old oracles are not overwritten. A BF16 midpoint fixture checks
 the native placement of the rounded F32 alpha; all34 CPU study tests pass. The
 actual checkpoint diagnostic result is pending. No numerical limit was relaxed,
 no native kernel changed, and no optimized full-model speedup is claimed.
+
+## P037 - 2026-10-23: scale-order correction resolves the component gate
+
+The new CPU oracle596bd1cf8909e0ebcdd1fdb3b7989a93bedcc9b23b3c257d17c80b709a0de6a9
+uses the native FP8 descriptor's combined F32 alpha after raw FP8 accumulation.
+Comparing retained, unchanged native outputs isolates that arithmetic change:
+four-token attention max absolute error drops0.25 to0.000244140625, and its
+two-token continuation0.18994140625 to0.00006103515625. Sixteen-token GDN max
+drops0.5 to0.001953125. Original references, raw outputs and failed runs remain.
+
+Job validate-native-order-chunk-oracles then completed exit0, re-executing serial
+six-step layers0/3 and fused4/16 layers0/3 against the corrected reference. All
+per-token hidden, sampled cache/state, inactive padding and CUDA replay gates
+passed with the same max0.05/relative0.01 limits. No native kernel changed.
+This fixes the reference mismatch, not the separate vision precision or VLM
+capitalization differences. It does not prove any performance improvement.
+
+The next full-model pilot selects the already existing fused16 path explicitly,
+with batched embeddings and real chunked prefill. The same16-token engine serves
+padded single-token decode, so no second compressed model copy is retained.
+It preserves batch1,4096 capacity and the same eight text request bodies and four
+matched JPEG smoke cases. Results are pending. General serving/tuned comparisons,
+INT4/4B execution and the2x objective remain incomplete.
