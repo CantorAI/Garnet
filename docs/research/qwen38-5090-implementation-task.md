@@ -501,6 +501,9 @@ batching, not just first-token delay. Preserve all regressions and repeat trials
 Separate construction memory from serving memory. Continue reference MTP/tuning and
 precision/kernel audits, including native F32 KV storage versus reference BF16
 KV, broader quality, actual long-context admission, INT4/4B measurements, native
-GPU concurrency and repeated trials. Full INT4 smoke producer is prepared but
-not yet qualified. The overall2xdecode/concurrency and half-TTFT objectives remain
+GPU concurrency and repeated trials. Full per-layer INT4 now passes12repeat/VLM
+smoke runs with496native G128 projections; HTTP/reference measurements and the
+optional whole-graph comparison remain pending. Installed-source audit identifies
+a small merged96-row INT4 projection risk for SGLang; confirm actual startup
+before declaring support or failure. The overall2xdecode/concurrency and half-TTFT objectives remain
 unproven; no goal completion is claimed.
