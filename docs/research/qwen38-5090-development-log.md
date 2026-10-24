@@ -1995,3 +1995,14 @@ Original build handle profiler-lifecycle-build-fixed-launcher completed exit 0; 
 Downloaded profiler-lifecycle-qualified-evidence.zip: 2836469 bytes, SHA256 579e0fcce28d808dcc29c9931998268b0559f1d5507aef9c4d82eb3a6ca6d6df. Offline verifier checks CRC/all19 manifest file hashes; archived native/probe source bytes exactly equal committed 6f943569f; DLL hash; successful build/correctness terminal ledgers; TSV/report equality; resource sampled maximum and graph counters. Reproducible verifier and verified JSON retained in chat outputs.
 
 The original shared-trt-layer-diagnostic-after-qualification handle is now running the full shared model diagnostic after its guard succeeded. Do not synchronize app source, rebuild or start another GPU job until this original handle terminates. No full-model outcome yet. No new throughput, TTFT or 2x evidence.
+
+
+### P135 — full first-use profile verified; INT4 packed qualification running
+
+Original shared-trt-layer-diagnostic-after-qualification completed exit 0. Twelve retained ordinary-teacher comparisons passed (six text/image/VLM cases repeated twice), all raw full token lists retained. Native source remains 6f943569f, DLL 9d82a3dc80e1817a50931ef130e2a6b3023248514687eddfd8f2493ee0dbb0af. Diagnostic archive 630029 bytes, SHA256 157870f571ff28bd50b43692264fee1637acc59a6fda716133d91d741f45c1e2. Offline verifier checked CRC/all32 manifest hashes, exact committed producer, all12 teacher token lists and request/teacher hashes, all5105 TSV rows across8 engines, terminal/resource/capture-failure checks. No broad quality or benchmark admission claimed.
+
+First-use layer timing has obvious initialization effects (e.g. one unnamed prefill plugin sample146.827 ms); generic plugin rows do not identify kernel families. Do not rank hot captured kernels from these cold eager samples. A proper warm diagnostic trigger or external profiler remains needed before causal kernel claims.
+
+Guarded int4-packed-after-layer-diagnostic archived the completed full profile, then launched the already prepared whole64 INT4 T16/cap4096 versus retained per-layer golden on the same DLL. Its original handle is running. It checks exact full IDs, normalized vector hashes, repeats and four VLM cases before any timing. Never launch a second GPU job or synchronize application source while it is live.
+
+Read-only CPU calibration audit completed exit0 with no GPU imports: all64 MLP gate/up pairs have bit-identical input scales AND weight_scale_2; all48 GDN QKV/Z and16 full-attention Q/K/V groups have identical input scales but differing weight scales. This supports investigating gate/up concatenation with preserved calibration, not proving a fused implementation, numerical equivalence or speedup. Raw scalar/header evidence archive preparation is in progress. Audit, archivers and guarded INT4 workflow sources retained for review. No new TTFT, decode or concurrency results; 2x remains unmet.
