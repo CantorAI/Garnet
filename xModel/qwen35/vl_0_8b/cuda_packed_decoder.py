@@ -15,7 +15,9 @@ from .cuda_packed_program import CUDAPackedDecoderProgram
 from .joined_mlp_profile import validate_joined_mlp_profile
 
 class CUDAPackedDecoder:
-    def __init__(self,checkpoint,config,batch=1,capacity=512,prefill_chunk=64,decode_chunk=4,projection_workspace_bytes=0,retain_linear_inputs=False,register_delta_128=False,flat_concat=False,deferred_state_commit=False,shared_output_storage=False,join_decode_input_projections=False,embedded_projection_weights=False,external_compressed_weights=False,joined_mlp_projections=False):
+    def __init__(self,checkpoint,config,batch=1,capacity=512,prefill_chunk=64,decode_chunk=4,projection_workspace_bytes=0,retain_linear_inputs=False,register_delta_128=False,flat_concat=False,deferred_state_commit=False,shared_output_storage=False,join_decode_input_projections=False,embedded_projection_weights=False,external_compressed_weights=False,joined_mlp_projections=False,host_embedding_lookup=False):
+        if type(host_embedding_lookup) is not bool:raise ValueError('Host embedding lookup requires an explicit bool')
+        self.host_embedding_lookup=host_embedding_lookup
         if decode_chunk not in (4,8,16) or prefill_chunk not in (4,8,16,32,64,128) or prefill_chunk<decode_chunk:
             raise ValueError('Packed decoder requires bounded prefill>=decode chunk')
         for size in (prefill_chunk,decode_chunk):validate_joined_mlp_profile(joined_mlp_projections,batch,capacity,size,external_compressed_weights,embedded_projection_weights,join_decode_input_projections)
@@ -41,6 +43,9 @@ class CUDAPackedDecoder:
         self.io=garnet.cuda_tensor_io()
         try:
             self.io.open(checkpoint)
+            if self.host_embedding_lookup:
+                self.io.enable_nvfp4_head(True)
+                self.io.enable_host_embedding(True)
             for size in dict.fromkeys((decode_chunk,prefill_chunk)):
                 program=CUDAPackedDecoderProgram(checkpoint,config,self.io,batch,capacity,size,retain_linear_inputs and size==decode_chunk,projection_workspace_bytes,register_delta_128,flat_concat,self.join_decode_input_projections and size==decode_chunk,self.embedded_projection_weights,self.external_compressed_weights,self.joined_mlp_projections)
                 self.programs[size]=program
@@ -166,13 +171,14 @@ class CUDAPackedDecoder:
         outputs=sum(g.get('owned_device_output_bytes',g['device_output_bytes']) for g in graphs)+pool_bytes
         proposal=sum(info.get(key,0) for key in ('candidate_workspace_bytes','candidate_index_bytes','indexed_head_buffers_bytes'))
         shared=info.get('embedding_table_bytes',info.get('embedding_head_shared_bytes',0))+sum(info.get(key,0) for key in ('untied_head_bytes','native_head_workspace_bytes','head_input_bytes','head_output_bytes','projection_weight_pool_bytes','compressed_projection_weight_bytes','compressed_projection_scale_bytes'))
-        return {'graphs':graphs,'state_bytes':states,'request_buffer_bytes':requests,'engine_output_bytes':outputs,'shared_output_pool_bytes':pool_bytes,
+        return {'embedding_mode':info.get('embedding_mode','device_bf16'),'host_embedding_mapped_tensor_bytes':info.get('host_embedding_mapped_tensor_bytes',0),
+            'graphs':graphs,'state_bytes':states,'request_buffer_bytes':requests,'engine_output_bytes':outputs,'shared_output_pool_bytes':pool_bytes,
             'embedding_head_shared_bytes':info['embedding_head_shared_bytes'],'head_input_bytes':info['head_input_bytes'],'head_output_bytes':info['head_output_bytes'],
             'compressed_projection_weight_bytes':info.get('compressed_projection_weight_bytes',0),'compressed_projection_scale_bytes':info.get('compressed_projection_scale_bytes',0),'compressed_projection_pool_entries':info.get('compressed_projection_pool_entries',0),
             'proposal_io_bytes':proposal,'projection_weight_pool_bytes':info.get('projection_weight_pool_bytes',0),'projection_weight_pool_entries':info.get('projection_weight_pool_entries',0),
             'trt_runtime_allocator_live_bytes':runtime,'owned_decoder_bytes':states+requests+outputs+proposal+shared+runtime if tracked else None,
             'joined_projection_group_count':info.get('joined_projection_group_count',0),'joined_projection_group_bytes':info.get('joined_projection_group_bytes',0),
-            'packed_profiles':{'prefill':self.prefill_chunk_size,'decode':self.decode_chunk_size,'single_canonical_state':True,'embedded_projection_weights':self.embedded_projection_weights,'external_compressed_weights':self.external_compressed_weights,'joined_mlp_projections':self.joined_mlp_projections,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'deferred_state_commit':self.deferred_state_commit,'shared_output_storage':self.shared_output_storage,'join_decode_input_projections':self.join_decode_input_projections},
+            'packed_profiles':{'prefill':self.prefill_chunk_size,'decode':self.decode_chunk_size,'single_canonical_state':True,'embedded_projection_weights':self.embedded_projection_weights,'external_compressed_weights':self.external_compressed_weights,'joined_mlp_projections':self.joined_mlp_projections,'host_embedding_lookup':self.host_embedding_lookup,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'deferred_state_commit':self.deferred_state_commit,'shared_output_storage':self.shared_output_storage,'join_decode_input_projections':self.join_decode_input_projections},
             'scope':'Retained canonical state, request/output buffers, one readonly projection pool/table and tracked TRT runtime. Excludes builder/driver/library/transient allocations; not process peak.'}
 
     def close(self):

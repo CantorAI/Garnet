@@ -1,0 +1,28 @@
+{
+  "status": "local_host_embedding_policy_preparation_only",
+  "time_utc": "2026-10-24T20:12:16.124401+00:00",
+  "source_sha256": {
+    "src/backends/tensorrt/cuda_tensor_io.cpp": "38b61ed47bb32c6cfe06a37a55f8f15d4a7409844fee83c5b03f2d45328838fb",
+    "src/backends/tensorrt/cuda_tensor_io.h": "dcf2c3fb7128c911576b1afa25d9643745dae8343a8217a31999af819feb3b9d",
+    "xModel/qwen35/vl_0_8b/cuda_packed_decoder.py": "bf927504f8b30df92ce16f707a86275ae9712b27c9d17b82582a4e631e7dd90b",
+    "test2026/cuda/qwen38_5090/test_host_embedding_policy.py": "c7bb5b5fbd49413dbd2d03129cde77b09ada490e148a58007f24e39550bc060c"
+  },
+  "cpu_policy_test": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.011s\n\nOK\n"
+  },
+  "native_compiled": false,
+  "gpu_numerics_verified": false,
+  "remote_deployed": false,
+  "performance_admitted": false,
+  "harness_failure_before_repair": "First AST harness extracted unrelated class aliases and raised NameError CUDADecoder in all four tests; restricted extraction to constructor/close. Not a native or model failure.",
+  "required_next_gates": [
+    "Original deferred HTTP terminal closure, archive and independent replay before changing remote source/runtime",
+    "New native build receipt and preserved old source/DLL",
+    "Default-off baseline regression and actual BF16-row byte oracle against device/host gather",
+    "B1/2/4/8 chunks1/4/16/128 full/partial, invalid IDs/shapes, mode/head/close transitions and sanitizer/lifetime checks",
+    "Full text/image IDs and ordinary/MTP state witnesses, then streams/HTTP correctness before matched performance",
+    "Measure host RSS, lookup/H2D costs and VRAM; mapped bytes are not resident RSS or process saving"
+  ]
+}

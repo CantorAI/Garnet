@@ -59,7 +59,7 @@ bool SameShape(const X::Tensor& tensor,const std::vector<int64_t>& shape){
 }
 }
 CUDATensorIO::~CUDATensorIO(){Close();}
-void CUDATensorIO::CloseUnlocked(){table_=X::Tensor();headInput_=X::Tensor();headOutput_=X::Tensor();tokenHeadInput_=X::Tensor();tokenHeadOutput_=X::Tensor();
+void CUDATensorIO::CloseUnlocked(){modelOpen_=false;hostEmbedding_.reset();hostEmbeddingBytes_=nullptr;hostEmbeddingSize_=0;table_=X::Tensor();headInput_=X::Tensor();headOutput_=X::Tensor();tokenHeadInput_=X::Tensor();tokenHeadOutput_=X::Tensor();
     untiedHead_=packedHead_=packedHeadScales_=X::Tensor();packedHeadScale2_=packedHeadInputScale_=0;nativeNVFP4Head_=false;
     nativeHeadTiledScales_=nativeHeadPackedInput_=nativeHeadInputScales_=nativeHeadWorkspace_=X::Tensor();nativeHeadContext_.reset();
     candidateScratch_=candidateOutput_=indexedScores_=indexedIds_=indexedValues_=X::Tensor();projectionWeights_.clear();compressedProjections_.clear();projectionWeightGroupMembers_.clear();projectionWeightGroups_.clear();projection_.reset();vocab_=width_=0;}
@@ -137,10 +137,11 @@ bool CUDATensorIO::Open(const std::string& checkpoint){
     auto projection=CreateBF16ProjectionContext();if(!projection)throw X::Error("CUDA tied head context initialization failed");
     table_=std::move(table);untiedHead_=std::move(separateHead);packedHead_=std::move(packedWeight);
     packedHeadScales_=std::move(packedScales);packedHeadScale2_=headScale2;packedHeadInputScale_=headInputScale;
-    projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);return true;
+    projection_=std::move(projection);vocab_=int(entry->shape[0]);width_=int(entry->shape[1]);modelOpen_=true;return true;
 }
 void CUDATensorIO::EnableNVFP4Head(bool enabled){
     std::lock_guard<std::mutex> lock(mutex_);
+    if(!enabled&&hostEmbedding_)throw X::Error("Host embedding requires the independent native NVFP4 head");
     if(!enabled){nativeNVFP4Head_=false;nativeHeadContext_.reset();
         nativeHeadTiledScales_=nativeHeadPackedInput_=nativeHeadInputScales_=nativeHeadWorkspace_=X::Tensor();return;}
     if(nativeNVFP4Head_)return;
@@ -155,6 +156,43 @@ void CUDATensorIO::EnableNVFP4Head(bool enabled){
     Check(RepackModelOptNVFP4Scales(static_cast<const unsigned char*>(packedHeadScales_.Info().data),
         static_cast<unsigned char*>(tiled.Info().data),vocab_,width_,CurrentExecutionStream()));use.Finish();
     nativeHeadTiledScales_=std::move(tiled);nativeHeadContext_=std::move(context);nativeNVFP4Head_=true;
+}
+void CUDATensorIO::EnableHostEmbedding(bool enabled){
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(!modelOpen_)throw X::Error("Host embedding requires an open checkpoint");
+    if(enabled==bool(hostEmbedding_))return;
+    const auto* entry=index_.Find("model.language_model.embed_tokens.weight");
+    if(!entry||entry->dataType!="BF16"||entry->shape!=std::vector<long long>{vocab_,width_}||
+        entry->dataSize!=uint64_t(vocab_)*uint64_t(width_)*2)
+        throw X::Error("Host embedding checkpoint geometry changed");
+    if(enabled){
+        if(!nativeNVFP4Head_||!packedHead_.IsValid())
+            throw X::Error("Host embedding requires an independent native NVFP4 head");
+        auto mapping=std::make_unique<SafeTensorsMappedFile>();std::string error;
+        if(!mapping->Open(entry->filePath,error))throw X::Error(error);
+        const auto* bytes=static_cast<const unsigned char*>(mapping->DataAt(entry->dataOffset,entry->dataSize));
+        if(!bytes)throw X::Error("Host embedding exceeds checkpoint storage");
+        // Configuration transition only: retire every outstanding reader before
+        // releasing the GPU table. No execution path can observe a half-switch.
+        Check(cudaDeviceSynchronize());
+        hostEmbedding_=std::move(mapping);hostEmbeddingBytes_=bytes;hostEmbeddingSize_=entry->dataSize;
+        table_=X::Tensor();
+    }else{
+        // Allocate before changing the working host mode; allocation failure
+        // leaves its mapping, head and embeddings usable.
+        auto table=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,{vocab_,width_},hostEmbeddingBytes_);
+        table_=std::move(table);hostEmbedding_.reset();hostEmbeddingBytes_=nullptr;hostEmbeddingSize_=0;
+    }
+}
+void CUDATensorIO::HostEmbeddingRow(int64_t id,float* destination) const{
+    static_assert(sizeof(float)==4&&std::numeric_limits<float>::is_iec559,"Host embedding requires IEEE754 FP32");
+    const auto* row=hostEmbeddingBytes_+size_t(id)*size_t(width_)*2;
+    for(int column=0;column<width_;++column){
+        // Checkpoints are little endian; preserve all BF16 bits without an
+        // arithmetic conversion or dependency on host BF16 support.
+        const uint32_t bits=(uint32_t(row[2*column])|uint32_t(row[2*column+1])<<8)<<16;
+        std::memcpy(destination+column,&bits,4);
+    }
 }
 X::Value CUDATensorIO::Zeros(X::Value shape){return TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,Shape(shape));}
 X::Value CUDATensorIO::StorageView(X::Value source,X::Value dimensions){
@@ -185,11 +223,11 @@ X::Value CUDATensorIO::FiniteF32Bytes(X::Value source){
 }
 std::string CUDATensorIO::WeightInfo(const std::string& name){
     std::lock_guard<std::mutex> lock(mutex_);auto* entry=index_.Find(name);
-    if(!table_.IsValid()||!entry)throw X::Error("Weight metadata requires an open checkpoint and existing name");
+    if(!modelOpen_||!entry)throw X::Error("Weight metadata requires an open checkpoint and existing name");
     return nlohmann::json{{"shape",entry->shape},{"dtype",entry->dataType},{"bytes",entry->dataSize},{"resident_in_projection_pool",projectionWeights_.find(name)!=projectionWeights_.end()}}.dump();
 }
 CUDATensorIO::CompressedProjection& CUDATensorIO::CompressedProjectionUnlocked(const std::string& name,bool load){
-    if(!table_.IsValid())throw X::Error("Compressed projection pool is closed");
+    if(!modelOpen_)throw X::Error("Compressed projection pool is closed");
     if(name.size()>512||name.size()<7||name.substr(name.size()-7)!=".weight"||
         (name.rfind("model.language_model.layers.",0)!=0&&name.rfind("mtp.",0)!=0))
         throw X::Error("Compressed pool admits named text-layer/MTP matrices only");
@@ -346,7 +384,7 @@ X::Value CUDATensorIO::CompressedScales(const std::string& name){
 
 X::Value CUDATensorIO::Weight(const std::string& name){
     std::lock_guard<std::mutex> lock(mutex_);
-    if(!table_.IsValid())throw X::Error("Projection weight pool is closed");
+    if(!modelOpen_)throw X::Error("Projection weight pool is closed");
     if(name.rfind("model.language_model.layers.",0)!=0&&name.rfind("mtp.",0)!=0)
         throw X::Error("Projection pool admits text-layer/MTP matrices; embedding/head uses its one existing table");
     auto existing=projectionWeights_.find(name);if(existing!=projectionWeights_.end())return existing->second;
@@ -449,11 +487,21 @@ void CUDATensorIO::UpdateRequest(X::Value active,X::Value positions,X::Value slo
 }
 void CUDATensorIO::EmbeddingChunk(X::Value tokens,X::Value destination){
     std::lock_guard<std::mutex> lock(mutex_);X::Tensor dst(destination);auto info=dst.Info();Require(info,X3_TENSOR_FLOAT32);
-    if(!table_.IsValid()||info.rank!=3||(info.shape[0]!=1&&info.shape[0]!=2&&info.shape[0]!=4&&info.shape[0]!=8)||info.shape[1]>128||info.shape[2]!=width_||
+    if(!modelOpen_||info.rank!=3||(info.shape[0]!=1&&info.shape[0]!=2&&info.shape[0]!=4&&info.shape[0]!=8)||info.shape[1]>128||info.shape[2]!=width_||width_>16384||
         !tokens.IsList()||tokens.Size()<1||tokens.Size()>info.shape[1])throw X::Error("Chunk embedding requires bounded batch/time/hidden shape");
     std::vector<int> ids;ids.reserve(tokens.Size()*info.shape[0]);
     for(uint64_t t=0;t<tokens.Size();++t){auto row=tokens.Get(t);if(!row.IsList()||row.Size()!=info.shape[0])throw X::Error("Chunk embedding token batch differs");
         for(uint64_t b=0;b<row.Size();++b){auto id=row.Get(b).ToInt64();if(id<0||id>=vocab_)throw X::Error("Chunk embedding token out of range");ids.push_back(int(id));}}
+    LogicalBytes(info);
+    if(hostEmbedding_){
+        std::vector<float> values(size_t(info.shape[0])*size_t(info.shape[1])*size_t(width_),0.0f);
+        for(size_t t=0;t<tokens.Size();++t)for(size_t b=0;b<size_t(info.shape[0]);++b)
+            HostEmbeddingRow(ids[t*size_t(info.shape[0])+b],values.data()+(b*size_t(info.shape[1])+t)*size_t(width_));
+        auto use=TensorHelper::AcquireGPU(dst,X3_TENSOR_WRITE);
+        Check(cudaMemcpyAsync(info.data,values.data(),values.size()*sizeof(float),cudaMemcpyHostToDevice,CurrentExecutionStream()));
+        // values is owned by this call, so complete its transfer before return.
+        Check(cudaStreamSynchronize(CurrentExecutionStream()));use.Finish();return;
+    }
     auto table=table_.Info();auto start=reinterpret_cast<uintptr_t>(table.data),end=reinterpret_cast<uintptr_t>(info.data);
     if(start<=end?end-start<table.byte_size:start-end<info.byte_size)throw X::Error("Embedding destination must not overlap table");
     auto use=TensorHelper::AcquireGPU({{table_,X3_TENSOR_READ},{dst,X3_TENSOR_WRITE}});
@@ -468,8 +516,13 @@ X::Value CUDATensorIO::ReadF32(const std::string& path,X::Value dimensions){
 }
 X::Value CUDATensorIO::Embedding(X::Value tokens){
     std::lock_guard<std::mutex> lock(mutex_);
-    if(!table_.IsValid()||!tokens.IsList()||tokens.Size()<1||tokens.Size()>8192)throw X::Error("embedding requires an open model and 1..8192 IDs");
+    if(!modelOpen_||!tokens.IsList()||tokens.Size()<1||tokens.Size()>8192)throw X::Error("embedding requires an open model and 1..8192 IDs");
     std::vector<long long> ids(tokens.Size());for(uint64_t i=0;i<tokens.Size();++i){ids[i]=tokens.Get(i).ToInt64();if(ids[i]<0||ids[i]>=vocab_)throw X::Error("embedding token out of range");}
+    if(hostEmbedding_){
+        std::vector<float> values(ids.size()*size_t(width_));
+        for(size_t row=0;row<ids.size();++row)HostEmbeddingRow(ids[row],values.data()+row*size_t(width_));
+        return TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,{int64_t(ids.size()),width_},values.data());
+    }
     auto indices=TensorHelper::CreateGPU(Host(),X3_TENSOR_INT64,{int64_t(ids.size())},ids.data());
     auto output=TensorHelper::CreateGPU(Host(),X3_TENSOR_FLOAT32,{int64_t(ids.size()),width_});
     auto use=TensorHelper::AcquireGPU({{table_,X3_TENSOR_READ},{indices,X3_TENSOR_READ},{output,X3_TENSOR_WRITE}});
@@ -521,7 +574,7 @@ X::Value CUDATensorIO::StackRows(X::Value rows){
 }
 X::Value CUDATensorIO::LogitsUnlocked(X::Value hidden,bool reuse,bool tokens){
     X::Tensor input(hidden);auto a=input.Info();Require(a,X3_TENSOR_FLOAT32);
-    if(!table_.IsValid()||(a.rank!=2&&!(tokens&&a.rank==3))||a.shape[a.rank-1]!=width_)
+    if(!modelOpen_||(a.rank!=2&&!(tokens&&a.rank==3))||a.shape[a.rank-1]!=width_)
         throw X::Error("tied head input/model shape mismatch");
     int64_t rows=a.shape[0];
     if(a.rank==3){if(rows>128/a.shape[1])throw X::Error("token head exceeds128rows");rows*=a.shape[1];}
@@ -582,7 +635,7 @@ X::Value CUDATensorIO::Predict(X::Value hidden){std::lock_guard<std::mutex> lock
 X::Value CUDATensorIO::PredictTokens(X::Value hidden){std::lock_guard<std::mutex> lock(mutex_);return ArgmaxUnlocked(LogitsUnlocked(hidden,true,true),128);}
 X::Value CUDATensorIO::HeadCandidates(X::Value selectedRows,int64_t count,bool tokenHead){
     std::lock_guard<std::mutex> lock(mutex_);auto& source=tokenHead?tokenHeadOutput_:headOutput_;
-    if(!table_.IsValid()||!source.IsValid()||!selectedRows.IsList()||selectedRows.Size()<1||selectedRows.Size()>8||count<1||count>65536||count>vocab_)
+    if(!modelOpen_||!source.IsValid()||!selectedRows.IsList()||selectedRows.Size()<1||selectedRows.Size()>8||count<1||count>65536||count>vocab_)
         throw X::Error("CUDA candidate head requires cached target logits,1..8 rows and valid candidate count");
     auto info=source.Info();std::vector<int> rows(selectedRows.Size());
     for(uint64_t i=0;i<selectedRows.Size();++i){auto r=selectedRows.Get(i).ToInt64();if(r<0||r>=info.shape[0])throw X::Error("Candidate source row out of range");rows[i]=int(r);}
@@ -599,7 +652,7 @@ X::Value CUDATensorIO::PredictIndexed(X::Value hidden,X::Value candidates){
     std::lock_guard<std::mutex> lock(mutex_);X::Tensor query(hidden),indices(candidates);auto a=query.Info(),b=indices.Info();
     if(packedHead_.IsValid())throw X::Error("Indexed NVFP4 head is not implemented; use full-head prediction");
     Require(a,X3_TENSOR_FLOAT32);Require(b,X3_TENSOR_INT32);
-    if(!table_.IsValid()||a.rank!=2||b.rank!=2||a.shape[0]<1||a.shape[0]>8||a.shape[1]!=width_||a.shape[0]!=b.shape[0]||b.shape[1]>65536||b.shape[1]>vocab_)
+    if(!modelOpen_||a.rank!=2||b.rank!=2||a.shape[0]<1||a.shape[0]>8||a.shape[1]!=width_||a.shape[0]!=b.shape[0]||b.shape[1]>65536||b.shape[1]>vocab_)
         throw X::Error("CUDA indexed proposal head shape invalid");
     std::vector<int64_t> scoreShape{a.shape[0],b.shape[1]},rowShape{a.shape[0]};
     if(!SameShape(indexedScores_,scoreShape))indexedScores_=TensorHelper::CreateGPU(Host(),X3_TENSOR_BFLOAT16,scoreShape);
@@ -646,7 +699,8 @@ std::string CUDATensorIO::MemoryJson() const{
         if(item.second.nvfp4)++nvfp4Entries;else ++fp8Entries;
     }
     return nlohmann::json{{"vocab_size",vocab_},{"hidden_size",width_},{"embedding_head_tied",!untiedHead_.IsValid()&&!packedHead_.IsValid()},
-        {"embedding_table_bytes",bytes(table_)},{"untied_head_bytes",bytes(untiedHead_)+bytes(packedHead_)+bytes(packedHeadScales_)},
+        {"embedding_table_bytes",bytes(table_)},{"model_open",modelOpen_},
+        {"embedding_mode",hostEmbedding_?"host_mapped_bf16":"device_bf16"},{"host_embedding_mapped_tensor_bytes",hostEmbeddingSize_},{"untied_head_bytes",bytes(untiedHead_)+bytes(packedHead_)+bytes(packedHeadScales_)},
         {"head_precision",nativeNVFP4Head_?"modelopt_nvfp4_w4a4":(packedHead_.IsValid()?"modelopt_nvfp4_w4a16":"bf16")},
         {"native_head_workspace_bytes",bytes(nativeHeadTiledScales_)+bytes(nativeHeadPackedInput_)+bytes(nativeHeadInputScales_)+bytes(nativeHeadWorkspace_)},
         {"native_head_tiled_weight_scales_bytes",bytes(nativeHeadTiledScales_)},

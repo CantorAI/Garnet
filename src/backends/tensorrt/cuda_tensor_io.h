@@ -12,9 +12,14 @@
 #include <vector>
 namespace Garnet {
 // GPU request tensors, BF16 embedding and an optional independent output head.
-// Only token IDs and small request metadata cross the host boundary.
+// Default device lookup transfers IDs; opt-in host lookup uploads gathered FP32 rows.
 class CUDATensorIO {
     SafeTensorsIndex index_;
+    bool modelOpen_=false;
+    std::unique_ptr<SafeTensorsMappedFile> hostEmbedding_;
+    const unsigned char* hostEmbeddingBytes_=nullptr;
+    uint64_t hostEmbeddingSize_=0;
+    void HostEmbeddingRow(int64_t id,float* destination) const;
     X::Tensor table_,headInput_,headOutput_,tokenHeadInput_,tokenHeadOutput_;
     X::Tensor untiedHead_;
     X::Tensor packedHead_,packedHeadScales_;
@@ -49,6 +54,7 @@ public:
     bool Open(const std::string& checkpoint);
     void Close();
     void EnableNVFP4Head(bool enabled);
+    void EnableHostEmbedding(bool enabled);
     X::Value Zeros(X::Value shape);
     X::Value StorageView(X::Value source,X::Value shape);
     X::Value FiniteF32Bytes(X::Value source);
@@ -93,6 +99,7 @@ public:
         APISET().AddFunc<0>("close",&CUDATensorIO::Close);
         APISET().AddFunc<1>("zeros",&CUDATensorIO::Zeros);
         APISET().AddFunc<1>("enable_nvfp4_head",&CUDATensorIO::EnableNVFP4Head);
+        APISET().AddFunc<1>("enable_host_embedding",&CUDATensorIO::EnableHostEmbedding);
         APISET().AddFunc<2>("storage_view",&CUDATensorIO::StorageView);
         APISET().AddFunc<1>("finite_f32_bytes",&CUDATensorIO::FiniteF32Bytes);
         APISET().AddFunc<1>("zero",&CUDATensorIO::Zero);
