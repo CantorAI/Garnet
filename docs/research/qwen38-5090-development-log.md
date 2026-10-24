@@ -1168,3 +1168,10 @@ No reference server or MTP GPU trial was started. Failed Linux server301/608 wer
 Remote sync verified6432 source files with no mismatches at24cca64fb. All61 CPU study tests passed again on CD-RTX5090 through the append-only mtp-cpu-gates-ledger, exit0. GPU inference remains off pending memory availability. The prior turn made progress by implementing/validating MTP gates and repairing the reference linker; this turn independently revalidated those states.
 
 Prepared a separate TensorRT INT4 group128/BF16 compatibility target, not general serving support. Logical signed weights span all16 codes; offset-binary checkpoint bytes are converted by XOR0x88. Independent CPU logical values and distinct row/group BF16 scales supply exact arithmetic oracles for batch1 and16. Bounded128x256 matrices and64MiB builder workspace are used; detailed engine inspector JSON is required. A numeric pass alone does not prove a fused WoQ tactic or full checkpoint compatibility. Build, GPU arithmetic and tactic inspection remain pending at this source commit. No synthetic timing is reported.
+
+
+## P053 - 2026-10-23: first INT4 graph rejected; physical-layout diagnostic
+
+Source c733ec39c verified6433 files remotely. The standalone test compiled/linked, then TensorRT10.16.1 engine build rejected the first batch1 [N,K] INT4 DQ/BF16 MatMul graph: Myelin reports blockwise dequantization input types exclude INT4, followed by no implementation found. Exit1 retained in int4-group128-ledger; no engine, arithmetic pass, WoQ support or metric claimed. Official pinned-version documentation describes INT4 G64/128 BF16 WoQ but does not establish this concrete graph/tactic combination: https://docs.nvidia.com/deeplearning/tensorrt/10.x.x/inference-library/work-quantized-types.html .
+
+Added optional physical [K,N] storage with transposed scales and block axis0, MatMul non-transposed. The independent logical CPU oracle remains unchanged. This tests a possible tactic-layout restriction; it is an unproven hypothesis. The original [N,K] failure mode remains selectable and preserved. No package upgrade, dequantized BF16 fallback or checkpoint change.

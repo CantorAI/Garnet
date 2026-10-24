@@ -4,6 +4,7 @@
 #include <cuda_bf16.h>
 #include <cuda_runtime.h>
 #include <cstdio>
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -17,7 +18,9 @@ void Check(cudaError_t e){if(e!=cudaSuccess)throw std::runtime_error(cudaGetErro
 struct Buffer {void* p=nullptr; explicit Buffer(size_t n){Check(cudaMalloc(&p,n));} ~Buffer(){if(p)cudaFree(p);}};
 int main(int argc,char** argv){try{
  using namespace nvinfer1;
- if(argc!=2)throw std::runtime_error("Output inspector filename prefix required");
+ if(argc<2||argc>3)throw std::runtime_error("Output prefix and optional kn layout required");
+ const bool kn=argc==3&&std::string(argv[2])=="kn";
+ if(argc==3&&!kn)throw std::runtime_error("Unknown physical layout");
  Logger logger;constexpr int n=128,k=256,group=128;
  // Independent logical oracle spans every signed code and distinct row/group scales.
  std::vector<int> logical(n*k);std::vector<unsigned char> offset(n*k/2,0),packed(n*k/2);
@@ -28,19 +31,25 @@ int main(int argc,char** argv){try{
    int i=row*k+col;offset[i/2]|=static_cast<unsigned char>((q+8)<<((i%2)*4));}
  }
  for(size_t i=0;i<packed.size();++i)packed[i]=offset[i]^0x88;
+ std::vector<__nv_bfloat16> storedScales=scales;
+ if(kn){
+  std::fill(packed.begin(),packed.end(),0);
+  for(int j=0;j<k;++j)for(int row=0;row<n;++row){int i=j*n+row;unsigned q=static_cast<unsigned>(logical[row*k+j])&15U;packed[i/2]|=static_cast<unsigned char>(q<<((i%2)*4));}
+  for(int g=0;g<k/group;++g)for(int row=0;row<n;++row)storedScales[g*n+row]=scales[row*(k/group)+g];
+ }
  for(int m:{1,16}){
   auto builder=Own(createInferBuilder(logger));
   auto net=Own(builder->createNetworkV2(1U<<int(NetworkDefinitionCreationFlag::kSTRONGLY_TYPED)));
   auto config=Own(builder->createBuilderConfig());config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE,64ULL<<20);
   config->setProfilingVerbosity(ProfilingVerbosity::kDETAILED);
-  auto* w=net->addConstant(Dims2{n,k},Weights{DataType::kINT4,packed.data(),n*k});
-  auto* s=net->addConstant(Dims2{n,k/group},Weights{DataType::kBF16,scales.data(),n*k/group});
+  auto* w=net->addConstant(kn?Dims2{k,n}:Dims2{n,k},Weights{DataType::kINT4,packed.data(),n*k});
+  auto* s=net->addConstant(kn?Dims2{k/group,n}:Dims2{n,k/group},Weights{DataType::kBF16,storedScales.data(),n*k/group});
   auto* x=net->addInput("input",DataType::kBF16,Dims2{m,k});
   if(!w||!s||!x)throw std::runtime_error("INT4/BF16 graph input creation failed");
   auto* dq=net->addDequantize(*w->getOutput(0),*s->getOutput(0),DataType::kBF16);
-  if(!dq||!dq->setBlockShape(Dims2{1,group}))throw std::runtime_error("Group128 BF16 dequantize creation failed");
+  if(!dq||!dq->setBlockShape(kn?Dims2{group,1}:Dims2{1,group}))throw std::runtime_error("Group128 BF16 dequantize creation failed");
   dq->setName("checkpoint_int4_group128_dequantize");
-  auto* mm=net->addMatrixMultiply(*x,MatrixOperation::kNONE,*dq->getOutput(0),MatrixOperation::kTRANSPOSE);
+  auto* mm=net->addMatrixMultiply(*x,MatrixOperation::kNONE,*dq->getOutput(0),kn?MatrixOperation::kNONE:MatrixOperation::kTRANSPOSE);
   if(!mm)throw std::runtime_error("INT4 DQ MatMul creation failed");
   mm->setName("checkpoint_w4a16_matmul");auto* y=mm->getOutput(0);y->setName("output");net->markOutput(*y);
   auto plan=Own(builder->buildSerializedNetwork(*net,*config));
