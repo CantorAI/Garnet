@@ -13,4 +13,9 @@ size_t Qwen35AttentionCoreWorkspace(const Qwen35AttentionCoreConfig&) noexcept;
 // per row before enqueue. Outputs/workspace must not alias inputs or each other.
 int RunQwen35AttentionCore(const Qwen35AttentionCoreConfig&,const void* const*,
     void* const*,void*,cudaStream_t) noexcept;
+// Unwired research candidate. Zero global scratch; same input/output contract.
+// Shared-memory use and long-prefix tradeoffs require independent qualification.
+int RunQwen35AttentionCompact(const Qwen35AttentionCoreConfig&,const void* const*,
+    void* const*,void*,cudaStream_t) noexcept;
+
 }

@@ -93,3 +93,8 @@ target_include_directories(garnet_ct_int4_plugin_test PRIVATE "${GARNET_STUDY_SO
 target_link_libraries(garnet_ct_int4_plugin_test PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
 target_compile_definitions(garnet_ct_int4_plugin_test PRIVATE NOMINMAX)
 set_target_properties(garnet_ct_int4_plugin_test PROPERTIES CUDA_STANDARD 17 CXX_STANDARD 17)
+
+add_executable(garnet_attention_compact_test attention_compact_test.cu "${GARNET_STUDY_SOURCE}/src/cuda/qwen35_attention_core.cu")
+target_include_directories(garnet_attention_compact_test PRIVATE "${GARNET_STUDY_SOURCE}/src/cuda")
+target_link_libraries(garnet_attention_compact_test PRIVATE CUDA::cudart)
+set_target_properties(garnet_attention_compact_test PROPERTIES CUDA_STANDARD 17 CXX_STANDARD 17)
