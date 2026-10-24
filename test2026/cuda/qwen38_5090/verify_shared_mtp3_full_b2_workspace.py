@@ -29,6 +29,10 @@ with zipfile.ZipFile(archive) as z:
     assert report['mtp_depth']==3 and report['draft_chunk']==4
     assert report['draft_builder_workspace_bytes']==128<<20
     assert workflow['draft_builder_workspace_bytes']==128<<20
+    prior_failure=json.loads(z.read('results/shared-mtp3-full-b2-attempt1-verified.json'))
+    assert prior_failure['archive_sha256']==evidence['linked_archives']['shared-mtp3-full-b2-attempt1-evidence.zip']
+    assert prior_failure['status']=='shared_mtp3_full_b2_failed_gate_evidence_verified' and not prior_failure['model_gate_passed']
+    assert not prior_failure['comparisons']
     for name,want in workflow['workspace_source_sha256'].items(): assert sha(z.read('Garnet/'+name))==want
     http_embedded='results/batch-http-pilot-attempt2-verified.json' in evidence['files']
     http=json.loads(z.read('results/batch-http-pilot-attempt2-verified.json')) if http_embedded else json.loads((out/'batch-http-pilot-attempt2-verified.json').read_text())

@@ -21,6 +21,7 @@ build = json.loads(build_path.read_text())
 library = hashlib.sha256((root / "build/bin/garnet.dll").read_bytes()).hexdigest()
 assert library == build["library_sha256"] == workflow["library_sha256"]
 files = [p for p in folder.rglob("*") if p.is_file()]
+files += [results / "shared-mtp3-full-b2-attempt1-verified.json"]
 files += [results / "batch-http-pilot-attempt2-verified.json", results / "shared-full-b2-attempt1-verified.json"]
 files += [root / n for n in ("Garnet/test2026/cuda/qwen38_5090/run_shared_mtp3_full_b2_workspace.py", "test-shared-mtp3-full-b2-workspace.bat")]
 files += [root / "Garnet" / n for n in list(build["source_sha256"]) + [
@@ -34,7 +35,7 @@ files += [root / n for n in ("capture-full-b2-wait-dump.py", "inspect-full-b2-fi
 raw = {p.relative_to(root).as_posix(): p.read_bytes() for p in files}
 manifest = {"library_sha256": library, "files": {n: hashlib.sha256(b).hexdigest() for n, b in raw.items()},
     "linked_archives": {n: hashlib.sha256((results / n).read_bytes()).hexdigest() for n in (
-        "batch-http-pilot-attempt2-evidence.zip", "shared-full-b2-attempt1-evidence.zip", "full-attention-policy-full-b2-attempt1-evidence.zip", "full-attention-policy-candidate-stages-attempt1-evidence.zip", "native-batch2-initial-failure-evidence.zip")},
+        "shared-mtp3-full-b2-attempt1-evidence.zip", "batch-http-pilot-attempt2-evidence.zip", "shared-full-b2-attempt1-evidence.zip", "full-attention-policy-full-b2-attempt1-evidence.zip", "full-attention-policy-candidate-stages-attempt1-evidence.zip", "native-batch2-initial-failure-evidence.zip")},
     "scope": "Closed B2 MTP3 retained-ID and complete ordinary-state hash witness, success or failure retained. Disk/source provenance retained; no independent live loaded-module receipt. Not HTTP, MTP, broad quality or throughput admission."}
 with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as z:
     for n, b in raw.items(): z.writestr(n, b)
