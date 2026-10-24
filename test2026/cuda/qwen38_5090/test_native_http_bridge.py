@@ -22,6 +22,13 @@ class BridgeTests(unittest.TestCase):
   with self.assertRaises(ValueError):validate_body(body)
   body['model']='qwen38-27b-nvfp4'
   with self.assertRaises(ValueError):validate_body(body,'qwen35-4b-bf16')
+ def test_int4_route_rejects_other_precision_names(self):
+  body,_=payload('text','fixture',1,'qwen38-27b-int4',128)
+  validate_body(body,'qwen38-27b-int4')
+  for model in ('qwen38-27b-nvfp4','qwen35-4b-bf16'):
+   with self.assertRaises(ValueError):validate_body(body,model)
+  body['max_tokens']=True
+  with self.assertRaises(ValueError):validate_body(body,'qwen38-27b-int4')
  def test_incremental_real_pipe_and_http_accounting_unicode_and_final_ids(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=Path(tmp);script=root/'fixture.py';script.write_text(FIXTURE,encoding='utf-8')

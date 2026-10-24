@@ -124,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
             else:self.reply(500,{'error':repr(error)})
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--model',choices=['qwen38-27b-nvfp4','qwen35-4b-bf16'],default='qwen38-27b-nvfp4');p.add_argument('--port',type=int,default=18082);p.add_argument('--log-root',type=Path,required=True);p.add_argument('command',nargs=argparse.REMAINDER);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--model',choices=['qwen38-27b-nvfp4','qwen35-4b-bf16','qwen38-27b-int4'],default='qwen38-27b-nvfp4');p.add_argument('--port',type=int,default=18082);p.add_argument('--log-root',type=Path,required=True);p.add_argument('command',nargs=argparse.REMAINDER);a=p.parse_args()
     command=a.command[1:] if a.command[:1]==['--'] else a.command
     if not command:p.error('Native worker command required')
     worker=Worker(command,a.log_root);server=ThreadingHTTPServer(('127.0.0.1',a.port),Handler);server.worker=worker;server.model=a.model
