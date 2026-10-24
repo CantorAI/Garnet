@@ -1,7 +1,17 @@
 import json,unittest
-from native_worker_io import requests,emit,MAX_FRAME_BYTES
+from native_worker_io import requests,emit,MAX_FRAME_BYTES,transport_text
 
 class WorkerIOTests(unittest.TestCase):
+    def test_native_byte_prefix_normalization_matches_utf8_codec(self):
+        class NativeText:
+            def __init__(self,raw):self.raw=raw
+            def encode(self,encoding):return self.raw
+        vectors=[b'\xf0\x9f\x94\xb5',b'\xe4\xb8\xad',b'\xc3\xa9',b'\xf0\x9fA',
+            b'\xed\xa0\x80',b'\xe0\x80\x80',b'\xf4\x90\x80\x80',b'\xff\x80',b'\xe2\x82\xac']
+        for raw in vectors:
+            for count in range(len(raw)+1):
+                prefix=b'prefix '+raw[:count]
+                self.assertEqual(transport_text(NativeText(prefix)),prefix.decode('utf8','replace'))
     def reader(self,blocks):
         it=iter(blocks)
         return lambda:next(it,b'')
