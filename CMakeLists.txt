@@ -4,6 +4,7 @@
 cmake_minimum_required(VERSION 3.18)
 option(GARNET_METAL "Build the experimental native Metal/MPS backend" OFF)
 option(GARNET_CPU_ONLY "Build Garnet's GPU-free OpenVINO graph runtime" OFF)
+option(GARNET_STAGE_VENDOR_DLLS "Stage vendor DLLs after Windows builds; keep ON for distributable runtimes" ON)
 if(GARNET_METAL)
     if(GARNET_CPU_ONLY)
         message(FATAL_ERROR "Select one backend build: Metal or CPU/OpenVINO")
@@ -545,10 +546,12 @@ if(WIN32)
         endif()
         list(APPEND GARNET_VENDOR_DLLS ${matches})
     endforeach()
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            ${GARNET_VENDOR_DLLS} "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        COMMAND_EXPAND_LISTS VERBATIM)
+    if(GARNET_STAGE_VENDOR_DLLS)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                ${GARNET_VENDOR_DLLS} "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMAND_EXPAND_LISTS VERBATIM)
+    endif()
 else()
     find_library(GARNET_TENSORRT_LIBRARY NAMES nvinfer
         PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
