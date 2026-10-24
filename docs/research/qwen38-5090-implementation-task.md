@@ -329,11 +329,14 @@ record resolved cache capacity, and require readiness/VLM/token protocol gates
 before the corrected grid workload. SGLang's graph pilot above remains a candidate,
 not a fastest-attainable claim; old image cache uniqueness is unproven.
 
-CD-RTX5090 currently has about10GB GPU memory held by desktop applications,
-leaving about22GB free. Full27B/reference/MTP runs require that memory to be freed.
-Preserve those applications and the fixed study directory. Do not manufacture
-results, lower4K capacity, change arithmetic or omit a stronger reference to fit.
-Once available: retry vLLM; run strict MTP/self-greedy gates; run full INT4 and4B
+User authorized stopping Cantor to release GPU memory; verified Cantor/WorldSense
+processes were stopped with identities retained. After4B exited, GPU use was464MiB.
+A later Cantor desktop restart was observed; recheck actual memory before each engine.
+Keep the fixed study directory. Do not manufacture results, lower4K capacity, change
+arithmetic or omit a stronger reference to fit. The linker-repaired vLLM graph retry
+is now live under separate logs/output/metadata with source1e19927bc. Do not restart
+it for quiet JIT output or run another GPU model concurrently. Next, run strict
+MTP/self-greedy gates; run full INT4 and4B
 correctness before timing; repeat native/SGLang/vLLM matched grid cohorts and actual
 concurrency admission; compare the faster valid reference with raw-event replay.
 
@@ -356,3 +359,21 @@ qualification profiles pass; warm-core4K cases improve versus legacy with extra
 scratch memory. It remains unwired and requires opt-in plugin/model validation.
 Small-capacity regression is retained. See P067 and verified attention-split evidence;
 no component result establishes the requested2x end-to-end reference comparison.
+
+
+4B current status: initial full32-layer/vision load and text4 passed; image failed
+because default min_pixels1024 produced14x14 while preloaded grid was16x16.
+Initial failure archive is preserved and verified. Native image-only probe proves
+explicit min=max65536 gives16x16. Source1e19927bc adds opt-in imageMinPixels and
+separate retry output paths; full corrected image/repeat/3968-input test remains
+pending. Model token callbacks and4B HTTP worker passed CPU control/protocol tests
+but remain GPU-unqualified. Do not infer4B speed/quality from these fixtures.
+
+User explicitly requested replacing local D:/CantorAI/Garnet with our source.
+Original dirty/untracked changes are retained in a pinned Git backup ref and
+D:/CantorAI/backups/garnet-before-qwen38-5090 replacement record. Primary checkout
+now uses a detached study commit, preserving qwen38-5090 ownership in the dedicated
+worktree.9992 tracked files matched byte-for-byte immediately after replacement.
+Ignored environments/build products were preserved, so source replacement alone
+is not proof those old binaries were rebuilt. Remote study DLL identity remains
+separately pinned and verified. Do not silently use original installed binaries.
