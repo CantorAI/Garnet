@@ -22,4 +22,9 @@ int RunQwen35AttentionCompact(const Qwen35AttentionCoreConfig&,const void* const
 int RunQwen35AttentionCompactTiled(const Qwen35AttentionCoreConfig&,const void* const*,
     void* const*,void*,cudaStream_t) noexcept;
 
+// Unwired split-key candidate. FP32 reduction order differs; qualify numerically.
+size_t Qwen35AttentionSplitWorkspace(const Qwen35AttentionCoreConfig&) noexcept;
+int RunQwen35AttentionSplit(const Qwen35AttentionCoreConfig&,const void* const*,
+    void* const*,void*,cudaStream_t) noexcept;
+
 }

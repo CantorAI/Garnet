@@ -275,14 +275,16 @@ capacity to fit larger batches.
 2. Establish text/image quality beyond basic smoke and record the precision
    differences. Current Garnet state/cache arithmetic is F32; initial references
    use BF16 KV/conv and F32 SSM. Close this matching gate before any2x claim.
-3. Validate the research-only HTTP bridge over actual native token events. It is
-   implemented with42 passing CPU study tests; full-model GPU integration is
-   running. Require original native VLM IDs/reference prompt IDs, then actual
-   streamed usage before timing. Its single slot queues clients; this does not
-   establish native batch2/4/8. Validate concurrency profiles1/2/4/8 with real
-   memory admission. Retain compressed weights shared
-   across profiles; inspect fused GDN/attention and resident control paths already
-   present in current Garnet before introducing another execution stack.
+3. Native HTTP B1 validation and128-token pilots completed. Original per-layer
+   text TTFT104.85ms/decode36.10tokens/s; packed full64 text123.04ms/34.68tokens/s.
+   Packed lowers sampled peak from27.81GB to24.51GB but does not improve speed.
+   Both retain4/4 native VLM-ID/prompt-ID gates and3/4 exact SGLang sequences;
+   broad quality/precision remain open. Image pilots are exploratory: the old
+   single-pixel JPEG nonce collided after compression. Rerun all engines with the
+   tested binary-grid nonce and precomputed request bodies. The bridge streams
+   actual native tokens, has63 CPU study checks, and remains a single queued slot;
+   it does not establish batch2/4/8. Validate native concurrency and actual4K
+   admission without duplicating packed weights or silently lowering capacity.
 4. Establish tuned vLLM/SGLang profiles, including feasible CUDA graph/kernel
    options. Both initial profiles deliberately used eager startup for feasibility;
    they are not evidence of the fastest attainable reference. A completed
@@ -292,8 +294,17 @@ capacity to fit larger batches.
    early image EOS and actual lengths. Autotuning/prefill graphs remain disabled
    in that candidate; broader reference tuning is still required. Compiler/linker
    failures and SGLang's first memory exhaustion are retained in the research log.
-5. Complete the separate INT4 W4A16 loader/kernel compatibility gate and4B comparison.
-   Do not label the mixed NVIDIA checkpoint as an INT4 baseline.
+5. INT4 is now partially integrated through a distinct symmetric G128 W4A16
+   loader, direct packed CUDA kernel and serialized zero-workspace plugin.
+   Generic TensorRT INT4-DQ graphs failed in three retained configurations;
+   the native route passed an actual projection and stateful layers0/3 against
+   independent CPU oracles, including graph replay. The guarded factory requires
+   all496 text projections to remain packed and preserves the BF16 head/sidecars
+   through an explicit index. Full64-layer INT4 VLM, chunk16 quality, memory,
+   HTTP timing and the downloaded Qwen3.5-4B comparison remain unexecuted.
+   Do not label the mixed NVIDIA checkpoint as INT4 or promote component gates
+   to full-model support. The opt-in MTP worker and16-sequence greedy gate are
+   implemented but have no GPU correctness/performance result yet.
 6. Collect repeated text/image TTFT, decode, aggregate throughput and memory with
    fixed4K total capacity and matched request hashes, quality, cache behavior,
    output lengths and concurrency. Both the initial32-token/eight-request SGLang
@@ -306,3 +317,33 @@ capacity to fit larger batches.
    reference for decode and throughput; seek half TTFT separately. Publish unmet
    targets as measured. No automatic success follows from primitive correctness,
    server process duration, a reduced workload or an untuned reference.
+
+
+## Current execution dependencies (2026-10-23 continuation)
+
+The vLLM graph attempt failed at final FlashInfer SM120 linking, not benchmarking.
+Existing CUDA-library aliases were repaired and the retained objects successfully
+linked with the original WSL driver-library path. No post-repair full-server result
+exists. Preserve the original failure/source snapshot, use a fresh attempt label,
+record resolved cache capacity, and require readiness/VLM/token protocol gates
+before the corrected grid workload. SGLang's graph pilot above remains a candidate,
+not a fastest-attainable claim; old image cache uniqueness is unproven.
+
+CD-RTX5090 currently has about10GB GPU memory held by desktop applications,
+leaving about22GB free. Full27B/reference/MTP runs require that memory to be freed.
+Preserve those applications and the fixed study directory. Do not manufacture
+results, lower4K capacity, change arithmetic or omit a stronger reference to fit.
+Once available: retry vLLM; run strict MTP/self-greedy gates; run full INT4 and4B
+correctness before timing; repeat native/SGLang/vLLM matched grid cohorts and actual
+concurrency admission; compare the faster valid reference with raw-event replay.
+
+Attention scheduling optimization is a separate, unwired experiment. The first
+per-query compact core passes all seven CPU/KV/graph gates and improves short-prefix
+component timing, but regresses full prefixes. It is not a serving default or a
+model speedup. An output-tiled candidate is being tested with the same gates and a
+three-way ABCCBA protocol. Retain all variants/failures and raw CUDA-event samples.
+Do not extrapolate a component ratio to HTTP TTFT, decode, throughput or the2x goal.
+
+The goal remains active. Completion requires the requested full-model comparisons,
+quality/precision/cache/transport matching, repeated metrics, actual concurrency
+and honest evidence for any claimed speedup; the2x objective is currently unmet.

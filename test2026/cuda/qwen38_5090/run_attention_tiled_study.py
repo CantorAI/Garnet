@@ -38,4 +38,4 @@ def main():
   sampler.close();report['whole_component_sampled_memory']=sampler.peak('whole-component-oracle-and-timing-job');report['sampling_errors']=sampler.errors
   report['source_after']=source_identity();manifest.write_text(json.dumps(report,indent=2))
  return code
-if __name__=='__main__':raise SystemExit(main())
+if __name__=='__main__':raise SystemExit('Three-variant experiment archived. Current binary requires run_attention_split_study.py; reproduce the earlier experiment from source39a393c8a.')
