@@ -2812,3 +2812,21 @@ The original pilot remains live, with all13 HTTP quality cases/two streams/four 
 Local B4 HTTP archive now requires the auxiliary CIM observation sidecar, and metric replay explicitly marks an extra observer during timing and clean-repeat requirement. This preserves the limitation rather than silently comparing a changed monitoring protocol as a clean repeat. Original job remains live; archive/replay method edits are local and do not alter the executing worker.
 
 The unrun B4 T4 candidate has local archive/replay preparation. It binds the prior B4 T8 ID proof and latest B4 HTTP archive, checks the declared T8-to-T4 source transformation against retained source, and retains strict full output-ID equality across both resets. No numerical, memory or performance result exists for T4 yet. Syntax validation passed.
+
+
+### Physical B4 T8 HTTP pilot independently replayed (2026-10-24)
+
+Original job completed exit0/all eight cohorts. Archive 97c0c3e617c253d5d56fdbf980bb3a1052ba7714f7019b4dcaba7d1721832e13 retains471 files/1,559,766 bytes, including the explicitly transcribed auxiliary CIM observer sidecar. Both machines independently replayed64 SSE/native-worker pairs,13 HTTP quality requests/two streams/four serialization regression captures, native source/runtime lineage, actual group occupancy, metric arithmetic, resource samples and identical request bytes/transport/prompt-output counts against ordinary references. Sampling gaps and the extra observer are retained; clean_repeat_required=true. This is verified pilot evidence, not a clean repeat or causal comparison.
+
+| Cohort | TTFT ms | Decode tok/s | Aggregate tok/s | Real-row group counts 1/2/3/4 |
+|---|---:|---:|---:|---:|
+| text-c1 | 325.9582 | 22.514346 | 19.385193 | 8/0/0/0 |
+| text-c2 | 6301.2518 | 22.498819 | 22.702702 | 6/1/0/0 |
+| text-c4 | 298.2323 | 15.436868 | 41.691157 | 1/0/1/1 |
+| text-c8 | 3361.0608 | 21.763860 | 83.409857 | 0/0/0/2 |
+| image-c1 | 677.6543 | 22.512011 | 20.222029 | 8/0/0/0 |
+| image-c2 | 673.3359 | 22.104832 | 32.133533 | 2/3/0/0 |
+| image-c4 | 676.2233 | 21.965258 | 53.139202 | 0/2/0/1 |
+| image-c8 | 7227.8325 | 21.763047 | 52.382222 | 1/0/1/1 |
+
+C8 text83.409857/image52.382222 tok/s is below the earlier B2 MTP pilot97.993738/90.708603 and the faster ordinary references445.768458/439.864319; these are different execution profiles and separate pilots, not a causal batch-size ablation. Target2x remains unmet. Only after both replays and original closure, guarded shared-full-b4-t4-attempt1 was launched on unchanged native DLL/source, reducing token slots from8 to4. No T4 numerical or speed result exists at launch. Broader quality/repeats/actual4K/tuned references remain pending.
