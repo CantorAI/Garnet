@@ -65,6 +65,9 @@ class BatchWorker(Worker):
                 if self.stop.is_set():break
                 if not self.healthy():raise RuntimeError('Native batch worker is not ready')
                 wire=(json.dumps({'batch':[{'id':t.key,'body':t.body} for t in group]},separators=(',',':'))+'\n').encode()
+                with (self.root/'batch-dispatch.jsonl').open('a',encoding='utf8') as log:
+                    log.write(json.dumps({'monotonic':time.monotonic(),'physical_capacity':self.capacity,
+                        'request_ids':[t.key for t in group],'real_rows':len(group)})+'\n')
                 while wire:
                     written=self.process.stdin.write(wire)
                     if not written:raise OSError('Batch request pipe closed')

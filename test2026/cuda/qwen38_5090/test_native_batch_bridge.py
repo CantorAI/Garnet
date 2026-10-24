@@ -37,6 +37,9 @@ class NativeBatchBridgeTests(unittest.TestCase):
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(call,[0,1]))
     self.assertEqual([r['text'] for r in results],['Aé','Bé']);self.assertTrue(all(r['status']=='completed' and r['generated_tokens']==2 for r in results))
     self.assertIn('FIXTURE_BATCH_SIZE 2',(root/'worker-stdout.jsonl').read_text(encoding='utf8'))
+    dispatch=[json.loads(line) for line in (root/'batch-dispatch.jsonl').read_text().splitlines()]
+    self.assertEqual(len(dispatch),1);self.assertEqual(dispatch[0]['real_rows'],2)
+    self.assertEqual(len(set(dispatch[0]['request_ids'])),2)
    finally:server.shutdown();server.server_close();thread.join();worker.close()
  def test_partial_group_is_dispatched_without_waiting_for_another_client(self):
   with tempfile.TemporaryDirectory() as tmp:
