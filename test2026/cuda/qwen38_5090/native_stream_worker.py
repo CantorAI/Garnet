@@ -50,7 +50,7 @@ try:
                 emit({'event':'token','id':key,'token_id':token,'sampled_tokens':len(generated),'prompt_tokens':len(ids),'text':text,'stop':stop,'native_monotonic_seconds':now})
                 if stop or step+1==limit:break
                 prediction=decoder.step([token],positions=[[current]*3]);current+=1
-            emit({'event':'completed','id':key,'generated_ids':generated,'prompt_ids':ids,'image_sha256':image_hash,'finish_reason':'stop' if generated[-1] in stops else 'length','native_elapsed_seconds':time.monotonic()-started})
+            emit({'event':'completed','id':key,'generated_ids':generated,'prompt_ids':ids,'text':text,'image_sha256':image_hash,'finish_reason':'stop' if generated[-1] in stops else 'length','native_elapsed_seconds':time.monotonic()-started})
         except Exception as error:
             emit({'event':'error','id':key,'error':repr(error)});raise
 finally:

@@ -1047,3 +1047,14 @@ Run81b4a8ebf3d14153b487d9ad40cdb4f4 completed exit0: eight measured requests per
 |image|8|359.6580500006894|55.77625939567659|351.1103320328398|936|28279881728|
 
 All measured arrivals carried single-token cumulative usage increments. Some image responses ended before128 tokens; actual counts910 at concurrency1 and936 at8 are retained without padding or discarded requests. Sampling errors were empty; actual per-cohort gaps and adapter-wide scope are in the manifest. These remain exploratory reference measurements until native transport, request hashes, lengths and quality are matched. Autotuning/prefill-graph tuning and vLLM graph baselines remain outstanding. No2x claim follows. The verified-owned parent369 received SIGTERM after the benchmark, with exit observation pending at this entry.
+
+
+## P042 - 2026-10-23: real HTTP bridge ready for GPU integration test
+
+SGLang graph parent exit0 was observed after verified SIGTERM; subsequent nvidia-smi showed106MiB and0% GPU utilization. No reference engine is left running before native startup.
+
+Added a loopback-only CPython HTTP bridge to the native token-event worker. It drains real per-token events from the child pipe, checks request IDs, cumulative counts and final IDs, and streams immediate SSE with actual usage. A single native slot serializes concurrent clients; queue time stays inside client TTFT. It is not advertised as native batching. Raw child stdout/stderr are retained. Images use one fixed JPEG file. General ServeModel admission is unchanged and broad/reference quality gates remain open.
+
+Two real child-process/HTTP CPU fixture tests validate separate token arrival times, cumulative usage, final IDs, Unicode prefix buffering/final text, non-stream replies and rejection of wrong input profiles. The first fixture failed because Windows wrote its Unicode source in the local encoding; explicit UTF-8 corrected the fixture. All42 CPU study tests pass, plus syntax checks. Fixture timestamps are never model performance evidence.
+
+Added GPU validation driver: wait for real health; replay all four retained JPEG request bodies; require original native fused16 generated IDs and reference prompt IDs to match; retain the separate SGLang parity result without weakening it. Then require actual single-token HTTP arrival accounting on the seeded text/image requests, before eight-request128-token B1 timing with the same seed3/JPEG/image-first body generation as SGLang. Warmups and raw events are retained. Full-model startup/validation remains pending at this entry. No2x claim.
