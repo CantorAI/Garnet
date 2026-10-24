@@ -2880,3 +2880,18 @@ Original pilot completed exit0/all eight cohorts. Archive a065bec1839c4ce001737e
 | image-c8 | 15146.2293 | 9.351911 | 26.815535 |
 
 The pilot establishes no improvement: C8 text81.724569/image26.815535 tok/s remains below the earlier B2 MTP pilot and ordinary references, and2x remains unmet. Only after original closure/archival/both independent replays and the separate post-run query, guarded shared-mtp3-full-b2-deferred-attempt1 was launched on unchanged native/core sources. This is a strict retained-ID/ordinary-state-hash experiment for the existing deferred-state option, not timing. Independent repeats, broader quality, actual4K prompts and tuned references remain pending.
+
+
+### Follow-up memory plan from retained allocations (2026-10-24; design only)
+
+The retained shared-mtp3-full-b2-attempt2 external_compressed_pool records embedding_table_bytes=2,542,796,800, embedding_head_tied=false, untied_head_bytes=715,161,600 and head_precision=modelopt_nvfp4_w4a4. Source cuda_tensor_io.cpp Open uploads the full BF16 embedding table independently of the packed head; Embedding/EmbeddingChunk gather its rows on device. This is a distinct potential memory target after the currently live deferred-state gate; no native/common source is changed now.
+
+Proposed implementation, contingent on subsequent evidence and qualification:
+
+1. Add a default-off native host-embedding mode with persistent read-only checkpoint mapping and explicit model-open state. Require the already validated independent NVFP4 head; never substitute an invalid GPU tensor as an open-model sentinel or silently fall back to a missing tied head. Apply before target construction/capture.
+2. Preserve both embedding APIs. Validate every ID and shape before mutation, gather only requested BF16 rows on CPU with exact bit-preserving FP32 conversion, and upload those rows to the existing GPU outputs. Preserve chunk time-major token input, batch-major output, inactive/padded-slot zeros and stream/lifetime rules. Include CPU lookup/H2D cost inside request timings.
+3. Keep head precision, weights and full vocabulary verification unchanged. Disable/close transitions must be atomic, preserve a working prior mode on allocation failure and fail closed if a head transition would require an absent GPU table. Report host mapping versus GPU table bytes separately; mapped size is not resident CPU RSS.
+4. Verify original GPU gather versus the new path using independent BF16 byte conversion, boundary/duplicate/random real checkpoint rows, B1/2/4/8 chunk shapes and invalid-ID/shape/lifetime cases. Preserve default behavior and run native memory/race checks where supported.
+5. Requalify real text/image outputs and full ordinary/MTP target-state hashes under4096 capacity before streaming/HTTP/performance. Measure GPU memory, host RSS/transfer costs, TTFT/decode/real concurrency including image encoding. Do not precompute visual inputs outside measured work or reduce supported context to manufacture a gain.
+
+The named2.54GB allocation motivates the design; no whole-process saving, equivalence, latency or2x claim is made. If the option is implemented it needs a new native build receipt and fresh gates; existing3c3207 proofs do not automatically qualify a changed DLL. Current deferred-state experiment remains isolated.
