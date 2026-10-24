@@ -440,3 +440,37 @@ separately.2x remains unmet; no claimed final fastest-reference baseline yet.
 P091 update: fresh B1retain0 matches all four saved B1 sequences/repeats, so retained-output setting alone does not explain B2 mismatch. Truncated prefix1 matches B1/B2 byteexact; prefix4 differs. Isolate prefixes2/3 next, preserving full-model failed gate. Opt-in MTP3draftT4 passed all16 self-greedy/VLM/stream gates but measured71.3text/71.9image tok/s, no clear throughput gain versus defaultT16; negative result archived. Resident vision end-to-end, stronger reference MTP/tuning, actual native batching, full INT4/4B comparisons and repeated final evidence remain required.2x unmet.
 
 P096 update: complete chunk/state evidence confirms tiny first-layer hidden differences despite exact first-layer GDN states; later states amplify differences. Substitute-input norm/MLP and residual-barrier experiments are exact B1/B2 and do not reproduce the real-layer issue. No barrier/default fix is justified. All three raw archives now locally integrity/array verified. Actual layer-intermediate isolation remains needed for batch admission; stronger referenceMTP, resident vision end-to-end and full INT4/4B/final repeated comparisons stay in scope.2x unmet.
+
+
+## Structural TTFT candidate: shared compressed weights across static profiles
+
+Source evidence: current mixed packed factory embeds weights and requires one
+shared prefill/decode chunk profile. At T16,41-token text uses3 target calls and
+104-token image uses7. This is a call-count fact, not a measured attribution of
+latency. The native NVFP4 lowering itself notes external packed bindings are
+needed to share compressed constants across prefill/decode engines. Existing
+external weight bindings admit BF16 only, which cannot safely stand in for this
+mixed checkpoint within the32GB target budget.
+
+Concrete candidate, not implemented or qualified:
+1. Add an IO-owned readonly packed matrix/scale pool retaining exact checkpoint
+   bytes and validated logical dimensions/scalars; repack NVFP4 block scales once.
+   Keep FP8 and NVFP4 recipes separate and reject BF16 expansion/fallback.
+2. Add guarded external compressed weight bindings to TensorRT lowering. Validate
+   declared input types, physical shapes, calibration metadata and single-owner
+   lifetime. Record external compressed bytes separately from embedded weights
+   and existing externalBF16 statistics; do not double-count shared storage.
+3. Build static wider-prefill and T16-decode programs against one pool/canonical
+   state/head, initially B1/4096 with bounded prefillT128. Reuse existing MTP wide
+   prefill normalization/slicing rather than adding a second draft weight copy.
+4. Qualify exact raw packed storage and same-profile component outputs versus
+   embedded lowering for both recipes; prove two engines share GPU allocations,
+   close/lifetime rules and no silent precision substitution. Then qualify real
+   prompt/state/full-token/VLM behavior across profiles before any performance.
+5. Only after these gates, repeat matched text/image HTTP TTFT/decode/VRAM against
+   the original T16 candidate and valid tuned references. Preserve any numerical
+   or performance regression. Wider prefill does not establish a2x model speedup.
+
+This is a backend optimization candidate motivated by concrete current-source
+constraints; it neither replaces unresolved B2 correctness work nor shrinks the
+remaining reference, INT4,4B,quality,concurrency and repetition requirements.
