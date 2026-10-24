@@ -5,21 +5,24 @@ projection/plugin tests, real layer0 MLP parity, real GDN/full-attention decoder
 parity at4K capacity, and native W4A4 head checks have passed. Both references have
 passed text/image smoke; SGLang's initial eager profile now has raw streaming and
 concurrency measurements. The33 CPU tests pass. Full64-layer native text smoke
-also reproduces the reference token IDs. Vision validation,
+also reproduces the reference token IDs. Four native VLM color/spatial answers
+are semantically correct; strict reference token parity is2/4 due to capitalization.
+Broader vision/precision validation,
 serving integration, tuned matched comparisons and the2x target remain incomplete.
-No Garnet full-model timing or successful2x comparison is claimed.
+A direct-call native text pilot measured37.3 decode tokens/s and1060ms first-token
+time over eight32-token requests. This excludes HTTP and is not a matched2x result.
 The full BF16-projection vision tower executes but has failed both the F32 and
 mixed-projection CPU comparison limits. A separate full27-layer F32-projection
 structural diagnostic passed with max error0.000576 and relative L2 error2.874e-6.
-Keep serving admission closed and retain the BF16 failures. Complete VLM output
-and low-precision quality validation are the next gates.
+Keep serving admission closed and retain the BF16/strict-token failures. Broader
+quality, real streaming, fused prefill and matched comparisons are the next gates.
 
 Audit date: 2026-10-23. The preserved source baseline was
 `5b0dc7ff8e5c1a77807138db310605bcd12aa390` plus inherited local edits, captured
 separately at2355fc4b5. Work continues on qwen38-5090; command ledgers retain exact
 commit/patch manifests. Do not reset the original checkout or infer tested source
 identity from a parent commit alone. Research method/failures are in the development
-log; no full-model throughput or successful2x comparison is claimed.
+log; no matched full-model throughput or successful2x comparison is claimed.
 
 ## Objective and acceptance
 
@@ -228,7 +231,7 @@ XLang3 Release binaries and a matching public SDK. From a VS x64 developer
 shell, configure it with `XLANG3_RUNTIME_DIR`, `XLANG3_ROOT`,
 `GARNET_TENSORRT_ROOT`, `CMAKE_CUDA_COMPILER` and an explicit architecture.
 Use89 for the recorded local RTX4080 correctness build; use120 for the target
-RTX5090 build, which has passed native build, component correctness and the full64-layer text smoke. Full VLM execution remains pending. Build target `garnet`. No VM sources
+RTX5090 build, which has passed native build, component correctness and the full64-layer text smoke. Full VLM executes with four semantic color/spatial answers, but strict parity and broad quality remain incomplete. Build target `garnet`. No VM sources
 are modified by this wrapper. Record executable/DLL/import-library and SDK
 hashes, as well as the complete compiler and dependency versions.
 
@@ -262,9 +265,10 @@ capacity to fit larger batches.
 
 1. Full64-layer decoder smoke passed with4096 capacity, the saved reference26-token
    prompt and exact[19,248046] output. This is not broad quality or a benchmark.
-   Next validate image processing
-   and vision plus full VLM generation. The reference224x224 PNG smoke produced64
-   image tokens; inspect actual resize/normalization rather than assuming49.
+   The checkpoint JPEG preprocessing gate passed; four matched JPEG VLM cases
+   give4/4 semantic colors and2/4 exact token sequences. Preserve those separate
+   outcomes and broaden quality checks. Test existing fused chunks4/16 with real
+   layers, state continuation, inactive masks and replay before a full-model pilot.
 2. Establish text/image quality beyond basic smoke and record the precision
    differences. Current Garnet state/cache arithmetic is F32; initial references
    use BF16 KV/conv and F32 SSM. Close this matching gate before any2x claim.

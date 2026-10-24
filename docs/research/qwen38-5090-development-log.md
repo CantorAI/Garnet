@@ -882,3 +882,46 @@ called a warmed serving peak. The measured direct-call subset remains separate
 from the outer correctness process duration. Exact runtime binaries are hashed
 after execution. The matched SGLang parent was signaled only after verified
 ownership, observed to exit0, and the GPU returned to106MiB/0% before native work.
+
+## P034 - 2026-10-23: first full native VLM observations and direct-call timings
+
+Run11e0c7a7341b4862a8a4ccd1430b7b66, source57f432ef8, completed exit1 because
+the strict reference-token assertion failed. All64 mixed decoder layers and the
+normal BF16 vision tower executed on the RTX5090 at batch1/capacity4096. Exact
+image hashes and full prompt IDs matched before construction. All four semantic
+color/spatial checks passed; strict token parity passed two of four:
+
+| Case | Garnet | SGLang | Exact generated IDs |
+| --- | --- | --- | --- |
+| red | Red | Red | pass |
+| green | green | Green | fail |
+| blue | blue | Blue | fail |
+| bottom-blue | blue | blue | pass |
+
+This preserves the failed strict gate; case-insensitive semantic success is a
+separate observation, not a retroactive change of its acceptance rule. It also
+does not establish broad VLM quality or explain the separate numerical vision
+differences. General serving admission remains closed.
+
+The independent direct native-call text pilot completed: one excluded warmup,
+eight measured requests,256 actual generated IDs,32 tokens/request and41 prompt
+tokens/request. Median first-token time1060.208299999431ms, median decode
+37.318686598767705tokens/s, cohort output16.69191732112634tokens/s. These include
+tokenization, state reset, per-token embedding/serial prefill and greedy sampling,
+but exclude HTTP transport. They are not matched HTTP results or proof of2x.
+The initially slow serial prefill is now an observed optimization target.
+
+Whole-job sampled adapter maximum28,536,557,568 bytes;16,580 samples, requested
+20ms interval, observed median31.18521ms/max218.7191ms gaps, no sampling errors.
+Its window includes build, warmup, pilot and VLM correctness, not just warmed
+serving. Pilot SHA256 f15cceb8bd3b6f3aa13f5cdf292f4902de1ff2ab237a09f70e6a9afc168d0b9e.
+All raw timestamps, greedy IDs, requests, failures, source and binary hashes remain
+saved. Importing the embedded runtime's hashlib emitted nonfatal unavailable
+SHA3/SHAKE messages; SHA256 verification and subsequent execution succeeded.
+
+Next optimization uses the existing Garnet fused GDN/attention chunk programs,
+not another inference stack. Prepared real-layer0/3 checks against18 sequential
+CPU steps at4K capacity, testing chunks4/16 plus a two-active-token continuation
+and inactive padding, future KV guards and CUDA replay. One engine/weight set
+must serve prefill and decode to avoid duplicating the compressed model in VRAM.
+These component/whole-model optimized results are not yet available.
