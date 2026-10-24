@@ -8,10 +8,11 @@
 namespace Garnet {
 class ModelOptFP8Plugin final:public nvinfer1::IPluginV2DynamicExt {
     struct State {int32_t rows,columns;float weightScale,inputScale;} state_;
+    bool canonicalGdnM32_=false;
     std::string namespace_;
     std::shared_ptr<void> context_;
 public:
-    ModelOptFP8Plugin(int rows,int columns,float weightScale,float inputScale);
+    ModelOptFP8Plugin(int rows,int columns,float weightScale,float inputScale,bool canonicalGdnM32=false);
     nvinfer1::IPluginV2DynamicExt* clone() const noexcept override;
     nvinfer1::DimsExprs getOutputDimensions(int,const nvinfer1::DimsExprs*,int,nvinfer1::IExprBuilder&) noexcept override;
     bool supportsFormatCombination(int,const nvinfer1::PluginTensorDesc*,int,int) noexcept override;
@@ -24,8 +25,11 @@ public:
     int getNbOutputs() const noexcept override{return 1;}
     int initialize() noexcept override;
     void terminate() noexcept override{context_.reset();}
-    size_t getSerializationSize() const noexcept override{return sizeof(State);}
-    void serialize(void* data) const noexcept override{if(data)std::memcpy(data,&state_,sizeof(State));}
+    size_t getSerializationSize() const noexcept override{return sizeof(State)+(canonicalGdnM32_?sizeof(uint32_t):0);}
+    void serialize(void* data) const noexcept override{
+        if(!data)return;std::memcpy(data,&state_,sizeof(State));
+        if(canonicalGdnM32_){const uint32_t policy=1;std::memcpy(static_cast<unsigned char*>(data)+sizeof(State),&policy,sizeof(policy));}
+    }
     static ModelOptFP8Plugin* Deserialize(const void* data,size_t length) noexcept;
     void destroy() noexcept override{delete this;}
     void setPluginNamespace(const char* value) noexcept override{namespace_=value?value:"";}

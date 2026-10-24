@@ -4,6 +4,7 @@
 #include <climits>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
 #include <stdexcept>
 namespace Garnet {
 using namespace nvinfer1;
@@ -55,7 +56,12 @@ ITensor* TRTBuilder::ProjectModelOptFP8(ITensor* input,ITensor* weight){
     auto* flatten=value?network->addShuffle(*value):nullptr;
     if(!flatten)throw std::runtime_error("Native FP8 input reshape failed");
     flatten->setReshapeDimensions(Dims2{int(rows),p.columns});
-    auto* plugin=new ModelOptFP8Plugin(p.rows,p.columns,p.weightScale,p.inputScale);ownedPlugins.push_back(plugin);
+    const char* canonicalPolicy=std::getenv("GARNET_FP8_GDN_M32_CANONICAL");
+    if(canonicalPolicy&&*canonicalPolicy&&std::strcmp(canonicalPolicy,"0")&&std::strcmp(canonicalPolicy,"1"))
+        throw std::invalid_argument("GARNET_FP8_GDN_M32_CANONICAL must be0 or1");
+    const bool canonicalGdnM32=canonicalPolicy&&!std::strcmp(canonicalPolicy,"1")&&
+        rows==32&&p.rows==5120&&p.columns==6144;
+    auto* plugin=new ModelOptFP8Plugin(p.rows,p.columns,p.weightScale,p.inputScale,canonicalGdnM32);ownedPlugins.push_back(plugin);
     ITensor* inputs[]={flatten->getOutput(0),weight};
     auto* layer=network->addPluginV2(inputs,2,*plugin);
     if(!layer)throw std::runtime_error("Native FP8 projection layer failed");

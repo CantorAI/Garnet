@@ -12,22 +12,25 @@ namespace {
 constexpr size_t BlasWorkspace=4ULL<<20;
 size_t Aligned(size_t bytes){return (bytes+255)&~size_t(255);}
 }
-ModelOptFP8Plugin::ModelOptFP8Plugin(int rows,int columns,float weightScale,float inputScale)
-    :state_{rows,columns,weightScale,inputScale}{
+ModelOptFP8Plugin::ModelOptFP8Plugin(int rows,int columns,float weightScale,float inputScale,bool canonicalGdnM32)
+    :state_{rows,columns,weightScale,inputScale},canonicalGdnM32_(canonicalGdnM32){
     static_assert(sizeof(State)==16,"Stable FP8 plugin wire format");
     if(rows<=0||rows>1048576||rows%16||columns<=0||columns>65536||columns%16||
         !std::isfinite(weightScale)||weightScale<=0||
         !std::isfinite(inputScale)||inputScale<=0||!std::isfinite(weightScale*inputScale)||weightScale*inputScale<=0)
         throw std::invalid_argument("Invalid ModelOpt FP8 plugin geometry/scales");
+    if(canonicalGdnM32_&&(rows!=5120||columns!=6144))throw std::invalid_argument("Unqualified FP8 canonical GDN geometry");
 }
 IPluginV2DynamicExt* ModelOptFP8Plugin::clone() const noexcept{
-    try{auto* p=new ModelOptFP8Plugin(state_.rows,state_.columns,state_.weightScale,state_.inputScale);
+    try{auto* p=new ModelOptFP8Plugin(state_.rows,state_.columns,state_.weightScale,state_.inputScale,canonicalGdnM32_);
         p->namespace_=namespace_;p->context_=context_;return p;}catch(...){return nullptr;}
 }
 ModelOptFP8Plugin* ModelOptFP8Plugin::Deserialize(const void* data,size_t length) noexcept{
-    if(!data||length!=sizeof(State))return nullptr;
+    if(!data||(length!=sizeof(State)&&length!=sizeof(State)+sizeof(uint32_t)))return nullptr;
     State s;std::memcpy(&s,data,sizeof(s));
-    try{return new ModelOptFP8Plugin(s.rows,s.columns,s.weightScale,s.inputScale);}catch(...){return nullptr;}
+    uint32_t policy=0;
+    if(length>sizeof(State)){std::memcpy(&policy,static_cast<const unsigned char*>(data)+sizeof(State),sizeof(policy));if(policy!=1)return nullptr;}
+    try{return new ModelOptFP8Plugin(s.rows,s.columns,s.weightScale,s.inputScale,policy==1);}catch(...){return nullptr;}
 }
 DimsExprs ModelOptFP8Plugin::getOutputDimensions(int index,const DimsExprs* input,int count,IExprBuilder& builder) noexcept{
     if(index||count!=2||input[0].nbDims!=2||input[1].nbDims!=2)return DimsExprs{};
@@ -42,6 +45,7 @@ bool ModelOptFP8Plugin::supportsFormatCombination(int pos,const PluginTensorDesc
 }
 size_t ModelOptFP8Plugin::getWorkspaceSize(const PluginTensorDesc* in,int count,const PluginTensorDesc*,int) const noexcept{
     if(!in||count!=2||in[0].dims.nbDims!=2||in[0].dims.d[0]<1||in[0].dims.d[0]>4096||in[0].dims.d[1]!=state_.columns)return 0;
+    if(canonicalGdnM32_&&in[0].dims.d[0]!=32)return 0;
     return Aligned(size_t(in[0].dims.d[0])*state_.columns)+BlasWorkspace;
 }
 int ModelOptFP8Plugin::initialize() noexcept{
@@ -61,7 +65,7 @@ int ModelOptFP8Plugin::enqueue(const PluginTensorDesc* in,const PluginTensorDesc
     auto* blasWorkspace=packed+Aligned(size_t(batch)*state_.columns);
     if(QuantizeModelOptFP8Activation(input[0],packed,state_.inputScale,batch,state_.columns,stream)!=cudaSuccess)return 1;
     return RunModelOptFP8MatmulContext(context_,input[1],packed,output[0],batch,state_.rows,state_.columns,
-        state_.weightScale*state_.inputScale,blasWorkspace,BlasWorkspace,stream)==CUBLAS_STATUS_SUCCESS?0:1;
+        state_.weightScale*state_.inputScale,blasWorkspace,BlasWorkspace,stream,canonicalGdnM32_)==CUBLAS_STATUS_SUCCESS?0:1;
 }
 class ModelOptFP8Creator final:public IPluginCreator {
     std::string namespace_;PluginFieldCollection fields_{};

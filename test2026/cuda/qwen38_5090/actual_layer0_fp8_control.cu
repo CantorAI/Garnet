@@ -13,6 +13,8 @@
 #include "modelopt_cublaslt.h"
 #include "modelopt_fp8.cuh"
 
+static bool sameAlgorithm = false, nativeCanonical = false, savedAlgorithmValid = false;
+static cublasLtMatmulAlgo_t savedAlgorithm{};
 // Observe the exact native helper's selected algorithm without changing calls.
 static cublasStatus_t ObserveMatmul(cublasLtHandle_t handle,
     cublasLtMatmulDesc_t operation, const void* alpha, const void* a,
@@ -20,15 +22,36 @@ static cublasStatus_t ObserveMatmul(cublasLtHandle_t handle,
     const void* beta, const void* c, cublasLtMatrixLayout_t cd,
     void* d, cublasLtMatrixLayout_t dd, const cublasLtMatmulAlgo_t* algo,
     void* workspace, size_t workspaceBytes, cudaStream_t stream) {
+    uint64_t m = 0; size_t layoutBytes = 0;
+    if (cublasLtMatrixLayoutGetAttribute(bd, CUBLASLT_MATRIX_LAYOUT_COLS,
+        &m, sizeof(m), &layoutBytes) != CUBLAS_STATUS_SUCCESS)
+        return CUBLAS_STATUS_INVALID_VALUE;
+    const cublasLtMatmulAlgo_t* selected = algo;
+    if (sameAlgorithm && m == 32) {
+        if (!savedAlgorithmValid) return CUBLAS_STATUS_INVALID_VALUE;
+        cublasLtMatmulHeuristicResult_t check{};
+        const auto checked = cublasLtMatmulAlgoCheck(handle, operation, ad, bd,
+            cd, dd, &savedAlgorithm, &check);
+        printf("SHARED_ALGORITHM_CHECK status=%d state=%d workspace=%zu\n",
+            int(checked), int(check.state), check.workspaceSize);
+        if (checked != CUBLAS_STATUS_SUCCESS || check.state != CUBLAS_STATUS_SUCCESS ||
+            check.workspaceSize > workspaceBytes) return CUBLAS_STATUS_INVALID_VALUE;
+        selected = &savedAlgorithm;
+    }
     const auto status = cublasLtMatmul(handle, operation, alpha, a, ad, b, bd,
-        beta, c, cd, d, dd, algo, workspace, workspaceBytes, stream);
+        beta, c, cd, d, dd, selected, workspace, workspaceBytes, stream);
+    if (m == 16 && status == CUBLAS_STATUS_SUCCESS) {
+        if (savedAlgorithmValid && std::memcmp(&savedAlgorithm, selected, sizeof(savedAlgorithm)))
+            return CUBLAS_STATUS_INVALID_VALUE;
+        savedAlgorithm = *selected; savedAlgorithmValid = true;
+    }
     int id = -1; size_t written = 0;
-    const auto query = cublasLtMatmulAlgoConfigGetAttribute(algo,
+    const auto query = cublasLtMatmulAlgoConfigGetAttribute(selected,
         CUBLASLT_ALGO_CONFIG_ID, &id, sizeof(id), &written);
     printf("ALGORITHM status=%d id_query=%d id=%d workspace=%zu opaque=",
         int(status), int(query), id, workspaceBytes);
-    const auto* bytes = reinterpret_cast<const unsigned char*>(algo);
-    for (size_t i = 0; i < sizeof(*algo); ++i) printf("%02x", bytes[i]);
+    const auto* bytes = reinterpret_cast<const unsigned char*>(selected);
+    for (size_t i = 0; i < sizeof(*selected); ++i) printf("%02x", bytes[i]);
     puts("");
     return status;
 }
@@ -64,7 +87,12 @@ __global__ void Cast(const float* input, __nv_bfloat16* output, int count) {
 }
 int main(int argc, char** argv) {
     try {
-        if (argc != 3) throw std::runtime_error("Usage: control FIXTURE OUTPUT_EXISTING_DIR");
+        if (argc != 3 && argc != 4) throw std::runtime_error("Usage: control FIXTURE OUTPUT_EXISTING_DIR [--same-algorithm|--native-canonical]");
+        if (argc == 4) {
+            if (!std::strcmp(argv[3], "--same-algorithm")) sameAlgorithm = true;
+            else if (!std::strcmp(argv[3], "--native-canonical")) nativeCanonical = true;
+            else throw std::runtime_error("Unknown mode");
+        }
         const std::string fixture = std::string(argv[1]) + "/";
         const std::string output = std::string(argv[2]) + "/";
         constexpr int n = 5120, k = 6144;
@@ -80,6 +108,7 @@ int main(int argc, char** argv) {
         Device w(weights.size()), workspace(4ULL << 20);
         Check(cudaMemcpy(w.p, weights.data(), weights.size(), cudaMemcpyHostToDevice));
         size_t totalChanged = 0;
+        std::vector<unsigned char> canonical;
         for (int m : {16, 32}) {
             const auto input = Read(fixture + "input-m" + std::to_string(m) + "-k6144.f32", m * k * 4);
             const auto expected = Read(fixture + "expected-m" + std::to_string(m) + "-n5120.bf16", m * n * 2);
@@ -98,21 +127,31 @@ int main(int argc, char** argv) {
             for (int repeat = 0; repeat < 2; ++repeat) {
                 printf("CONTROL m=%d repeat=%d\n", m, repeat);
                 const auto status = Garnet::RunModelOptFP8Matmul(handle, w.p, packed.p,
-                    result.p, m, n, k, weightScale * inputScale, workspace.p, 4ULL << 20, nullptr);
+                    result.p, m, n, k, weightScale * inputScale, workspace.p, 4ULL << 20, nullptr,nativeCanonical&&m==32);
                 if (status != CUBLAS_STATUS_SUCCESS) throw std::runtime_error("Native helper matmul failed");
                 Check(cudaDeviceSynchronize());
                 std::vector<unsigned char> actual(m * n * 2);
                 Check(cudaMemcpy(actual.data(), result.p, actual.size(), cudaMemcpyDeviceToHost));
                 Write(output + "actual-m" + std::to_string(m) + "-r" + std::to_string(repeat) + ".bf16", actual);
-                size_t changed = 0;
+                size_t changed = 0, archiveChanged = 0;
+                if (m == 16 && repeat == 0) canonical = actual;
                 for (size_t i = 0; i < actual.size(); i += 2)
-                    if (actual[i] != expected[i] || actual[i + 1] != expected[i + 1]) ++changed;
+                    if (actual[i] != expected[i] || actual[i + 1] != expected[i + 1]) ++archiveChanged;
+                if ((sameAlgorithm || nativeCanonical) && m == 32) {
+                    for (size_t i = 0; i < actual.size(); i += 2) {
+                        const auto index = i % canonical.size();
+                        if (actual[i] != canonical[index] || actual[i + 1] != canonical[index + 1]) ++changed;
+                    }
+                } else changed = archiveChanged;
                 totalChanged += changed;
+                printf("ARCHIVED_OUTPUT_DELTA m=%d repeat=%d changed_words=%zu\n", m, repeat, archiveChanged);
                 printf("EXACT_CONTROL m=%d repeat=%d changed_words=%zu total_words=%d\n", m, repeat, changed, m * n);
             }
         }
         cublasLtDestroy(handle);
-        puts(totalChanged ? "REAL_PROJECTION_CONTROL_FAILED" : "REAL_PROJECTION_CONTROL_PASSED");
+        if (nativeCanonical) puts(totalChanged ? "NATIVE_CANONICAL_CANDIDATE_FAILED" : "NATIVE_CANONICAL_CANDIDATE_PASSED");
+        else if (sameAlgorithm) puts(totalChanged ? "SHARED_ALGORITHM_CANDIDATE_FAILED" : "SHARED_ALGORITHM_CANDIDATE_PASSED");
+        else puts(totalChanged ? "REAL_PROJECTION_CONTROL_FAILED" : "REAL_PROJECTION_CONTROL_PASSED");
         return totalChanged ? 1 : 0;
     } catch (const std::exception& e) {
         fprintf(stderr, "ERROR %s\n", e.what()); return 2;

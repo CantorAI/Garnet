@@ -70,13 +70,13 @@ cublasStatus_t RunModelOptNVFP4MatmulContext(const std::shared_ptr<void>& opaque
 }
 cublasStatus_t RunModelOptFP8MatmulContext(const std::shared_ptr<void>& opaque,
     const void* weights,const void* input,void* output,int batch,int rows,int columns,
-    float globalScale,void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept {
+    float globalScale,void* workspace,size_t workspaceBytes,cudaStream_t stream,bool canonicalGdnM32) noexcept {
     if(!opaque)return CUBLAS_STATUS_NOT_INITIALIZED;
     try{
         auto context=std::static_pointer_cast<Context>(opaque);
         std::lock_guard<std::mutex> lock(context->mutex);
         return RunModelOptFP8Matmul(context->handle,weights,input,output,batch,rows,columns,
-            globalScale,workspace,workspaceBytes,stream);
+            globalScale,workspace,workspaceBytes,stream,canonicalGdnM32);
     }catch(...){return CUBLAS_STATUS_INTERNAL_ERROR;}
 }
 #define MODELOPT_LT_CHECK(call) do { const auto status=(call); if(status!=CUBLAS_STATUS_SUCCESS)return status; } while(false)
@@ -131,7 +131,7 @@ cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
 cublasStatus_t RunModelOptFP8Matmul(cublasLtHandle_t handle,
     const void* weights,const void* input,
     void* output,int batch,int rows,int columns,float globalScale,
-    void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept {
+    void* workspace,size_t workspaceBytes,cudaStream_t stream,bool canonicalGdnM32) noexcept {
 #if CUDART_VERSION >= 12080
     if(!handle||!weights||!input||!output||batch<=0||rows<=0||
         columns<=0||rows%16||columns%16||!std::isfinite(globalScale)||globalScale<=0||
@@ -149,6 +149,36 @@ cublasStatus_t RunModelOptFP8Matmul(cublasLtHandle_t handle,
     MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&d.c,CUDA_R_16BF,rows,batch,rows));
     MODELOPT_LT_CHECK(cublasLtMatmulPreferenceCreate(&d.preference));
     MODELOPT_LT_CHECK(cublasLtMatmulPreferenceSetAttribute(d.preference,CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTES,&workspaceBytes,sizeof(workspaceBytes)));
+    if(canonicalGdnM32){
+        // Research-only intervention, qualified first on the actual layer0
+        // projection witness. Never silently fall back to a different algorithm.
+        if(batch!=32||rows!=5120||columns!=6144||workspaceBytes!=(4ULL<<20)||
+            cublasLtGetVersion()!=130400)return CUBLAS_STATUS_NOT_SUPPORTED;
+        int device=-1,major=0,minor=0;
+        if(cudaGetDevice(&device)!=cudaSuccess||
+            cudaDeviceGetAttribute(&major,cudaDevAttrComputeCapabilityMajor,device)!=cudaSuccess||
+            cudaDeviceGetAttribute(&minor,cudaDevAttrComputeCapabilityMinor,device)!=cudaSuccess||
+            major!=12||minor!=0)return CUBLAS_STATUS_NOT_SUPPORTED;
+        Descriptors canonical;
+        MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&canonical.b,CUDA_R_8F_E4M3,columns,16,columns));
+        MODELOPT_LT_CHECK(cublasLtMatrixLayoutCreate(&canonical.c,CUDA_R_16BF,rows,16,rows));
+        cublasLtMatmulHeuristicResult_t choices[8]{};int found=0;
+        MODELOPT_LT_CHECK(cublasLtMatmulAlgoGetHeuristic(handle,d.operation,d.a,canonical.b,
+            canonical.c,canonical.c,d.preference,8,choices,&found));
+        for(int i=0;i<found;++i){
+            if(choices[i].state!=CUBLAS_STATUS_SUCCESS)continue;
+            if(!ConfigEquals<int32_t>(choices[i].algo,CUBLASLT_ALGO_CONFIG_ID,35))
+                return CUBLAS_STATUS_NOT_SUPPORTED;
+            cublasLtMatmulHeuristicResult_t check{};
+            MODELOPT_LT_CHECK(cublasLtMatmulAlgoCheck(handle,d.operation,d.a,d.b,d.c,d.c,&choices[i].algo,&check));
+            if(check.state!=CUBLAS_STATUS_SUCCESS||check.workspaceSize>workspaceBytes)
+                return CUBLAS_STATUS_NOT_SUPPORTED;
+            const float beta=0;
+            return cublasLtMatmul(handle,d.operation,&globalScale,weights,d.a,input,d.b,&beta,
+                output,d.c,output,d.c,&choices[i].algo,workspace,workspaceBytes,stream);
+        }
+        return CUBLAS_STATUS_NOT_SUPPORTED;
+    }
     cublasLtMatmulHeuristicResult_t candidates[8]{};int count=0;
     MODELOPT_LT_CHECK(cublasLtMatmulAlgoGetHeuristic(handle,d.operation,d.a,d.b,d.c,d.c,d.preference,8,candidates,&count));
     if(!count)return CUBLAS_STATUS_NOT_SUPPORTED;

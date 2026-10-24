@@ -45,7 +45,28 @@ int main(int argc,char** argv){try{
             desc[pos]=saved;
         }
         if(plugin.supportsFormatCombination(0,nullptr,2,1)||plugin.supportsFormatCombination(-1,desc,2,1)||plugin.supportsFormatCombination(3,desc,2,1))throw std::runtime_error("Invalid descriptor admitted");
-        puts("COMPRESSED_STORAGE_FORMAT_ADMISSION_PASS; no GPU or numerical claim");
+        if(plugin.getSerializationSize()!=16)throw std::runtime_error("Default wire changed");
+        Garnet::ModelOptFP8Plugin candidate(5120,6144,1.f,1.f,true);
+        if(candidate.getSerializationSize()!=20)throw std::runtime_error("Candidate policy missing from wire");
+        std::vector<unsigned char> encoded(candidate.getSerializationSize());candidate.serialize(encoded.data());
+        auto restored=Own(Garnet::ModelOptFP8Plugin::Deserialize(encoded.data(),encoded.size()));
+        auto destroy=[](nvinfer1::IPluginV2DynamicExt* p){if(p)p->destroy();};
+        std::unique_ptr<nvinfer1::IPluginV2DynamicExt,decltype(destroy)> cloned(candidate.clone(),destroy);
+        if(!cloned)throw std::runtime_error("Candidate clone failed");
+        for(auto* p:{static_cast<nvinfer1::IPluginV2*>(restored.get()),static_cast<nvinfer1::IPluginV2*>(cloned.get())}){
+            std::vector<unsigned char> again(p->getSerializationSize());p->serialize(again.data());
+            if(again!=encoded)throw std::runtime_error("Candidate clone/deserialization lost policy");
+        }
+        auto invalid=encoded;const uint32_t badPolicy=2;std::memcpy(invalid.data()+16,&badPolicy,4);
+        if(Garnet::ModelOptFP8Plugin::Deserialize(invalid.data(),invalid.size()))throw std::runtime_error("Unknown policy accepted");
+        if(Garnet::ModelOptFP8Plugin::Deserialize(encoded.data(),19))throw std::runtime_error("Truncated policy accepted");
+        bool rejected=false;try{Garnet::ModelOptFP8Plugin bad(256,256,1.f,1.f,true);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("Candidate geometry accepted");
+        PluginTensorDesc profile[2]{};profile[0].dims=Dims2{32,6144};
+        if(!candidate.getWorkspaceSize(profile,2,nullptr,1))throw std::runtime_error("Candidate M32 rejected");
+        profile[0].dims.d[0]=16;
+        if(candidate.getWorkspaceSize(profile,2,nullptr,1))throw std::runtime_error("Candidate M16 accepted");
+        puts("COMPRESSED_STORAGE_FORMAT_AND_CANONICAL_POLICY_PASS; no GPU or numerical claim");
         if(argc==2&&!std::strcmp(argv[1],"--formats-only"))return 0;
     }
     if(!Garnet::EnsureModelOptFP8PluginRegistered())throw std::runtime_error("Plugin registration failed");
