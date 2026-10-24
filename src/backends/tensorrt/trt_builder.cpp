@@ -6188,12 +6188,42 @@ namespace Garnet {
                         b["qwen35_conv_bind_active"],keywordText("layer_prefix"),keywordInt("hidden_dim",0),keywordInt("tokens",0),
                         keywordInt("key_heads",0),keywordInt("value_heads",0),keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("register_delta_128",0)!=0);
                 }else if(opName=="qwen35_full_decoder_chunk") {
+                    auto* stageAttribute=FindKeyword(kwParams,"diagnostic_full_stages");
+                    const auto diagnostic=stageAttribute?stageAttribute->second.ToLongLong():0;
+                    if(diagnostic!=0&&diagnostic!=1)throw std::invalid_argument("Full attention stage diagnostic must be0 or1");
+                    auto dimensions=ops.shape(source);
+                    if(diagnostic&&(capturedWeightProfile!="modelopt_mixed"||!external.empty()||
+                        dimensions.size()!=3||(dimensions[0]!=1&&dimensions[0]!=2)||dimensions[1]!=16||dimensions[2]!=5120||
+                        keywordText("layer_prefix")!="model.language_model.layers.3"||keywordInt("num_heads",0)!=24||
+                        keywordInt("num_kv_heads",0)!=4||keywordInt("head_dim",0)!=256||keywordInt("rotary_dim",0)!=64||
+                        keywordInt("mrope_t",0)!=11||keywordInt("mrope_h",0)!=11||keywordInt("mrope_w",0)!=10||
+                        keywordInt("fused_attention",0)!=1||keywordInt("joined_mlp_projections",0)!=0))
+                        throw std::invalid_argument("Stage capture requires embedded mixed27B layer3 B1/2 T16 profile");
+                    std::vector<ITensor*> diagnosticStages;
                     auto b=qwen35Bindings[TensorId(input)];
+                    if(diagnostic){
+                        ops.require(b["qwen35_attention_bind_key"],{dimensions[0],4,4096,256});
+                        ops.require(b["qwen35_attention_bind_value"],{dimensions[0],4,4096,256});
+                    }
                     lastOutput=ops.fullDecoderChunk(source,b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],
                         b["qwen35_attention_bind_positions"],b["qwen35_attention_bind_slots"],b["qwen35_attention_bind_active"],
                         keywordText("layer_prefix"),keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),
                         keywordInt("rotary_dim",0),{keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},
-                        float(number("rope_theta",1e7)),float(number("eps",1e-6)),keywordInt("fused_attention",0)!=0,keywordInt("joined_mlp_projections",0)!=0);
+                        float(number("rope_theta",1e7)),float(number("eps",1e-6)),keywordInt("fused_attention",0)!=0,keywordInt("joined_mlp_projections",0)!=0,diagnostic?&diagnosticStages:nullptr);
+                    if(diagnostic){
+                        if(diagnosticStages.size()!=10)throw std::runtime_error("Full attention stage contract changed");
+                        std::vector<ITensor*> parts{lastOutput};
+                        for(auto* value:diagnosticStages){
+                            const auto shape=ops.shape(value);int width=1;
+                            if(shape.size()<2||shape[0]!=dimensions[0])throw std::runtime_error("Full diagnostic batch differs");
+                            for(size_t i=1;i<shape.size();++i){
+                                if(shape[i]<1||width>1048576/shape[i])throw std::runtime_error("Full diagnostic stage exceeds bounded row reader");
+                                width*=shape[i];
+                            }
+                            parts.push_back(ops.reshape(ops.cast(value),{dimensions[0],width}));
+                        }
+                        lastOutput=ops.cat(parts,1);
+                    }
                 }else if(opName=="qwen35_mtp_decoder_chunk") {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.mtpChunk(source,b["qwen35_mtp_bind_embedding"],b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],

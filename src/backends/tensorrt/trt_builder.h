@@ -201,7 +201,7 @@ namespace Garnet {
         };
         std::unordered_map<nvinfer1::ITensor*,NativeNVFP4Weight> nativeNVFP4Weights;
         std::deque<std::vector<unsigned char>> nativeNVFP4ScaleStorage;
-        struct NativeFP8Weight {int rows,columns;float weightScale,inputScale;};
+        struct NativeFP8Weight {int rows,columns;float weightScale,inputScale;std::string logicalName;};
         std::unordered_map<nvinfer1::ITensor*,NativeFP8Weight> nativeFP8Weights;
         struct NativeCTInt4Weight {nvinfer1::ITensor* scales;int rows,columns;};
         std::unordered_map<nvinfer1::ITensor*,NativeCTInt4Weight> nativeCTInt4Weights;

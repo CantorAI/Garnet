@@ -40,7 +40,7 @@ ITensor* TRTBuilder::GetModelOptFP8Weight(const std::string& name,const SafeTens
         if(!weight||!network->setWeightsName(packed,name.c_str()))
             throw std::runtime_error("Native FP8 constant registration failed");
         weight->setName(name.c_str());auto* result=weight->getOutput(0);result->setName(name.c_str());
-        nativeFP8Weights[result]={rows,columns,weightScale,inputScale};
+        nativeFP8Weights[result]={rows,columns,weightScale,inputScale,name};
         weightTensorMap[name]=result;return result;
     }catch(const std::exception& error){loweringError=error.what();return nullptr;}
 }
@@ -61,7 +61,9 @@ ITensor* TRTBuilder::ProjectModelOptFP8(ITensor* input,ITensor* weight){
         throw std::invalid_argument("GARNET_FP8_GDN_M32_CANONICAL must be0 or1");
     // Full-attention o_proj has the same dimensions; only the actual GDN
     // projection family has supplied the diagnostic witness for this option.
-    const std::string weightName=weight->getName()?weight->getName():"";
+    // External inputs have generic binding names; checkpoint identity is
+    // retained at registration for both embedded and caller-owned weights.
+    const std::string& weightName=p.logicalName;
     const std::string gdnSuffix=".linear_attn.out_proj.weight";
     const bool gdnOutput=weightName.size()>=gdnSuffix.size()&&
         weightName.compare(weightName.size()-gdnSuffix.size(),gdnSuffix.size(),gdnSuffix)==0;

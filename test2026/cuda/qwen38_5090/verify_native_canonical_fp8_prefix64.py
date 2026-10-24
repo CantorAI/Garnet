@@ -8,9 +8,10 @@ import zipfile
 import numpy as np
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--experiment", choices=("prefix64", "prefix8-16", "prefix4-hidden"), default="prefix64")
+parser.add_argument("--experiment", choices=("prefix64", "prefix8-16", "prefix4-hidden", "prefix4-hidden-geometry"), default="prefix64")
 experiment = parser.parse_args().experiment
-prefixes = {"prefix64": [64], "prefix8-16": [8, 16], "prefix4-hidden": [4]}[experiment]
+geometry = experiment == "prefix4-hidden-geometry"
+prefixes = {"prefix64": [64], "prefix8-16": [8, 16], "prefix4-hidden": [4], "prefix4-hidden-geometry": [4]}[experiment]
 stem = "native-canonical-fp8-" + experiment
 out = Path(__file__).parent
 sha = lambda raw: hashlib.sha256(raw).hexdigest()
@@ -28,10 +29,15 @@ with zipfile.ZipFile(archive) as z:
     base = "results/" + stem + "-attempt1/"
     workflow = document(base + "workflow.json")
     assert workflow["status"] == "completed_needs_independent_replay" and workflow["exit_code"] == 0
-    build = document("results/native-canonical-fp8-build-attempt2/manifest.json")
+    build = document("results/native-canonical-fp8-build-attempt" + ("1" if geometry else "2") + "/manifest.json")
+    source_build = document("results/native-canonical-fp8-build-attempt2/manifest.json")
+    if geometry: assert workflow["restored_library_sha256"] == source_build["library_sha256"] == evidence["restored_library_sha256"]
     assert workflow["library_sha256"] == build["library_sha256"] == evidence["library_sha256"]
-    for name, digest in build["source_sha256"].items(): assert sha(read("Garnet/" + name)) == digest
-    assert sha(read("Garnet/test2026/cuda/qwen38_5090/" + ("probe_native_prefix_hidden_chunks.py" if experiment == "prefix4-hidden" else "probe_native_deeper_prefix_batch.py"))) == workflow["probe_sha256"]
+    for name, digest in source_build["source_sha256"].items(): assert sha(read("Garnet/" + name)) == digest
+    if geometry:
+        old_lowerer = "results/native-canonical-fp8-family-scope-install/original-lowering.cpp"
+        assert sha(read(old_lowerer)) == build["source_sha256"]["src/backends/tensorrt/modelopt_fp8_lowering.cpp"]
+    assert sha(read("Garnet/test2026/cuda/qwen38_5090/" + ("probe_native_prefix_hidden_chunks.py" if experiment.startswith("prefix4-hidden") else "probe_native_deeper_prefix_batch.py"))) == workflow["probe_sha256"]
     report = document(base + "native/report.json")
     assert report["status"] == "diagnostic_completed" and report["prefixes"] == prefixes
     assert report["capacity"] == 4096 and report["chunk"] == 16 and not report["capture_internals"]
@@ -65,7 +71,7 @@ with zipfile.ZipFile(archive) as z:
         assert math.isclose(comparison["relative_l2"], relative, rel_tol=1e-12, abs_tol=1e-18)
         comparisons[str(prefix)] = {"cross_batch_hidden_exact": exact, "max_abs": max_abs, "relative_l2": relative, "changed_elements": int(np.count_nonzero(left != right))}
     chunk_comparisons = []
-    if experiment == "prefix4-hidden":
+    if experiment.startswith("prefix4-hidden"):
         assert report["capture_hidden_chunks"] is True and len(report["internal_files"]) == 18
         chunk_frames = {}
         for item in report["internal_files"]:
@@ -93,6 +99,26 @@ with zipfile.ZipFile(archive) as z:
             for repeat in (0, 1):
                 name = f"prefix-4-batch-1-repeat-{repeat}-hidden.f32"
                 assert read(base + "native/" + name) == old.read("results/native-prefix-batch-diagnostic/" + name)
+    intervention = []
+    if geometry:
+        with zipfile.ZipFile(out / "native-canonical-fp8-prefix4-hidden-attempt1-evidence.zip") as prior:
+            assert prior.testzip() is None
+            previous = json.loads(prior.read("evidence-manifest.json"))
+            def previous_read(name):
+                digest = previous["files"][name]
+                raw = prior.read("objects/" + digest)
+                assert sha(raw) == digest
+                return raw
+            old_base = "results/native-canonical-fp8-prefix4-hidden-attempt1/native/"
+            for start in (0, 16, 32):
+                for repeat in (0, 1):
+                    name = f"prefix-4-batch-1-repeat-{repeat}-chunk-{start}-hidden-row-0.f32"
+                    assert read(base + "native/" + name) == previous_read(old_base + name)
+                name = f"prefix-4-batch-2-repeat-0-chunk-{start}-hidden-row-0.f32"
+                a = np.frombuffer(read(base + "native/" + name), dtype="<f4")
+                b = np.frombuffer(previous_read(old_base + name), dtype="<f4")
+                intervention.append({"start": start, "b1_preserved": True,
+                    "changed_b2_words_vs_gdn_only": int(np.count_nonzero(a != b))})
     for directory in (base + "ledger/", "results/" + stem + "-controller-ledger/"):
         events = [json.loads(v) for v in read(directory + "commands.jsonl").decode().splitlines()]
         assert events[-1]["event"] == "finished" and events[-1]["exit_code"] == 0
@@ -102,8 +128,8 @@ with zipfile.ZipFile(archive) as z:
     peak = max(v["used_bytes"] for v in samples)
     assert monitor["sampled_memory"]["sampled_peak_adapter_used_bytes"] == peak
     result = {"status": ("canonical_fp8_full_depth_prefill_evidence_verified" if experiment == "prefix64" else "canonical_fp8_deeper_prefix_evidence_verified"), "archive_sha256": sha(archive.read_bytes()),
-        "file_observations_verified": len(evidence["files"]), "raw_arrays_verified": 4 * len(prefixes) + (18 if experiment == "prefix4-hidden" else 0), "prefixes": comparisons,
-        "chunk_comparisons": chunk_comparisons,
+        "file_observations_verified": len(evidence["files"]), "raw_arrays_verified": 4 * len(prefixes) + (18 if experiment.startswith("prefix4-hidden") else 0), "prefixes": comparisons,
+        "chunk_comparisons": chunk_comparisons, "intervention": intervention,
         **(comparisons["64"] if experiment == "prefix64" else {}), "sampled_peak_adapter_used_bytes": peak,
         "performance_admitted": False,
         "scope": "Repeated identical41-token text rows, selected deeper prefixes, B1/B2 prefill. No independent B1 historical deeper-hidden witness; no ragged VLM/generation/quality or speed admission."}

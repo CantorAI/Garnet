@@ -388,7 +388,7 @@ public:
         return cat({reshape(result->getOutput(1),{batch,channels*kernel}),reshape(result->getOutput(2),{batch,vh*kd*vd})},1);
     }
     T* fullDecoderChunk(T* x,T* key,T* value,T* positions,T* slots,T* active,const std::string& layer,
-        int heads,int kv,int dim,int rotary,std::array<int,3> sections,float theta,float eps,bool fusedAttention=false,bool joinedMLPProjections=false) {
+        int heads,int kv,int dim,int rotary,std::array<int,3> sections,float theta,float eps,bool fusedAttention=false,bool joinedMLPProjections=false,std::vector<T*>* diagnosticStages=nullptr) {
         auto xs=shape(x),ks=shape(key);
         if(xs.size()!=3||xs[1]>128||ks.size()!=4||kv<=0||dim<=0)throw std::invalid_argument("Qwen3.5 full chunk dimensions invalid");
         const int batch=xs[0],tokens=xs[1],hidden=xs[2],capacity=ks[2],width=kv*capacity*dim;
@@ -402,6 +402,7 @@ public:
         auto* qg=project(normalized,weight(prefix+".q_proj.weight"));
         auto* projectedK=project(normalized,weight(prefix+".k_proj.weight"));
         auto* projectedV=project(normalized,weight(prefix+".v_proj.weight"));
+        if(diagnosticStages)*diagnosticStages={x,normalized,qg,projectedK,projectedV};
         T* coreOutput=nullptr;
         if(fusedAttention){
             if(heads<=0||heads%kv||rotary<=0||rotary>dim||rotary%2||
@@ -448,11 +449,13 @@ public:
             value=reshape(slice(packed,1,contextWidth+width,width),{batch,kv,capacity,dim});
         }
         if(!coreOutput)coreOutput=cat(outputs,1);
+        if(diagnosticStages)diagnosticStages->push_back(coreOutput);
         auto* attention=project(coreOutput,weight(prefix+".o_proj.weight"));
         attention=select(reshape(active,{batch,tokens,1}),attention,scalar(0,3));
         T* residual=add(x,attention);
         auto* mlpInput=norm(residual,layer+".post_attention_layernorm.weight",eps);
         T* output=add(residual,joinedMLPProjections?joinedMLP(mlpInput,layer+".mlp"):mlp(mlpInput,layer+".mlp"));
+        if(diagnosticStages)diagnosticStages->insert(diagnosticStages->end(),{attention,residual,mlpInput,output});
         return cat({reshape(output,{batch,tokens*hidden}),reshape(key,{batch,width}),reshape(value,{batch,width})},1);
     }
     T* mtpChunk(T* normalizedTarget,T* embedding,T* key,T* value,T* positions,T* slots,T* active,

@@ -118,7 +118,7 @@ size_t TRTBuilder::BindExternalModelOptWeight(const std::string& name,ITensor* p
         nativeNVFP4Weights[packed]={scales,rows,columns,weightScale,inputScale};bytes+=scaleBytes;
     }else{
         if(scales)throw std::invalid_argument("FP8 external weight cannot bind block scales");
-        nativeFP8Weights[packed]={rows,columns,weightScale,inputScale};
+        nativeFP8Weights[packed]={rows,columns,weightScale,inputScale,name};
     }
     return bytes;
 }
