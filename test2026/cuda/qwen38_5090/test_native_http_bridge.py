@@ -16,6 +16,12 @@ for line in sys.stdin:
  print(json.dumps({'event':'completed','id':k,'generated_ids':[1,2],'prompt_ids':[3,4,5],'text':'aé','finish_reason':'length'}),flush=True)
 '''
 class BridgeTests(unittest.TestCase):
+ def test_explicit_4b_route_does_not_admit_wrong_checkpoint_name(self):
+  body,_=payload('text','fixture',1,'qwen35-4b-bf16',2)
+  validate_body(body,'qwen35-4b-bf16')
+  with self.assertRaises(ValueError):validate_body(body)
+  body['model']='qwen38-27b-nvfp4'
+  with self.assertRaises(ValueError):validate_body(body,'qwen35-4b-bf16')
  def test_incremental_real_pipe_and_http_accounting_unicode_and_final_ids(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=Path(tmp);script=root/'fixture.py';script.write_text(FIXTURE,encoding='utf-8')

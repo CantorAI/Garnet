@@ -139,8 +139,11 @@ class Model:
             else:hidden.append(io.row(embeddings,i))
         return hidden,positions,ids,current,compile_ms,visual_count
 
-    def infer_batch(self,prompts,images,limit):
+    def infer_batch(self,prompts,images,limit,on_token=None):
         with self.lock:
+            if on_token is not None:
+                if not callable(on_token):raise TypeError('on_token must be callable')
+                if self.speculative is not None:raise ValueError('Model streaming callback currently requires target-only decoding')
             if len(prompts)!=self.batch or len(images)!=self.batch:raise ValueError('Request batch must match loaded CUDA profile')
             if limit<1 or limit>self.max_output:raise ValueError('Output limit exceeds loaded CUDA profile')
             started=time.monotonic()
@@ -170,6 +173,9 @@ class Model:
                     for b in range(self.batch):
                         if active[b]:
                             sampled[b]+=1
+                            # Each prediction is synchronized by the decoder before return.
+                            # Include EOS in the sampled stream; never emit inactive rows.
+                            if on_token is not None:on_token(b,prediction[b],sampled[b],lengths[b])
                             if prediction[b] in self.stops:
                                 active[b]=0;finish[b]='eos';stop_tokens[b]=prediction[b]
                             else:output[b].append(prediction[b])
@@ -201,9 +207,9 @@ class Model:
                     'residual_state_norm_attention':'FP32','equivalent_to_transformers_full_bf16':False},
                 'prompt_sha256':[hashlib.sha256(p.encode()).hexdigest() for p in prompts]}
 
-    def infer(self,prompt,image,limit):
+    def infer(self,prompt,image,limit,on_token=None):
         if self.batch!=1:raise ValueError('Use infer_batch with the loaded batch profile')
-        r=self.infer_batch([prompt],[image],limit);r['text']=r['texts'][0];return r
+        r=self.infer_batch([prompt],[image],limit,on_token=on_token);r['text']=r['texts'][0];return r
 
     def close(self):
         try:

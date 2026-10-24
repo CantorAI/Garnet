@@ -57,8 +57,8 @@ class Worker:
         self.process.stdin.close()
         self.process.wait(timeout=120);self.reader.join(timeout=10);self.process.stdout.close();self.stderr.close()
 
-def validate_body(body):
-    if not isinstance(body,dict) or body.get('model')!='qwen38-27b-nvfp4' or body.get('temperature')!=0:
+def validate_body(body,model='qwen38-27b-nvfp4'):
+    if not isinstance(body,dict) or body.get('model')!=model or body.get('temperature')!=0:
         raise ValueError('Study requires the pinned model and greedy generation')
     if body.get('chat_template_kwargs')!={'enable_thinking':False}:raise ValueError('Thinking must be disabled')
     limit=body.get('max_tokens')
@@ -87,7 +87,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             size=int(self.headers.get('Content-Length','0'))
             if not 1<=size<=2*1024*1024:raise ValueError('Request size outside study bounds')
-            body=json.loads(self.rfile.read(size));validate_body(body)
+            body=json.loads(self.rfile.read(size));validate_body(body,getattr(self.server,'model','qwen38-27b-nvfp4'))
             if not self.server.worker.healthy():self.reply(503,{'error':'Native worker not ready'});return
         except Exception as error:self.reply(400,{'error':str(error)});return
         key=uuid.uuid4().hex;stream=body.get('stream',False);previous='';count=0;prompt=None;tokens=[];disconnected=False;started=False
@@ -124,9 +124,9 @@ class Handler(BaseHTTPRequestHandler):
             else:self.reply(500,{'error':repr(error)})
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=18082);p.add_argument('--log-root',type=Path,required=True);p.add_argument('command',nargs=argparse.REMAINDER);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--model',choices=['qwen38-27b-nvfp4','qwen35-4b-bf16'],default='qwen38-27b-nvfp4');p.add_argument('--port',type=int,default=18082);p.add_argument('--log-root',type=Path,required=True);p.add_argument('command',nargs=argparse.REMAINDER);a=p.parse_args()
     command=a.command[1:] if a.command[:1]==['--'] else a.command
     if not command:p.error('Native worker command required')
-    worker=Worker(command,a.log_root);server=ThreadingHTTPServer(('127.0.0.1',a.port),Handler);server.worker=worker
+    worker=Worker(command,a.log_root);server=ThreadingHTTPServer(('127.0.0.1',a.port),Handler);server.worker=worker;server.model=a.model
     try:server.serve_forever()
     finally:server.server_close();worker.close()
