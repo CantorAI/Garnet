@@ -1,5 +1,6 @@
 """Build installed research candidate in the existing native build slot."""
 from pathlib import Path
+import argparse
 import hashlib
 import json
 import subprocess
@@ -8,11 +9,12 @@ import sys
 root = Path("D:/CantorAI/5090-study-20261023")
 sys.path.insert(0, str(root / "Garnet/test2026/cuda/qwen38_5090"))
 from run_logged import run
-out = root / "results/native-canonical-fp8-build-attempt1"
+parser = argparse.ArgumentParser(); parser.add_argument("--attempt", type=int, choices=(1, 2), default=1); args = parser.parse_args()
+out = root / f"results/native-canonical-fp8-build-attempt{args.attempt}"
 assert not out.exists()
-receipt_path = root / "results/native-canonical-fp8-source-install/receipt.json"
+receipt_path = root / ("results/native-canonical-fp8-source-install/receipt.json" if args.attempt == 1 else "results/native-canonical-fp8-family-scope-install/receipt.json")
 receipt = json.loads(receipt_path.read_text())
-assert receipt["status"] == "native_candidate_sources_installed_unbuilt"
+assert receipt["status"] == ("native_candidate_sources_installed_unbuilt" if args.attempt == 1 else "native_candidate_family_scope_installed_unbuilt")
 assert int(subprocess.check_output(["nvidia-smi", "--query-gpu=memory.used",
     "--format=csv,noheader,nounits"], text=True).strip()) < 1024
 library = root / "build/bin/garnet.dll"
@@ -30,7 +32,7 @@ report = {"status": "build_failed" if code else "native_build_finished_unqualifi
 if code == 0:
     raw = library.read_bytes()
     report["library_sha256"] = hashlib.sha256(raw).hexdigest()
-    backup = root / "build/bin/garnet-native-canonical-fp8-attempt1.dll"
+    backup = root / f"build/bin/garnet-native-canonical-fp8-attempt{args.attempt}.dll"
     assert not backup.exists()
     backup.write_bytes(raw)
 (out / "manifest.json").write_text(json.dumps(report, indent=2), encoding="utf8")

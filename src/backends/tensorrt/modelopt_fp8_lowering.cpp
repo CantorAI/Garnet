@@ -59,8 +59,14 @@ ITensor* TRTBuilder::ProjectModelOptFP8(ITensor* input,ITensor* weight){
     const char* canonicalPolicy=std::getenv("GARNET_FP8_GDN_M32_CANONICAL");
     if(canonicalPolicy&&*canonicalPolicy&&std::strcmp(canonicalPolicy,"0")&&std::strcmp(canonicalPolicy,"1"))
         throw std::invalid_argument("GARNET_FP8_GDN_M32_CANONICAL must be0 or1");
+    // Full-attention o_proj has the same dimensions; only the actual GDN
+    // projection family has supplied the diagnostic witness for this option.
+    const std::string weightName=weight->getName()?weight->getName():"";
+    const std::string gdnSuffix=".linear_attn.out_proj.weight";
+    const bool gdnOutput=weightName.size()>=gdnSuffix.size()&&
+        weightName.compare(weightName.size()-gdnSuffix.size(),gdnSuffix.size(),gdnSuffix)==0;
     const bool canonicalGdnM32=canonicalPolicy&&!std::strcmp(canonicalPolicy,"1")&&
-        rows==32&&p.rows==5120&&p.columns==6144;
+        gdnOutput&&rows==32&&p.rows==5120&&p.columns==6144;
     auto* plugin=new ModelOptFP8Plugin(p.rows,p.columns,p.weightScale,p.inputScale,canonicalGdnM32);ownedPlugins.push_back(plugin);
     ITensor* inputs[]={flatten->getOutput(0),weight};
     auto* layer=network->addPluginV2(inputs,2,*plugin);
