@@ -1029,3 +1029,21 @@ The graph candidate accepted its configuration, loaded all three shards, capture
 A CPU-only native VM probe emitted an immediate JSON ready event, but sys.stdin iteration failed with invalid memory stream object (exit1). An unchanged-VM os.read/os.write framing probe then returned ready and the supplied value7 with exit0. Neither probe initialized Garnet/CUDA or ran inference. Added a bounded JSON-line transport using direct descriptors, handling split frames, partial writes, EOF and malformed/oversized requests. Added a research-only single-slot Qwen3.8 worker over the current64-layer mixed decoder and default BF16 vision. It emits token IDs/counts/timestamps immediately after synchronized predictions and retains full prompt/generated IDs; no buffered-final-text timing substitution. It uses one fixed JPEG input file and supports only the explicit image-first JPEG profile. The general ServeModel admission gate remains closed.
 
 Worker full-model integration and HTTP transport are not yet validated. Five new CPU tests cover framing/partial writes and multimodal rotary boundaries, including non-square geometry; all40 CPU study tests pass. Python syntax compilation passed. No remote source resync or native GPU inference is performed while the reference benchmark is live. Next: preserve the completed reference evidence, stop only its verified-owned parent, then validate the native streaming worker against the retained request bodies before implementing HTTP measurements.
+
+
+## P041 - 2026-10-23: eight graph reference cohorts completed
+
+Run81b4a8ebf3d14153b487d9ad40cdb4f4 completed exit0: eight measured requests per cohort, two excluded warmup waves per concurrency, maximum128 output tokens,4K capacity, JPEG/image-first. Live server-info confirms full decode graph backend, capture1/2/4/8, max_total_num_tokens32768 and ready status; runtime logs confirm actual graph replay.
+
+|case|concurrency|TTFT median ms|decode median tokens/s|cohort output tokens/s|actual output tokens|sampled peak bytes|
+|---|---:|---:|---:|---:|---:|---:|
+|text|1|141.90374999998312|65.05723780587802|61.092137216423644|1024|28030320640|
+|text|2|264.3982000008691|63.168771583808265|111.93046739453078|1024|28036612096|
+|text|4|338.55524999944464|60.707432695421744|210.35341859942818|1024|28036612096|
+|text|8|315.3050000000803|60.48445245605198|423.5778487481452|1024|28101623808|
+|image|1|143.87115000045014|61.819192916561335|57.0954999660933|910|28101623808|
+|image|2|314.3764500000543|59.92573981179359|104.94914547720484|1024|28112109568|
+|image|4|353.6734499994054|57.492526278726665|199.61835076684082|1024|28118401024|
+|image|8|359.6580500006894|55.77625939567659|351.1103320328398|936|28279881728|
+
+All measured arrivals carried single-token cumulative usage increments. Some image responses ended before128 tokens; actual counts910 at concurrency1 and936 at8 are retained without padding or discarded requests. Sampling errors were empty; actual per-cohort gaps and adapter-wide scope are in the manifest. These remain exploratory reference measurements until native transport, request hashes, lengths and quality are matched. Autotuning/prefill-graph tuning and vLLM graph baselines remain outstanding. No2x claim follows. The verified-owned parent369 received SIGTERM after the benchmark, with exit observation pending at this entry.
