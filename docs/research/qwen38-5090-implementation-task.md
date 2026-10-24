@@ -340,8 +340,10 @@ concurrency admission; compare the faster valid reference with raw-event replay.
 Attention scheduling optimization is a separate, unwired experiment. The first
 per-query compact core passes all seven CPU/KV/graph gates and improves short-prefix
 component timing, but regresses full prefixes. It is not a serving default or a
-model speedup. An output-tiled candidate is being tested with the same gates and a
-three-way ABCCBA protocol. Retain all variants/failures and raw CUDA-event samples.
+model speedup. The output-tiled variant also regresses full prefixes. A split-key candidate
+passes the seven numerical/KV/graph profiles and improves tested4K-capacity warm
+component timings with extra scratch memory. It remains unwired, with model-level
+qualification pending. Retain all variants/failures and raw CUDA-event samples.
 Do not extrapolate a component ratio to HTTP TTFT, decode, throughput or the2x goal.
 
 The goal remains active. Completion requires the requested full-model comparisons,
