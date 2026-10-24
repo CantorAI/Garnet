@@ -37,6 +37,10 @@ public:
         // Diagnostic opt-in only. Keep this alive through context destruction.
         std::unique_ptr<TRTSyncAllocator> temporaryAllocator;
         nvinfer1::IExecutionContext* context = nullptr;
+        // TensorRT 10.16 rejects setProfiler(nullptr). Retain the concrete
+        // diagnostic callback until after context destruction.
+        std::shared_ptr<void> layerProfilerOwner;
+        bool layerProfileActive = false;
         cudaEvent_t completion = nullptr;
         cudaGraph_t graph = nullptr;
         cudaGraphExec_t executable = nullptr;

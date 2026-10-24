@@ -235,7 +235,8 @@ namespace Garnet {
             const bool useCudaGraph =
                 enableCudaGraph &&
                 !(enabled && enabled[0] == '0' && enabled[1] == '\0') &&
-                context->getProfiler() == nullptr;
+                (context->getProfiler() == nullptr ||
+                 (state.layerProfilerOwner && !state.layerProfileActive));
             const auto resource=CurrentOperatorExecutionOwner();
             const bool same=(!resource && !state.operatorOwner) ||
                 (resource && state.operatorOwner && resource->Identity()==state.operatorOwner->Identity() &&
@@ -5208,9 +5209,12 @@ namespace Garnet {
             std::lock_guard<std::mutex> lock(g_trtLayerProfileMutex);
             profileDecodeLayers = g_profiledTRTEngines.insert(enginePath).second;
         }
-        OneShotTRTLayerProfiler layerProfiler;
+        std::shared_ptr<OneShotTRTLayerProfiler> layerProfiler;
         if (profileDecodeLayers) {
-            cachedContext->setProfiler(&layerProfiler);
+            layerProfiler = std::make_shared<OneShotTRTLayerProfiler>();
+            cachedUse.slot->layerProfilerOwner = layerProfiler;
+            cachedUse.slot->layerProfileActive = true;
+            cachedContext->setProfiler(layerProfiler.get());
             cachedContext->setEnqueueEmitsProfile(true);
         }
         bindingSignature.push_back(outputDevicePointer);
@@ -5220,16 +5224,16 @@ namespace Garnet {
                 enginePath, cachedContext, *cachedUse.slot.operator->(), bindingSignature, enableCudaGraph,
                 CurrentExecutionStream(), shapeSignature)) {
             if (profileDecodeLayers) {
-                cachedContext->setProfiler(nullptr);
                 cachedContext->setEnqueueEmitsProfile(false);
+                cachedUse.slot->layerProfileActive = false;
             }
             errorMessage = "TensorRT enqueueV3 failed";
             return X::Value();
         }
         if (profileDecodeLayers) {
-            cachedContext->setProfiler(nullptr);
             cachedContext->setEnqueueEmitsProfile(false);
-            layerProfiler.Write(layerProfilePath, enginePath);
+            cachedUse.slot->layerProfileActive = false;
+            layerProfiler->Write(layerProfilePath, enginePath);
         }
 
         errorMessage.clear();
