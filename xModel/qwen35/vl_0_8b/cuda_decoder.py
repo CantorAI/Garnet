@@ -242,6 +242,7 @@ class CUDADecoder:
 
 class CUDAImageEncoder:
     def __init__(self,checkpoint,config,gh,gw,batch=1):
+        self.resident_io=None;self.resident_patches=None;self.resident_input_bytes=0
         self.shape=[batch,gh*gw,config['in_channels']*config['temporal_patch_size']*config['patch_size']**2]
         symbol=tensor.input('cuda_image_patches',shape=self.shape,dtype=tensor.float32)
         @T.fusion(name='qwen35_cuda_image',boundary='required')
@@ -249,5 +250,21 @@ class CUDAImageEncoder:
         self.graph=garnet.compiled_graph()
         try:self.graph.build(forward(symbol),[symbol],checkpoint)
         except:self.graph.close();raise
-    def encode_patches(self,patches):return self.graph.run_device([patches])
-    def close(self):self.graph.close()
+    def enable_resident_input(self,io):
+        """Opt-in stable graph binding; caller IO must outlive this encoder."""
+        if self.resident_patches is not None:raise ValueError('Resident vision input already enabled')
+        patches=io.zeros(self.shape)
+        self.resident_input_bytes=io.tensor_bytes(patches)
+        self.resident_io=io;self.resident_patches=patches
+
+    def encode_patches(self,patches):
+        if self.resident_patches is not None:
+            # Native copy validates identical dtype/shape and tracks GPU fences.
+            # Never reuse prior image contents when this copy fails.
+            self.resident_io.copy_into(patches,self.resident_patches)
+            patches=self.resident_patches
+        return self.graph.run_device([patches])
+
+    def close(self):
+        try:self.graph.close()
+        finally:self.resident_patches=None;self.resident_io=None;self.resident_input_bytes=0
