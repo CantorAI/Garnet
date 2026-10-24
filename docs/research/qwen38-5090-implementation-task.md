@@ -266,28 +266,40 @@ capacity to fit larger batches.
 1. Full64-layer decoder smoke passed with4096 capacity, the saved reference26-token
    prompt and exact[19,248046] output. This is not broad quality or a benchmark.
    The checkpoint JPEG preprocessing gate passed; four matched JPEG VLM cases
-   give4/4 semantic colors and2/4 exact token sequences. Preserve those separate
-   outcomes and broaden quality checks. Test existing fused chunks4/16 with real
-   layers, state continuation, inactive masks and replay before a full-model pilot.
-   Those fused4/16 gates now pass with the corrected native-order FP8 CPU oracle;
-   the first full fused16 pilot is the next performance experiment.
+   give4/4 semantic colors and3/4 exact token sequences on the completed fused16
+   run (earlier serial run2/4). Preserve the strict failure and broaden quality
+   checks. Real serial6/fused4/fused16 layer, state, inactive mask and replay gates
+   pass with the corrected native-order FP8 CPU oracle. The exploratory fused16
+   direct-call text pilot measured99.8ms TTFT and36.5 decode tokens/s; it excludes
+   HTTP and used32 output tokens, so it is not matched to the new reference run.
 2. Establish text/image quality beyond basic smoke and record the precision
    differences. Current Garnet state/cache arithmetic is F32; initial references
    use BF16 KV/conv and F32 SSM. Close this matching gate before any2x claim.
-3. Add streaming/count accounting to Garnet's serving path and validate concurrency
-   profiles1/2/4/8 with real memory admission. Retain compressed weights shared
+3. Validate the research-only HTTP bridge over actual native token events. It is
+   implemented with42 passing CPU study tests; full-model GPU integration is
+   running. Require original native VLM IDs/reference prompt IDs, then actual
+   streamed usage before timing. Its single slot queues clients; this does not
+   establish native batch2/4/8. Validate concurrency profiles1/2/4/8 with real
+   memory admission. Retain compressed weights shared
    across profiles; inspect fused GDN/attention and resident control paths already
    present in current Garnet before introducing another execution stack.
 4. Establish tuned vLLM/SGLang profiles, including feasible CUDA graph/kernel
    options. Both initial profiles deliberately used eager startup for feasibility;
-   they are not evidence of the fastest attainable reference. Compiler/linker
+   they are not evidence of the fastest attainable reference. A completed
+   SGLang full-decode-graph candidate captured1/2/4/8 and replayed during the
+   seed3/JPEG/image-first128-token benchmark: text/c1 decode65.1tokens/s and
+   TTFT141.9ms; c8 output423.6tokens/s text and351.1tokens/s images. Preserve
+   early image EOS and actual lengths. Autotuning/prefill graphs remain disabled
+   in that candidate; broader reference tuning is still required. Compiler/linker
    failures and SGLang's first memory exhaustion are retained in the research log.
 5. Complete the separate INT4 W4A16 loader/kernel compatibility gate and4B comparison.
    Do not label the mixed NVIDIA checkpoint as an INT4 baseline.
 6. Collect repeated text/image TTFT, decode, aggregate throughput and memory with
    fixed4K total capacity and matched request hashes, quality, cache behavior,
-   output lengths and concurrency. The current32-token/eight-request SGLang data is
-   exploratory. Preserve longer runs, distributions and raw failures. The NVML
+   output lengths and concurrency. Both the initial32-token/eight-request SGLang
+   data and the new128-token graph candidate are exploratory until matched native
+   quality/arithmetic/transport gates close. Preserve repeated longer runs,
+   distributions and raw failures. The NVML
    sampler requested20ms but measured about31ms typical gaps and one7.787s gap;
    investigate timing/observer repeatability and report sampled peaks honestly.
 7. Optimize from measured bottlenecks, then test against twice the faster valid
