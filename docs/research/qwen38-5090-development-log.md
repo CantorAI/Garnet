@@ -2176,3 +2176,24 @@ After authoritative terminal state, GPU returned39MiB used/32149MiB free/0%util.
 Trusted coordination note requested no local compiler/RTX4080 work until10:20UTC; observed10:15:39UTC and kept compilation remote. Follow-up released the window early at10:16:02.809UTC. No local build/GPU execution during the requested interval; local lightweight evidence/file analysis only. This is method provenance, not a cross-host performance claim.
 
 For vLLM INT4 cache correction, installed source confirms reset_mm_cache clears processor/transport caches separately from reset_encoder_cache clearing scheduler/GPU encoder outputs. Router availability and actual clearing/repeat evidence still needed. The first cached image-TTFT trial remains excluded; no new reference run or broad/cross-engine quality equivalence claimed. Keep remainingNVFP4/INT4/4B/reference/concurrency/repetition/long-context scope and2x target intact.
+
+
+### P155 — original-layout NVFP4 candidate screening verified, not model promotion
+
+Original remote helper48577 operand-sweep-attempt2 terminal0: standalone build, structured small oracle and nine projection-shape/workspace screens. Sourcee307bd000, qualified production2d902723 DLL identical before/after build and GPU execution. Archive 249818bytes/55entries SHA256 222f5592152db752e2c736ef061470e954fdfb849800df9df757c56b722fae07; downloaded CRC/all54 hashes, exact producer/CUDA sources against Git, three terminal ledgers, DLL identity and every retained canonical original/swapped BF16 output checked by independent CPU scale/sum/rounding oracle. Candidate numerical equality is an archived GPU producer assertion against that oracle, not separately retained full raw output for every successful candidate. No actual checkpoint weights or activations in this screen.
+
+Up to32 heuristic candidates requested per4/32/64MiB workspace and shape;161 supported candidate/workspace trial groups across9 shapes (duplicates across workspaces, not161 distinct algorithms), each16 ABBA samples with explicit outside-event cache eviction. All returned supported IDs70, but heuristic variants differ; numeric algorithm ID alone cannot identify an implementation variant. Best-of-many selection is biased and not a confidence interval.
+
+n17408-k5120-b1: best screening ratio 1.028232266, baseline 0.051279999ms/candidate 0.049872000ms, workspace budget 67108864bytes, heuristic index 1, algorithm ID70.
+n17408-k5120-b4: best screening ratio 1.022566536, baseline 0.048575999ms/candidate 0.047503999ms, workspace budget 4194304bytes, heuristic index 0, algorithm ID70.
+n17408-k5120-b128: best screening ratio 1.015586570, baseline 0.039616000ms/candidate 0.039007999ms, workspace budget 67108864bytes, heuristic index 2, algorithm ID70.
+n34816-k5120-b1: best screening ratio 1.000169723, baseline 0.094288003ms/candidate 0.094272003ms, workspace budget 33554432bytes, heuristic index 1, algorithm ID70.
+n34816-k5120-b4: best screening ratio 1.006676522, baseline 0.086847998ms/candidate 0.086272001ms, workspace budget 4194304bytes, heuristic index 0, algorithm ID70.
+n34816-k5120-b128: best screening ratio 1.013686536, baseline 0.073472001ms/candidate 0.072480001ms, workspace budget 4194304bytes, heuristic index 4, algorithm ID70.
+n5120-k17408-b1: best screening ratio 1.235372316, baseline 0.059455998ms/candidate 0.048128000ms, workspace budget 33554432bytes, heuristic index 3, algorithm ID70.
+n5120-k17408-b4: best screening ratio 1.261016925, baseline 0.059519999ms/candidate 0.047200000ms, workspace budget 33554432bytes, heuristic index 4, algorithm ID70.
+n5120-k17408-b128: best screening ratio 1.220383012, baseline 0.060160000ms/candidate 0.049295999ms, workspace budget 67108864bytes, heuristic index 1, algorithm ID70.
+
+Joined gate/up B1/B4 ratios1.00017/1.00668 show no meaningful gain in this screen. Down5120x17408 candidate at32MiB gives1.23537 atB1 and1.26102 atB4; T128 best64MiB gives1.22038. Do not multiply these into model tok/s. No production runtime change/default promotion or2x result. Next retain full variant configuration, repeat selected candidates with fresh/actual checkpoint data and signed activations, then full model state/token/VLM gates before any HTTP timing; warm full-model profiling should determine whether the down projection is a worthwhile bottleneck. Broader remaining objective unchanged.
+
+New trusted local quiet window10:18–10:26UTC was received; no local compiler/RTX4080 execution started. It was released early at10:19:25.599UTC. All builds in this interval remained on remote5090. A read-only installed-vLLM cache-router source audit is still live on original helper48577 audit-vllm-mm-cache-router; inspect its handle rather than restarting. No model/GPU worker is live after the standalone sweep. Cache correction/repeated reference,4B, native concurrency, quality/full-context and target2x remain open.
