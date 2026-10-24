@@ -2,6 +2,12 @@
 import copy,unittest
 from validate_native_mtp_http import compare_greedy_pair,validate_worker_profile
 class MTPGateTests(unittest.TestCase):
+ def test_head_reuse_requires_actual_readiness_field(self):
+  worker={'mtp_depth':3,'mtp_chunk':4,'vision_input_policy':'direct','chunk':4,'prefill_chunk':128,'shared_compressed_weights':True}
+  for value in (None,False,16):
+   with self.subTest(value=value),self.assertRaises(ValueError):validate_worker_profile({'native_worker':dict(worker,reuse_verified_head=value)},3,4,'direct',4,128,True,True)
+  worker['reuse_verified_head']=True
+  self.assertEqual(validate_worker_profile({'native_worker':worker},3,4,'direct',4,128,True,True),worker)
  def test_actual_profile_required_before_candidate_timing(self):
   h={'native_worker':{'mtp_depth':3,'mtp_chunk':4,'vision_input_policy':'direct'}}
   self.assertEqual(validate_worker_profile(h,3,4,'direct'),h['native_worker'])

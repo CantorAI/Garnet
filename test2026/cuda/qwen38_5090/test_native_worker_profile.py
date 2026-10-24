@@ -10,7 +10,9 @@ class WorkerProfileTests(unittest.TestCase):
             with self.subTest(launcher=path.name):
                 self.assertIn('GARNET_STUDY_SHARED_COMPRESSED',values)
                 profile=resolve_profile(values)
-                self.assertEqual(profile['shared'],path.name=='serve_native_mtp3_shared_worker.bat')
+                self.assertIn('GARNET_STUDY_REUSE_VERIFIED_HEAD',values)
+                self.assertEqual(profile['shared'],path.name in ('serve_native_mtp3_shared_worker.bat','serve_native_mtp3_shared_headreuse_worker.bat'))
+                self.assertEqual(profile['reuse_head'],path.name=='serve_native_mtp3_shared_headreuse_worker.bat')
 
     def test_legacy_defaults(self):
         self.assertEqual(resolve_profile({})['decode_chunk'],16)
@@ -19,6 +21,13 @@ class WorkerProfileTests(unittest.TestCase):
     def test_shared_mtp3(self):
         p=resolve_profile({'GARNET_STUDY_PACKED':'1','GARNET_STUDY_SHARED_COMPRESSED':'1','GARNET_STUDY_MTP_DEPTH':'3'})
         self.assertEqual((p['prefill_chunk'],p['decode_chunk'],p['draft_chunk']),(128,4,4))
+
+    def test_head_reuse_is_explicit_and_bounded_to_qualified_profile(self):
+        base={'GARNET_STUDY_PACKED':'1','GARNET_STUDY_SHARED_COMPRESSED':'1','GARNET_STUDY_MTP_DEPTH':'3'}
+        self.assertFalse(resolve_profile(base)['reuse_head'])
+        self.assertTrue(resolve_profile(dict(base,GARNET_STUDY_REUSE_VERIFIED_HEAD='1'))['reuse_head'])
+        for override in ({'GARNET_STUDY_MTP_DEPTH':'0'},{'GARNET_STUDY_MTP_DEPTH':'1'},{'GARNET_STUDY_SHARED_COMPRESSED':'0'},{'GARNET_STUDY_REUSE_VERIFIED_HEAD':'yes'}):
+            with self.subTest(override=override),self.assertRaises(ValueError):resolve_profile(dict(base,**dict({'GARNET_STUDY_REUSE_VERIFIED_HEAD':'1'},**override)))
 
     def test_invalid_combinations(self):
         base={'GARNET_STUDY_PACKED':'1','GARNET_STUDY_SHARED_COMPRESSED':'1','GARNET_STUDY_MTP_DEPTH':'3'}

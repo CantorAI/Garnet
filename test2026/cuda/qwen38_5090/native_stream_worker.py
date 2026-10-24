@@ -30,12 +30,13 @@ try:
     vision_policy='1' if profile['resident'] else '0'
     if vision_policy not in ('0','1'):raise ValueError('Invalid resident vision profile')
     if vision_policy=='1':vision.enable_resident_input(decoder.io)
+    decoder.reuse_verified_head=profile['reuse_head']
     mtp_chunk=profile['draft_chunk']
     if mtp_chunk not in (4,8,16) or mtp_depth and mtp_depth+1>mtp_chunk:raise ValueError('Invalid MTP draft chunk')
     if mtp_depth:
         from xModel.qwen38.vl_27b.model import create_cuda_mtp_session
         speculative=create_cuda_mtp_session(decoder,checkpoint,config,stops,mtp_depth,draft_chunk_size=mtp_chunk)
-    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
+    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'reuse_verified_head':bool(speculative is not None and speculative.verifier.reuse_verified_head),'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
     for item in requests():
         key=item['id'];body=item['body'];started=time.monotonic()
         try:

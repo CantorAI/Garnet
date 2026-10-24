@@ -1,5 +1,5 @@
 """Versioned shared-profile golden gate; historical T16 gate remains unchanged."""
-import hashlib,json,subprocess,sys
+import argparse,hashlib,json,subprocess,sys
 from pathlib import Path
 GOLDEN_SHA256='634e6200658aa74467b575c8d4b5e8dde58bb7522d4de1e5ca813da7576acf4b'
 COLORS={'red':'red','green':'green','blue':'blue','bottom-blue':'blue'}
@@ -28,20 +28,22 @@ def verify_records(golden,records):
     return {'target_mtp_pairs':20,'full128_pairs':16,'retained_profile_goldens':6,'vlm_semantic_cases':4}
 
 def main():
-    root,out=map(Path,sys.argv[1:3]);out.mkdir(exist_ok=True)
+    parser=argparse.ArgumentParser();parser.add_argument('study',type=Path);parser.add_argument('output',type=Path)
+    parser.add_argument('--diagnostic',type=Path);parser.add_argument('--reuse-verified-head',action='store_true');a=parser.parse_args()
+    root,out=a.study,a.output;out.mkdir(exist_ok=True)
     if any(out.iterdir()):raise FileExistsError('Preserve candidate attempt')
     sys.path.insert(0,str(root/'Garnet/test2026/cuda/qwen38_5090'))
     from validate_native_mtp_http import validate_worker_profile
     from benchmark_stream import payload,request
     from run_logged import source_identity
     from urllib.request import urlopen
-    url='http://127.0.0.1:18082';diagnostic=root/'results/shared-mtp-sequence-diagnostic'
+    url='http://127.0.0.1:18082';diagnostic=a.diagnostic or root/'results/shared-mtp-sequence-diagnostic'
     golden_path=root/'results/shared-decoder-full-qualification/report.json';raw=golden_path.read_bytes()
     if hashlib.sha256(raw).hexdigest()!=GOLDEN_SHA256:raise ValueError('Unqualified golden identity')
     golden=json.loads(raw);prior=json.loads((diagnostic/'report.json').read_text())
     if prior['status']!='diagnostic_passed':raise ValueError('Diagnostic did not complete')
     with urlopen(url+'/health',timeout=5) as response:health=json.load(response)
-    validate_worker_profile(health,3,4,'direct',4,128,True)
+    validate_worker_profile(health,3,4,'direct',4,128,True,True if a.reuse_verified_head else None)
     if health!=prior['health']:raise ValueError('Worker profile changed after diagnosis')
     records={};files=[golden_path,diagnostic/'report.json',root/'build/bin/garnet.dll',root/'build/bin/xlang3.exe',root/'models/Qwen3.8-27B-NVFP4/config.json']
     for key in KEYS:
