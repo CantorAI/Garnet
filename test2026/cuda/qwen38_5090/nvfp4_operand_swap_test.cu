@@ -34,6 +34,11 @@ Json AlgorithmConfiguration(const cublasLtMatmulAlgo_t& algo){
  {"inner_shape",AlgorithmAttribute<uint16_t>(algo,CUBLASLT_ALGO_CONFIG_INNER_SHAPE_ID)},
  {"cluster_shape",AlgorithmAttribute<uint16_t>(algo,CUBLASLT_ALGO_CONFIG_CLUSTER_SHAPE_ID)}};
 }
+std::string AlgorithmOpaqueHex(const cublasLtMatmulAlgo_t& algo){
+ // CUDA permits reuse only with the same cuBLAS version. Never decode these bytes.
+ const auto* bytes=reinterpret_cast<const unsigned char*>(&algo);const char* digits="0123456789abcdef";std::string result;
+ for(size_t i=0;i<sizeof(algo);++i){result+=digits[bytes[i]>>4];result+=digits[bytes[i]&15];}return result;
+}
 struct Buffer{void* p=nullptr;explicit Buffer(size_t bytes){CU(cudaMalloc(&p,bytes));}~Buffer(){if(p)cudaFree(p);}Buffer(const Buffer&)=delete;};
 struct Stream{cudaStream_t p=nullptr;Stream(){CU(cudaStreamCreate(&p));}~Stream(){cudaStreamDestroy(p);}};
 struct Handle{cublasLtHandle_t p=nullptr;Handle(){BL(cublasLtCreate(&p));}~Handle(){cublasLtDestroy(p);}};
@@ -163,6 +168,7 @@ Json Case(const std::filesystem::path& out,cublasLtHandle_t handle,cudaStream_t 
     const auto& candidate=options.candidates[index];
     Json row={{"heuristic_index",index},{"heuristic_state",int(candidate.state)},{"workspace_required_bytes",candidate.workspaceSize}};
     row["algorithm_configuration"]=AlgorithmConfiguration(candidate.algo);
+    row["algorithm_opaque_hex"]=AlgorithmOpaqueHex(candidate.algo);
     row["estimated_waves"]=candidate.wavesCount;
     int algorithmId=-1;size_t written=0;
     const auto idStatus=cublasLtMatmulAlgoConfigGetAttribute(&candidate.algo,CUBLASLT_ALGO_CONFIG_ID,&algorithmId,sizeof(algorithmId),&written);
@@ -194,7 +200,7 @@ std::vector<unsigned char> ReadFixture(const std::filesystem::path& path,size_t 
  std::vector<unsigned char> raw(bytes);std::ifstream f(path,std::ios::binary);f.read(reinterpret_cast<char*>(raw.data()),bytes);
  if(!f)throw std::runtime_error("Fixture read failed");return raw;
 }
-Json CheckpointCase(const std::filesystem::path& fixture,const std::filesystem::path& out,const Json& manifest,cublasLtHandle_t handle,cudaStream_t stream,int batch){
+Json CheckpointCase(const std::filesystem::path& fixture,const std::filesystem::path& out,const Json& manifest,cublasLtHandle_t handle,cudaStream_t stream,int batch,bool timing=false){
  const int rows=5120,k=17408;const size_t budget=64ULL<<20;
  if(manifest.at("schema")!=1||manifest.at("n")!=rows||manifest.at("k")!=k||manifest.at("max_batch")!=128||manifest.at("checkpoint_revision")!="482ca0f3832238542f8f5295dde86b5f22711d80")throw std::runtime_error("Unqualified fixture identity");
  const float alpha=manifest.at("alpha").get<float>();if(!std::isfinite(alpha)||alpha<=0)throw std::runtime_error("Invalid fixture alpha");
@@ -209,13 +215,13 @@ Json CheckpointCase(const std::filesystem::path& fixture,const std::filesystem::
  const std::vector<std::pair<std::string,int>> required={{"id",70},{"tile",20},{"split_k",-2},{"reduction",2},{"cta_swizzling",0},{"custom_option",0},{"stages",37},{"inner_shape",0},{"cluster_shape",5}};
  for(int i=0;i<options.count;++i){if(options.candidates[i].state!=CUBLAS_STATUS_SUCCESS)continue;auto config=AlgorithmConfiguration(options.candidates[i].algo);bool match=true;
   for(const auto& item:required)if(config[item.first]["status"]!=0||config[item.first]["value"]!=item.second)match=false;
-  if(match){matches.push_back({{"heuristic_index",i},{"configuration",config},{"workspace_required_bytes",options.candidates[i].workspaceSize}});if(chosen<0)chosen=i;}
+  if(match){matches.push_back({{"heuristic_index",i},{"configuration",config},{"algorithm_opaque_hex",AlgorithmOpaqueHex(options.candidates[i].algo)},{"estimated_waves",options.candidates[i].wavesCount},{"workspace_required_bytes",options.candidates[i].workspaceSize}});if(chosen<0)chosen=i;}
  }
  if(chosen<0)throw std::runtime_error("Fixed candidate configuration unavailable; no substitution");
  BL(Garnet::RunModelOptNVFP4Matmul(handle,dw.p,dws.p,dx.p,dxs.p,a.p,batch,rows,k,alpha,workspace.p,4ULL<<20,stream));
  BL(options.Launch(chosen,handle,dw.p,dx.p,b.p,workspace.p,budget,stream,alpha));CU(cudaStreamSynchronize(stream));
  std::vector<__nv_bfloat16> left(size_t(batch)*rows),right(left.size());CU(cudaMemcpy(left.data(),a.p,left.size()*2,cudaMemcpyDeviceToHost));CU(cudaMemcpy(right.data(),b.p,right.size()*2,cudaMemcpyDeviceToHost));
- const auto stem="checkpoint-down-b"+std::to_string(batch);Write(out/(stem+"-baseline.bf16"),left);Write(out/(stem+"-candidate.bf16"),right);
+ const auto stem=std::string(timing?"checkpoint-timed-down-b":"checkpoint-down-b")+std::to_string(batch);Write(out/(stem+"-baseline.bf16"),left);Write(out/(stem+"-candidate.bf16"),right);
  size_t differences=0,nonfinite=0,baselineOracleFailures=0,candidateOracleFailures=0;double maxDifference=0;
  for(size_t i=0;i<left.size();++i){const float l=__bfloat162float(left[i]),r=__bfloat162float(right[i]);if(!std::isfinite(l)||!std::isfinite(r))++nonfinite;
   if(std::memcmp(&left[i],&right[i],2))++differences;maxDifference=std::max(maxDifference,double(std::abs(l-r)));
@@ -227,18 +233,35 @@ Json CheckpointCase(const std::filesystem::path& fixture,const std::filesystem::
   baselineOracleFailures+=std::abs(double(__bfloat162float(left[size_t(br)*rows+channel]))-ref)>tolerance;
   candidateOracleFailures+=std::abs(double(__bfloat162float(right[size_t(br)*rows+channel]))-ref)>tolerance;
  }
- return {{"batch",batch},{"outputs",left.size()},{"different_bf16_words",differences},{"nonfinite_outputs",nonfinite},{"max_absolute_difference",maxDifference},{"cpu_oracle_outputs",batch*32},{"baseline_oracle_failures",baselineOracleFailures},{"candidate_oracle_failures",candidateOracleFailures},{"candidate_matches",matches},{"chosen_heuristic_index",chosen},{"workspace_budget_bytes",budget},{"passed",differences==0&&nonfinite==0&&baselineOracleFailures==0&&candidateOracleFailures==0}};
+ const bool passed=differences==0&&nonfinite==0&&baselineOracleFailures==0&&candidateOracleFailures==0;
+ Json result={{"batch",batch},{"outputs",left.size()},{"different_bf16_words",differences},{"nonfinite_outputs",nonfinite},{"max_absolute_difference",maxDifference},{"cpu_oracle_outputs",batch*32},{"baseline_oracle_failures",baselineOracleFailures},{"candidate_oracle_failures",candidateOracleFailures},{"candidate_matches",matches},{"chosen_heuristic_index",chosen},{"workspace_budget_bytes",budget},{"passed",passed}};
+ if(timing&&passed){
+  cudaDeviceProp prop{};CU(cudaGetDeviceProperties(&prop,0));const size_t flushBytes=std::max<size_t>(256ULL<<20,2ULL*prop.l2CacheSize+(32ULL<<20));Buffer flush(flushBytes);CU(cudaMemsetAsync(flush.p,0,flushBytes,stream));
+  TimedGraph baseline,candidate;baseline.Capture(stream,[&]{BL(Garnet::RunModelOptNVFP4Matmul(handle,dw.p,dws.p,dx.p,dxs.p,a.p,batch,rows,k,alpha,workspace.p,4ULL<<20,stream));});
+  candidate.Capture(stream,[&]{BL(options.Launch(chosen,handle,dw.p,dx.p,b.p,workspace.p,budget,stream,alpha));});baseline.Run(stream);candidate.Run(stream);
+  result["trials"]=Json::array();result["flush_bytes"]=flushBytes;
+  for(int repeat=0;repeat<8;++repeat)for(int mode:{0,1,1,0}){
+   Evict<<<1024,256,0,stream>>>(static_cast<unsigned int*>(flush.p),flushBytes/4,unsigned(repeat+mode+1));CU(cudaGetLastError());
+   const float ms=(mode?candidate:baseline).Run(stream);if(!(ms>0))throw std::runtime_error("Invalid checkpoint event timing");
+   result["trials"].push_back({{"mode",mode?"candidate":"baseline_first_supported"},{"abba_repeat",repeat},{"milliseconds",ms}});
+  }
+ }
+ return result;
 }
 int main(int argc,char** argv){Json report={{"status","starting"},{"cases",Json::array()},{"scope","Standalone synthetic packed NVFP4/scales oracle. Actual model projection dimensions when requested, not checkpoint weights or model tokens. Timings use CUDA event nodes inside captured graphs, include transpose/padded-row cost, exclude preceding cache-eviction kernel. Eviction is cold-cache intent, not proof of exact hardware cache residency. No full-model, HTTP or2x claim."}};std::filesystem::path path;
  try{
   if(argc<2||argc>4)throw std::runtime_error("Pass report path and optional timing mode or --checkpoint-fixture directory");path=argv[1];if(std::filesystem::exists(path))throw std::runtime_error("Preserve prior probe report");std::filesystem::create_directories(path.parent_path());
-  const bool checkpoint=argc==4&&std::string(argv[2])=="--checkpoint-fixture";
+  const bool checkpointTiming=argc==4&&std::string(argv[2])=="--checkpoint-timing";
+  const bool checkpoint=argc==4&&(std::string(argv[2])=="--checkpoint-fixture"||checkpointTiming);
   const bool sweep=argc==3&&std::string(argv[2])=="--algorithm-timing";const bool timing=sweep||(argc==3&&std::string(argv[2])=="--shape-timing");if((argc==3&&!timing)||(argc==4&&!checkpoint))throw std::runtime_error("Unknown argument");
   cudaDeviceProp prop{};CU(cudaGetDeviceProperties(&prop,0));if(prop.major<10)throw std::runtime_error("Actual Blackwell GPU required");
   int runtime=0;CU(cudaRuntimeGetVersion(&runtime));report["device"]={{"name",prop.name},{"major",prop.major},{"minor",prop.minor},{"l2_cache_bytes",prop.l2CacheSize}};report["cuda_runtime_version"]=runtime;report["cublaslt_version_raw"]=cublasLtGetVersion();
   if(checkpoint){std::ifstream file(std::filesystem::path(argv[3])/"manifest.json");Json manifest;file>>manifest;Stream stream;Handle handle;bool passed=true;
    report["fixture_manifest"]=manifest;report["scope"]="Actual pinned full down-projection weights/scales; signed synthetic packed inputs. Full BF16 candidate/baseline outputs retained; bounded32-channel CPU double oracle. No timing/model-token/full-model claim.";
    for(int batch:{1,4,128}){auto result=CheckpointCase(argv[3],path.parent_path(),manifest,handle.p,stream.p,batch);passed=passed&&result["passed"].get<bool>();report["cases"].push_back(result);std::ofstream(path)<<report.dump(2);}
+   if(passed&&checkpointTiming){report["timed_cases"]=Json::array();report["scope"]="Actual pinned full down-projection weights; signed synthetic inputs. All B1/B4/B128 correctness gates precede fixed-first-public-match ABBA timing. Opaque algorithms only comparable within this cuBLAS version. No model-token/full-model/2x claim.";
+    for(int batch:{1,4,128}){auto result=CheckpointCase(argv[3],path.parent_path(),manifest,handle.p,stream.p,batch,true);passed=passed&&result["passed"].get<bool>();report["timed_cases"].push_back(result);std::ofstream(path)<<report.dump(2);}
+   }
    report["status"]=passed?"passed":"failed";std::ofstream(path)<<report.dump(2);std::cout<<"NVFP4_CHECKPOINT_CANDIDATE_"<<(passed?"PASS":"FAIL")<<'\n';return passed?0:1;
   }
   const size_t flushBytes=std::max<size_t>(256ULL<<20,2ULL*prop.l2CacheSize+(32ULL<<20));report["flush_bytes"]=flushBytes;
