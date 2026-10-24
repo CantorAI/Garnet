@@ -115,9 +115,9 @@ class Handler(BaseHTTPRequestHandler):
                     usage={'prompt_tokens':prompt,'completion_tokens':count,'total_tokens':prompt+count}
                     if stream:
                         send({'id':key,'choices':[{'index':0,'delta':{'content':full_text[len(previous):]},'finish_reason':event['finish_reason']}],'usage':usage,
-                            'prompt_token_ids':event['prompt_ids'],'response_token_ids':tokens});send('[DONE]')
+                            'prompt_token_ids':event['prompt_ids'],'response_token_ids':tokens,'study':{'generation_mode':event.get('generation_mode'),'speculative_metrics':event.get('speculative_metrics')}});send('[DONE]')
                     else:self.reply(200,{'id':key,'choices':[{'index':0,'message':{'role':'assistant','content':full_text},'finish_reason':event['finish_reason'],
-                        'prompt_token_ids':event['prompt_ids'],'response_token_ids':tokens}],'usage':usage})
+                        'prompt_token_ids':event['prompt_ids'],'response_token_ids':tokens}],'usage':usage,'study':{'generation_mode':event.get('generation_mode'),'speculative_metrics':event.get('speculative_metrics')}})
         except Exception as error:
             self.server.worker.ready=False
             if started:send({'error':repr(error)})

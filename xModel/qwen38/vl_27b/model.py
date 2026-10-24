@@ -84,13 +84,13 @@ def create_cuda_decoder(checkpoint,config,capacity,batch=1,chunk_size=1,fused_de
         decoder.close();raise
 
 
-def create_cuda_packed_decoder(checkpoint,config,capacity,batch=1):
+def create_cuda_packed_decoder(checkpoint,config,capacity,batch=1,retain_linear_inputs=False):
     """Research candidate: one embedded mixed program, one16-token profile."""
     validate_cuda_profile(config,capacity,batch)
     import json
     from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
     decoder=CUDAPackedDecoder(checkpoint,config['text_config'],batch,capacity,16,16,
-        flat_concat=True,embedded_projection_weights=True)
+        flat_concat=True,embedded_projection_weights=True,retain_linear_inputs=retain_linear_inputs)
     try:
         decoder.io.enable_nvfp4_head(True)
         stats=json.loads(decoder.programs[16].graph.stats_json())
@@ -105,6 +105,40 @@ def create_cuda_vision(checkpoint,config,gh,gw):
     validate_cuda_profile(config,4096,1)
     from xModel.qwen35.vl_0_8b.cuda_decoder import CUDAImageEncoder
     return CUDAImageEncoder(checkpoint,config['vision_config'],gh,gw,1)
+
+
+def mtp_shapes(config):
+    """Pinned one-layer BF16 draft contract; runtime/GPU equivalence is separate."""
+    validate_config(config)
+    c=config['text_config'];h=c['hidden_size'];m=c['intermediate_size'];q=c['num_attention_heads']*c['head_dim'];kv=c['num_key_value_heads']*c['head_dim']
+    if c.get('mtp_num_hidden_layers',1)!=1:raise ValueError('One checkpoint MTP layer required')
+    result={'mtp.fc.weight':[h,2*h]}
+    for name in ('pre_fc_norm_embedding','pre_fc_norm_hidden','norm'):result['mtp.'+name+'.weight']=[h]
+    for name in ('input_layernorm','post_attention_layernorm'):result['mtp.layers.0.'+name+'.weight']=[h]
+    for name in ('q_norm','k_norm'):result['mtp.layers.0.self_attn.'+name+'.weight']=[c['head_dim']]
+    for name,shape in {'q_proj':[2*q,h],'k_proj':[kv,h],'v_proj':[kv,h],'o_proj':[h,q]}.items():result['mtp.layers.0.self_attn.'+name+'.weight']=shape
+    for name,shape in {'gate_proj':[m,h],'up_proj':[m,h],'down_proj':[h,m]}.items():result['mtp.layers.0.mlp.'+name+'.weight']=shape
+    return result
+
+
+def validate_mtp_metadata(config,metadata):
+    for name,shape in mtp_shapes(config).items():
+        value=metadata.get(name,{})
+        if value.get('dtype')!='BF16' or value.get('shape')!=shape:raise ValueError('MTP BF16 tensor contract mismatch: '+name)
+    return True
+
+
+def create_cuda_mtp_session(decoder,checkpoint,config,stops,depth=3):
+    """Research-only verified draft; no indexed NVFP4 head or second target copy."""
+    validate_cuda_profile(config,decoder.capacity,decoder.batch)
+    if depth not in (1,3,7) or not getattr(decoder,'packed_state_program',False) or not decoder.retain_linear_inputs:
+        raise ValueError('MTP requires depth1/3/7 and retained packed target projections')
+    import json
+    metadata={name:json.loads(decoder.io.weight_info(name)) for name in mtp_shapes(config)}
+    validate_mtp_metadata(config,metadata)
+    if json.loads(decoder.io.memory_json())['head_precision']!='modelopt_nvfp4_w4a4':raise ValueError('MTP requires the target native NVFP4 head')
+    from xModel.qwen35.vl_0_8b.cuda_speculative import CUDASpeculativeSession
+    return CUDASpeculativeSession(decoder,checkpoint,stops,depth,head_candidates=0,prefix_replay=True)
 
 
 def validate_image_processor(processor,max_pixels=1048576):
