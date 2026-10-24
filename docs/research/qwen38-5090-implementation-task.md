@@ -347,3 +347,10 @@ Do not extrapolate a component ratio to HTTP TTFT, decode, throughput or the2x g
 The goal remains active. Completion requires the requested full-model comparisons,
 quality/precision/cache/transport matching, repeated metrics, actual concurrency
 and honest evidence for any claimed speedup; the2x objective is currently unmet.
+
+
+The attention experiments now include a split-key candidate. All seven component
+qualification profiles pass; warm-core4K cases improve versus legacy with extra
+scratch memory. It remains unwired and requires opt-in plugin/model validation.
+Small-capacity regression is retained. See P067 and verified attention-split evidence;
+no component result establishes the requested2x end-to-end reference comparison.
