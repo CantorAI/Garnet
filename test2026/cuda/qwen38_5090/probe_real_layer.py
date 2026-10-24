@@ -1,5 +1,6 @@
 """Real decoder-layer CPU parity and stateful CUDA replay checks; not a benchmark."""
-import os,sys,json,math
+import os,sys,json,math,struct
+from pathlib import Path
 sys.path.insert(0,os.environ['GARNET_RUNTIME_ROOT']);sys.path.insert(0,os.getcwd())
 import garnet,tensor
 from xModel.qwen35.vl_0_8b.decoder_layer import T,Qwen35LinearDecoderLayer,Qwen35FullDecoderLayer
@@ -37,14 +38,22 @@ for item in oracle['layers']:
             io.update(args[0],case['input'])
             if kind!='linear_attention':io.update(args[3],case['positions']);io.update(args[4],[step])
             checks=[]
-            for enabled in [False,True,True,True,True]:
+            for replay_index,enabled in enumerate([False,True,True,True,True]):
                 graph.enable_cuda_graph(enabled);packed=graph.run_device(args);io.slice_into(packed,0,hidden)
-                actual=garnet.tensor_to_cpu(hidden).tolist();checks.append(compare(actual,case['expected_hidden']))
+                actual=garnet.tensor_to_cpu(hidden).tolist()
+                if oracle.get('expected_weight_precision')=='ct_int4_g128':
+                    raw_path=Path(output).with_name(Path(output).stem+'-layer'+str(idx)+'-step'+str(step)+'-run'+str(replay_index)+'.f32')
+                    raw_path.write_bytes(struct.pack('<'+'f'*len(actual),*actual))
+                checks.append(compare(actual,case['expected_hidden']))
             # Compare sampled state entries only after final replay; keep canonical GPU states for next token.
             offset=width;state_checks=[]
             for state,sample in zip(args[1:3],case['state_samples']):
                 io.slice_into(packed,offset,state);values=garnet.tensor_to_cpu(state).tolist()
-                state_checks.append(compare([values[i] for i in sample['indices']],sample['values']))
+                selected=[values[i] for i in sample['indices']]
+                if oracle.get('expected_weight_precision')=='ct_int4_g128':
+                    raw_path=Path(output).with_name(Path(output).stem+'-layer'+str(idx)+'-step'+str(step)+'-state'+str(len(state_checks))+'.f32')
+                    raw_path.write_bytes(struct.pack('<'+'f'*len(selected),*selected))
+                state_checks.append(compare(selected,sample['values']))
                 offset+=len(values)
             cases.append({'hidden':checks,'sampled_states':state_checks})
         stats=json.loads(graph.stats_json());assert stats['graph_replays']>=2 and stats['graph_capture_failures']==0
