@@ -20,6 +20,7 @@ def main():
     p.add_argument('--engine', choices=['vllm','sglang'], required=True)
     p.add_argument('--url', required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--model',choices=['qwen38-27b-nvfp4','qwen38-27b-int4','qwen35-4b-bf16'],default='qwen38-27b-nvfp4')
     p.add_argument('--ordinary-oracle', type=Path)
     a=p.parse_args();out=a.output
     if out.exists() and any(out.iterdir()):raise FileExistsError('Preserve previous reference attempt')
@@ -27,9 +28,10 @@ def main():
     prior=None
     if a.ordinary_oracle:
         prior=json.loads(a.ordinary_oracle.read_text(encoding='utf8'))
+        if prior.get('model','qwen38-27b-nvfp4')!=a.model:raise ValueError('Ordinary oracle model mismatch')
         if prior['engine']!=a.engine or prior['mode']!='ordinary_capture' or prior['status']!='passed' or len(prior['cases'])!=16:
             raise ValueError('A complete same-engine ordinary capture is required')
-    report={'engine':a.engine,'mode':'speculative_compare' if prior else 'ordinary_capture',
+    report={'engine':a.engine,'model':a.model,'mode':'speculative_compare' if prior else 'ordinary_capture',
             'status':'running','cases':[],
             'scope':'Sixteen same-engine full greedy sequences only; verify actual server configuration separately. Not broad quality or timing.'}
     if prior:report['ordinary_oracle_sha256']=hashlib.sha256(a.ordinary_oracle.read_bytes()).hexdigest()
@@ -38,7 +40,7 @@ def main():
         for case_index,case in enumerate(['text','image']):
             for i in range(8):
                 key='s3-'+case+'-c1-r'+str(i)
-                body,_=payload(case,key,301000+case_index*20000+i,'qwen38-27b-nvfp4',128,'jpeg','image-first','binary-grid')
+                body,_=payload(case,key,301000+case_index*20000+i,a.model,128,'jpeg','image-first','binary-grid')
                 body['stream']=False
                 body.pop('stream_options',None)
                 digest=hashlib.sha256(json.dumps(body,sort_keys=True,separators=(',',':')).encode()).hexdigest()

@@ -17,7 +17,7 @@ def reference_tokens(result,engine):
     return ids,generated
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--url',default='http://127.0.0.1:18081');p.add_argument('--output',type=Path,required=True);p.add_argument('--engine',choices=['sglang','vllm'],default='sglang');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--url',default='http://127.0.0.1:18081');p.add_argument('--output',type=Path,required=True);p.add_argument('--engine',choices=['sglang','vllm'],default='sglang');p.add_argument('--model',choices=['qwen38-27b-nvfp4','qwen38-27b-int4','qwen35-4b-bf16'],default='qwen38-27b-nvfp4');a=p.parse_args()
     a.output.mkdir(parents=True,exist_ok=True)
     prompt='What is the dominant color in this image? Answer with one color word.'
     cases=[]
@@ -30,7 +30,7 @@ def main():
         path=a.output/(name+'.jpg');image.save(path,quality=100,subsampling=0);data=path.read_bytes()
         content=[{'type':'image_url','image_url':{'url':'data:image/jpeg;base64,'+base64.b64encode(data).decode()}},
                  {'type':'text','text':question}]
-        payload={'model':'qwen38-27b-nvfp4','messages':[{'role':'user','content':content}],
+        payload={'model':a.model,'messages':[{'role':'user','content':content}],
             'max_tokens':32,'temperature':0,'stream':False,'chat_template_kwargs':{'enable_thinking':False},
             'return_prompt_token_ids':True,'return_token_ids':True}
         if a.engine=='vllm':del payload['return_prompt_token_ids']
@@ -45,7 +45,7 @@ def main():
             'image_sha256':hashlib.sha256(data).hexdigest(),'request_sha256':hashlib.sha256(wire).hexdigest(),
             'response_sha256':hashlib.sha256(raw).hexdigest(),'usage':result['usage']})
         print('MATCHED_REFERENCE_IMAGE_PASS',name,text,flush=True)
-    oracle={'cases':reports,'engine':a.engine,'grid':[1,16,16],'context_capacity':4096,
+    oracle={'cases':reports,'model':a.model,'engine':a.engine,'grid':[1,16,16],'context_capacity':4096,
         'scope':'Four matched JPEG color/spatial smoke cases only; not broad VLM quality or performance'}
     (a.output/'oracle.json').write_text(json.dumps(oracle,indent=2))
 
