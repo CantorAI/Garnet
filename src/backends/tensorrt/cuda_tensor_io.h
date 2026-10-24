@@ -3,6 +3,7 @@
 #if !defined(GARNET_CPU_ONLY) && !defined(GARNET_METAL)
 #include "xlang3/xlang3.h"
 #include "safetensors_index.h"
+#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -21,6 +22,15 @@ class CUDATensorIO {
     X::Tensor nativeHeadTiledScales_,nativeHeadPackedInput_,nativeHeadInputScales_,nativeHeadWorkspace_;
     std::shared_ptr<void> nativeHeadContext_;
     X::Tensor candidateScratch_,candidateOutput_,indexedScores_,indexedIds_,indexedValues_;
+    // Explicit opt-in pool: opaque checkpoint bytes, never BF16 expansion.
+    struct CompressedProjection {
+        X::Tensor packed,scales;
+        int rows=0,columns=0;bool nvfp4=false;
+        float weightScale=0,inputScale=0;
+        size_t packedBytes=0,scaleBytes=0;
+    };
+    std::unordered_map<std::string,CompressedProjection> compressedProjections_;
+    CompressedProjection& CompressedProjectionUnlocked(const std::string& name,bool load);
     std::unordered_map<std::string,X::Tensor> projectionWeights_;
     std::unordered_map<std::string,X::Tensor> projectionWeightGroups_;
     std::unordered_set<std::string> projectionWeightGroupMembers_;
@@ -67,6 +77,9 @@ public:
     X::Value PredictIndexed(X::Value hidden,X::Value candidates);
     std::string WeightInfo(const std::string& name);
     X::Value Weight(const std::string& name);
+    std::string CompressedWeightInfo(const std::string& name);
+    X::Value CompressedWeight(const std::string& name);
+    X::Value CompressedScales(const std::string& name);
     X::Value GroupWeights(X::Value names);
     X::Value PrepareImage(const std::string& path,int pixels);
     X::Value PrepareImageProfile(const std::string& path,int minPixels,int maxPixels);
@@ -107,6 +120,9 @@ public:
         APISET().AddFunc<2>("predict_indexed",&CUDATensorIO::PredictIndexed);
         APISET().AddFunc<1>("weight_info",&CUDATensorIO::WeightInfo);
         APISET().AddFunc<1>("weight",&CUDATensorIO::Weight);
+        APISET().AddFunc<1>("compressed_weight_info",&CUDATensorIO::CompressedWeightInfo);
+        APISET().AddFunc<1>("compressed_weight",&CUDATensorIO::CompressedWeight);
+        APISET().AddFunc<1>("compressed_scales",&CUDATensorIO::CompressedScales);
         APISET().AddFunc<1>("group_weights",&CUDATensorIO::GroupWeights);
         APISET().AddFunc<2>("prepare_image",&CUDATensorIO::PrepareImage);
         APISET().AddFunc<3>("prepare_image_profile",&CUDATensorIO::PrepareImageProfile);

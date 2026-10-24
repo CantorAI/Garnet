@@ -35,11 +35,14 @@ DimsExprs ModelOptNVFP4Plugin::getOutputDimensions(int index,const DimsExprs* in
     auto shape=input[0];shape.d[1]=builder.constant(state_.rows);return shape;
 }
 bool ModelOptNVFP4Plugin::supportsFormatCombination(int pos,const PluginTensorDesc* values,int inputs,int outputs) noexcept{
-    if(inputs!=3||outputs!=1||pos<0||pos>=4||values[pos].format!=TensorFormat::kLINEAR)return false;
-    return values[pos].type==((pos==0||pos==3)?DataType::kBF16:DataType::kINT8);
+    if(!values||inputs!=3||outputs!=1||pos<0||pos>=4||values[pos].format!=TensorFormat::kLINEAR)return false;
+    if(pos==0||pos==3)return values[pos].type==DataType::kBF16;
+    // INT32 is opaque four-byte storage for caller-owned compressed buffers.
+    // The kernel reads the same packed bytes; no numerical conversion occurs.
+    return values[pos].type==DataType::kINT8||values[pos].type==DataType::kINT32;
 }
 size_t ModelOptNVFP4Plugin::getWorkspaceSize(const PluginTensorDesc* in,int count,const PluginTensorDesc*,int) const noexcept{
-    if(count!=3||in[0].dims.nbDims!=2||in[0].dims.d[0]<1||in[0].dims.d[0]>1024||in[0].dims.d[1]!=state_.columns)return 0;
+    if(!in||count!=3||in[0].dims.nbDims!=2||in[0].dims.d[0]<1||in[0].dims.d[0]>1024||in[0].dims.d[1]!=state_.columns)return 0;
     return Aligned(size_t(in[0].dims.d[0])*state_.columns/2)+
         Aligned(ModelOptNVFP4ScaleBytes(int(in[0].dims.d[0]),state_.columns))+BlasWorkspace;
 }
@@ -49,9 +52,13 @@ int ModelOptNVFP4Plugin::initialize() noexcept{
 int ModelOptNVFP4Plugin::enqueue(const PluginTensorDesc* in,const PluginTensorDesc* out,const void* const* input,
     void* const* output,void* workspace,cudaStream_t stream) noexcept{
     if(!in||!out||!input||!output||!workspace||!context_||!getWorkspaceSize(in,3,out,1)||
-        in[1].dims.nbDims!=2||in[1].dims.d[0]!=state_.rows||in[1].dims.d[1]!=state_.columns/2||
-        in[2].dims.nbDims!=1||in[2].dims.d[0]!=int64_t(ModelOptNVFP4ScaleBytes(state_.rows,state_.columns))||
+        in[1].dims.nbDims!=2||in[1].dims.d[0]!=state_.rows||in[1].dims.d[1]!=state_.columns/(in[1].type==DataType::kINT32?8:2)||
+        in[2].dims.nbDims!=1||in[2].dims.d[0]!=int64_t(ModelOptNVFP4ScaleBytes(state_.rows,state_.columns)/(in[2].type==DataType::kINT32?4:1))||
         out[0].dims.nbDims!=2||out[0].dims.d[0]!=in[0].dims.d[0]||out[0].dims.d[1]!=state_.rows)return 1;
+    PluginTensorDesc descriptors[4];
+    for(int i=0;i<3;++i){if(!input[i])return 1;descriptors[i]=in[i];}
+    if(!output[0])return 1;descriptors[3]=out[0];
+    for(int i=0;i<4;++i)if(!supportsFormatCombination(i,descriptors,3,1))return 1;
     const int batch=int(in[0].dims.d[0]);
     auto* packed=static_cast<unsigned char*>(workspace);
     auto* scales=packed+Aligned(size_t(batch)*state_.columns/2);

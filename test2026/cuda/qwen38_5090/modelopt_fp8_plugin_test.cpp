@@ -26,8 +26,28 @@ unsigned char Encode(float value){
         if(delta<distance||(delta==distance&&!(code&1))){distance=delta;best=code;}}
     return static_cast<unsigned char>(best|(negative?128:0));
 }
-int main(){try{
+int main(int argc,char** argv){try{
     using namespace nvinfer1;Logger logger;
+    {
+        Garnet::ModelOptFP8Plugin plugin(256,256,1.f,1.f/448.f);
+        PluginTensorDesc desc[3]{};
+        for(auto& d:desc)d.format=TensorFormat::kLINEAR;
+        desc[0].type=desc[2].type=DataType::kBF16;
+        for(int mask=0;mask<(1<<1);++mask){
+            for(int i=1;i<2;++i)desc[i].type=(mask&(1<<(i-1)))?DataType::kINT32:DataType::kINT8;
+            for(int pos=0;pos<3;++pos)if(!plugin.supportsFormatCombination(pos,desc,2,1))throw std::runtime_error("Packed storage type rejected");
+        }
+        for(int pos=0;pos<3;++pos){
+            auto saved=desc[pos];desc[pos].type=DataType::kFLOAT;
+            if(plugin.supportsFormatCombination(pos,desc,2,1))throw std::runtime_error("Wrong storage type admitted");
+            desc[pos]=saved;desc[pos].format=TensorFormat::kCHW4;
+            if(plugin.supportsFormatCombination(pos,desc,2,1))throw std::runtime_error("Nonlinear packed storage admitted");
+            desc[pos]=saved;
+        }
+        if(plugin.supportsFormatCombination(0,nullptr,2,1)||plugin.supportsFormatCombination(-1,desc,2,1)||plugin.supportsFormatCombination(3,desc,2,1))throw std::runtime_error("Invalid descriptor admitted");
+        puts("COMPRESSED_STORAGE_FORMAT_ADMISSION_PASS; no GPU or numerical claim");
+        if(argc==2&&!std::strcmp(argv[1],"--formats-only"))return 0;
+    }
     if(!Garnet::EnsureModelOptFP8PluginRegistered())throw std::runtime_error("Plugin registration failed");
     {
         Garnet::ModelOptFP8Plugin valid(256,256,1.f,1.f/448.f);
@@ -37,7 +57,7 @@ int main(){try{
         if(Garnet::ModelOptFP8Plugin::Deserialize(wire.data(),wire.size()))throw std::runtime_error("Nonfinite plugin metadata accepted");
     }
     constexpr int rows=256,k=256,blocks=k/16;
-    for(int batch:{1,16,4096}){
+    for(bool external:{false,true})for(int batch:{1,16,4096}){
         auto builder=Own(createInferBuilder(logger));
         auto network=Own(builder->createNetworkV2(1U<<int(NetworkDefinitionCreationFlag::kSTRONGLY_TYPED)));
         auto config=Own(builder->createBuilderConfig());config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE,64ULL<<20);
@@ -46,11 +66,12 @@ int main(){try{
         for(int r=0;r<rows;++r)for(int c=0;c<k;++c)weights[r*k+c]=Encode((1+(r+c)%4)*((r+c)%3?-1.f:1.f));
         std::vector<float> decodedWeights(weights.size());
         for(size_t i=0;i<weights.size();++i)decodedWeights[i]=Decode(weights[i]);
-        auto* w=network->addConstant(Dims2{rows,k},{DataType::kINT8,weights.data(),int64_t(weights.size())});
+        auto* w=external?nullptr:network->addConstant(Dims2{rows,k},{DataType::kINT8,weights.data(),int64_t(weights.size())});
+        auto* weightTensor=external?network->addInput("packed_weight",DataType::kINT32,Dims2{rows,k/4}):(w?w->getOutput(0):nullptr);
         auto* x=network->addInput("input",DataType::kBF16,Dims2{batch,k});
-        if(!w||!x)throw std::runtime_error("Native plugin input creation failed");
+        if(!weightTensor||!x)throw std::runtime_error("Native plugin input creation failed");
         auto plugin=std::make_unique<Garnet::ModelOptFP8Plugin>(rows,k,.5f,1.f);
-        ITensor* inputs[]={x,w->getOutput(0)};
+        ITensor* inputs[]={x,weightTensor};
         auto* layer=network->addPluginV2(inputs,2,*plugin);
         if(!layer)throw std::runtime_error("Native plugin layer creation failed");
         layer->getOutput(0)->setName("output");network->markOutput(*layer->getOutput(0));
@@ -65,6 +86,12 @@ int main(){try{
         CUDA(cudaMalloc(&deviceInput,input.size()*2));CUDA(cudaMalloc(&deviceOutput,output.size()*2));
         CUDA(cudaMemcpy(deviceInput,input.data(),input.size()*2,cudaMemcpyHostToDevice));
         if(!context->setTensorAddress("input",deviceInput)||!context->setTensorAddress("output",deviceOutput))throw std::runtime_error("Binding failed");
+        void *deviceWeight=nullptr,*deviceScales=nullptr;
+        if(external){
+            CUDA(cudaMalloc(&deviceWeight,weights.size()));
+            CUDA(cudaMemcpy(deviceWeight,weights.data(),weights.size(),cudaMemcpyHostToDevice));
+            if(!context->setTensorAddress("packed_weight",deviceWeight))throw std::runtime_error("External packed weight binding failed");
+        }
         cudaStream_t stream=nullptr;CUDA(cudaStreamCreate(&stream));
         if(!context->enqueueV3(stream))throw std::runtime_error("Native plugin enqueue failed");CUDA(cudaStreamSynchronize(stream));
         auto verify=[&]{
@@ -82,7 +109,8 @@ int main(){try{
         CUDA(cudaGraphLaunch(executable,stream));CUDA(cudaStreamSynchronize(stream));verify();
         CUDA(cudaGraphExecDestroy(executable));CUDA(cudaGraphDestroy(graph));CUDA(cudaStreamDestroy(stream));
         CUDA(cudaFree(deviceInput));CUDA(cudaFree(deviceOutput));
-        printf("FP8_PLUGIN_SERIALIZATION_AND_GRAPH_PASS: batch=%d, CPU-oracle outputs=%d; no performance claim\n",batch,batch*rows);fflush(stdout);
+        if(deviceWeight)CUDA(cudaFree(deviceWeight));if(deviceScales)CUDA(cudaFree(deviceScales));
+        printf("FP8_PLUGIN_SERIALIZATION_AND_GRAPH_PASS: external_int32=%d, batch=%d, CPU-oracle outputs=%d; no performance claim\n",int(external),batch,batch*rows);fflush(stdout);
     }
     return 0;
 }catch(const std::exception& e){fprintf(stderr,"%s\n",e.what());return 1;}}

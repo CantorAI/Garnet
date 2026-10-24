@@ -3237,6 +3237,7 @@ namespace Garnet {
     }
 
     nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTWeight(const std::string& weightName) {
+        if(externalCompressedBindings.count(weightName))throw std::invalid_argument("Compressed weight requires its explicit external binding on every operation: "+weightName);
         auto existing = weightTensorMap.find(weightName);
         if (existing != weightTensorMap.end()) {
             return existing->second;
@@ -4497,7 +4498,7 @@ namespace Garnet {
         constantTensors.clear();
         weightTensorMap.clear();
         nativeNVFP4Weights.clear();nativeNVFP4ScaleStorage.clear();nativeFP8Weights.clear();nativeCTInt4Weights.clear();
-        externalBF16Bindings.clear();
+        externalBF16Bindings.clear();externalCompressedBindings.clear();
         scalarWeights.clear();
         bfloat16ScalarWeights.clear();
         integerWeights.clear();
@@ -6076,6 +6077,39 @@ namespace Garnet {
                         if(previous!=externalBF16Bindings.end()&&previous->second.first!=TensorId(value))
                             throw std::invalid_argument("One checkpoint weight cannot bind multiple tensor inputs");
                         externalBF16Bindings[name]={TensorId(value),expectedBytes};external[name]=declared->second;
+                    }
+                }
+                // Each checkpoint name maps to [packed] for FP8 or
+                // [packed, tiled_scales] for NVFP4, both opaque INT32 tensors.
+                if(auto* bindings=FindKeyword(kwParams,"external_compressed_weights")){
+                    if(!bindings->second.IsDict()||capturedWeightProfile!="modelopt_mixed"||bindings->second.Size()>1024)
+                        throw std::invalid_argument("External compressed weights require a bounded mixed-profile dictionary");
+                    for(uint64_t i=0;i<bindings->second.Size();++i){
+                        X::Value key,value;
+                        if(!bindings->second.DictEntry(i,key,value)||!key.IsString()||!value.IsList()||value.Size()<1||value.Size()>2)
+                            throw std::invalid_argument("External compressed binding must be a named packed tensor list");
+                        const auto name=key.ToString();
+                        if(external.count(name))throw std::invalid_argument("Checkpoint name bound as both BF16 and compressed");
+                        unsigned long long ids[2]={0,0};ITensor* tensors[2]={nullptr,nullptr};
+                        for(uint64_t j=0;j<value.Size();++j){
+                            auto tensor=value.Get(j);if(!IsTensor(tensor))throw std::invalid_argument("External compressed binding requires tensor inputs");
+                            X::Tensor handle(tensor);auto info=handle.Info();ids[j]=TensorId(tensor);auto found=tensorMap.find(ids[j]);
+                            if(info.dtype!=X3_TENSOR_INT32||found==tensorMap.end()||!found->second->isNetworkInput())
+                                throw std::invalid_argument("External compressed buffer must be a declared INT32 network input");
+                            tensors[j]=found->second;
+                        }
+                        if(ids[0]==ids[1])throw std::invalid_argument("Packed weight and scales must use distinct inputs");
+                        for(const auto& previous:externalCompressedBindings){
+                            if(previous.first==name){
+                                if(previous.second.packedId!=ids[0]||previous.second.scaleId!=ids[1])
+                                    throw std::invalid_argument("One compressed checkpoint weight cannot bind multiple inputs");
+                            }else if(previous.second.packedId==ids[0]||previous.second.scaleId==ids[0]||
+                                (ids[1]&&(previous.second.packedId==ids[1]||previous.second.scaleId==ids[1])))
+                                throw std::invalid_argument("Compressed storage input cannot alias different checkpoint weights");
+                        }
+                        if(weightTensorMap.count(name))throw std::invalid_argument("Compressed weight already embedded in this graph: "+name);
+                        const auto bytes=BindExternalModelOptWeight(name,tensors[0],tensors[1]);
+                        externalCompressedBindings[name]={ids[0],ids[1],bytes};external[name]=tensors[0];
                     }
                 }
                 Qwen35TRTOps ops(*network,vectorWeights,[&](const std::string& name){

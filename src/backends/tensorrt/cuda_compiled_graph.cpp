@@ -18,7 +18,7 @@ CUDACompiledGraph::CUDACompiledGraph() {
     enginePath_=cacheRoot_+"model.engine";
 }
 CUDACompiledGraph::~CUDACompiledGraph(){Close();}
-void CUDACompiledGraph::CloseUnlocked(){deviceOutput_=X::Value();externalOutput_=false;execution_.reset();TRTBuilder::ReleaseCachedExecutions(cacheRoot_);ready_=false;externalWeightCount_=externalWeightBytes_=joinedProjectionInputs_=nativeFP8WeightCount_=nativeNVFP4WeightCount_=nativeCTInt4WeightCount_=0;weightPrecision_="bf16";}
+void CUDACompiledGraph::CloseUnlocked(){deviceOutput_=X::Value();externalOutput_=false;execution_.reset();TRTBuilder::ReleaseCachedExecutions(cacheRoot_);ready_=false;externalWeightCount_=externalWeightBytes_=joinedProjectionInputs_=nativeFP8WeightCount_=nativeNVFP4WeightCount_=nativeCTInt4WeightCount_=0;externalCompressedWeightCount_=externalCompressedWeightBytes_=0;weightPrecision_="bf16";}
 void CUDACompiledGraph::Close(){std::lock_guard<std::mutex> lock(mutex_);CloseUnlocked();}
 bool CUDACompiledGraph::Ready() const{std::lock_guard<std::mutex> lock(mutex_);return ready_;}
 double CUDACompiledGraph::CompileMs() const{std::lock_guard<std::mutex> lock(mutex_);return compileMs_;}
@@ -51,6 +51,9 @@ std::string CUDACompiledGraph::StatsJson() const{
     info["native_int4_g128_projection_weights"]=nativeCTInt4WeightCount_;
     info["joined_projection_inputs"]=joinedProjectionInputs_;
     info["external_bf16_weight_bytes"]=externalWeightBytes_;
+    info["external_compressed_weight_inputs"]=externalCompressedWeightCount_;
+    info["external_compressed_weight_bytes"]=externalCompressedWeightBytes_;
+    info["external_compressed_weight_scope"]="Caller-owned opaque INT32 storage; calibration from checkpoint; excluded from graph-owned allocations";
     info["external_weight_scope"]="Caller-owned symbolic BF16 inputs; excluded from graph-owned allocations";
     uint64_t span=0,footprint=0;
     if(deviceOutput_.IsValid()){
@@ -101,6 +104,7 @@ bool CUDACompiledGraph::Build(X::Value graph,X::Value symbols,const std::string&
         throw X::Error(error);
     execution_=TRTBuilder::RetainCachedExecution(enginePath_,&weights_,error,weightPrecision_=="modelopt_mixed"||weightPrecision_=="ct_int4_g128");
     if(!execution_)throw X::Error(error);
+    externalCompressedWeightCount_=builder.ExternalCompressedWeightInputs();externalCompressedWeightBytes_=builder.ExternalCompressedWeightBytes();
     externalWeightCount_=builder.ExternalBF16WeightInputs();externalWeightBytes_=builder.ExternalBF16WeightBytes();
     joinedProjectionInputs_=builder.JoinedProjectionInputs();
     nativeNVFP4WeightCount_=builder.NativeNVFP4WeightCount();

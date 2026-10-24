@@ -63,6 +63,51 @@ ITensor* TRTBuilder::GetModelOptNVFP4Weight(const std::string& name,const SafeTe
         weightTensorMap[name]=result;return result;
     }catch(const std::exception& error){loweringError=error.what();return nullptr;}
 }
+// Registers caller-owned raw storage; checkpoint metadata remains the authority
+// for logical dimensions and calibration. No compressed constants are created.
+size_t TRTBuilder::BindExternalModelOptWeight(const std::string& name,ITensor* packed,ITensor* scales){
+    if(capturedWeightProfile!="modelopt_mixed"||!capturedWeightIndex||!packed||
+        name.size()>512||name.size()<7||name.substr(name.size()-7)!=".weight"||
+        (name.rfind("model.language_model.layers.",0)!=0&&name.rfind("mtp.",0)!=0))
+        throw std::invalid_argument("External compressed weight profile/name invalid");
+    auto* entry=capturedWeightIndex->Find(name);
+    const bool nv=entry&&entry->dataType=="U8";
+    if(!entry||(!nv&&entry->dataType!="F8_E4M3"&&entry->dataType!="F8_E4M3FN")||entry->shape.size()!=2||
+        entry->shape[0]<1||entry->shape[0]>1048576||entry->shape[0]%16||entry->shape[1]<1||
+        entry->shape[1]>(nv?32768:65536)||entry->shape[1]%(nv?32:16)||
+        entry->dataSize!=uint64_t(entry->shape[0])*entry->shape[1]||entry->dataSize>(512ULL<<20))
+        throw std::invalid_argument("External compressed checkpoint geometry invalid: "+name);
+    const int rows=int(entry->shape[0]),columns=int(entry->shape[1])*(nv?2:1);
+    auto dims=packed->getDimensions();
+    if(packed->getType()!=DataType::kINT32||dims.nbDims!=2||dims.d[0]!=rows||dims.d[1]!=columns/(nv?8:4))
+        throw std::invalid_argument("External compressed raw INT32 matrix shape invalid: "+name);
+    const auto prefix=name.substr(0,name.size()-7);
+    auto scalar=[&](const char* suffix){
+        auto* e=capturedWeightIndex->Find(prefix+suffix);
+        if(!e||e->dataType!="F32"||!e->shape.empty()||e->dataSize!=4)throw std::invalid_argument("External compressed calibration invalid");
+        auto& mapping=capturedWeightFiles[e->filePath.string()];
+        if(!mapping){mapping=std::make_unique<SafeTensorsMappedFile>();if(!mapping->Open(e->filePath,loweringError))throw std::runtime_error(loweringError);}
+        auto* raw=mapping->DataAt(e->dataOffset,4);if(!raw)throw std::invalid_argument("External compressed calibration span invalid");
+        float value;std::memcpy(&value,raw,4);if(!std::isfinite(value)||value<=0)throw std::invalid_argument("External compressed calibration nonpositive/nonfinite");return value;
+    };
+    const float weightScale=scalar(nv?".weight_scale_2":".weight_scale"),inputScale=scalar(".input_scale");
+    if(!std::isfinite(weightScale*inputScale)||weightScale*inputScale<=0)throw std::invalid_argument("External compressed calibration product invalid");
+    size_t bytes=size_t(entry->dataSize);
+    if(nv){
+        auto* e=capturedWeightIndex->Find(prefix+".weight_scale");const auto scaleBytes=ModelOptNVFP4ScaleBytes(rows,columns);
+        if(!e||(e->dataType!="F8_E4M3"&&e->dataType!="F8_E4M3FN")||e->shape!=std::vector<long long>{rows,columns/16}||
+            e->dataSize!=uint64_t(rows)*(columns/16)||!scaleBytes||scaleBytes>(256ULL<<20)||!scales)
+            throw std::invalid_argument("External compressed block scales invalid");
+        auto shape=scales->getDimensions();
+        if(scales->getType()!=DataType::kINT32||shape.nbDims!=1||shape.d[0]!=int64_t(scaleBytes/4))
+            throw std::invalid_argument("External compressed tiled INT32 scales shape invalid");
+        nativeNVFP4Weights[packed]={scales,rows,columns,weightScale,inputScale};bytes+=scaleBytes;
+    }else{
+        if(scales)throw std::invalid_argument("FP8 external weight cannot bind block scales");
+        nativeFP8Weights[packed]={rows,columns,weightScale,inputScale};
+    }
+    return bytes;
+}
 ITensor* TRTBuilder::ProjectModelOptNVFP4(ITensor* input,ITensor* weight){
     auto found=nativeNVFP4Weights.find(weight);if(found==nativeNVFP4Weights.end())return ProjectModelOptFP8(input,weight);
     const auto& p=found->second;auto shape=input->getDimensions();
