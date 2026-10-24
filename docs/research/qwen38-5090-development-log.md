@@ -1180,3 +1180,10 @@ Added optional physical [K,N] storage with transposed scales and block axis0, Ma
 ## P054 - 2026-10-23: transposed INT4 failure and model-sized probe
 
 The physical [K,N] graph also compiled but failed engine building with the same Myelin INT4 block-dequantization type restriction; exit1 retained in int4-group128-kn-ledger. Neither physical layout produces a passing engine or numerical result. Added kn-model diagnostic for a representative actual27B o_proj geometry [N,K]=[5120,6144], retaining BF16 scales/G128 and unchanged logical signed oracle. This distinguishes small-matrix tactic constraints from a broader installed-route limitation. Still only a compatibility probe, with no full-checkpoint loading, serving or timing claim.
+
+
+## P055 - 2026-10-23: model-sized INT4 failure archived and verified
+
+The representative [N,K]=[5120,6144] graph also failed TensorRT10.16.1 engine building with the same INT4 block-dequantization restriction. All three diagnostics compiled; none produced an engine or arithmetic pass. They preserve signed4-bit storage, G128 BF16 scales and BF16 activations; no BF16 weight-materialization fallback was substituted. This leaves the direct TensorRT route unproven on this installed Windows/SM120 stack. Alternative native WoQ implementation or a verified different tactic remains required; this evidence does not establish universal INT4 incompatibility.
+
+int4-compatibility-evidence.zip contains all three append-only ledgers, build launchers, final selectable source, CMake, source transfer/state manifests and executable SHA256. Download verified SHA256/ZIP CRC and every archived source/log digest:21320bytes/14entries, SHA256c17db38730b3bed655416355e686541d59aa836f84d418305bb8169844f9a75a6. No benchmark generated. Remote final tested source87254695e,6433 files verified. The prior continuation made concrete progress: remote61-test validation, three actual INT4 compatibility failures, and evidence archive. 27B/MTP/vLLM full-model runs remain pending memory availability; target2x, INT4 inference,4B comparison, corrected image cohorts and native concurrency are still incomplete. Goal active.
