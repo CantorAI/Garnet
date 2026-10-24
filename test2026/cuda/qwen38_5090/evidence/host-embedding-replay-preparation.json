@@ -1,0 +1,21 @@
+{
+  "status": "host_embedding_independent_replay_prepared_synthetic_tests_only",
+  "time_utc": "2026-10-24T20:15:05.341306+00:00",
+  "source_sha256": {
+    "test2026/cuda/qwen38_5090/probe_host_embedding_rows.py": "5910d896c9aefb01338287d77fea1f59e65c1a7318835dedd173561fc670dee4",
+    "test2026/cuda/qwen38_5090/verify_host_embedding_rows.py": "6fedf110f1f778e700f955847f0e68450c22751b4edc7a699a724bb78e63ce14",
+    "test2026/cuda/qwen38_5090/test_host_embedding_replay.py": "27e959d8aed4f5836c06d590bbd67393ac457c4ebe7ffff2a11551a3abbcace2"
+  },
+  "synthetic_tests": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 1.066s\n\nOK\n"
+  },
+  "expected_real_raw_arrays": 226,
+  "expected_guard_rejections": 22,
+  "actual_gpu_captures_verified": false,
+  "native_compiled": false,
+  "remote_deployed": false,
+  "performance_admitted": false,
+  "scope": "Synthetic fixture matrix and intentional corruption/missing-evidence negatives test verifier behavior only."
+}

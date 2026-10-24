@@ -52,7 +52,8 @@ try:
         record(mode+'-vector',embedded,b''.join(oracle[token] for token in ids))
         predictions.append(list(io.predict(io.embedding([ids[0]]))))
         # Metadata/projection access must remain open after GPU-table retirement.
-        assert json.loads(io.weight_info('model.language_model.embed_tokens.weight'))['shape']==[vocab,width]
+        report[mode+'_embedding_metadata']=json.loads(io.weight_info('model.language_model.embed_tokens.weight'))
+        assert report[mode+'_embedding_metadata']['shape']==[vocab,width]
         for batch in (1,2,4,8):
             for time in (1,4,16,128):
                 dst=io.zeros([batch,time,width])
@@ -70,9 +71,10 @@ try:
         reject(mode+'-empty-vector',lambda:io.embedding([]))
         destination=io.zeros([1,4,width]);io.embedding_chunk([[ids[1]]]*4,destination)
         before=bytes(io.finite_f32_bytes(destination))
+        record(mode+'-invalid-before',destination,oracle[ids[1]]*4)
         for name,tokens in [('negative',[[-1]]),('high',[[vocab]]),('wrong-batch',[[0,1]]),('empty',[]),('over-time',[[0]]*5)]:
             reject(mode+'-chunk-'+name,lambda tokens=tokens:io.embedding_chunk(tokens,destination))
-            assert bytes(io.finite_f32_bytes(destination))==before
+            record(mode+'-invalid-after-'+name,destination,before)
         reject(mode+'-shape',lambda:io.embedding_chunk([[0],[1]],io.zeros([1,1,width])))
         destination=None;embedded=None
     assert predictions[0]==predictions[1];report['head_predictions']=predictions
@@ -82,12 +84,13 @@ try:
     record('restored-device-vector',io.embedding(ids),b''.join(oracle[token] for token in ids))
     report['restored_memory']=json.loads(io.memory_json())
     assert report['restored_memory']['embedding_table_bytes']==vocab*width*2 and report['restored_memory']['host_embedding_mapped_tensor_bytes']==0
-    io.enable_nvfp4_head(False);io.close()
+    io.enable_nvfp4_head(False);report['native_head_disabled_memory']=json.loads(io.memory_json());io.close()
     reject('closed-vector',lambda:io.embedding([0]))
     reject('closed-host-enable',lambda:io.enable_host_embedding(True))
     report['closed_memory']=json.loads(io.memory_json());assert not report['closed_memory']['model_open']
     io.open(str(checkpoint));record('reopened-default-vector',io.embedding(ids),b''.join(oracle[token] for token in ids))
-    assert json.loads(io.memory_json())['embedding_mode']=='device_bf16'
+    report['reopened_memory']=json.loads(io.memory_json())
+    assert report['reopened_memory']['embedding_mode']=='device_bf16'
     report['status']='embedding_gate_passed_needs_independent_replay'
 except Exception as error:report['status']='failed';report['error']=repr(error);raise
 finally:io.close();save()
