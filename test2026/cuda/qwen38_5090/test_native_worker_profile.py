@@ -1,7 +1,17 @@
 import unittest
+from pathlib import Path
 from test2026.cuda.qwen38_5090.native_worker_profile import resolve_profile
 
 class WorkerProfileTests(unittest.TestCase):
+    def test_launchers_pin_shared_policy(self):
+        root=Path(__file__).parent
+        for path in root.glob('serve_native_mtp*_worker.bat'):
+            values=dict(line[4:].split('=',1) for line in path.read_text().splitlines() if line.startswith('set GARNET_STUDY_'))
+            with self.subTest(launcher=path.name):
+                self.assertIn('GARNET_STUDY_SHARED_COMPRESSED',values)
+                profile=resolve_profile(values)
+                self.assertEqual(profile['shared'],path.name=='serve_native_mtp3_shared_worker.bat')
+
     def test_legacy_defaults(self):
         self.assertEqual(resolve_profile({})['decode_chunk'],16)
         self.assertEqual(resolve_profile({'GARNET_STUDY_PACKED':'1','GARNET_STUDY_MTP_DEPTH':'7'})['draft_chunk'],16)
