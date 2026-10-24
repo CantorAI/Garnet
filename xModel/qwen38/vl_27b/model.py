@@ -87,6 +87,23 @@ def create_cuda_decoder(checkpoint,config,capacity,batch=1,chunk_size=1,fused_de
 def create_cuda_packed_decoder(checkpoint,config,capacity,batch=1,retain_linear_inputs=False):
     """Research candidate: one embedded mixed program, one16-token profile."""
     validate_cuda_profile(config,capacity,batch)
+    return _create_cuda_packed_embedded(checkpoint,config,capacity,batch,retain_linear_inputs)
+
+
+def validate_cuda_batch_study_profile(config,capacity,batch):
+    """Opt-in backend qualification only; not general serving admission."""
+    validate_cuda_profile(config,capacity,1)
+    if type(batch) is not int or batch not in (2,4) or type(capacity) is not int:
+        raise ValueError('Batch study requires batch2/4; numerical/memory gates remain pending')
+    return True
+
+
+def create_cuda_batch_study_decoder(checkpoint,config,capacity,batch=2,retain_linear_inputs=False):
+    validate_cuda_batch_study_profile(config,capacity,batch)
+    return _create_cuda_packed_embedded(checkpoint,config,capacity,batch,retain_linear_inputs)
+
+
+def _create_cuda_packed_embedded(checkpoint,config,capacity,batch,retain_linear_inputs):
     import json
     from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
     decoder=CUDAPackedDecoder(checkpoint,config['text_config'],batch,capacity,16,16,
