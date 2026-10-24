@@ -27,7 +27,9 @@ with zipfile.ZipFile(archive) as z:
     baseline = json.loads(z.read("results/full-attention-policy-full-b2-attempt1-verified.json"))
     assert baseline['model_gate_passed'] and baseline['library_sha256'] == evidence['library_sha256']
     assert report['mtp_depth']==3 and report['draft_chunk']==4
-    http=json.loads(z.read('results/batch-http-pilot-attempt2-verified.json'))
+    http_embedded='results/batch-http-pilot-attempt2-verified.json' in evidence['files']
+    http=json.loads(z.read('results/batch-http-pilot-attempt2-verified.json')) if http_embedded else json.loads((out/'batch-http-pilot-attempt2-verified.json').read_text())
+    assert http['archive_sha256']==evidence['linked_archives']['batch-http-pilot-attempt2-evidence.zip']
     assert http['status']=='batch_http_pilot_independently_verified' and http['library_sha256']==evidence['library_sha256']
     assert report['external_compressed_weights']
     pool = report['external_compressed_pool']
@@ -101,7 +103,7 @@ with zipfile.ZipFile(archive) as z:
         "model_gate_passed": passed, "archive_sha256": sha(archive.read_bytes()), "files_verified": len(evidence["files"]),
         "library_sha256": evidence["library_sha256"], "comparisons": comparisons,
         "loaded_module_path_observed": False, "build_source_hashes_verified": True,
-        "strict_target_state_hash_gate_passed": passed, "raw_target_state_arrays_retained": False,
+        "strict_target_state_hash_gate_passed": passed, "raw_target_state_arrays_retained": False, "http_dependency_proof_embedded": http_embedded,
         "performance_admitted": False,
         "scope": "B2 MTP3 retained-ID plus producer-observed full target-state hash witness; raw target-state arrays are not retained. Source coverage and hash equality replay, not independent raw-state arithmetic replay. Failure is preserved as failure. No HTTP, MTP, broad quality, decode speed, true concurrency throughput or2x claim."}
 (out / "shared-mtp3-full-b2-attempt1-verified.json").write_text(json.dumps(result, indent=2), encoding="utf8")

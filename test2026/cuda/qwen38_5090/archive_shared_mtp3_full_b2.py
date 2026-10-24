@@ -21,6 +21,7 @@ build = json.loads(build_path.read_text())
 library = hashlib.sha256((root / "build/bin/garnet.dll").read_bytes()).hexdigest()
 assert library == build["library_sha256"] == workflow["library_sha256"]
 files = [p for p in folder.rglob("*") if p.is_file()]
+files += [results / "batch-http-pilot-attempt2-verified.json", results / "shared-full-b2-attempt1-verified.json"]
 files += [root / n for n in ("Garnet/test2026/cuda/qwen38_5090/run_shared_mtp3_full_b2.py", "test-shared-mtp3-full-b2.bat")]
 files += [root / "Garnet" / n for n in list(build["source_sha256"]) + [
     "test2026/cuda/qwen38_5090/probe_native_batch.py", "test2026/cuda/qwen38_5090/probe_shared_mtp3_full_b2.py", "test2026/cuda/qwen38_5090/run_logged.py",

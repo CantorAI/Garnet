@@ -19,11 +19,14 @@ def resolve_mtp_chunk(target_chunk,depth,draft_chunk=None):
     return size
 
 class CUDASpeculativeSession:
-    def __init__(self,decoder,checkpoint,stops,max_draft_tokens=3,head_candidates=0,prefix_replay=False,draft_chunk_size=None):
+    def __init__(self,decoder,checkpoint,stops,max_draft_tokens=3,head_candidates=0,prefix_replay=False,draft_chunk_size=None,draft_builder_workspace_bytes=0):
         if max_draft_tokens not in (1,3,7) or max_draft_tokens+1>decoder.chunk_size:
             raise ValueError('MTP draft depth1/3/7 must fit the target chunk')
         vocab=json.loads(decoder.io.memory_json())['vocab_size']
         if head_candidates<0 or head_candidates>min(65536,vocab):raise ValueError('Invalid MTP head candidate count')
+        if type(draft_builder_workspace_bytes) is not int or draft_builder_workspace_bytes not in (0,128<<20):
+            raise ValueError('MTP draft builder workspace must preserve default0 or opt in to128MiB')
+        self.draft_builder_workspace_bytes=draft_builder_workspace_bytes
         self.head_candidates=head_candidates;self.candidates=None
         self.prefix_replay=prefix_replay
         self.decoder=decoder;self.io=decoder.io;self.stops=set(stops);self.depth=max_draft_tokens
@@ -41,7 +44,7 @@ class CUDASpeculativeSession:
                     from .cuda_delta_replay import CUDADeltaReplayVerifier
                     self.verifier=CUDADeltaReplayVerifier(decoder,checkpoint,max_draft_tokens+1)
             else:self.verifier=CUDATargetVerifier(decoder,checkpoint,max_draft_tokens+1)
-            self.program=CUDAMTPProgram(checkpoint,decoder.config,b,self.capacity,t,decoder.projection_workspace_bytes)
+            self.program=CUDAMTPProgram(checkpoint,decoder.config,b,self.capacity,t,decoder.projection_workspace_bytes,builder_workspace_bytes=draft_builder_workspace_bytes)
             self.program.graph.enable_cuda_graph(True)
             if getattr(decoder,'serial_graph_reuse',False):self.program.graph.enable_serial_graph_reuse(True)
             self.prefill_width=getattr(decoder,'prefill_chunk_size',decoder.chunk_size)
@@ -254,7 +257,7 @@ class CUDASpeculativeSession:
         prefill=json.loads(self.prefill_norm.stats_json()) if self.prefill_norm is not None else None
         prefill_owned=prefill['device_output_bytes']+prefill['trt_allocator_live_bytes'] if prefill is not None and prefill['allocator_tracking_enabled'] else 0 if prefill is None else None
         owned=buffers+graph['device_output_bytes']+live+helper['owned_helper_bytes']+prefill_owned if live is not None and helper['owned_helper_bytes'] is not None and prefill_owned is not None else None
-        return {'mtp_buffers_bytes':buffers,'mtp_graph':graph,'target_verifier':helper,'owned_speculative_bytes':owned,
+        return {'mtp_buffers_bytes':buffers,'mtp_graph':graph,'target_verifier':helper,'owned_speculative_bytes':owned,'draft_builder_workspace_bytes':self.draft_builder_workspace_bytes,
             'wide_target_norm_graph':prefill,'target_prefill_chunk':self.prefill_width,'draft_chunk':self.size,
             'scope':'Session-only buffers/engines/backups. Caller owns the one shared table/head buffers; not process peak'}
 
