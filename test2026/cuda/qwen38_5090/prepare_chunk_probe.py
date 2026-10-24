@@ -2,6 +2,7 @@
 import argparse,hashlib,json
 from pathlib import Path
 import numpy as np
+import prepare_real_layer_probe as arithmetic
 from prepare_real_layer_probe import Checkpoint,dense,rms,linear,attention,mlp
 
 def prepare(root):
@@ -32,8 +33,11 @@ def prepare(root):
             cases.append({'input':x.tolist(),'positions':position,'expected_hidden':out.tolist(),'state_samples':samples})
         layers.append({'layer':layer,'kind':kind,'state_shapes':[list(s1.shape),list(s2.shape)],'cases':cases})
     return {'layers':layers,'capacity':capacity,'chunk_profiles':[4,16],'steps':18,'numpy_version':np.__version__,
+        'fp8_scaling':'combined F32 alpha after raw FP8 dot' if arithmetic.FP8_ALPHA_AFTER_DOT else 'separate scale multiplication before dot',
         'scope':'Actual mixed layers0/3; eighteen sequential CPU steps, active and future KV samples. Tests fused4/16 followed by padded2-active chunks, not full-model quality or performance'}
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('checkpoint',type=Path);p.add_argument('output',type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('checkpoint',type=Path);p.add_argument('output',type=Path)
+    p.add_argument('--fp8-alpha-after-dot',action='store_true');a=p.parse_args()
+    arithmetic.FP8_ALPHA_AFTER_DOT=a.fp8_alpha_after_dot
     a.output.write_text(json.dumps(prepare(a.checkpoint)));print(json.dumps({'oracle_sha256':hashlib.sha256(a.output.read_bytes()).hexdigest()}))

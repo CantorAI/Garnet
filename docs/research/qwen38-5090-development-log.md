@@ -954,3 +954,25 @@ It includes source snapshots, native raw token timings, NVML records, matched JP
 reference requests/responses and the strict VLM failure. CUDA memory snapshot
 29,194,911,744 bytes is also retained separately from the lower NVML sampled
 maximum; the APIs have different measurement scopes and are not equated.
+
+## P036 - 2026-10-23: broadened serial test also fails; audit FP8 oracle scaling
+
+The serial6/fused4/fused16 diagnostic completed exit1 with all raw observations
+retained. Serial GDN passed all six steps, but serial attention failed at steps3/4
+(zero-based), with max absolute0.25/0.1899414 and relative L20.031518/0.0331484.
+Fused4 shows the same large errors and sampled attention-state maximum
+0.007527589797973633 as serial. Fused16 attention also fails; fused16 GDN fails
+the absolute hidden limit at later steps, although relative L2 is below0.01.
+These observations contradict an assumption that the discrepancy was introduced
+only by the fused attention kernel. The original two-step serial result remains
+valid only for its narrower coverage.
+
+The CPU FP8 oracle currently dequantizes weights and activations separately
+before its dot product, whereas the native cuBLASLt code combines the two F32
+global scales in alpha after the raw FP8 accumulation. Both express the same
+real-valued operation but can round differently before BF16 conversion. Added an
+explicit optional alpha-after-dot CPU diagnostic; default historical arithmetic
+is preserved and old oracles are not overwritten. A BF16 midpoint fixture checks
+the native placement of the rounded F32 alpha; all34 CPU study tests pass. The
+actual checkpoint diagnostic result is pending. No numerical limit was relaxed,
+no native kernel changed, and no optimized full-model speedup is claimed.

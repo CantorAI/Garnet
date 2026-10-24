@@ -3,6 +3,7 @@ import argparse,hashlib,json
 from pathlib import Path
 import numpy as np
 from prepare_real_mlp_probe import Checkpoint,bf16,fp8_table,nearest,project as packed_project
+FP8_ALPHA_AFTER_DOT=False
 
 def dense(cp,name):
     raw,e=cp.tensor(name)
@@ -24,7 +25,10 @@ def project(cp,prefix,x):
         codes=raw[start:start+128]
         if np.any((codes&127)==127):raise ValueError('NaN FP8 weight')
         w=table[codes&127]*np.where(codes&128,-1,1)
-        out[start:start+128]=((w*sw).astype(np.float32)@activation)
+        if FP8_ALPHA_AFTER_DOT:
+            alpha=np.float32(np.float32(sw)*np.float32(sx))
+            out[start:start+128]=(w.astype(np.float32)@q.astype(np.float32))*alpha
+        else:out[start:start+128]=((w*sw).astype(np.float32)@activation)
     return bf16(out)
 
 def rms(x,w,eps,offset=False):
