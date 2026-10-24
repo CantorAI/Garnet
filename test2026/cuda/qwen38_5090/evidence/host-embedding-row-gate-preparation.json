@@ -1,0 +1,19 @@
+{
+  "status": "host_embedding_byte_gate_prepared_not_run",
+  "time_utc": "2026-10-24T20:13:31.865880+00:00",
+  "source_sha256": {
+    "test2026/cuda/qwen38_5090/host_embedding_fixture.py": "db3247238a43f8cfbed2d51f64707832986bffdd3f3e481a4a8d744de497fc4d",
+    "test2026/cuda/qwen38_5090/test_host_embedding_fixture.py": "15d292b14ac782864b1baec7d2acde53af938d988dddc177bf1c1ead7ab89e0d",
+    "test2026/cuda/qwen38_5090/probe_host_embedding_rows.py": "3cc93eea175517c2ecce7b1e6f2e24ffe1785017b306a570c11b080913c3c4f7"
+  },
+  "cpu_fixture_tests": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.020s\n\nOK\n"
+  },
+  "native_probe_syntax_checked": true,
+  "actual_checkpoint_fixture_created": false,
+  "native_build_or_gpu_probe_run": false,
+  "remote_deployed": false,
+  "performance_admitted": false
+}
