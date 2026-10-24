@@ -2771,3 +2771,10 @@ C4/C8 queue physical B2 groups. Text C2 contains four MTP requests and four gree
 ### Physical B4 T8 original launch and replay preparation (2026-10-24)
 
 After the B2 MTP HTTP pilot closed, was archived and passed independent replay on both machines, guarded shared-full-b4-t8-attempt1 was launched through the original supervised handle. The remote source/runtime remains frozen while it lives. Local archival/replay preparation binds the prior verified HTTP and shared B2 archives, the same native DLL/five native build-source hashes, raw request/response oracles and resource records. It independently verifies that the new probe differs from the retained B2 probe only by the declared B4/T8 profile, guard and scope/docstring changes. All four retained B1 sequences must match across two resets (eight row comparisons); a partial or failed run remains failure evidence. No target-state-array, broader quality, HTTP or timing admission follows from this ID gate. Methods syntax-checked; original job remains live and no B4 result is claimed.
+
+
+### Physical B4 T8 retained-ID gate passed (2026-10-24)
+
+Original supervised job completed exit0; archivecc0359d98131a98b74c5f0672de8e3c2509e8a96dd6a69fdebdcefb14f794f70 retains36 files/107,210 bytes. Both independent replays passed all eight row/repeat full-ID comparisons against retained B1 oracles, and verified the exact declared source transformation from the archived B2 probe. No target-state hash, broad quality, HTTP or performance claim.
+
+A separate B4 T8 greedy stream worker now requires that proof. Missing physical rows duplicate a valid prefill prompt but stay inactive during generation and emit no events. The protocol candidate uses seven groups/seventeen requests: two full four-row repeats, separate text/image singles, a two-row color group, a three-row ragged text/image/short-output group, and an unequal-limit pair. All real-row output IDs/counts and absence of dummy/retired events must match. Syntax checks passed; no stream or timing result is claimed before the real GPU gate.
