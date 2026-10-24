@@ -1,0 +1,16 @@
+{
+  "status": "host_embedding_source_handoff_prepared_not_deployed",
+  "original_source_reference": "ce60088a7",
+  "original_library_sha256": "3c3207b84b0e048f7e69736f3ae927ffb629c40ffe086994765e9a70ac5f58dd",
+  "original_source_sha256": {
+    "src/backends/tensorrt/cuda_tensor_io.cpp": "a4c3356cc5e54e4959a526cb619c1f185b6a8a477d4d2cef0360a29e58156bce",
+    "src/backends/tensorrt/cuda_tensor_io.h": "78e8c9b1b3af6e49679d753ec5d935f7ed91e106752bee762cae5c9873d60b47",
+    "xModel/qwen35/vl_0_8b/cuda_packed_decoder.py": "f47d3317e85647bfd8478d799aecc30122487b2f33b35fb3de4ad667bd56b996"
+  },
+  "candidate_source_sha256": {
+    "src/backends/tensorrt/cuda_tensor_io.cpp": "38b61ed47bb32c6cfe06a37a55f8f15d4a7409844fee83c5b03f2d45328838fb",
+    "src/backends/tensorrt/cuda_tensor_io.h": "dcf2c3fb7128c911576b1afa25d9643745dae8343a8217a31999af819feb3b9d",
+    "xModel/qwen35/vl_0_8b/cuda_packed_decoder.py": "bf927504f8b30df92ce16f707a86275ae9712b27c9d17b82582a4e631e7dd90b"
+  },
+  "scope": "Exactly three files; deployment must compare actual remote old source bytes, preserve them, and wait for terminal/archived/replayed HTTP run. Not native qualification."
+}
