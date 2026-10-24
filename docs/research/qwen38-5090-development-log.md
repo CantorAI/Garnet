@@ -2850,3 +2850,10 @@ Original batch4-t4-stream-protocol-attempt1 remains live. Local archive/replay p
 ### B4 T4 streaming independently passed; matched HTTP launched (2026-10-24)
 
 Original streaming job closed exit0. Archive04cde6f44242b09af5fc264b138d95967d31745c67cbc748bef26654cf8cd194 retains43 files/130,322 bytes. Both machines independently verified all seventeen prompt/output-ID sequences, seven full/partial/reset/unequal-limit groups, image hashes/no dummy events, native readyT4 profile and source/runtime/resource/terminal lineage. Sampled adapter-wide peak31,362,195,456 bytes is not instantaneous or process-attributed. Only after both replays and original closure, guarded batch4-t4-http-pilot-attempt1 was launched in the fixed study folder using unchanged native DLL and shared model assets. Same-worker13-case HTTP quality/two streams/four serialization captures precede identical timing. No auxiliary CIM observer is planned for this pilot; no T4 performance result exists at launch.
+
+
+### Deferred canonical-state MTP candidate preparation (2026-10-24; not run)
+
+The retained B2 MTP128 MiB report records canonical_state_backup_bytes1,391,460,352 and a separate packed replay output of1,391,460,352 bytes. Allocator tracking is disabled, so these named logical allocations do not account for whole-process peak. Source audit finds the existing default-off deferred_state_commit path: the verifier borrows unchanged canonical state until final commit and omits its separate canonical backup. This motivates a strict B2 gate before attempting larger MTP batches; no measured memory saving or speed claim follows.
+
+The prepared probe opts into that existing flag only, retaining the same B2 T16/draftT4/128 MiB builder, quantization/runtime, four oracle rows/two resets, complete ordinary-versus-MTP state hashes and retained B1 output IDs. Hash reads additionally require no pending verifier/decoder transaction. The wrapper requires the current B4 T4 HTTP pilot to close, archive and independently verify before launch. No native or common decoder/session source is edited. Syntax checks passed; no deferred27B correctness/streaming/timing result exists.
