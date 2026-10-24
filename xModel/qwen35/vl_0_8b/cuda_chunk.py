@@ -9,9 +9,10 @@ from .tensor_compat import tensor
 T=tensor()
 
 @T.fusion(name='qwen35_cuda_decoder_chunk',role='decoder_layer',boundary='required')
-def Qwen35CUDAChunk(hidden,state1,state2,active,positions,slots,config,layer_idx,kind,fused_delta=False,fused_attention=False,projection_workspace_bytes=0,retain_linear_inputs=False,external_weights=None,register_delta_128=False,join_input_projections=False):
+def Qwen35CUDAChunk(hidden,state1,state2,active,positions,slots,config,layer_idx,kind,fused_delta=False,fused_attention=False,projection_workspace_bytes=0,retain_linear_inputs=False,external_weights=None,register_delta_128=False,join_input_projections=False,external_compressed_weights=None):
     p='model.language_model.layers.'+str(layer_idx)
     extra={'external_weights':external_weights} if external_weights else {}
+    if external_compressed_weights:extra['external_compressed_weights']=external_compressed_weights
     if kind=='linear_attention':
         bound=hidden*T.binary_op('qwen35_conv_bind_state')*state1
         bound=bound*T.binary_op('qwen35_delta_bind_state')*state2

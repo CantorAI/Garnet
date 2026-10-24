@@ -3,6 +3,7 @@
 
 By default large matrices are readonly inputs from the caller's BF16 pool.
 The opt-in embedded mode uses checkpoint constants and native mixed lowering.
+An explicit shared compressed mode borrows one mixed NVFP4/FP8 pool.
 Layer boundaries explicitly materialize FP32 hidden values. This component
 does not yet replace the serving decoder or its prefix-commit helper.
 """
@@ -42,17 +43,19 @@ def decoder_state_layout(config,batch,capacity):
     return result,offset
 
 class CUDAPackedDecoderProgram:
-    def __init__(self,checkpoint,config,io,batch=1,capacity=512,chunk_size=4,retain_linear_inputs=False,projection_workspace_bytes=0,register_delta_128=False,flat_concat=False,join_input_projections=False,embedded_projection_weights=False):
+    def __init__(self,checkpoint,config,io,batch=1,capacity=512,chunk_size=4,retain_linear_inputs=False,projection_workspace_bytes=0,register_delta_128=False,flat_concat=False,join_input_projections=False,embedded_projection_weights=False,external_compressed_weights=False):
         if batch not in (1,2,4,8) or not 32<=capacity<=8192 or chunk_size not in (4,8,16,32,64,128):raise ValueError('Unsupported packed decoder profile')
         if projection_workspace_bytes not in (0,16384):raise ValueError('Invalid projection workspace')
         self.config=config;self.io=io;self.batch=batch;self.capacity=capacity;self.size=chunk_size;self.retain=retain_linear_inputs
         self.register_delta_128=register_delta_128;self.flat_concat=flat_concat
         self.embedded_projection_weights=bool(embedded_projection_weights)
+        self.external_compressed_weights=bool(external_compressed_weights)
+        if self.external_compressed_weights and (self.embedded_projection_weights or join_input_projections):raise ValueError("Shared compressed weights exclude embedded/joined BF16 modes")
         self.join_input_projections=bool(join_input_projections)
         if self.embedded_projection_weights and self.join_input_projections:raise ValueError('Embedded projections do not support BF16 joined input pools')
         if self.join_input_projections and chunk_size!=4:raise ValueError('Joined input projections require decode width4')
         self.workspace=projection_workspace_bytes;self.layout,self.state_width=decoder_state_layout(config,batch,capacity)
-        self.hidden_width=chunk_size*config['hidden_size'];self.payload_width=0;self.weight_names=[];self.weight_layers=[];self.weights=[];self.graph=None
+        self.hidden_width=chunk_size*config['hidden_size'];self.payload_width=0;self.weight_names=[];self.weight_layers=[];self.weight_slots=[];self.weights=[];self.graph=None
         symbols=[tensor.input('packed_hidden',shape=[batch,chunk_size,config['hidden_size']],dtype=tensor.float32),
             tensor.input('packed_state',shape=[batch,self.state_width],dtype=tensor.float32),
             tensor.input('packed_active',shape=[batch,chunk_size],dtype=tensor.float32),
@@ -71,12 +74,26 @@ class CUDAPackedDecoderProgram:
             # checkpoint lookup/lowering, including mixed compressed constants.
             for suffix in ([] if self.embedded_projection_weights else suffixes):
                 name=p+suffix
+                if self.external_compressed_weights:
+                    original=json.loads(io.weight_info(name))
+                    if original['dtype']=='BF16':
+                        if kind!='linear_attention' or suffix not in ('linear_attn.in_proj_a.weight','linear_attn.in_proj_b.weight'):
+                            raise ValueError('Unexpected BF16 fallback in shared compressed projection: '+name)
+                        continue
+                    info=json.loads(io.compressed_weight_info(name));slots=[]
+                    buffers=[('packed',info['packed_shape'],io.compressed_weight(name))]
+                    if info['scale_bytes']:buffers.append(('scales',info['scale_shape'],io.compressed_scales(name)))
+                    for role,shape,value in buffers:
+                        slots.append(len(self.weights));self.weights.append(value)
+                        symbols.append(tensor.input('compressed_'+role+'_'+str(len(self.weights)),shape=shape,dtype=tensor.int32))
+                    indices.append(len(self.weight_names));self.weight_names.append(name);self.weight_slots.append(slots)
+                    continue
                 if joined is not None and name==joined_name:
                     rows=2*config['linear_num_key_heads']*config['linear_key_head_dim']+2*config['linear_num_value_heads']*config['linear_value_head_dim']+2*config['linear_num_value_heads']
                     info={'dtype':'BF16','shape':[rows,config['hidden_size']]};value=joined
                 else:info=json.loads(io.weight_info(name));value=io.weight(name)
                 if info['dtype']!='BF16' or len(info['shape'])!=2:raise ValueError('Packed decoder requires BF16 matrix weights')
-                indices.append(len(self.weight_names));self.weight_names.append(name);self.weights.append(value)
+                indices.append(len(self.weight_names));self.weight_names.append(name);self.weight_slots.append([len(self.weights)]);self.weights.append(value)
                 symbols.append(tensor.input('packed_weight_'+str(len(self.weight_names)),shape=info['shape'],dtype=tensor.bfloat16))
             self.weight_layers.append(indices)
             layer['payload_width']=0
@@ -97,9 +114,10 @@ class CUDAPackedDecoderProgram:
             for layer,indices in zip(layout,self.weight_layers):
                 w1=layer['state1_width'];w2=layer['state2_width'];offset=layer['offset']
                 first=packed_view(state,offset,w1,layer['state1_shape']);second=packed_view(state,offset+w1,w2,layer['state2_shape'])
-                external={self.weight_names[i]:weights[i] for i in indices}
+                external={} if self.external_compressed_weights else {self.weight_names[i]:weights[self.weight_slots[i][0]] for i in indices}
+                compressed={self.weight_names[i]:[weights[j] for j in self.weight_slots[i]] for i in indices} if self.external_compressed_weights else None
                 packed=Qwen35CUDAChunk(hidden,first,second,active,positions,slots,config,layer['index'],layer['kind'],True,True,
-                    self.workspace,self.retain,external,self.register_delta_128,self.join_input_projections and layer['kind']=='linear_attention')
+                    self.workspace,self.retain,external,self.register_delta_128,self.join_input_projections and layer['kind']=='linear_attention',external_compressed_weights=compressed)
                 hidden=packed_view(packed,0,t*h,[b,t,h])
                 state_outputs.append(packed_view(packed,t*h,w1+w2,[b,w1+w2]))
                 if layer['payload_width']:
@@ -116,8 +134,8 @@ class CUDAPackedDecoderProgram:
 
     def memory_info(self):
         if self.graph is None:raise ValueError('Packed decoder program is closed')
-        return {'graph':json.loads(self.graph.stats_json()),'embedded_projection_weights':self.embedded_projection_weights,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'joined_input_projections':self.join_input_projections,'state_width':self.state_width,'hidden_width':self.hidden_width,
-            'payload_width':self.payload_width,'external_weight_count':len(self.weights),'fp32_layer_barriers':max(0,len(self.layout)-1),
+        return {'graph':json.loads(self.graph.stats_json()),'embedded_projection_weights':self.embedded_projection_weights,'external_compressed_weights':self.external_compressed_weights,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'joined_input_projections':self.join_input_projections,'state_width':self.state_width,'hidden_width':self.hidden_width,
+            'payload_width':self.payload_width,'external_weight_count':len(self.weights),'external_projection_matrix_count':len(self.weight_names),'fp32_layer_barriers':max(0,len(self.layout)-1),
             'scope':'Program graph only; embedded weights belong to its engine, external projection pools belong to caller; canonical state and request buffers are separate. Not process peak.'}
 
     def close(self):
