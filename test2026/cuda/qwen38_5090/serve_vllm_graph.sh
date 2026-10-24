@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 study=/mnt/d/CantorAI/5090-study-20261023
+log=${GARNET_VLLM_LOG:-$study/results/vllm-graph-server.log}
 export HF_HUB_OFFLINE=1
 export HF_HOME=/opt/cantorai5090/huggingface
 export CUDA_VISIBLE_DEVICES=0
@@ -9,7 +10,7 @@ export CUDA_HOME=/opt/cantorai5090/vllm/lib/python3.12/site-packages/nvidia/cu13
 export LIBRARY_PATH="/usr/lib/wsl/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
 export VLLM_CACHE_ROOT=/opt/cantorai5090/vllm-cache
 export TRITON_CACHE_DIR=/opt/cantorai5090/triton-cache
-printf '\n=== vLLM decode-graph NVFP4 VLM candidate, %s ===\n' "$(date -u +%FT%TZ)" >> "$study/results/vllm-graph-server.log"
+printf '\n=== vLLM decode-graph NVFP4 VLM candidate, %s ===\n' "$(date -u +%FT%TZ)" >> "$log"
 # Candidate only: actual graph replay, admission, quality and timing must pass.
 # Explicit cache budget is not evidence of eight full4K admissions; inspect
 # resolved cache capacity and test admission before claiming that profile.
@@ -24,4 +25,4 @@ exec /opt/cantorai5090/vllm/bin/vllm serve "$study/models/Qwen3.8-27B-NVFP4" \
   --no-enable-prefix-caching --kv-cache-memory-bytes 4294967296 \
   --max-cudagraph-capture-size 8 \
   --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,4,8]}' \
-  >> "$study/results/vllm-graph-server.log" 2>&1
+  >> "$log" 2>&1
