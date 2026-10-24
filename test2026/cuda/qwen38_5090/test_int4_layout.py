@@ -1,8 +1,17 @@
-import copy,hashlib,json,unittest
+import copy,hashlib,json,tempfile,unittest
 from pathlib import Path
 from inspect_int4 import audit,validate
 
 class INT4LayoutTests(unittest.TestCase):
+    def test_packed_factory_rejects_unsupported_profile_before_gpu_import(self):
+        from xModel.qwen38.vl_27b.model import create_cuda_int4_packed_decoder
+        config=json.loads((Path(__file__).parent/'evidence/int4-headers/config.json').read_text())
+        with tempfile.TemporaryDirectory() as folder:
+            for chunk in (True,1,32,4.0):
+                with self.subTest(chunk=chunk),self.assertRaises(ValueError):create_cuda_int4_packed_decoder(folder,config,4096,chunk)
+            with self.assertRaisesRegex(ValueError,'shard index'):create_cuda_int4_packed_decoder(folder,config)
+            bad=copy.deepcopy(config);bad['quantization_config']['quant_method']='modelopt'
+            with self.assertRaises(ValueError):create_cuda_int4_packed_decoder(folder,bad)
     def test_primary_headers_show_packed_linear_attention(self):
         root=Path(__file__).parent/'evidence/int4-headers';report=json.loads((root/'header-audit.json').read_text());headers={}
         for source in report['sources']:

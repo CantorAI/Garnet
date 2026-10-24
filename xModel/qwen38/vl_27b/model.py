@@ -236,3 +236,27 @@ def create_cuda_int4_decoder(checkpoint,config,capacity=4096):
         return decoder
     except:
         decoder.close();raise
+
+
+def create_cuda_int4_packed_decoder(checkpoint,config,capacity=4096,chunk_size=16):
+    """Unqualified whole-graph alternative; same packed G128/BF16-head recipe."""
+    import json
+    from pathlib import Path
+    validate_cuda_int4_profile(config,capacity)
+    if type(chunk_size) is not int or chunk_size not in (4,8,16):
+        raise ValueError('Packed INT4 study requires static chunk4/8/16')
+    index=Path(checkpoint)/'model.safetensors.index.json'
+    if not index.is_file():raise ValueError('Packed INT4 study requires explicit verified shard index')
+    from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
+    decoder=CUDAPackedDecoder(str(index),config['text_config'],1,capacity,chunk_size,chunk_size,
+        flat_concat=True,embedded_projection_weights=True)
+    try:
+        stats=json.loads(decoder.programs[chunk_size].graph.stats_json())
+        if (stats.get('native_int4_g128_projection_weights')!=496 or
+            stats.get('native_nvfp4_projection_weights',0) or stats.get('native_fp8_projection_weights',0) or
+            stats.get('external_bf16_weight_inputs',0) or stats.get('checkpoint_weight_precision')!='ct_int4_g128'):
+            raise ValueError('Whole INT4 program must retain exactly496 G128 projections')
+        if json.loads(decoder.io.memory_json())['head_precision']!='bf16':raise ValueError('Pinned INT4 head must remain BF16')
+        return decoder
+    except:
+        decoder.close();raise
