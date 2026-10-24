@@ -1011,3 +1011,12 @@ All four JPEG color/spatial semantic smoke checks passed. Strict token parity im
 Whole-build/correctness/pilot sampled adapter-wide NVML maximum was27,810,942,976bytes over13,398 samples. Observed gaps median31.6873ms/max1.3155206s; no sampler errors. This is neither an instantaneous peak nor a warmed serving/process-only measurement. Source identity was unchanged before/after. Native DLL and VM hashes match the earlier pilot. Raw pilot SHA256 is47c86d5795f1ec0c1f67ef69970736d0704d3be9bb25602618623fb936bcf455f.
 
 Next: resolve/characterize exact-token quality differences, expose true streaming events through current Garnet serving, and establish tuned matched CUDA-graph references before any2x claim. INT4 W4A16,4B and concurrency execution remain outstanding. The active goal is not complete.
+
+
+## P039 - 2026-10-23: explicit matched JPEG workload and graph candidate
+
+Added explicit benchmark image format/order options. Historical defaults remain PNG/text-first; new native-comparable runs must select JPEG/image-first on both engines. JPEG is encoded once into each saved request body; actual wire bytes remain available for hash matching. A new test checks MIME/decoded format, dimensions, base64 bytes, deterministic requests, changed nonce pixels and unchanged text requests. All35 CPU study tests pass. No earlier PNG result is relabeled as a JPEG result.
+
+Installed SGLang0.5.22 field definitions were located under arg_groups/fields/exec_.py and schedule.py, rather than the earlier shallow scan. Source-hashed audit confirms full decode graph backend, explicit decode batch sizes and max_total_tokens. Added a separate candidate launcher capturing1/2/4/8 with32768 KV pool tokens (eight times4096), retaining eager prefill and all initial precision/cache/attention choices. It is not called tuned or faster before startup, correctness and measurements succeed. Metadata preparation now accepts the actual launcher and a fresh output path to avoid accidentally hashing the old eager launcher.
+
+WSL direct health returned actual uptime; the slow shell inspection eventually completed and was not restarted. No native study xlang process was live before reference startup preparation. Graph candidate results remain pending;2x is unproven.

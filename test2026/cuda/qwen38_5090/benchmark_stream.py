@@ -48,13 +48,22 @@ class TokenEvents:
             'single_token_arrivals':self.max_batch==1,'token_count_source':'server cumulative completion_tokens with continuous_usage_stats',
             'text':''.join(self.text),'scope':'Client-observed token arrival times over loopback HTTP; batched arrivals are retained explicitly'}
 
-def payload(case,key,seed,model,maximum):
+def payload(case,key,seed,model,maximum,image_format='png',image_order='text-first'):
+    if image_format not in ('png','jpeg') or image_order not in ('text-first','image-first'):
+        raise ValueError('Unsupported image format/order')
     prompt='Explain in detail how rain forms, step by step, with enough detail for a science lesson. Request '+key+'.'
     image=None;content=prompt
     if case=='image':
         image=image_png(seed)
+        if image_format=='jpeg':
+            from io import BytesIO
+            from PIL import Image
+            encoded=BytesIO()
+            with Image.open(BytesIO(image)) as source:source.convert('RGB').save(encoded,format='JPEG',quality=100,subsampling=0)
+            image=encoded.getvalue()
         content=[{'type':'text','text':'Describe the colors and shapes in this image in detail, then explain their spatial relationships. Request '+key+'.'},
-            {'type':'image_url','image_url':{'url':'data:image/png;base64,'+base64.b64encode(image).decode()}}]
+            {'type':'image_url','image_url':{'url':'data:image/'+image_format+';base64,'+base64.b64encode(image).decode()}}]
+        if image_order=='image-first':content.reverse()
     return {'model':model,'messages':[{'role':'user','content':content}],'max_tokens':maximum,'temperature':0,'stream':True,
         'stream_options':{'include_usage':True,'continuous_usage_stats':True},'chat_template_kwargs':{'enable_thinking':False}},image
 
@@ -84,6 +93,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--url',required=True);p.add_argument('--engine',required=True,choices=['vllm','sglang','garnet'])
     p.add_argument('--model',default='qwen38-27b-nvfp4');p.add_argument('--output',type=Path,required=True);p.add_argument('--metadata',type=Path,required=True)
     p.add_argument('--concurrency',type=int,nargs='+',default=[1]);p.add_argument('--requests',type=int,default=4);p.add_argument('--warmups',type=int,default=2)
+    p.add_argument('--image-format',choices=['png','jpeg'],default='png');p.add_argument('--image-order',choices=['text-first','image-first'],default='text-first')
     p.add_argument('--workload-seed',type=int,default=1);p.add_argument('--max-tokens',type=int,default=128);p.add_argument('--cases',nargs='+',choices=['text','image'],default=['text','image']);a=p.parse_args()
     parsed=urlsplit(a.url)
     if parsed.scheme!='http' or parsed.hostname not in ('127.0.0.1','localhost') or parsed.path not in ('','/') or parsed.username:raise ValueError('Study requires loopback HTTP')
@@ -92,6 +102,7 @@ def main():
     metadata=json.loads(a.metadata.read_text());manifest={'run_id':run,'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'engine':a.engine,
         'status':'running','argv':sys.argv,'source':source_identity(),'engine_metadata':metadata,'engine_metadata_sha256':hashlib.sha256(a.metadata.read_bytes()).hexdigest(),
         'python':platform.python_version(),'platform':platform.platform(),'context_capacity':4096,
+        'image_format':a.image_format,'image_order':a.image_order,
         'workload':'Deterministic per-request nonce and one changed image pixel avoid prefix/vision result reuse; matching keys yield identical requests across engines',
         'measurement_scope':'Exploratory unless engine precision/workload/quality/configuration equivalence is independently established; no automatic2x claim'}
     (root/(prefix+'manifest.json')).write_text(json.dumps(manifest,indent=2),encoding='utf-8')
@@ -109,7 +120,7 @@ def main():
                         for i in range(c):
                             key='s'+str(a.workload_seed)+'-'+case+'-c'+str(c)+'-warmup-'+str(wave)+'-'+str(i)
                             seed=a.workload_seed*100000+50000+c*1000+wave*10+i
-                            body,image=payload(case,key,seed,a.model,a.max_tokens)
+                            body,image=payload(case,key,seed,a.model,a.max_tokens,a.image_format,a.image_order)
                             warm.append(pool.submit(request,a.url.rstrip('/'),body,root,prefix+key,a.max_tokens))
                         for future in warm:
                             result=future.result()
@@ -117,7 +128,7 @@ def main():
                 phase=case+'-c'+str(c);sampler.phase=phase;sampler.sample();jobs=[]
                 with concurrent.futures.ThreadPoolExecutor(max_workers=c) as pool:
                     for i in range(a.requests):
-                        key='s'+str(a.workload_seed)+'-'+phase+'-r'+str(i);body,image=payload(case,key,a.workload_seed*100000+case_index*20000+c*1000+i,a.model,a.max_tokens)
+                        key='s'+str(a.workload_seed)+'-'+phase+'-r'+str(i);body,image=payload(case,key,a.workload_seed*100000+case_index*20000+c*1000+i,a.model,a.max_tokens,a.image_format,a.image_order)
                         jobs.append(pool.submit(request,a.url.rstrip('/'),body,root,prefix+key,a.max_tokens))
                     rows=[f.result() for f in jobs]
                 sampler.sample();summary=summarize(rows);summary.update(sampler.peak(phase));summary.update(case=case,concurrency=c,

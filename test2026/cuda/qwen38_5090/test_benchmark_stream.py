@@ -51,4 +51,19 @@ class StreamingAccountingTests(unittest.TestCase):
         first,image=payload('image','image-c1-r0',10001,'model',128)
         again,repeated=payload('image','image-c1-r0',10001,'model',128)
         self.assertEqual(first,again);self.assertEqual(image,repeated);self.assertNotEqual(image,image_png(10002))
+
+    def test_jpeg_profile_preserves_wire_bytes_order_and_nonce(self):
+        import base64
+        from io import BytesIO
+        from PIL import Image
+        body,image=payload('image','s3-image-c1-r0',321001,'model',128,'jpeg','image-first')
+        content=body['messages'][0]['content']
+        self.assertEqual(content[0]['type'],'image_url');self.assertEqual(content[1]['type'],'text')
+        url=content[0]['image_url']['url'];self.assertTrue(url.startswith('data:image/jpeg;base64,'))
+        self.assertEqual(base64.b64decode(url.split(',',1)[1]),image)
+        with Image.open(BytesIO(image)) as decoded:self.assertEqual(decoded.size,(224,224));self.assertEqual(decoded.format,'JPEG')
+        self.assertEqual(image,payload('image','s3-image-c1-r0',321001,'model',128,'jpeg','image-first')[1])
+        self.assertNotEqual(image,payload('image','s3-image-c1-r1',321002,'model',128,'jpeg','image-first')[1])
+        self.assertEqual(payload('text','key',1,'model',128),payload('text','key',1,'model',128,'jpeg','image-first'))
+        with self.assertRaises(ValueError):payload('image','key',1,'model',128,'gif')
 if __name__=='__main__':unittest.main()
