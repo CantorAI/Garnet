@@ -22,6 +22,11 @@ def requests(read=None):
 
 def emit(value,write=None):
     write=write or (lambda raw:os.write(1,raw))
+    if isinstance(value.get('text'),str):
+        # The native tokenizer can return an incomplete UTF-8 byte prefix.
+        # Normalize transport text; token IDs/counts and the caller stay intact.
+        value=dict(value)
+        value['text']=value['text'].encode('utf8').decode('utf8','replace')
     raw=(json.dumps(value,separators=(',',':'),ensure_ascii=True)+'\n').encode()
     while raw:
         count=write(raw)

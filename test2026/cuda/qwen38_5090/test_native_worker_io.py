@@ -19,4 +19,12 @@ class WorkerIOTests(unittest.TestCase):
         self.assertEqual(json.loads(b''.join(parts)),{'event':'token','token_id':248046})
         self.assertTrue(b''.join(parts).endswith(b'\n'))
         with self.assertRaises(OSError):emit({},lambda raw:0)
+    def test_unicode_text_partial_writes_preserve_ids_and_caller(self):
+        value={'event':'token','text':'Here\u2019s \u4e2d\u6587 \U0001f535\n"quoted"','token_id':91786,'sampled_tokens':2}
+        before=dict(value);parts=[]
+        def write(raw):parts.append(raw[:3]);return len(raw[:3])
+        emit(value,write)
+        self.assertEqual(json.loads(b''.join(parts)),before)
+        self.assertEqual(value,before)
+        self.assertEqual(b''.join(parts).count(b'\n'),1)
 if __name__=='__main__':unittest.main()
