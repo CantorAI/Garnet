@@ -12,9 +12,27 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <cstdint>
 using Json=nlohmann::json;
 void CU(cudaError_t code){if(code!=cudaSuccess)throw std::runtime_error(cudaGetErrorString(code));}
 void BL(cublasStatus_t code){if(code!=CUBLAS_STATUS_SUCCESS)throw std::runtime_error("cuBLAS status "+std::to_string(int(code)));}
+template<typename T> Json AlgorithmAttribute(const cublasLtMatmulAlgo_t& algo,cublasLtMatmulAlgoConfigAttributes_t attr){
+ T value{};size_t written=0;const auto status=cublasLtMatmulAlgoConfigGetAttribute(&algo,attr,&value,sizeof(value),&written);
+ Json result={{"status",int(status)},{"bytes_written",written},{"expected_bytes",sizeof(value)}};
+ if(status==CUBLAS_STATUS_SUCCESS){if(written!=sizeof(value))throw std::runtime_error("Unexpected algorithm attribute size");result["value"]=value;}
+ return result;
+}
+Json AlgorithmConfiguration(const cublasLtMatmulAlgo_t& algo){
+ return {{"id",AlgorithmAttribute<int32_t>(algo,CUBLASLT_ALGO_CONFIG_ID)},
+ {"tile",AlgorithmAttribute<uint32_t>(algo,CUBLASLT_ALGO_CONFIG_TILE_ID)},
+ {"split_k",AlgorithmAttribute<int32_t>(algo,CUBLASLT_ALGO_CONFIG_SPLITK_NUM)},
+ {"reduction",AlgorithmAttribute<uint32_t>(algo,CUBLASLT_ALGO_CONFIG_REDUCTION_SCHEME)},
+ {"cta_swizzling",AlgorithmAttribute<uint32_t>(algo,CUBLASLT_ALGO_CONFIG_CTA_SWIZZLING)},
+ {"custom_option",AlgorithmAttribute<uint32_t>(algo,CUBLASLT_ALGO_CONFIG_CUSTOM_OPTION)},
+ {"stages",AlgorithmAttribute<uint32_t>(algo,CUBLASLT_ALGO_CONFIG_STAGES_ID)},
+ {"inner_shape",AlgorithmAttribute<uint16_t>(algo,CUBLASLT_ALGO_CONFIG_INNER_SHAPE_ID)},
+ {"cluster_shape",AlgorithmAttribute<uint16_t>(algo,CUBLASLT_ALGO_CONFIG_CLUSTER_SHAPE_ID)}};
+}
 struct Buffer{void* p=nullptr;explicit Buffer(size_t bytes){CU(cudaMalloc(&p,bytes));}~Buffer(){if(p)cudaFree(p);}Buffer(const Buffer&)=delete;};
 struct Stream{cudaStream_t p=nullptr;Stream(){CU(cudaStreamCreate(&p));}~Stream(){cudaStreamDestroy(p);}};
 struct Handle{cublasLtHandle_t p=nullptr;Handle(){BL(cublasLtCreate(&p));}~Handle(){cublasLtDestroy(p);}};
@@ -143,6 +161,8 @@ Json Case(const std::filesystem::path& out,cublasLtHandle_t handle,cudaStream_t 
    for(int index=0;index<options.count;++index){
     const auto& candidate=options.candidates[index];
     Json row={{"heuristic_index",index},{"heuristic_state",int(candidate.state)},{"workspace_required_bytes",candidate.workspaceSize}};
+    row["algorithm_configuration"]=AlgorithmConfiguration(candidate.algo);
+    row["estimated_waves"]=candidate.wavesCount;
     int algorithmId=-1;size_t written=0;
     const auto idStatus=cublasLtMatmulAlgoConfigGetAttribute(&candidate.algo,CUBLASLT_ALGO_CONFIG_ID,&algorithmId,sizeof(algorithmId),&written);
     row["algorithm_id_status"]=int(idStatus);if(idStatus==CUBLAS_STATUS_SUCCESS)row["algorithm_id"]=algorithmId;
