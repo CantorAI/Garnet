@@ -1,15 +1,20 @@
 """Archive the closed full-depth duplicate-text prefill diagnostic."""
 from pathlib import Path
 import hashlib
+import argparse
 import json
 import subprocess
 import zipfile
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--experiment", choices=("prefix64", "prefix8-16"), default="prefix64")
+experiment = parser.parse_args().experiment
+stem = "native-canonical-fp8-" + experiment
 root = Path("D:/CantorAI/5090-study-20261023")
 results = root / "results"
-folder = results / "native-canonical-fp8-prefix64-attempt1"
-outer = results / "native-canonical-fp8-prefix64-controller-ledger"
-target = results / "native-canonical-fp8-prefix64-attempt1-evidence.zip"
+folder = results / (stem + "-attempt1")
+outer = results / (stem + "-controller-ledger")
+target = results / (stem + "-attempt1-evidence.zip")
 assert not target.exists()
 workflow = json.loads((folder / "workflow.json").read_text())
 events = [json.loads(v) for v in (outer / "commands.jsonl").read_text().splitlines()]
@@ -23,8 +28,8 @@ files = []
 for directory in (folder, outer, results / "study-ssd-cache-setup-ledger",
         results / "study-ssd-engine-cache", results / "native-canonical-fp8-build-attempt2"):
     files.extend(p for p in directory.rglob("*") if p.is_file())
-files.extend(root / n for n in ("run-native-canonical-fp8-prefix64.py",
-    "test-native-canonical-fp8-prefix64.bat", "prepare-ssd-engine-cache.py"))
+files.extend(root / n for n in ("run-" + stem + ".py",
+    "test-" + stem + ".bat", "prepare-ssd-engine-cache.py"))
 files.extend(root / "Garnet" / n for n in (
     "test2026/cuda/qwen38_5090/probe_native_deeper_prefix_batch.py",
     "test2026/cuda/qwen38_5090/run_logged.py",
@@ -47,8 +52,9 @@ for p in files:
 manifest = {"storage": "sha256-objects-v1", "files": observations,
     "objects": {h: len(b) for h, b in objects.items()}, "library_sha256": library,
     "linked_archives": {n: sha((results / n).read_bytes()) for n in (
-        "native-canonical-fp8-prefix4-attempt1-evidence.zip", "native-canonical-fp8-full-b2-attempt1-evidence.zip")},
-    "scope": "Full64 duplicate-text prefill outputs, raw arrays, source/build provenance and resources. No ragged text/image generation, quality or performance admission."}
+        "native-canonical-fp8-prefix4-attempt1-evidence.zip", "native-canonical-fp8-full-b2-attempt1-evidence.zip") +
+        (("native-canonical-fp8-prefix64-attempt1-evidence.zip",) if experiment != "prefix64" else ())},
+    "scope": "Deeper-prefix duplicate-text prefill outputs, raw arrays, source/build provenance and resources. No ragged text/image generation, quality or performance admission."}
 with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as z:
     for h, raw in objects.items(): z.writestr("objects/" + h, raw)
     z.writestr("evidence-manifest.json", json.dumps(manifest, indent=2))
