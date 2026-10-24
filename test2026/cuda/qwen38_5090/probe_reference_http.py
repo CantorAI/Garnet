@@ -4,10 +4,17 @@ from pathlib import Path
 from urllib.request import Request,urlopen
 
 
-def image_png(seed=0):
+def image_png(seed=0,nonce_pattern='pixel'):
+    if nonce_pattern not in ('pixel','binary-grid') or type(seed) is not int or not 0<=seed<2**24:raise ValueError('Invalid image nonce')
     def chunk(kind,data):
         return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data)&0xffffffff)
-    rows=b''.join(b'\0'+b''.join(bytes(((seed&255,(seed>>8)&255,(seed>>16)&255) if seed and x==223 and y==223 else ((0,0,255) if x<56 and y<56 else (255,0,0)))) for x in range(224)) for y in range(224))
+    def pixel(x,y):
+        if nonce_pattern=='binary-grid' and x>=160 and y>=200:
+            bit=((y-200)//8)*8+(x-160)//8
+            return (255,255,255) if seed&(1<<bit) else (0,0,0)
+        if nonce_pattern=='pixel' and seed and x==223 and y==223:return (seed&255,(seed>>8)&255,(seed>>16)&255)
+        return (0,0,255) if x<56 and y<56 else (255,0,0)
+    rows=b''.join(b'\0'+b''.join(bytes(pixel(x,y)) for x in range(224)) for y in range(224))
     return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',224,224,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(rows))+chunk(b'IEND',b'')
 
 

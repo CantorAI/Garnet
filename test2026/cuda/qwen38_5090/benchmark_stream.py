@@ -48,13 +48,13 @@ class TokenEvents:
             'single_token_arrivals':self.max_batch==1,'token_count_source':'server cumulative completion_tokens with continuous_usage_stats',
             'text':''.join(self.text),'scope':'Client-observed token arrival times over loopback HTTP; batched arrivals are retained explicitly'}
 
-def payload(case,key,seed,model,maximum,image_format='png',image_order='text-first'):
+def payload(case,key,seed,model,maximum,image_format='png',image_order='text-first',image_nonce_pattern='pixel'):
     if image_format not in ('png','jpeg') or image_order not in ('text-first','image-first'):
         raise ValueError('Unsupported image format/order')
     prompt='Explain in detail how rain forms, step by step, with enough detail for a science lesson. Request '+key+'.'
     image=None;content=prompt
     if case=='image':
-        image=image_png(seed)
+        image=image_png(seed,image_nonce_pattern)
         if image_format=='jpeg':
             from io import BytesIO
             from PIL import Image
@@ -89,11 +89,36 @@ def request(url,body,root,key,maximum):
         (root/(key+'-result.json')).write_text(json.dumps(result,indent=2),encoding='utf-8')
         return result
 
+def prepare_workloads(args):
+    """Keep client image encoding outside measured dispatch; audit actual pixels."""
+    from io import BytesIO
+    prepared={};images=[];seen_encoded=set();seen_pixels=set()
+    for case_index,case in enumerate(args.cases):
+        for c in args.concurrency:
+            group={'warmups':[],'measured':[]};prepared[(case,c)]=group
+            def make(key,seed,phase):
+                body,data=payload(case,key,seed,args.model,args.max_tokens,args.image_format,args.image_order,args.image_nonce_pattern)
+                if data is not None:
+                    from PIL import Image
+                    encoded=hashlib.sha256(data).hexdigest()
+                    with Image.open(BytesIO(data)) as image:pixels=hashlib.sha256(image.convert('RGB').tobytes()).hexdigest()
+                    if args.image_nonce_pattern=='binary-grid' and (encoded in seen_encoded or pixels in seen_pixels):raise ValueError('Encoded/decoded image nonce collision before measurement')
+                    seen_encoded.add(encoded);seen_pixels.add(pixels)
+                    images.append({'key':key,'phase':phase,'encoded_sha256':encoded,'decoded_rgb_sha256':pixels,'bytes':len(data)})
+                return key,body
+            for wave in range(args.warmups):
+                group['warmups'].append([make('s'+str(args.workload_seed)+'-'+case+'-c'+str(c)+'-warmup-'+str(wave)+'-'+str(i),
+                    args.workload_seed*100000+50000+c*1000+wave*10+i,'warmup') for i in range(c)])
+            group['measured']=[make('s'+str(args.workload_seed)+'-'+case+'-c'+str(c)+'-r'+str(i),
+                args.workload_seed*100000+case_index*20000+c*1000+i,'measured') for i in range(args.requests)]
+    return prepared,images
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--url',required=True);p.add_argument('--engine',required=True,choices=['vllm','sglang','garnet'])
     p.add_argument('--model',default='qwen38-27b-nvfp4');p.add_argument('--output',type=Path,required=True);p.add_argument('--metadata',type=Path,required=True)
     p.add_argument('--concurrency',type=int,nargs='+',default=[1]);p.add_argument('--requests',type=int,default=4);p.add_argument('--warmups',type=int,default=2)
     p.add_argument('--image-format',choices=['png','jpeg'],default='png');p.add_argument('--image-order',choices=['text-first','image-first'],default='text-first')
+    p.add_argument('--image-nonce-pattern',choices=['pixel','binary-grid'],default='binary-grid')
     p.add_argument('--workload-seed',type=int,default=1);p.add_argument('--max-tokens',type=int,default=128);p.add_argument('--cases',nargs='+',choices=['text','image'],default=['text','image']);a=p.parse_args()
     parsed=urlsplit(a.url)
     if parsed.scheme!='http' or parsed.hostname not in ('127.0.0.1','localhost') or parsed.path not in ('','/') or parsed.username:raise ValueError('Study requires loopback HTTP')
@@ -102,12 +127,15 @@ def main():
     metadata=json.loads(a.metadata.read_text());manifest={'run_id':run,'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'engine':a.engine,
         'status':'running','argv':sys.argv,'source':source_identity(),'engine_metadata':metadata,'engine_metadata_sha256':hashlib.sha256(a.metadata.read_bytes()).hexdigest(),
         'python':platform.python_version(),'platform':platform.platform(),'context_capacity':4096,
-        'image_format':a.image_format,'image_order':a.image_order,
-        'workload':'Deterministic per-request nonce and one changed image pixel avoid prefix/vision result reuse; matching keys yield identical requests across engines',
+        'image_format':a.image_format,'image_order':a.image_order,'image_nonce_pattern':a.image_nonce_pattern,
+        'request_preparation':'All request bodies and encoded/decoded image hashes prepared before warmup/measurement dispatch',
+        'workload':'Deterministic request text nonce and explicit pixel pattern; legacy single-pixel JPEG can collide and does not establish uncached vision. Match actual request/image hashes across engines.',
         'measurement_scope':'Exploratory unless engine precision/workload/quality/configuration equivalence is independently established; no automatic2x claim'}
     (root/(prefix+'manifest.json')).write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     sampler=None
     try:
+        prepared,images=prepare_workloads(a)
+        (root/(prefix+'image-fixtures.json')).write_text(json.dumps(images,indent=2),encoding='utf-8')
         with urlopen(a.url.rstrip('/')+'/health',timeout=10) as response:
             if response.status!=200:raise ValueError('Engine is not healthy')
         sampler=Sampler(root/(prefix+'vram.jsonl'));manifest['gpu']=sampler.device;sampler.start()
@@ -117,18 +145,14 @@ def main():
                 for wave in range(a.warmups):
                     with concurrent.futures.ThreadPoolExecutor(max_workers=c) as pool:
                         warm=[]
-                        for i in range(c):
-                            key='s'+str(a.workload_seed)+'-'+case+'-c'+str(c)+'-warmup-'+str(wave)+'-'+str(i)
-                            seed=a.workload_seed*100000+50000+c*1000+wave*10+i
-                            body,image=payload(case,key,seed,a.model,a.max_tokens,a.image_format,a.image_order)
+                        for key,body in prepared[(case,c)]['warmups'][wave]:
                             warm.append(pool.submit(request,a.url.rstrip('/'),body,root,prefix+key,a.max_tokens))
                         for future in warm:
                             result=future.result()
                             if result['status']!='completed':raise RuntimeError('Warmup failed: '+str(result))
                 phase=case+'-c'+str(c);sampler.phase=phase;sampler.sample();jobs=[]
                 with concurrent.futures.ThreadPoolExecutor(max_workers=c) as pool:
-                    for i in range(a.requests):
-                        key='s'+str(a.workload_seed)+'-'+phase+'-r'+str(i);body,image=payload(case,key,a.workload_seed*100000+case_index*20000+c*1000+i,a.model,a.max_tokens,a.image_format,a.image_order)
+                    for key,body in prepared[(case,c)]['measured']:
                         jobs.append(pool.submit(request,a.url.rstrip('/'),body,root,prefix+key,a.max_tokens))
                     rows=[f.result() for f in jobs]
                 sampler.sample();summary=summarize(rows);summary.update(sampler.peak(phase));summary.update(case=case,concurrency=c,
