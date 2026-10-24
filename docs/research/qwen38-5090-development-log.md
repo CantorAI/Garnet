@@ -2862,3 +2862,21 @@ The prepared probe opts into that existing flag only, retaining the same B2 T16/
 ### Deferred-state archival/replay preparation (2026-10-24; not run)
 
 While the original T4 HTTP pilot remains live, local deferred-state replay methods were prepared. They bind its eventual verified archive and the retained non-deferred strict B2 MTP archive, require byte-identical six core Python methods plus unchanged native sources/runtime, and verify the exact declared experiment-source changes. Success still requires all retained IDs and complete ordinary/MTP state hash witnesses across two resets, closed transactions at hash reads, deferred mode metadata and zero named canonical backup bytes. The result cannot establish whole-process memory savings or performance from logical allocation metadata. Raw target-state arrays are still not retained. Syntax validation passed; no deferred GPU test has run and no live runtime/source is changed.
+
+
+### B4 T4 HTTP pilot independently replayed; deferred-state gate launched (2026-10-24)
+
+Original pilot completed exit0/all eight cohorts. Archive a065bec1839c4ce001737e274cb9038c18ba0787dd11e44c4e02b468fe98ea0d retains471 files/1,569,109 bytes. Independent replay passed on both machines for64 SSE/worker pairs, thirteen HTTP quality cases/two streams/four serialization captures, source/runtime/proof lineage, actual occupancy, metric/resource arithmetic and identical requests/transport/counts against both ordinary references. No auxiliary CIM observer ran during this timing. Large sampling gaps remain, reaching21.9991333 seconds in imageC4; retain them, do not remove pauses or infer a causal T4 speed comparison. A read-only post-run System event query over the prior hour found zero Display/NVIDIA/WHEA matches and zero query errors; its JSON is archived. This does not rule out paging, stalls or other causes.
+
+| Cohort | TTFT ms | Decode tok/s | Aggregate tok/s |
+|---|---:|---:|---:|
+| text-c1 | 522.8968 | 23.045113 | 20.877911 |
+| text-c2 | 3523.6284 | 22.898377 | 26.944289 |
+| text-c4 | 507.9289 | 21.120722 | 78.390586 |
+| text-c8 | 3650.1646 | 22.047870 | 81.724569 |
+| image-c1 | 1257.6239 | 14.223868 | 12.168385 |
+| image-c2 | 1339.1085 | 10.801433 | 12.073384 |
+| image-c4 | 1306.5570 | 14.657596 | 20.237039 |
+| image-c8 | 15146.2293 | 9.351911 | 26.815535 |
+
+The pilot establishes no improvement: C8 text81.724569/image26.815535 tok/s remains below the earlier B2 MTP pilot and ordinary references, and2x remains unmet. Only after original closure/archival/both independent replays and the separate post-run query, guarded shared-mtp3-full-b2-deferred-attempt1 was launched on unchanged native/core sources. This is a strict retained-ID/ordinary-state-hash experiment for the existing deferred-state option, not timing. Independent repeats, broader quality, actual4K prompts and tuned references remain pending.
