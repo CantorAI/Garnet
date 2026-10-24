@@ -365,9 +365,10 @@ no component result establishes the requested2x end-to-end reference comparison.
 because default min_pixels1024 produced14x14 while preloaded grid was16x16.
 Initial failure archive is preserved and verified. Native image-only probe proves
 explicit min=max65536 gives16x16. Source1e19927bc adds opt-in imageMinPixels and
-separate retry output paths; full corrected image/repeat/3968-input test remains
-pending. Model token callbacks and4B HTTP worker passed CPU control/protocol tests
-but remain GPU-unqualified. Do not infer4B speed/quality from these fixtures.
+separate retry output paths. The corrected image/repeat/3968-input qualification
+subsequently passed (see current checkpoint below). Model token callbacks passed
+actual GPU smoke;4B HTTP transport remains GPU-unqualified. Do not infer4B speed
+or broad quality from these checks.
 
 User explicitly requested replacing local D:/CantorAI/Garnet with our source.
 Original dirty/untracked changes are retained in a pinned Git backup ref and
@@ -379,7 +380,7 @@ is not proof those old binaries were rebuilt. Remote study DLL identity remains
 separately pinned and verified. Do not silently use original installed binaries.
 
 
-## Current execution checkpoint (P080)
+## Current execution checkpoint (P087)
 
 Completed corrected-grid vLLM candidate cf140177a4f24bf3ad845ad32f8cb4c0: actual
 decode graphs1/2/4/8, four JPEG token/color gates, eight measured cohorts and raw
@@ -403,9 +404,34 @@ actual graph replay0->4 and wrong-shape rejection, using1.5MiB extra input stora
 It is allocation staging, with fresh image preprocessing on every call. No
 end-to-end TTFT benefit has yet been measured. Initial B2 packed backend qualification failed full B1-ID equality, with first
 divergences at text token0 and image token8; preserve the strict gate and raw IDs.
-Fixed-B2 prefill row-isolation diagnostics are now live under source3ef07624c.
-Next: resolve the divergence before qualifying B4 or enabling actual native
-HTTP batching, then measure matched concurrency. Repeat end-to-end image timing
-with qualified resident input, and continue full INT4/4B reference and stronger
-SGLang/vLLM ordinary/MTP tuning/quality comparisons. Source edits stay on the
-dedicated branch; runtime DLL identity is independently pinned.
+Fixed-B2 prefill isolation now passes ten captures/eight full-row checks, and
+head-only replay of identical normalized vectors agrees for B1/B2 and native/
+dequantized heads. Both raw evidence archives were independently verified.
+Fresh B1 retain0 configuration control is live on sourcef8587f5ee, isolating the
+saved MTP3 target's retain1 setting before assigning an upstream numerical cause.
+Original cross-B1 full-ID gate remains failed; no actual native GPU batch serving
+or concurrency throughput is qualified.
+
+Next GPU sequence, preserving serial GPU ownership and raw evidence:
+1. Finish/archive the same-configuration B1 diagnostic; use actual hidden/ID
+   differences to choose the next batch correctness investigation. Do not weaken
+   the original gate or treat within-B2 repeat equality as B1 equivalence.
+2. Qualify opt-in MTP3 draftT4 against unchanged targetT16 using all16 complete
+   self-greedy sequences, retained VLM checks and actual stream/count gates, then
+   benchmark the corrected workload only on success. Default draftT16 stays.
+3. Separately repeat MTP3 image/text timing with component-qualified resident
+   vision input. Keep this separate from draftT4 initially to attribute effects.
+4. Establish feasible stronger reference MTP modes. vLLM MTP3 launcher and a
+   same-engine ordinary/speculative16-sequence full-ID capture/check tool are
+   prepared; actual mixed-checkpoint runtime/quality remains pending. Repeat
+   corrected-grid SGLang ordinary and tuned feasible MTP before final comparison.
+5. After batch correctness, implement the real native batch worker, qualify
+   HTTP/early-EOS/ragged/state isolation, then measure actual C2/4/8 where memory
+   permits. CPU grouped-transport fixtures alone do not establish GPU throughput.
+6. Complete full INT4 model/precision/VLM/HTTP and4B reference/quality/HTTP runs,
+   repeated measured cohorts, actual long-context/concurrent admission and memory
+   accounting. Preserve all failed candidates and negative results.
+
+Actual worker depth/chunk/vision profile can now be required before native MTP
+quality gates/timing. Keep source on the dedicated branch and pin runtime DLL
+separately.2x remains unmet; no claimed final fastest-reference baseline yet.

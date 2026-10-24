@@ -1,7 +1,14 @@
 """CPU fixtures for the strict pre-benchmark MTP equality gate, not GPU evidence."""
 import copy,unittest
-from validate_native_mtp_http import compare_greedy_pair
+from validate_native_mtp_http import compare_greedy_pair,validate_worker_profile
 class MTPGateTests(unittest.TestCase):
+ def test_actual_profile_required_before_candidate_timing(self):
+  h={'native_worker':{'mtp_depth':3,'mtp_chunk':4,'vision_input_policy':'direct'}}
+  self.assertEqual(validate_worker_profile(h,3,4,'direct'),h['native_worker'])
+  for depth,chunk,vision in [(7,4,'direct'),(3,16,'direct'),(3,4,'resident_copy')]:
+   with self.assertRaises(ValueError):validate_worker_profile(h,depth,chunk,vision)
+  with self.assertRaises(ValueError):validate_worker_profile({'native_worker':{'mtp_depth':3}},3,4)
+  with self.assertRaises(ValueError):validate_worker_profile({})
  def test_matching_ids_require_actual_mtp_mode_and_metrics(self):
   teacher={'choices':[{'prompt_token_ids':[1,2],'response_token_ids':[10,99]}],'study':{'generation_mode':'greedy_target'}}
   trial=copy.deepcopy(teacher);trial['study']={'generation_mode':'verified_mtp','speculative_metrics':{'target_verification_calls':1}}

@@ -18,8 +18,17 @@ def compare_greedy_pair(key,teacher,trial):
  row['passed']=bool(right['response_token_ids']) and row['prompt_ids_match'] and row['generated_ids_match'] and row['teacher_mode']=='greedy_target' and row['trial_mode']=='verified_mtp' and isinstance(metrics,dict)
  return row
 
+def validate_worker_profile(health,depth=None,chunk=None,vision=None):
+ worker=health.get('native_worker',{})
+ if worker.get('mtp_depth') not in (1,3,7):raise ValueError('Actual MTP worker readiness required')
+ for key,expected in [('mtp_depth',depth),('mtp_chunk',chunk),('vision_input_policy',vision)]:
+  if expected is not None and worker.get(key)!=expected:raise ValueError('Actual worker profile mismatch: '+key)
+ return worker
+
 def main():
- p=argparse.ArgumentParser();p.add_argument('--study',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--launcher',type=Path);a=p.parse_args();root=a.study;out=a.output
+ p=argparse.ArgumentParser();p.add_argument('--study',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--launcher',type=Path)
+ p.add_argument('--mtp-depth',type=int,choices=[1,3,7]);p.add_argument('--mtp-chunk',type=int,choices=[4,8,16]);p.add_argument('--vision-input-policy',choices=['direct','resident_copy'])
+ a=p.parse_args();root=a.study;out=a.output
  if out.exists() and any(out.iterdir()):raise FileExistsError('Preserve previous MTP attempt')
  out.mkdir(exist_ok=True)
  url='http://127.0.0.1:18082';deadline=time.monotonic()+1800
@@ -30,7 +39,7 @@ def main():
   except Exception as error:
    if time.monotonic()>=deadline:raise TimeoutError('MTP readiness deadline; inspect live worker before restart') from error
   time.sleep(5)
- if health.get('native_worker',{}).get('mtp_depth') not in (1,3,7):raise ValueError('Actual MTP worker readiness required')
+ validate_worker_profile(health,a.mtp_depth,a.mtp_chunk,a.vision_input_policy)
  (out/'health.json').write_text(json.dumps(health,indent=2));colors=validate_saved_vlm(root,out,url);rows=[]
  for case_index,case in enumerate(['text','image']):
   for i in range(8):
