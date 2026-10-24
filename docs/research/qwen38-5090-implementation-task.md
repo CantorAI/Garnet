@@ -435,3 +435,6 @@ Next GPU sequence, preserving serial GPU ownership and raw evidence:
 Actual worker depth/chunk/vision profile can now be required before native MTP
 quality gates/timing. Keep source on the dedicated branch and pin runtime DLL
 separately.2x remains unmet; no claimed final fastest-reference baseline yet.
+
+
+P091 update: fresh B1retain0 matches all four saved B1 sequences/repeats, so retained-output setting alone does not explain B2 mismatch. Truncated prefix1 matches B1/B2 byteexact; prefix4 differs. Isolate prefixes2/3 next, preserving full-model failed gate. Opt-in MTP3draftT4 passed all16 self-greedy/VLM/stream gates but measured71.3text/71.9image tok/s, no clear throughput gain versus defaultT16; negative result archived. Resident vision end-to-end, stronger reference MTP/tuning, actual native batching, full INT4/4B comparisons and repeated final evidence remain required.2x unmet.

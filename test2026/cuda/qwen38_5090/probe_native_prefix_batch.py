@@ -6,6 +6,8 @@ from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
 from test2026.cuda.qwen38_5090.run_logged import source_identity
 
 root=Path(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(exist_ok=True)
+prefixes=tuple(int(v) for v in sys.argv[3:]) or (1,4)
+if len(set(prefixes))!=len(prefixes) or any(v not in (1,2,3,4) for v in prefixes):raise ValueError('Diagnostic prefixes must be unique values1..4')
 path=out/'report.json'
 if path.exists():raise FileExistsError('Preserve prior prefix diagnostic')
 checkpoint=root/'models/Qwen3.8-27B-NVFP4'
@@ -13,13 +15,13 @@ config_path=checkpoint/'config.json';original=json.loads(config_path.read_text(e
 oracle=root/'results/native-mtp3-http/s3-text-c1-r0-greedy-response.json'
 ids=json.loads(oracle.read_text(encoding='utf8'))['choices'][0]['prompt_token_ids']
 assert len(ids)==41
-report={'status':'starting','source':source_identity(),'capacity':4096,'chunk':16,'cases':[],
+report={'status':'starting','source':source_identity(),'capacity':4096,'chunk':16,'prefixes':prefixes,'cases':[],
  'input_prompt_ids':ids,'config_sha256':hashlib.sha256(config_path.read_bytes()).hexdigest(),
  'oracle_sha256':hashlib.sha256(oracle.read_bytes()).hexdigest(),
- 'scope':'Diagnostic truncated checkpoint prefixes1/4, identical text rows at B1/B2; no full-model IDs, VLM, serving, quality or timing claim. Original64-layer batch gate remains failed.'}
+ 'scope':'Diagnostic truncated checkpoint prefixes1..4, identical text rows at B1/B2; no full-model IDs, VLM, serving, quality or timing claim. Original64-layer batch gate remains failed.'}
 decoder=None
 try:
- for prefix in (1,4):
+ for prefix in prefixes:
   snapshots={}
   config=dict(original['text_config']);config['num_hidden_layers']=prefix;config['layer_types']=config['layer_types'][:prefix]
   for batch in (1,2):
