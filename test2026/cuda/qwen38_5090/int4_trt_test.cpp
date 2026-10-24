@@ -19,9 +19,10 @@ struct Buffer {void* p=nullptr; explicit Buffer(size_t n){Check(cudaMalloc(&p,n)
 int main(int argc,char** argv){try{
  using namespace nvinfer1;
  if(argc<2||argc>3)throw std::runtime_error("Output prefix and optional kn layout required");
- const bool kn=argc==3&&std::string(argv[2])=="kn";
+ const bool model=argc==3&&std::string(argv[2])=="kn-model";
+ const bool kn=model||(argc==3&&std::string(argv[2])=="kn");
  if(argc==3&&!kn)throw std::runtime_error("Unknown physical layout");
- Logger logger;constexpr int n=128,k=256,group=128;
+ Logger logger;const int n=model?5120:128,k=model?6144:256,group=128;
  // Independent logical oracle spans every signed code and distinct row/group scales.
  std::vector<int> logical(n*k);std::vector<unsigned char> offset(n*k/2,0),packed(n*k/2);
  std::vector<__nv_bfloat16> scales(n*k/group);

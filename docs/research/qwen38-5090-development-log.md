@@ -1175,3 +1175,8 @@ Prepared a separate TensorRT INT4 group128/BF16 compatibility target, not genera
 Source c733ec39c verified6433 files remotely. The standalone test compiled/linked, then TensorRT10.16.1 engine build rejected the first batch1 [N,K] INT4 DQ/BF16 MatMul graph: Myelin reports blockwise dequantization input types exclude INT4, followed by no implementation found. Exit1 retained in int4-group128-ledger; no engine, arithmetic pass, WoQ support or metric claimed. Official pinned-version documentation describes INT4 G64/128 BF16 WoQ but does not establish this concrete graph/tactic combination: https://docs.nvidia.com/deeplearning/tensorrt/10.x.x/inference-library/work-quantized-types.html .
 
 Added optional physical [K,N] storage with transposed scales and block axis0, MatMul non-transposed. The independent logical CPU oracle remains unchanged. This tests a possible tactic-layout restriction; it is an unproven hypothesis. The original [N,K] failure mode remains selectable and preserved. No package upgrade, dequantized BF16 fallback or checkpoint change.
+
+
+## P054 - 2026-10-23: transposed INT4 failure and model-sized probe
+
+The physical [K,N] graph also compiled but failed engine building with the same Myelin INT4 block-dequantization type restriction; exit1 retained in int4-group128-kn-ledger. Neither physical layout produces a passing engine or numerical result. Added kn-model diagnostic for a representative actual27B o_proj geometry [N,K]=[5120,6144], retaining BF16 scales/G128 and unchanged logical signed oracle. This distinguishes small-matrix tactic constraints from a broader installed-route limitation. Still only a compatibility probe, with no full-checkpoint loading, serving or timing claim.
