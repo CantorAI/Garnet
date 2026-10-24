@@ -3,7 +3,7 @@ import hashlib,json,subprocess,sys
 from urllib.request import urlopen
 r=Path('D:/CantorAI/5090-study-20261023');p=r/'Garnet/test2026/cuda/qwen38_5090';out=r/'results/native-4b-http-pilot'
 # Never time while the CPU/IO-heavy tool extraction is still running.
-for name in ('nsight-2026-tool-setup-direct-ledger','native-4b-http-quality-ledger'):
+for name in ('nsight-2026-tool-setup-direct-ledger','nsight-2026-cab-extraction-ledger','native-4b-http-quality-ledger'):
  events=[json.loads(l) for l in (r/'results'/name/'commands.jsonl').read_text(encoding='utf8').splitlines()];assert events[-1]['event']=='finished','Observe original setup/quality terminal handles before timing'
  if name=='native-4b-http-quality-ledger':assert events[-1]['exit_code']==0
 q=json.loads((out/'quality.json').read_text(encoding='utf8'));assert q['status']=='passed'
