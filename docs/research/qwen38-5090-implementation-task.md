@@ -380,7 +380,7 @@ is not proof those old binaries were rebuilt. Remote study DLL identity remains
 separately pinned and verified. Do not silently use original installed binaries.
 
 
-## Current execution checkpoint (P087)
+## Current execution checkpoint (P096)
 
 Completed corrected-grid vLLM candidate cf140177a4f24bf3ad845ad32f8cb4c0: actual
 decode graphs1/2/4/8, four JPEG token/color gates, eight measured cohorts and raw
@@ -438,3 +438,5 @@ separately.2x remains unmet; no claimed final fastest-reference baseline yet.
 
 
 P091 update: fresh B1retain0 matches all four saved B1 sequences/repeats, so retained-output setting alone does not explain B2 mismatch. Truncated prefix1 matches B1/B2 byteexact; prefix4 differs. Isolate prefixes2/3 next, preserving full-model failed gate. Opt-in MTP3draftT4 passed all16 self-greedy/VLM/stream gates but measured71.3text/71.9image tok/s, no clear throughput gain versus defaultT16; negative result archived. Resident vision end-to-end, stronger reference MTP/tuning, actual native batching, full INT4/4B comparisons and repeated final evidence remain required.2x unmet.
+
+P096 update: complete chunk/state evidence confirms tiny first-layer hidden differences despite exact first-layer GDN states; later states amplify differences. Substitute-input norm/MLP and residual-barrier experiments are exact B1/B2 and do not reproduce the real-layer issue. No barrier/default fix is justified. All three raw archives now locally integrity/array verified. Actual layer-intermediate isolation remains needed for batch admission; stronger referenceMTP, resident vision end-to-end and full INT4/4B/final repeated comparisons stay in scope.2x unmet.
