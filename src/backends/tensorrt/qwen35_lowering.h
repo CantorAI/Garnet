@@ -162,6 +162,13 @@ public:
         return project(mul(silu(project(x,weight(prefix+".gate_proj.weight"))),
             project(x,weight(prefix+".up_proj.weight"))),weight(prefix+".down_proj.weight"));
     }
+    // Explicit component/study entry point. Existing decoder MLP remains unchanged.
+    T* joinedMLP(T* x,const std::string& prefix) {
+        auto* values=project(x,weight(prefix+".gate_up_proj.weight"));auto s=shape(values);
+        if(s.back()%2)throw std::invalid_argument("Joined gate/up output width must be even");
+        const int half=s.back()/2,axis=int(s.size())-1;
+        return project(mul(silu(slice(values,axis,0,half)),slice(values,axis,half,half)),weight(prefix+".down_proj.weight"));
+    }
     T* maskRows(T* x,T* active) {
         auto s=shape(x);require(active,{s[0]});
         return select(reshape(active,{s[0],1}),x,scalar(0,s.size()));

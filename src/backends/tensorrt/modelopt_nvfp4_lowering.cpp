@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "trt_builder.h"
 #include "modelopt_nvfp4_plugin.h"
+#include "modelopt_joined_mlp.h"
 #include "../../cuda/modelopt_nvfp4.cuh"
 #include <climits>
 #include <cmath>
@@ -70,6 +71,18 @@ size_t TRTBuilder::BindExternalModelOptWeight(const std::string& name,ITensor* p
         name.size()>512||name.size()<7||name.substr(name.size()-7)!=".weight"||
         (name.rfind("model.language_model.layers.",0)!=0&&name.rfind("mtp.",0)!=0))
         throw std::invalid_argument("External compressed weight profile/name invalid");
+    std::string gate,up;
+    if(JoinedNVFP4MLPNames(name,gate,up)){
+        const auto p=ValidateJoinedNVFP4MLP(*capturedWeightIndex,name);const int rows=p.halfRows*2;
+        const auto scaleBytes=ModelOptNVFP4ScaleBytes(rows,p.columns);auto dims=packed->getDimensions();
+        if(packed->getType()!=DataType::kINT32||dims.nbDims!=2||dims.d[0]!=rows||dims.d[1]!=p.columns/8||
+            !scales||!scaleBytes||scaleBytes>(256ULL<<20))throw std::invalid_argument("Joined NVFP4 packed binding shape invalid");
+        auto shape=scales->getDimensions();
+        if(scales->getType()!=DataType::kINT32||shape.nbDims!=1||shape.d[0]!=int64_t(scaleBytes/4))
+            throw std::invalid_argument("Joined NVFP4 tiled scales binding shape invalid");
+        nativeNVFP4Weights[packed]={scales,rows,p.columns,p.weightScale,p.inputScale};
+        return size_t(p.gate->dataSize)*2+scaleBytes;
+    }
     auto* entry=capturedWeightIndex->Find(name);
     const bool nv=entry&&entry->dataType=="U8";
     if(!entry||(!nv&&entry->dataType!="F8_E4M3"&&entry->dataType!="F8_E4M3FN")||entry->shape.size()!=2||

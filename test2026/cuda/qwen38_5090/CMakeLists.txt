@@ -98,3 +98,12 @@ add_executable(garnet_attention_compact_test attention_compact_test.cu "${GARNET
 target_include_directories(garnet_attention_compact_test PRIVATE "${GARNET_STUDY_SOURCE}/src/cuda")
 target_link_libraries(garnet_attention_compact_test PRIVATE CUDA::cudart)
 set_target_properties(garnet_attention_compact_test PROPERTIES CUDA_STANDARD 17 CXX_STANDARD 17)
+
+# Metadata admission test uses the actual checkpoint parser without CUDA calls.
+add_executable(garnet_joined_mlp_metadata_test joined_mlp_metadata_test.cpp
+    "${GARNET_STUDY_SOURCE}/src/model/safetensors_index.cpp")
+target_include_directories(garnet_joined_mlp_metadata_test PRIVATE
+    "${GARNET_STUDY_SOURCE}/src/model" "${GARNET_STUDY_SOURCE}/src/backends/tensorrt"
+    "${GARNET_STUDY_SOURCE}/third_party")
+target_compile_features(garnet_joined_mlp_metadata_test PRIVATE cxx_std_17)
+add_test(NAME garnet_joined_mlp_metadata COMMAND garnet_joined_mlp_metadata_test "${CMAKE_BINARY_DIR}/joined-mlp-metadata-fixtures")

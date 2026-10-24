@@ -6182,6 +6182,11 @@ namespace Garnet {
                     lastOutput=ops.reshape(ops.norm(source,keywordText("weight_name"),float(number("eps",1e-6))),{s[0],s[1]*s[2]});
                 }
                 else if(opName=="qwen35_mlp")lastOutput=ops.mlp(source,keywordText("weight_prefix"));
+                else if(opName=="qwen35_joined_mlp"){
+                    const auto prefix=keywordText("weight_prefix");
+                    if(!external.count(prefix+".gate_up_proj.weight"))throw std::invalid_argument("Joined MLP requires explicit validated external compressed weights");
+                    lastOutput=ops.joinedMLP(source,prefix);
+                }
                 else if(opName=="qwen35_attention_step") {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.attentionStep(source,b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],

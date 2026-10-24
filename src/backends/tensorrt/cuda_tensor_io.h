@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 namespace Garnet {
 // GPU request tensors, BF16 embedding and an optional independent output head.
 // Only token IDs and small request metadata cross the host boundary.
@@ -28,9 +29,11 @@ class CUDATensorIO {
         int rows=0,columns=0;bool nvfp4=false;
         float weightScale=0,inputScale=0;
         size_t packedBytes=0,scaleBytes=0;
+        std::vector<std::string> sourceWeights;
     };
     std::unordered_map<std::string,CompressedProjection> compressedProjections_;
     CompressedProjection& CompressedProjectionUnlocked(const std::string& name,bool load);
+    CompressedProjection& JoinedCompressedProjectionUnlocked(const std::string& name,bool load);
     std::unordered_map<std::string,X::Tensor> projectionWeights_;
     std::unordered_map<std::string,X::Tensor> projectionWeightGroups_;
     std::unordered_set<std::string> projectionWeightGroupMembers_;

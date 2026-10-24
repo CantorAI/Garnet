@@ -3,6 +3,7 @@
 #include "cuda_tensor_io.h"
 #include "bf16_projection_plugin.h"
 #include "modelopt_cublaslt.h"
+#include "modelopt_joined_mlp.h"
 #include "tensor_helper.h"
 #include "cuda_lib.h"
 #include "../../cuda/qwen35_indexed_head.cuh"
@@ -192,6 +193,11 @@ CUDATensorIO::CompressedProjection& CUDATensorIO::CompressedProjectionUnlocked(c
     if(name.size()>512||name.size()<7||name.substr(name.size()-7)!=".weight"||
         (name.rfind("model.language_model.layers.",0)!=0&&name.rfind("mtp.",0)!=0))
         throw X::Error("Compressed pool admits named text-layer/MTP matrices only");
+    std::string gate,up;
+    if(JoinedNVFP4MLPNames(name,gate,up))return JoinedCompressedProjectionUnlocked(name,load);
+    if(load)for(const auto& joined:compressedProjections_)if(joined.second.packed.IsValid())
+        for(const auto& member:joined.second.sourceWeights)if(member==name)
+            throw X::Error("Original NVFP4 projection already owned by a joined MLP pool");
     auto existing=compressedProjections_.find(name);
     const auto* entry=index_.Find(name);
     if(existing==compressedProjections_.end()){
@@ -277,13 +283,54 @@ CUDATensorIO::CompressedProjection& CUDATensorIO::CompressedProjectionUnlocked(c
     Check(cudaStreamSynchronize(CurrentExecutionStream()));
     p.packed=std::move(packed);p.scales=std::move(scales);return p;
 }
+CUDATensorIO::CompressedProjection& CUDATensorIO::JoinedCompressedProjectionUnlocked(const std::string& name,bool load){
+    const auto metadata=ValidateJoinedNVFP4MLP(index_,name);
+    auto found=compressedProjections_.find(name);
+    if(found==compressedProjections_.end()){
+        CompressedProjection p;p.nvfp4=true;p.rows=metadata.halfRows*2;p.columns=metadata.columns;
+        p.weightScale=metadata.weightScale;p.inputScale=metadata.inputScale;
+        p.packedBytes=size_t(metadata.gate->dataSize)*2;p.scaleBytes=ModelOptNVFP4ScaleBytes(p.rows,p.columns);
+        if(!p.scaleBytes||p.scaleBytes>(256ULL<<20))throw X::Error("Joined NVFP4 tiled scales exceed256MiB");
+        p.sourceWeights={metadata.gateName,metadata.upName};
+        found=compressedProjections_.emplace(name,std::move(p)).first;
+    }
+    auto& p=found->second;if(!load||p.packed.IsValid())return p;
+    for(const auto& member:p.sourceWeights){auto existing=compressedProjections_.find(member);
+        if(existing!=compressedProjections_.end()&&existing->second.packed.IsValid())
+            throw X::Error("Joined NVFP4 cannot duplicate resident original gate/up matrices");}
+    std::vector<unsigned char> packed(p.packedBytes),tiled(p.scaleBytes,0);
+    const SafeTensorMetadata* matrices[]={metadata.gate,metadata.up};
+    const SafeTensorMetadata* scales[]={metadata.gateScales,metadata.upScales};
+    const int blocks=p.columns/16,paddedColumns=((blocks+3)/4)*4;
+    for(int half=0;half<2;++half){
+        SafeTensorsMappedFile matrix,scale;std::string error;
+        if(!matrix.Open(matrices[half]->filePath,error)||!scale.Open(scales[half]->filePath,error))throw X::Error(error);
+        const auto* weights=matrix.DataAt(matrices[half]->dataOffset,matrices[half]->dataSize);
+        const auto* raw=static_cast<const unsigned char*>(scale.DataAt(scales[half]->dataOffset,scales[half]->dataSize));
+        if(!weights||!raw)throw X::Error("Joined NVFP4 checkpoint span invalid");
+        std::memcpy(packed.data()+size_t(half)*metadata.gate->dataSize,weights,size_t(matrices[half]->dataSize));
+        for(int row=0;row<metadata.halfRows;++row)for(int col=0;col<blocks;++col){
+            const auto value=raw[size_t(row)*blocks+col];if(value>126)throw X::Error("Joined NVFP4 block scale negative/nonfinite");
+            const int joinedRow=row+half*metadata.halfRows;
+            const size_t offset=size_t(joinedRow/128)*128*paddedColumns+size_t(col/4)*512+
+                (joinedRow%32)*16+((joinedRow%128)/32)*4+col%4;
+            tiled[offset]=value;
+        }
+    }
+    auto readonly=[&](X::Tensor tensor){auto owner=std::make_shared<X::Tensor>(std::move(tensor));auto info=owner->Info();info.readonly=1;return TensorHelper::WrapBorrowedGPU(Host(),info,owner);};
+    struct UploadFence { cudaStream_t stream;~UploadFence(){cudaStreamSynchronize(stream);} } uploadFence{CurrentExecutionStream()};
+    auto weights=readonly(TensorHelper::CreateGPU(Host(),X3_TENSOR_INT32,{p.rows,p.columns/8},packed.data()));
+    auto scalesValue=readonly(TensorHelper::CreateGPU(Host(),X3_TENSOR_INT32,{int64_t(p.scaleBytes/4)},tiled.data()));
+    Check(cudaStreamSynchronize(CurrentExecutionStream()));
+    p.packed=std::move(weights);p.scales=std::move(scalesValue);return p;
+}
 std::string CUDATensorIO::CompressedWeightInfo(const std::string& name){
     std::lock_guard<std::mutex> lock(mutex_);auto& p=CompressedProjectionUnlocked(name,false);
     return nlohmann::json{{"recipe",p.nvfp4?"modelopt_nvfp4_w4a4":"modelopt_fp8_w8a8"},
         {"logical_shape",{p.rows,p.columns}},{"packed_shape",{p.rows,p.nvfp4?p.columns/8:p.columns/4}},
         {"scale_shape",p.nvfp4?std::vector<int64_t>{int64_t(p.scaleBytes/4)}:std::vector<int64_t>{}},
         {"packed_dtype","INT32"},{"storage_encoding","Opaque little-endian words; raw checkpoint bits, no numeric conversion"},{"packed_bytes",p.packedBytes},{"scale_bytes",p.scaleBytes},
-        {"weight_scale",p.weightScale},{"input_scale",p.inputScale},
+        {"weight_scale",p.weightScale},{"input_scale",p.inputScale},{"joined_mlp",!p.sourceWeights.empty()},{"source_weights",p.sourceWeights},
         {"resident_in_compressed_pool",p.packed.IsValid()},
         {"resident_packed_readonly",p.packed.IsValid()&&p.packed.Info().readonly!=0},
         {"resident_scales_readonly",p.scales.IsValid()&&p.scales.Info().readonly!=0}}.dump();
