@@ -377,3 +377,34 @@ worktree.9992 tracked files matched byte-for-byte immediately after replacement.
 Ignored environments/build products were preserved, so source replacement alone
 is not proof those old binaries were rebuilt. Remote study DLL identity remains
 separately pinned and verified. Do not silently use original installed binaries.
+
+
+## Current execution checkpoint (P080)
+
+Completed corrected-grid vLLM candidate cf140177a4f24bf3ad845ad32f8cb4c0: actual
+decode graphs1/2/4/8, four JPEG token/color gates, eight measured cohorts and raw
+event replay verified. B1 text/image decode both about68.5tok/s; text/image TTFT
+152.4/166.5ms. Output-head tuning coverage remains incomplete; MTP reference modes,
+repetition, full4K concurrent admission and native/reference precision/quality
+equivalence remain required before a fastest-valid-reference or2x claim.
+
+Corrected full4B native text/image/repeat/token-event/3968-input smoke now passes.
+It generated78 sampled outputs on the long input before EOS. Independent4B
+reference/quality and real HTTP/concurrency measurements remain pending.
+
+Native MTP3 exact16-sequence self-greedy gate plus actual HTTP pilot passed;
+text/image decode72.1/71.7tok/s and TTFT111.2/269.9ms. B1 request bytes and counts
+match vLLM, but native speed is only about1.05x and image TTFT is worse. MTP7
+passes the same gates but regresses to69.0/64.0tok/s; preserve this negative result.
+Neither measured profile establishes2x or real native GPU batched concurrency.
+
+Optional resident vision input now passes six full raw output equality pairs,
+actual graph replay0->4 and wrong-shape rejection, using1.5MiB extra input storage.
+It is allocation staging, with fresh image preprocessing on every call. No
+end-to-end TTFT benefit has yet been measured. B2 packed backend qualification is
+currently live under frozen sourcecbb2388b3; await its actual raw ID/memory result.
+Next: archive B2 result, qualify B4 where feasible, implement/test actual native
+HTTP batching, then measure matched concurrency. Repeat end-to-end image timing
+with qualified resident input, and continue full INT4/4B reference and stronger
+SGLang/vLLM ordinary/MTP tuning/quality comparisons. Source edits stay on the
+dedicated branch; runtime DLL identity is independently pinned.
