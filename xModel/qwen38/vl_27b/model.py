@@ -90,24 +90,27 @@ def create_cuda_packed_decoder(checkpoint,config,capacity,batch=1,retain_linear_
     return _create_cuda_packed_embedded(checkpoint,config,capacity,batch,retain_linear_inputs)
 
 
-def create_cuda_shared_compressed_decoder(checkpoint,config,capacity,batch=1,retain_linear_inputs=False,prefill_chunk=128,decode_chunk=4):
+def create_cuda_shared_compressed_decoder(checkpoint,config,capacity,batch=1,retain_linear_inputs=False,prefill_chunk=128,decode_chunk=4,joined_mlp_projections=False):
     """Unqualified opt-in: two static profiles borrow one mixed projection pool."""
     validate_cuda_profile(config,capacity,batch)
     if type(prefill_chunk) is not int or prefill_chunk not in (32,64,128) or type(decode_chunk) is not int or decode_chunk not in (4,8,16) or prefill_chunk<decode_chunk:
         raise ValueError('Shared compressed candidate requires bounded prefill32/64/128 and decode4/8/16')
+    from xModel.qwen35.vl_0_8b.joined_mlp_profile import validate_joined_mlp_profile
+    for size in (prefill_chunk,decode_chunk):validate_joined_mlp_profile(joined_mlp_projections,batch,capacity,size,True)
     import json
     from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
     decoder=CUDAPackedDecoder(checkpoint,config['text_config'],batch,capacity,prefill_chunk,decode_chunk,
-        flat_concat=True,external_compressed_weights=True,shared_output_storage=True,retain_linear_inputs=retain_linear_inputs)
+        flat_concat=True,external_compressed_weights=True,shared_output_storage=True,retain_linear_inputs=retain_linear_inputs,joined_mlp_projections=joined_mlp_projections)
     try:
         decoder.io.enable_nvfp4_head(True)
         pool=json.loads(decoder.io.memory_json())
-        if pool['compressed_projection_pool_entries']!=400 or pool['compressed_nvfp4_entries']!=192 or pool['compressed_fp8_entries']!=208:
-            raise ValueError('Shared mixed pool must contain exactly192NVFP4+208FP8 projection matrices')
+        nvfp4=128 if joined_mlp_projections else 192;total=nvfp4+208
+        if pool['compressed_projection_pool_entries']!=total or pool['compressed_nvfp4_entries']!=nvfp4 or pool['compressed_fp8_entries']!=208:
+            raise ValueError('Shared mixed pool projection counts do not match joined/original profile')
         physical=pool['compressed_projection_weight_bytes']+pool['compressed_projection_scale_bytes']
         for program in decoder.programs.values():
             stats=json.loads(program.graph.stats_json())
-            if stats['native_nvfp4_projection_weights']!=192 or stats['native_fp8_projection_weights']!=208 or stats['external_bf16_weight_inputs']!=0 or stats['external_compressed_weight_inputs']!=400 or stats['external_compressed_weight_bytes']!=physical:
+            if stats['native_nvfp4_projection_weights']!=nvfp4 or stats['native_fp8_projection_weights']!=208 or stats['external_bf16_weight_inputs']!=0 or stats['external_compressed_weight_inputs']!=total or stats['external_compressed_weight_bytes']!=physical:
                 raise ValueError('Shared whole-program compressed projection contract mismatch')
         return decoder
     except:

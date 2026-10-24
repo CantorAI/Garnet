@@ -12,6 +12,7 @@ import garnet
 import tensor
 from .decoder_layer import T
 from .cuda_chunk import Qwen35CUDAChunk
+from .joined_mlp_profile import validate_joined_mlp_profile
 
 def packed_view(value,start,width,shape):
     return value*T.unary_op('qwen35_packed_view',start=start,width=width,shape=shape)
@@ -43,9 +44,11 @@ def decoder_state_layout(config,batch,capacity):
     return result,offset
 
 class CUDAPackedDecoderProgram:
-    def __init__(self,checkpoint,config,io,batch=1,capacity=512,chunk_size=4,retain_linear_inputs=False,projection_workspace_bytes=0,register_delta_128=False,flat_concat=False,join_input_projections=False,embedded_projection_weights=False,external_compressed_weights=False):
+    def __init__(self,checkpoint,config,io,batch=1,capacity=512,chunk_size=4,retain_linear_inputs=False,projection_workspace_bytes=0,register_delta_128=False,flat_concat=False,join_input_projections=False,embedded_projection_weights=False,external_compressed_weights=False,joined_mlp_projections=False):
         if batch not in (1,2,4,8) or not 32<=capacity<=8192 or chunk_size not in (4,8,16,32,64,128):raise ValueError('Unsupported packed decoder profile')
         if projection_workspace_bytes not in (0,16384):raise ValueError('Invalid projection workspace')
+        validate_joined_mlp_profile(joined_mlp_projections,batch,capacity,chunk_size,external_compressed_weights,embedded_projection_weights,join_input_projections)
+        self.joined_mlp_projections=joined_mlp_projections
         self.config=config;self.io=io;self.batch=batch;self.capacity=capacity;self.size=chunk_size;self.retain=retain_linear_inputs
         self.register_delta_128=register_delta_128;self.flat_concat=flat_concat
         self.embedded_projection_weights=bool(embedded_projection_weights)
@@ -61,9 +64,15 @@ class CUDAPackedDecoderProgram:
             tensor.input('packed_active',shape=[batch,chunk_size],dtype=tensor.float32),
             tensor.input('packed_positions',shape=[batch,chunk_size,3],dtype=tensor.float32),
             tensor.input('packed_slots',shape=[batch,chunk_size],dtype=tensor.float32)]
+        if self.joined_mlp_projections:
+            for layer in self.layout:
+                prefix='model.language_model.layers.'+str(layer['index'])+'.mlp.'
+                info=json.loads(io.compressed_weight_info(prefix+'gate_up_proj.weight'))
+                if not info['joined_mlp'] or info['source_weights']!=[prefix+'gate_proj.weight',prefix+'up_proj.weight']:
+                    raise ValueError('Joined MLP provenance mismatch')
         for layer in self.layout:
             index=layer['index'];kind=layer['kind'];p='model.language_model.layers.'+str(index)+'.'
-            suffixes=['mlp.gate_proj.weight','mlp.up_proj.weight','mlp.down_proj.weight']
+            suffixes=['mlp.gate_up_proj.weight','mlp.down_proj.weight'] if self.joined_mlp_projections else ['mlp.gate_proj.weight','mlp.up_proj.weight','mlp.down_proj.weight']
             joined=None;joined_name=p+'linear_attn.in_proj_joined.weight'
             if kind=='linear_attention' and self.join_input_projections:
                 joined=io.group_weights([p+'linear_attn.'+name+'.weight' for name in ('in_proj_qkv','in_proj_z','in_proj_b','in_proj_a')])
@@ -75,7 +84,7 @@ class CUDAPackedDecoderProgram:
             for suffix in ([] if self.embedded_projection_weights else suffixes):
                 name=p+suffix
                 if self.external_compressed_weights:
-                    original=json.loads(io.weight_info(name))
+                    original={'dtype':'U8'} if self.joined_mlp_projections and suffix=='mlp.gate_up_proj.weight' else json.loads(io.weight_info(name))
                     if original['dtype']=='BF16':
                         if kind!='linear_attention' or suffix not in ('linear_attn.in_proj_a.weight','linear_attn.in_proj_b.weight'):
                             raise ValueError('Unexpected BF16 fallback in shared compressed projection: '+name)
@@ -117,7 +126,7 @@ class CUDAPackedDecoderProgram:
                 external={} if self.external_compressed_weights else {self.weight_names[i]:weights[self.weight_slots[i][0]] for i in indices}
                 compressed={self.weight_names[i]:[weights[j] for j in self.weight_slots[i]] for i in indices} if self.external_compressed_weights else None
                 packed=Qwen35CUDAChunk(hidden,first,second,active,positions,slots,config,layer['index'],layer['kind'],True,True,
-                    self.workspace,self.retain,external,self.register_delta_128,self.join_input_projections and layer['kind']=='linear_attention',external_compressed_weights=compressed)
+                    self.workspace,self.retain,external,self.register_delta_128,self.join_input_projections and layer['kind']=='linear_attention',external_compressed_weights=compressed,joined_mlp_projections=self.joined_mlp_projections)
                 hidden=packed_view(packed,0,t*h,[b,t,h])
                 state_outputs.append(packed_view(packed,t*h,w1+w2,[b,w1+w2]))
                 if layer['payload_width']:
@@ -134,7 +143,7 @@ class CUDAPackedDecoderProgram:
 
     def memory_info(self):
         if self.graph is None:raise ValueError('Packed decoder program is closed')
-        return {'graph':json.loads(self.graph.stats_json()),'embedded_projection_weights':self.embedded_projection_weights,'external_compressed_weights':self.external_compressed_weights,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'joined_input_projections':self.join_input_projections,'state_width':self.state_width,'hidden_width':self.hidden_width,
+        return {'graph':json.loads(self.graph.stats_json()),'embedded_projection_weights':self.embedded_projection_weights,'joined_mlp_projections':self.joined_mlp_projections,'external_compressed_weights':self.external_compressed_weights,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'joined_input_projections':self.join_input_projections,'state_width':self.state_width,'hidden_width':self.hidden_width,
             'payload_width':self.payload_width,'external_weight_count':len(self.weights),'external_projection_matrix_count':len(self.weight_names),'fp32_layer_barriers':max(0,len(self.layout)-1),
             'scope':'Program graph only; embedded weights belong to its engine, external projection pools belong to caller; canonical state and request buffers are separate. Not process peak.'}
 

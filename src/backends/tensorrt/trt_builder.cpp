@@ -6116,6 +6116,11 @@ namespace Garnet {
                         externalCompressedBindings[name]={ids[0],ids[1],bytes};external[name]=tensors[0];
                     }
                 }
+                if(keywordInt("joined_mlp_projections",0)!=0){
+                    if(keywordInt("joined_mlp_projections",0)!=1||(opName!="qwen35_linear_decoder_chunk"&&opName!="qwen35_full_decoder_chunk")||
+                        !external.count(keywordText("layer_prefix")+".mlp.gate_up_proj.weight"))
+                        throw std::invalid_argument("Joined decoder MLP requires an explicit validated compressed alias");
+                }
                 Qwen35TRTOps ops(*network,vectorWeights,[&](const std::string& name){
                     auto found=external.find(name);if(found==external.end())return GetOrCreateTRTWeight(name);
                     usedExternal.insert(name);return found->second;
@@ -6150,7 +6155,7 @@ namespace Garnet {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.linearDecoderChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
                         b["qwen35_conv_bind_active"],keywordText("layer_prefix"),keywordInt("key_heads",0),keywordInt("value_heads",0),
-                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0,keywordInt("joined_input_projections",0)!=0);
+                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0,keywordInt("joined_input_projections",0)!=0,keywordInt("joined_mlp_projections",0)!=0);
                 }else if(opName=="qwen35_linear_replay_chunk") {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.linearReplayChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
@@ -6162,7 +6167,7 @@ namespace Garnet {
                         b["qwen35_attention_bind_positions"],b["qwen35_attention_bind_slots"],b["qwen35_attention_bind_active"],
                         keywordText("layer_prefix"),keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),
                         keywordInt("rotary_dim",0),{keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},
-                        float(number("rope_theta",1e7)),float(number("eps",1e-6)),keywordInt("fused_attention",0)!=0);
+                        float(number("rope_theta",1e7)),float(number("eps",1e-6)),keywordInt("fused_attention",0)!=0,keywordInt("joined_mlp_projections",0)!=0);
                 }else if(opName=="qwen35_mtp_decoder_chunk") {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.mtpChunk(source,b["qwen35_mtp_bind_embedding"],b["qwen35_attention_bind_key"],b["qwen35_attention_bind_value"],

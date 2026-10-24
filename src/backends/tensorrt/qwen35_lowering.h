@@ -306,7 +306,7 @@ public:
         return cat({output,reshape(core[1],{batch,channels*kernel}),reshape(core[2],{batch,vh*kd*vd})},1);
     }
     T* linearDecoderChunk(T* x,T* history,T* state,T* active,const std::string& layer,
-        int kh,int vh,int kd,int vd,float eps,bool fusedDelta=false,bool retainInputs=false,bool register128=false,bool joinedInputs=false) {
+        int kh,int vh,int kd,int vd,float eps,bool fusedDelta=false,bool retainInputs=false,bool register128=false,bool joinedInputs=false,bool joinedMLPProjections=false) {
         if(retainInputs&&!fusedDelta)throw std::invalid_argument("Qwen3.5 retained projections require fused delta");
         if(register128&&(!fusedDelta||kd!=128||vd!=128||kh>64||vh>64))throw std::invalid_argument("Register delta requires fused128 dimensions and bounded heads");
         auto xs=shape(x),hs=shape(history);
@@ -351,7 +351,8 @@ public:
         T* attention=project(coreOutput,w(".out_proj.weight"));
         attention=select(reshape(active,{batch,tokens,1}),attention,scalar(0,3));
         T* residual=add(x,attention);
-        T* output=add(residual,mlp(norm(residual,layer+".post_attention_layernorm.weight",eps),layer+".mlp"));
+        auto* mlpInput=norm(residual,layer+".post_attention_layernorm.weight",eps);
+        T* output=add(residual,joinedMLPProjections?joinedMLP(mlpInput,layer+".mlp"):mlp(mlpInput,layer+".mlp"));
         std::vector<T*> packed={reshape(output,{batch,tokens*hidden}),reshape(history,{batch,channels*kernel}),reshape(state,{batch,vh*kd*vd})};
         if(retainInputs){
             packed.push_back(reshape(cast(qkv),{batch,tokens*channels}));packed.push_back(reshape(cast(z),{batch,tokens*vh*vd}));
@@ -383,7 +384,7 @@ public:
         return cat({reshape(result->getOutput(1),{batch,channels*kernel}),reshape(result->getOutput(2),{batch,vh*kd*vd})},1);
     }
     T* fullDecoderChunk(T* x,T* key,T* value,T* positions,T* slots,T* active,const std::string& layer,
-        int heads,int kv,int dim,int rotary,std::array<int,3> sections,float theta,float eps,bool fusedAttention=false) {
+        int heads,int kv,int dim,int rotary,std::array<int,3> sections,float theta,float eps,bool fusedAttention=false,bool joinedMLPProjections=false) {
         auto xs=shape(x),ks=shape(key);
         if(xs.size()!=3||xs[1]>128||ks.size()!=4||kv<=0||dim<=0)throw std::invalid_argument("Qwen3.5 full chunk dimensions invalid");
         const int batch=xs[0],tokens=xs[1],hidden=xs[2],capacity=ks[2],width=kv*capacity*dim;
@@ -446,7 +447,8 @@ public:
         auto* attention=project(coreOutput,weight(prefix+".o_proj.weight"));
         attention=select(reshape(active,{batch,tokens,1}),attention,scalar(0,3));
         T* residual=add(x,attention);
-        T* output=add(residual,mlp(norm(residual,layer+".post_attention_layernorm.weight",eps),layer+".mlp"));
+        auto* mlpInput=norm(residual,layer+".post_attention_layernorm.weight",eps);
+        T* output=add(residual,joinedMLPProjections?joinedMLP(mlpInput,layer+".mlp"):mlp(mlpInput,layer+".mlp"));
         return cat({reshape(output,{batch,tokens*hidden}),reshape(key,{batch,width}),reshape(value,{batch,width})},1);
     }
     T* mtpChunk(T* normalizedTarget,T* embedding,T* key,T* value,T* positions,T* slots,T* active,
