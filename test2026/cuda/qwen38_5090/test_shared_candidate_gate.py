@@ -13,6 +13,15 @@ def fixtures():
     return {'status':'smoke_passed','batch':1,'capacity':4096,'prefill_chunk':128,'decode_chunk':4,'cases':cases},records
 
 class SharedCandidateGateTests(unittest.TestCase):
+    def test_head_profile_requires_actual_counter_evidence(self):
+        golden,records=fixtures()
+        with self.assertRaises(ValueError):verify_records(golden,records,require_head_reuse=True)
+        for key,pair in records.items():
+            if key not in COLORS:pair[1]['study']['speculative_metrics']={'target_head_reuses':2,'target_head_evaluations':3,'target_verification_calls':3,'target_prefix_replays':2}
+        verify_records(golden,records,require_head_reuse=True)
+        for field,value in [('target_head_reuses',0),('target_head_evaluations',5),('target_prefix_replays',0),('target_verification_calls',True)]:
+            bad=copy.deepcopy(records);bad['s3-text-c1-r0'][1]['study']['speculative_metrics'][field]=value
+            with self.subTest(field=field),self.assertRaises(ValueError):verify_records(golden,bad,require_head_reuse=True)
     def test_complete_versioned_profile(self):
         self.assertEqual(verify_records(*fixtures())['retained_profile_goldens'],6)
 

@@ -5,7 +5,7 @@ GOLDEN_SHA256='634e6200658aa74467b575c8d4b5e8dde58bb7522d4de1e5ca813da7576acf4b'
 COLORS={'red':'red','green':'green','blue':'blue','bottom-blue':'blue'}
 KEYS=list(COLORS)+['s3-'+case+'-c1-r'+str(i) for case in ('text','image') for i in range(8)]
 
-def verify_records(golden,records):
+def verify_records(golden,records,require_head_reuse=False):
     if (golden.get('status'),golden.get('batch'),golden.get('capacity'),golden.get('prefill_chunk'),golden.get('decode_chunk'))!=('smoke_passed',1,4096,128,4):raise ValueError('Wrong golden profile')
     if set(records)!=set(KEYS):raise ValueError('All twenty target/MTP pairs required')
     for key,pair in records.items():
@@ -15,7 +15,13 @@ def verify_records(golden,records):
         if teacher.get('study',{}).get('generation_mode')!='greedy_target' or trial.get('study',{}).get('generation_mode')!='verified_mtp' or not isinstance(trial.get('study',{}).get('speculative_metrics'),dict):raise ValueError('Actual target/MTP execution required')
         if key in COLORS:
             if any(r['choices'][0]['message']['content'].strip().lower().rstrip('.')!=COLORS[key] for r in pair):raise ValueError('VLM semantic failure')
-        elif len(b['response_token_ids'])!=128:raise ValueError('Full128 output required')
+        else:
+            if len(b['response_token_ids'])!=128:raise ValueError('Full128 output required')
+            if require_head_reuse:
+                m=trial['study']['speculative_metrics']
+                fields=('target_head_reuses','target_head_evaluations','target_verification_calls','target_prefix_replays')
+                if any(type(m.get(field)) is not int or m[field]<0 for field in fields):raise ValueError('Actual verified-head counters required')
+                if not (m['target_head_reuses']>0 and m['target_head_reuses']==m['target_prefix_replays'] and m['target_head_evaluations']==m['target_verification_calls']):raise ValueError('Verified head reuse was not exercised as qualified')
     names=list(COLORS)+['s3-text-c1-r0-greedy','s3-image-c1-r0-greedy']
     if len(golden['cases'])!=12 or {row['key'] for row in golden['cases']}!=set(names):raise ValueError('Complete retained golden required')
     for name in names:
@@ -60,7 +66,7 @@ def main():
             if hashlib.sha256(original.read_bytes()).hexdigest()!=matched[0]['request_sha256']:raise ValueError('Retained request identity changed')
             body=json.loads(original.read_text());body.pop('study_target_only',None)
             if body!=bodies[0]:raise ValueError('Golden request differs')
-    gates=verify_records(golden,records)
+    gates=verify_records(golden,records,require_head_reuse=a.reuse_verified_head)
     for index,case in enumerate(('text','image')):
         key='s3-'+case+'-c1-r0';body,_=payload(case,key,301000+index*20000,'qwen38-27b-nvfp4',128,'jpeg','image-first','binary-grid')
         stem='stream-gate-'+case;result=request(url,body,out,stem,128)
