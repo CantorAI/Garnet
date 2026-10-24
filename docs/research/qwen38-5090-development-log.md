@@ -2748,3 +2748,21 @@ Local archive/replay methods retain the strict MTP source/workspace lineage and 
 ### Guarded physical B4 T8 launch preparation (2026-10-24; not launched)
 
 The earlier unrun B4 T8 retained-ID probe now has a fixed-folder launcher and lifecycle wrapper. It requires the current B2 MTP HTTP pilot to be terminal and independently verified with a hash-matching archive, plus unchanged native DLL/five build-source hashes and prior canonical numerical gates. GPU idle and owned SSD scratch checks remain mandatory. This prevents overlapping the live HTTP worker or moving to a larger batch without preserving its measurements. B4 T8 remains a separate unqualified numerical/memory candidate; only syntax and launch-argument checks have run.
+
+
+### B2 MTP HTTP pilot independently verified (2026-10-24)
+
+Original supervised job completed exit0, all eight cohorts. Archive bb2a7145657adaaa1ee1e694b026ef17c2db12757a35fbfbb1bc886745ae0d4e retains466 files/1,581,798 bytes. Local independent replay passed. The first remote replay failed to import compare_http_runs because the result directory lacked its module search path; a second replay with the retained methods directory on sys.path passed unchanged data and checks. Both machines verify64 measured SSE/worker pairs, matched request bytes/transport/prompt-output counts against both ordinary references, eight HTTP quality cases, two stream oracles and four serialization regression captures. No GPU rerun was needed for the replay import failure.
+
+| Cohort | TTFT ms | Decode tok/s | Aggregate tok/s | MTP/greedy requests |
+|---|---:|---:|---:|---:|
+| text-c1 | 159.7317 | 28.080875 | 27.324550 | 0/8 |
+| text-c2 | 2475.9712 | 39.994733 | 42.790462 | 4/4 |
+| text-c4 | 2812.1804 | 51.376502 | 94.770809 | 8/0 |
+| text-c8 | 4009.5516 | 53.353790 | 97.993738 | 8/0 |
+| image-c1 | 339.0321 | 27.984452 | 26.254975 | 0/8 |
+| image-c2 | 352.6613 | 52.178424 | 89.342210 | 8/0 |
+| image-c4 | 3192.9900 | 52.237758 | 88.248960 | 8/0 |
+| image-c8 | 4565.5161 | 54.433241 | 90.708603 | 8/0 |
+
+C4/C8 queue physical B2 groups. Text C2 contains four MTP requests and four greedy fallback requests, so its cohort median is not an isolated MTP measurement. C1 is entirely greedy. C8 aggregate versus earlier greedy pilot is text 1.792949x; image 1.728579x; these are separate bounded pilots, not a controlled causal or repeated-study speedup claim. Faster ordinary reference C8 aggregate remains445.768458 text/439.864319 image tok/s. Target2x is unmet. Sampled adapter-wide measured peak reaches31,658,659,840 bytes; not an instantaneous process-attributed peak. Actual4K prompts, broad quality, repeats and tuned fastest reference configurations remain pending.
