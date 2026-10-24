@@ -18,6 +18,10 @@ build_path = root / "results/native-full-attention-fp8-build-attempt1/manifest.j
 build = json.loads(build_path.read_text())
 assert build["status"] == "native_full_attention_policy_build_finished_unqualified" and build["exit_code"] == 0
 digest = build["library_sha256"]
+control_path = root / "results/full-attention-policy-control-stages-attempt1-verified.json"
+control = json.loads(control_path.read_text())
+assert control["status"] == "full_attention_policy_default_control_verified"
+assert control["all_171_arrays_preserve_old_build"] and control["library_sha256"] == digest
 for name, expected in build["source_sha256"].items(): assert hashlib.sha256((root / "Garnet" / name).read_bytes()).hexdigest() == expected
 assert hashlib.sha256(library.read_bytes()).hexdigest() == digest
 proof = root / "results/native-canonical-fp8-prefix4-hidden-geometry-attempt1-verified.json"
@@ -43,7 +47,7 @@ workflow = {"status": "running", "library_sha256": digest,
 code = run([sys.executable, str(methods / "monitor_native_probe.py"), "--study", str(root),
     "--output", str(out / "resources"), "--", "cmd.exe", "/d", "/c", str(launcher),
     str(out / "native"), str(cache)], out / "ledger", "correctness", "first-attention-real-stage-primary-gate",
-    [library, launcher, probe, proof, receipt, Path(__file__),
+    [library, launcher, probe, proof, receipt, control_path, Path(__file__),
      build_path, root / "results/first-attention-stage-witness/manifest.json"])
 workflow["exit_code"] = code
 workflow["status"] = "process_failed" if code else "completed_needs_independent_replay"
