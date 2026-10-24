@@ -10,7 +10,7 @@ for name in names[:2]:
 stop=r/'results/native-mtp3-decode-only-intentional-stop.json'
 assert json.loads(stop.read_text(encoding='utf8'))['taskkill_exit']==0
 files=[p for name in names for p in (r/'results'/name).rglob('*') if p.is_file()]
-root_names=['run-nvfp4-decode-only-server.py','run-nvfp4-decode-only-http-workflow.py','run-nvfp4-decode-only-http-candidate.py','serve-nvfp4-decode-only-worker.bat','stop-nvfp4-decode-only-worker.py','archive-nvfp4-decode-only-http.py']
+root_names=['run-nvfp4-decode-only-server.py','run-nvfp4-decode-only-http-workflow.py','run-nvfp4-decode-only-http-candidate.py','serve-nvfp4-decode-only-worker.bat','stop-nvfp4-decode-only-worker.py','archive-nvfp4-decode-only-http.py','repeat-nvfp4-decode-only-failures.py']
 files += [r/n for n in root_names]+[stop,r/'results/nvfp4-decode-only-full-independent-verification.json']
 p=r/'Garnet/test2026/cuda/qwen38_5090'
 files += [p/n for n in ['native_http_bridge.py','native_stream_worker.py','monitor_native_probe.py','benchmark_stream.py','probe_shared_mtp_sequences.py','run_logged.py','joined_model_gates.py','validate_native_mtp_http.py','compare_http_runs.py','sample_vram.py','metrics.py','native_worker_profile.py','native_worker_io.py','native_prompt.py','run_shared_mtp_candidate.py']]
