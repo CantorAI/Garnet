@@ -1105,3 +1105,21 @@ Actual program stats show12 NVFP4 projection weights,13 FP8 projection weights, 
 The next research-only factory uses existing CUDAPackedDecoder with embedded projections, enforcing equal prefill/decode chunk16 and rejecting BF16 joined pools so no second compressed model is retained. Full64-layer construction must report192 NVFP4 and208 FP8 projections and zero external BF16 inputs; the separate output head remains native W4A4. Ready metadata now records the selected decoder layout. A fresh named result directory preserves the original HTTP pilot; the same prompt/native-output/streaming gates precede timing. Canonical state/request buffers remain explicit. Corrected packed owned-byte accounting includes separate embedding/untied-head/native-head-workspace allocations consistently with the layer decoder; NVML remains the authority for sampled adapter-wide peak.
 
 Full64-layer packed GPU construction and HTTP regression are pending. General serving admission, precision/broader quality equivalence, native batch/concurrency admission, tuned vLLM, INT4,4B and2x remain incomplete.
+
+
+## P047 - 2026-10-23: full packed pilot completed; no decode improvement
+
+Source ec6b3519b04b0cdce3a61449705a245ee3a36462 completed full64-layer packed construction and HTTP validation. All four saved native output-ID sequences and reference prompt-ID sequences remain exact; semantic4/4 and SGLang exact3/4 stay separate. Both streaming gates passed. Run08421c581fd44b85a9a653b85a5aea49 completed exit0 with the same seed3/JPEG/image-first128-token maximum, eight measured requests and two excluded warmups per case.
+
+|case|TTFT median ms|decode median tokens/s|cohort output tokens/s|actual tokens|sampled peak bytes|
+|---|---:|---:|---:|---:|---:|
+|text|123.04409999978816|34.68293228334323|33.79564399165833|1024|24512122880|
+|image|260.10540000061155|34.64965096686278|32.53912955051301|1024|24518414336|
+
+This single pilot did not improve decode versus the preceding per-layer HTTP run36.10/36.02tokens/s. Sampled adapter-wide maxima are about3.29GB lower, but this is not evidence of a2x speedup or repeated statistical significance. Sampling errors were empty; raw per-cohort intervals and scope are retained. The packed path remains optional. Source and binaries were frozen during measurement; the large four-layer archive transfer finished and was verified before these timing cohorts. The component archive verified113835503bytes/17entries, SHA2561788367ae479f8045ae6046bf6ad53b582b973cca0b33ca0e32fd9343550de4a.
+
+After benchmark exit0, only verified packed bridge2832/parent9016 was stopped, with command/parent identity recorded. Server parent records intentional operator termination4294967295. Child14360 disappearance and GPU106MiB/0% were subsequently observed. Protected unrelated processes were untouched. Packed raw/source/command archive SHA256724ee7148d369f042b5468108c266d46bd6404db0a3b39cad2e1724d63ebaa91f; local download verification pending at this entry.
+
+Prepared a separate vLLM decode-graph candidate using installed audited FULL_DECODE_ONLY mode, capture sizes1/2/4/8, bounded compilation workers and explicit4GiB cache budget. That budget alone does not prove eight simultaneous4K admissions: inspect resolved allocation and test admission before claiming it. Eager baseline is preserved. No vLLM graph performance is claimed before actual startup/quality/streaming/timing.
+
+Read-only installed-source audits confirm vLLM returns prompt IDs at response top level and output IDs in choice.token_ids, unlike SGLang choice.prompt_token_ids/response_token_ids. Its shared protocol supports continuous_usage_stats. Extended the JPEG reference probe with an explicit engine selector, preserving default SGLang request bytes and omitting its unsupported prompt-ID request flag for vLLM. Two fixtures reject missing/wrong-layout/boolean/out-of-range IDs and context overflow. All48 CPU study tests pass. No new code was resynced into the live native run. Next: collect the vLLM graph reference, then profile projection/kernel costs and assess the current Garnet MTP path; removing64 host graph submissions alone did not deliver the target.
