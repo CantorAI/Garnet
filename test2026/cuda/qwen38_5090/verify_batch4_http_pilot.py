@@ -20,6 +20,12 @@ with zipfile.ZipFile(archive) as z:
     doc = lambda name: json.loads(z.read(name))
     base = 'results/batch4-http-pilot-attempt1/'
     native = base+'native/'
+    observer = doc(base+'auxiliary-cim-observation.json')
+    assert observer['capture_method'] == 'Transcribed from the SSH helper command JSON output; not a raw timestamped CIM export.'
+    assert not observer['exact_observation_timestamp_recorded']
+    assert observer['observed_before_completed_cohort'] == 'text-c2'
+    assert len(observer['records']) == 3
+
     quality = doc(native+'quality.json')
     assert quality['status'] == 'passed' and len(quality['cases']) == 13 and len(quality['stream_cases']) == 2
     for case in quality['cases']:
@@ -163,6 +169,6 @@ with zipfile.ZipFile(archive) as z:
         'actual_dispatch_by_cohort':dispatch_by_cohort,
         'dispatch_group_sizes':{str(n):sum(g['real_rows']==n for g in dispatch) for n in (1,2,3,4)},
         'run':run,'references':references,'comparison':compare(run,references),'raw_cohorts':manifest['cohorts'],
-        'two_x_established':False,'scope':'One B4 T8 MTP0 fixed-batch pilot; C8 queues physical B4 groups. Bounded quality; ordinary references, tuning/repeats/4K/broad quality pending.'}
+        'auxiliary_observer_during_timing':True,'clean_repeat_required':True,'two_x_established':False,'scope':'One B4 T8 MTP0 fixed-batch pilot; C8 queues physical B4 groups. Extra auxiliary CIM observer and sampling gaps retained; clean repeat required. Bounded quality; ordinary references, tuning/repeats/4K/broad quality pending.'}
 (out/'batch4-http-pilot-attempt1-verified.json').write_text(json.dumps(result,indent=2),encoding='utf8')
 print(json.dumps({k:v for k,v in result.items() if k not in ('run','references','raw_cohorts')},indent=2))

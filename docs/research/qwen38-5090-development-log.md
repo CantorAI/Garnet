@@ -2805,3 +2805,10 @@ The current B4 T8 HTTP pilot remains live. A local B4 T4 retained-ID candidate r
 ### B4 HTTP live observer note (2026-10-24)
 
 The original pilot remains live, with all13 HTTP quality cases/two streams/four serialization captures passed and the first three text timing cohorts recorded. Sampling gaps occur in retained timing/resource data; no causal root is proven. One auxiliary read-only Windows GPUAdapterMemory CIM query was issued after the observed textC1 gap and returned before textC2 completion was observed. Its counter values and command are transcribed in evidence/batch4-http-cim-observation.json (SHA256 9f749a6b78c20d15e931fc9727de60af70c6f13f24ac46990a827d7b963ef7f3). An exact observation timestamp was not captured; this is not a raw timestamped export, process attribution, DXGI budget or eviction evidence. The extra observer differs from baseline monitoring and is retained as a possible measurement confound. Do not silently discard pauses or claim clean repeated causal speedups from this pilot. No further such observer queries are planned during the live measurements.
+
+
+### B4 pilot observer retention and T4 replay preparation (2026-10-24)
+
+Local B4 HTTP archive now requires the auxiliary CIM observation sidecar, and metric replay explicitly marks an extra observer during timing and clean-repeat requirement. This preserves the limitation rather than silently comparing a changed monitoring protocol as a clean repeat. Original job remains live; archive/replay method edits are local and do not alter the executing worker.
+
+The unrun B4 T4 candidate has local archive/replay preparation. It binds the prior B4 T8 ID proof and latest B4 HTTP archive, checks the declared T8-to-T4 source transformation against retained source, and retains strict full output-ID equality across both resets. No numerical, memory or performance result exists for T4 yet. Syntax validation passed.

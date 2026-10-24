@@ -21,6 +21,7 @@ build = json.loads(build_path.read_text())
 library = hashlib.sha256((root / "build/bin/garnet.dll").read_bytes()).hexdigest()
 assert library == build["library_sha256"] == workflow["library_sha256"]
 files = [p for p in folder.rglob("*") if p.is_file()]
+assert (folder / "auxiliary-cim-observation.json") in files, "Retain the extra live observer before archival"
 files += [root / n for n in ("Garnet/test2026/cuda/qwen38_5090/run_batch4_http_pilot.py", "test-batch4-http-pilot.bat")]
 files += [results / "unicode-transport-repair2-verified.json", results / "batch-http-serialization-regression.json", results / "batch-http-pilot-attempt1-failure-verified.json", results / "batch4-stream-protocol-attempt1-verified.json", root / "models/Qwen3.8-27B-NVFP4/config.json", root / "serve-native-batch4-shared-worker.bat", results / "shared-full-b4-t8-attempt1-verified.json"]
 files += [root / "Garnet" / n for n in list(build["source_sha256"]) + [
