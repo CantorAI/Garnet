@@ -848,3 +848,29 @@ hashes and command ledgers. Remote/local SHA256 matches:
 Local ZIP integrity check passed. Both immutable native archives and the initial
 SGLang raw archive are available with an evidence index in the chat outputs.
 No GPU benchmark/reference server was left running by these diagnostics.
+
+## P033 - 2026-10-23: matched JPEG reference and full VLM probe
+
+Restarted the same initial/eager SGLang profile only after native GPU diagnostics
+had closed. Matched reference job matched-jpeg-vlm-reference-smoke completed exit0:
+solid red/green/blue JPEGs returned Red/Green/Blue, and a red-top/blue-bottom JPEG
+returned blue to a bottom-half question. Each image uses the same224px JPEG bytes
+saved for native input, yields64 image tokens and requests disabled thinking.
+The reference returns exact prompt/generated token IDs, image/wire/response hashes
+and usage. This four-case color/spatial smoke is not broad VLM quality or timing.
+
+Reference image content is explicitly before question text, matching Garnet's
+current image-first request formatting. Earlier PNG measurements had text-first
+content and must not be silently treated as these matched requests. The native
+probe verifies full prompt tokenization/image hashes before model construction,
+uses the normal BF16 vision tower and all64 mixed decoder layers, resets state
+between cases and compares both generated token IDs and semantic colors. It
+remains a correctness probe, not general serving admission.
+
+A separate exploratory native-call text pilot reuses the same model load and
+the eight exact text/c1 request bodies from SGLang run da2e6f2275164c5d8be1859f62fc26bf.
+It records actual greedy IDs and synchronized per-token monotonic timestamps,
+one excluded warmup, eight32-token requests, batch1 and4K capacity. This includes
+native tokenization/reset/prefill/sampling and excludes HTTP; its TTFT/throughput
+must not be represented as a matched client HTTP result or proof of2x. It is
+intended to identify native bottlenecks before further optimization. Results pending.
