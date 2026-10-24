@@ -20,7 +20,7 @@ for key in keys:
 report={'status':'starting','source':source_identity(),'batch':batch,'capacity':4096,'chunk':16,
  'garnet_dll_sha256':hashlib.sha256((root/'build/bin/garnet.dll').read_bytes()).hexdigest(),
  'cases':[],'oracles':[{k:c[k] for k in ('key','oracle_sha256')} for c in cases],
- 'mtp_depth':3,'draft_chunk':4,'scope':'Research B2 MTP3 packed mixed backend, ragged text/image/early EOS against retained B1 full IDs. Inputs use saved oracle prompt IDs; no tokenizer frontend, HTTP, MTP, broad quality or throughput claim.'}
+ 'mtp_depth':3,'draft_chunk':4,'scope':'Research B2 MTP3 packed mixed backend, ragged text/image/early EOS against retained B1 full IDs. Inputs use saved oracle prompt IDs; no tokenizer frontend, HTTP, broad quality or throughput claim. Complete target state hashes must match same-decoder ordinary generation.'}
 path.write_text(json.dumps(report,indent=2));decoder=None;vision=None;speculative=None
 try:
  assert batch == 2 and os.environ.get('GARNET_FP8_FULL_ATTN_M32_CANONICAL') == '1'
@@ -46,6 +46,18 @@ try:
  vision=create_cuda_vision(str(checkpoint),config,16,16);vision.graph.enable_cuda_graph(True)
  tokenizer=garnet.tokenizer();tokenizer.open(str(checkpoint));stops=[tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
  speculative=CUDASpeculativeSession(decoder,str(checkpoint),stops,3,head_candidates=0,prefix_replay=True,draft_chunk_size=4)
+ width=decoder.programs[16].state_width
+ sizes={min(1048576,width-offset) for offset in range(0,width,1048576)}
+ hash_buffers={size:io.zeros([batch,size]) for size in sizes}
+ def state_hashes():
+  digests=[hashlib.sha256() for _ in range(batch)]
+  for offset in range(0,width,1048576):
+   size=min(1048576,width-offset);part=hash_buffers[size]
+   io.slice_into(decoder.state,offset,part)
+   for row in range(batch):digests[row].update(bytes(io.finite_f32_bytes(io.row(part,row))))
+  return {'state_row_sha256':[h.hexdigest() for h in digests],
+    'last_hidden_sha256':hashlib.sha256(bytes(io.finite_f32_bytes(decoder.last_hidden))).hexdigest(),
+    'slots':list(decoder.slots),'state_words_per_row':width}
  groups=[cases[:2],cases[2:]]
  for group_index,group in enumerate(groups):
   for repeat in range(2):
@@ -68,16 +80,30 @@ try:
    lengths=[len(r['ids']) for r in rows];positions=[r['positions']+[[0,0,0]]*(count-len(r['ids'])) for r in rows]
    limits=[c['body']['max_tokens'] for c in group]
    assert len(set(limits))==1,'This bounded MTP probe requires equal per-row output limits'
+   prediction=decoder.prefill_sequence(hidden,positions,lengths)
+   ordinary=[[] for _ in rows];active=[1]*batch;current=[r['current'] for r in rows]
+   for step in range(limits[0]):
+    for row in range(batch):
+     if active[row]:
+      ordinary[row].append(prediction[row])
+      if prediction[row] in stops or len(ordinary[row])==limits[row]:active[row]=0
+    if not any(active):break
+    prediction=decoder.step(prediction,active,[[v]*3 for v in current])
+    current=[v+flag for v,flag in zip(current,active)]
+   ordinary_state=state_hashes()
+   speculative.reset()
    speculative.prefill(hidden,positions,lengths,[r['current'] for r in rows])
    mtp_result=speculative.generate(limits[0])
    generated=[list(v) for v in mtp_result['generated_token_ids']]
    for row,stop in enumerate(mtp_result['stop_token_ids']):
     if stop is not None:generated[row].append(stop)
+   mtp_state=state_hashes()
    expected=[c['choice']['response_token_ids'] for c in group]
    result={'group':group_index,'repeat':repeat,'keys':[c['key'] for c in group],'prompt_lengths':lengths,'limits':limits,
-    'generated_ids':generated,'expected_ids':expected,'speculative_metrics':mtp_result['speculative_metrics'],'mtp_memory':speculative.memory_info(),'exact_b1_ids_match':generated==expected,'decoder_memory':decoder.memory_info()}
+    'generated_ids':generated,'expected_ids':expected,'ordinary_ids':ordinary,'ordinary_state':ordinary_state,'mtp_state':mtp_state,'full_target_state_exact':ordinary_state==mtp_state,'speculative_metrics':mtp_result['speculative_metrics'],'mtp_memory':speculative.memory_info(),'exact_b1_ids_match':generated==expected,'decoder_memory':decoder.memory_info()}
    report['cases'].append(result);path.write_text(json.dumps(report,indent=2))
-   assert generated==expected,'Batched greedy output differs from B1 oracle; raw IDs saved'
+   assert generated==expected==ordinary,'Batched greedy output differs from B1 oracle; raw IDs saved'
+   assert ordinary_state==mtp_state,'MTP target state differs from ordinary; strict hashes retained'
    print('BATCH_BACKEND_FULL_IDS_PASS',batch,group_index,repeat,flush=True)
  report['status']='backend_smoke_completed';report['vision_memory']=json.loads(vision.graph.stats_json());path.write_text(json.dumps(report,indent=2))
 except Exception as error:
