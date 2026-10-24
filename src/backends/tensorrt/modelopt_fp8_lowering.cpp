@@ -59,17 +59,25 @@ ITensor* TRTBuilder::ProjectModelOptFP8(ITensor* input,ITensor* weight){
     const char* canonicalPolicy=std::getenv("GARNET_FP8_GDN_M32_CANONICAL");
     if(canonicalPolicy&&*canonicalPolicy&&std::strcmp(canonicalPolicy,"0")&&std::strcmp(canonicalPolicy,"1"))
         throw std::invalid_argument("GARNET_FP8_GDN_M32_CANONICAL must be0 or1");
-    // Full-attention o_proj has the same dimensions; only the actual GDN
-    // projection family has supplied the diagnostic witness for this option.
-    // External inputs have generic binding names; checkpoint identity is
-    // retained at registration for both embedded and caller-owned weights.
+    // Separate default-off policies use validated logical checkpoint names.
+    // Full-attention integration still requires real stage and model gates.
+    const char* attentionPolicy=std::getenv("GARNET_FP8_FULL_ATTN_M32_CANONICAL");
+    if(attentionPolicy&&*attentionPolicy&&std::strcmp(attentionPolicy,"0")&&std::strcmp(attentionPolicy,"1"))
+        throw std::invalid_argument("GARNET_FP8_FULL_ATTN_M32_CANONICAL must be0 or1");
     const std::string& weightName=p.logicalName;
     const std::string gdnSuffix=".linear_attn.out_proj.weight";
     const bool gdnOutput=weightName.size()>=gdnSuffix.size()&&
         weightName.compare(weightName.size()-gdnSuffix.size(),gdnSuffix.size(),gdnSuffix)==0;
-    const bool canonicalGdnM32=canonicalPolicy&&!std::strcmp(canonicalPolicy,"1")&&
-        gdnOutput&&rows==32&&p.rows==5120&&p.columns==6144;
-    auto* plugin=new ModelOptFP8Plugin(p.rows,p.columns,p.weightScale,p.inputScale,canonicalGdnM32);ownedPlugins.push_back(plugin);
+    const auto suffixMatches=[&](const char* suffix){
+        const size_t count=std::strlen(suffix);
+        return weightName.size()>=count&&weightName.compare(weightName.size()-count,count,suffix)==0;
+    };
+    const bool attentionProjection=(suffixMatches(".self_attn.q_proj.weight")&&p.rows==12288&&p.columns==5120)||
+        (suffixMatches(".self_attn.o_proj.weight")&&p.rows==5120&&p.columns==6144);
+    const bool canonicalM32=rows==32&&(
+        (canonicalPolicy&&!std::strcmp(canonicalPolicy,"1")&&gdnOutput&&p.rows==5120&&p.columns==6144)||
+        (attentionPolicy&&!std::strcmp(attentionPolicy,"1")&&attentionProjection));
+    auto* plugin=new ModelOptFP8Plugin(p.rows,p.columns,p.weightScale,p.inputScale,canonicalM32);ownedPlugins.push_back(plugin);
     ITensor* inputs[]={flatten->getOutput(0),weight};
     auto* layer=network->addPluginV2(inputs,2,*plugin);
     if(!layer)throw std::runtime_error("Native FP8 projection layer failed");
