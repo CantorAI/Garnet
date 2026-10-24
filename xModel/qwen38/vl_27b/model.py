@@ -84,6 +84,23 @@ def create_cuda_decoder(checkpoint,config,capacity,batch=1,chunk_size=1,fused_de
         decoder.close();raise
 
 
+def create_cuda_packed_decoder(checkpoint,config,capacity,batch=1):
+    """Research candidate: one embedded mixed program, one16-token profile."""
+    validate_cuda_profile(config,capacity,batch)
+    import json
+    from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
+    decoder=CUDAPackedDecoder(checkpoint,config['text_config'],batch,capacity,16,16,
+        flat_concat=True,embedded_projection_weights=True)
+    try:
+        decoder.io.enable_nvfp4_head(True)
+        stats=json.loads(decoder.programs[16].graph.stats_json())
+        if stats['native_nvfp4_projection_weights']!=192 or stats['native_fp8_projection_weights']!=208 or stats['external_bf16_weight_inputs']!=0:
+            raise ValueError('Embedded whole-program mixed projection contract mismatch')
+        return decoder
+    except:
+        decoder.close();raise
+
+
 def create_cuda_vision(checkpoint,config,gh,gw):
     validate_cuda_profile(config,4096,1)
     from xModel.qwen35.vl_0_8b.cuda_decoder import CUDAImageEncoder

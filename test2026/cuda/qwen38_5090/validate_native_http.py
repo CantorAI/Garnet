@@ -6,8 +6,8 @@ from run_logged import source_identity
 from benchmark_stream import payload,request
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--study',type=Path,required=True);a=p.parse_args();root=a.study
- out=root/'results/native-http';out.mkdir(exist_ok=True);url='http://127.0.0.1:18082';deadline=time.monotonic()+1200
+ p=argparse.ArgumentParser();p.add_argument('--study',type=Path,required=True);p.add_argument('--output',type=Path);a=p.parse_args();root=a.study
+ out=a.output or root/'results/native-http';out.mkdir(exist_ok=True);url='http://127.0.0.1:18082';deadline=time.monotonic()+1200
  while True:
   try:
    with urlopen(url+'/health',timeout=5) as response:

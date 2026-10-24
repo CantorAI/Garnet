@@ -78,7 +78,10 @@ class Handler(BaseHTTPRequestHandler):
         raw=json.dumps(body).encode();self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(raw)));self.end_headers();self.wfile.write(raw)
     def do_GET(self):
         if self.path!='/health':self.reply(404,{'error':'Unknown study endpoint'});return
-        self.reply(200 if self.server.worker.healthy() else 503,{'research_only':True,'batch':1,'context_capacity':4096,'queued_concurrency':True})
+        healthy=self.server.worker.healthy()
+        info={'research_only':True,'batch':1,'context_capacity':4096,'queued_concurrency':True}
+        if healthy:info['native_worker']=self.server.worker.ready_info
+        self.reply(200 if healthy else 503,info)
     def do_POST(self):
         if self.path!='/v1/chat/completions':self.reply(404,{'error':'Unknown study endpoint'});return
         try:

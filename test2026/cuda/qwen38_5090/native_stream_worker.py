@@ -16,9 +16,13 @@ stops=[tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
 decoder=None;vision=None
 try:
     vision=create_cuda_vision(checkpoint,config,16,16)
-    decoder=create_cuda_decoder(checkpoint,config,4096,chunk_size=16,fused_delta=True,fused_attention=True)
+    packed_mode=os.environ.get('GARNET_STUDY_PACKED','0')=='1'
+    if packed_mode:
+        from xModel.qwen38.vl_27b.model import create_cuda_packed_decoder
+        decoder=create_cuda_packed_decoder(checkpoint,config,4096)
+    else:decoder=create_cuda_decoder(checkpoint,config,4096,chunk_size=16,fused_delta=True,fused_attention=True)
     decoder.enable_cuda_graph(True);vision.graph.enable_cuda_graph(True)
-    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':16,'precision':'mixed NVFP4/FP8; BF16 vision','exact_vlm_parity_gate':'open'})
+    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':16,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','exact_vlm_parity_gate':'open'})
     for item in requests():
         key=item['id'];body=item['body'];started=time.monotonic()
         try:

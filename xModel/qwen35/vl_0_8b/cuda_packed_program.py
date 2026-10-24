@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Unwired whole-decoder program with one canonical packed state input.
 
-Large matrices remain readonly inputs from the caller's single GPU pool.
+By default large matrices are readonly inputs from the caller's BF16 pool.
+The opt-in embedded mode uses checkpoint constants and native mixed lowering.
 Layer boundaries explicitly materialize FP32 hidden values. This component
 does not yet replace the serving decoder or its prefix-commit helper.
 """
@@ -117,7 +118,7 @@ class CUDAPackedDecoderProgram:
         if self.graph is None:raise ValueError('Packed decoder program is closed')
         return {'graph':json.loads(self.graph.stats_json()),'embedded_projection_weights':self.embedded_projection_weights,'register_delta_128':self.register_delta_128,'flat_concat':self.flat_concat,'joined_input_projections':self.join_input_projections,'state_width':self.state_width,'hidden_width':self.hidden_width,
             'payload_width':self.payload_width,'external_weight_count':len(self.weights),'fp32_layer_barriers':max(0,len(self.layout)-1),
-            'scope':'Program graph only; canonical state, request buffers and the one projection pool belong to caller. Not process peak.'}
+            'scope':'Program graph only; embedded weights belong to its engine, external projection pools belong to caller; canonical state and request buffers are separate. Not process peak.'}
 
     def close(self):
         if self.graph is not None:self.graph.close()
