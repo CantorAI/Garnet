@@ -2895,3 +2895,10 @@ Proposed implementation, contingent on subsequent evidence and qualification:
 5. Requalify real text/image outputs and full ordinary/MTP target-state hashes under4096 capacity before streaming/HTTP/performance. Measure GPU memory, host RSS/transfer costs, TTFT/decode/real concurrency including image encoding. Do not precompute visual inputs outside measured work or reduce supported context to manufacture a gain.
 
 The named2.54GB allocation motivates the design; no whole-process saving, equivalence, latency or2x claim is made. If the option is implemented it needs a new native build receipt and fresh gates; existing3c3207 proofs do not automatically qualify a changed DLL. Current deferred-state experiment remains isolated.
+
+
+### Deferred-state B2 MTP strict gate independently passed (2026-10-24)
+
+Original job closed exit0. Archive76602b940062fca89c22ea65266f2443e89e5a7f028df8067914cbe813aff1d0 retains43 files/145,722 bytes. Both independent replays pass eight retained B1 output-ID comparisons and four complete ordinary/MTP target-state hash witnesses, closed transactions, declared probe transformation, six byte-identical core Python methods, native build/source/proof/resource/terminal lineage. Deferred canonical backup reports zero in all four cases versus1,391,460,352 bytes in each retained non-deferred case. Sampled adapter-wide peaks are30,292,647,936 versus31,658,659,840 bytes across separate correctness runs; this observed difference is not an instantaneous/process-attributed saving or performance claim. Raw state arrays are not retained; arithmetic replay remains limited to source/hash witnesses.
+
+A separate B2 deferred-MTP streaming worker now opts into the existing flag and requires this strict proof. It preserves T16 target/T4 draft/128 MiB builder, equal-two-real-row MTP policy, single/unequal-limit greedy fallback and the same six-group/ten-request protocol. Ready metadata records deferred mode. Syntax validation passed; no streaming or timing admission yet. No native/common algorithm/default is changed.
