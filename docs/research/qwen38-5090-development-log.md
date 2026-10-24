@@ -2830,3 +2830,8 @@ Original job completed exit0/all eight cohorts. Archive 97c0c3e617c253d5d56fdbf9
 | image-c8 | 7227.8325 | 21.763047 | 52.382222 | 1/0/1/1 |
 
 C8 text83.409857/image52.382222 tok/s is below the earlier B2 MTP pilot97.993738/90.708603 and the faster ordinary references445.768458/439.864319; these are different execution profiles and separate pilots, not a causal batch-size ablation. Target2x remains unmet. Only after both replays and original closure, guarded shared-full-b4-t4-attempt1 was launched on unchanged native DLL/source, reducing token slots from8 to4. No T4 numerical or speed result exists at launch. Broader quality/repeats/actual4K/tuned references remain pending.
+
+
+### B4 T4 conditional streaming candidate (2026-10-24; not run)
+
+Original shared-full-b4-t4-attempt1 remains live and unqualified. A separate local stream candidate changes only the guarded retained-ID proof and target graph/ready token dimensions from8 to4 relative to the B4 T8 greedy worker. It retains the same seven-group/seventeen-request protocol, dummy-row inactivity, reset/early-stop handling and exact prompt/output-ID requirements. The wrapper requires successful terminal original T4 job and independent T4 ID proof before construction. Native DLL, quantization, image path, capacity4096 and request corpus are unchanged. Syntax checks passed; no source is deployed over the live worker and no T4 stream/timing result is claimed.
