@@ -19,7 +19,7 @@ assert c['hidden_size']==5120 and c['layer_types']==['linear_attention'] and c['
 ids=saved['input_prompt_ids'];assert len(ids)==41;ids=ids[:16]
 normal_width=16*5120+40960+786432
 stages=[('masked_input',81920),('input_norm',81920),('qkv',163840),('z',98304),('beta',768),('a',768),('gdn_gated_output',98304),('attention_output',81920),('residual',81920),('mlp_input_norm',81920),('output_hidden',81920)]
-report={'status':'starting','source':source_identity(),'config_sha256':saved['config_sha256'],'historical_archive_sha256':saved['archive_sha256'],'input_ids':ids,'stages':stages,'files':[],'cases':[],'scope':'Two prefix1 B1/B2 profiles, actual first16 prompt embeddings, zero initial state. Primary output/state must match ordinary prefix graph before stage attribution. Additional exports may change TensorRT fusion; failure is retained and disqualifies attribution. No timing/fullmodel/batch2 or2x admission.'}
+report={'status':'starting','source':source_identity(),'config_sha256':saved['config_sha256'],'historical_archive_sha256':saved['archive_sha256'],'input_ids':ids,'input_source':'Fresh buffer written from retained prompt embedding token rows, never decoder.hidden after execution','stages':stages,'files':[],'cases':[],'scope':'Two prefix1 B1/B2 profiles, actual first16 prompt embeddings, zero initial state. Primary output/state must match ordinary prefix graph before stage attribution. Additional exports may change TensorRT fusion; failure is retained and disqualifies attribution. No timing/fullmodel/batch2 or2x admission.'}
 frames={};decoder=graph=None
 
 def save():path.write_text(json.dumps(report,indent=2))
@@ -39,10 +39,15 @@ try:
  for batch in (1,2):
   decoder=CUDAPackedDecoder(str(checkpoint),c,batch,4096,16,16,flat_concat=True,embedded_projection_weights=True);decoder.enable_cuda_graph(True);io=decoder.io
   embedded=io.embedding(ids);tokens=[io.stack_rows([io.row(embedded,t)]*batch) for t in range(16)]
+  hidden=io.zeros([batch,16,5120])
+  for token,value in enumerate(tokens):io.write_chunk_token(value,hidden,token)
+  capture(io,io.storage_view(hidden,[batch,81920]),batch,-1,'prompt_input')
+  decoder.reset();decoder.chunk_hidden(tokens,[[1]*batch for _ in range(16)],[[[t]*3 for t in range(16)] for _ in range(batch)],False)
+  report.setdefault('warmup_runs',[]).append({'batch':batch,'ordinary':1,'stage':3})
   for repeat in range(2):
    decoder.reset();decoder.chunk_hidden(tokens,[[1]*batch for _ in range(16)],[[[t]*3 for t in range(16)] for _ in range(batch)],False)
    capture(io,decoder.last_packed,batch,repeat,'ordinary')
-  hidden=io.clone(decoder.hidden);history=io.zeros([batch,10240,4]);state=io.zeros([batch,48,128,128]);active=io.from_host([1.0]*(batch*16),[batch,16])
+  history=io.zeros([batch,10240,4]);state=io.zeros([batch,48,128,128]);active=io.from_host([1.0]*(batch*16),[batch,16])
   symbols=[tensor.input('stage_'+str(i),shape=shape,dtype=tensor.float32) for i,shape in enumerate(([batch,16,5120],[batch,10240,4],[batch,48,128,128],[batch,16]))]
   if batch==1:
    rejected=[]
@@ -55,10 +60,16 @@ try:
     rejected.append({'flag':flag,'batch':bad_batch,'time':bad_time,'rejected':failed,'error':reason});report['invalid_profiles']=rejected;save()
     assert failed,'Native binary ignored or accepted unsupported stage diagnostic profile'
   graph=garnet.compiled_graph();graph.set_builder_workspace_bytes(256<<20);graph.build(make_forward(1)(*symbols),symbols,str(checkpoint));graph.enable_cuda_graph(True)
+  boundary=io.zeros([batch,1])
+  for warmup in range(3):
+   warmed=graph.run_device([hidden,history,state,active]);io.slice_into(warmed,0,boundary)
+   raw_boundary=bytes(io.finite_f32_bytes(boundary));warmed=None
+   report.setdefault('warmup_boundaries',[]).append({'batch':batch,'index':warmup,'bytes':len(raw_boundary),'sha256':hashlib.sha256(raw_boundary).hexdigest()})
   for repeat in range(2):
    result=graph.run_device([hidden,history,state,active]);offset=0
    for label,width in [('primary',normal_width)]+stages:
     part=io.zeros([batch,width]);io.slice_into(result,offset,part);capture(io,part,batch,repeat,label);offset+=width
+   result=None;part=None
    save()
   stats=json.loads(graph.stats_json());report.setdefault('native_projection_counts',[]).append({'batch':batch,'stats':stats});save()
   assert stats['checkpoint_weight_precision']=='modelopt_mixed' and stats['native_nvfp4_projection_weights']==3 and stats['native_fp8_projection_weights']==3 and stats['native_int4_g128_projection_weights']==0,'Diagnostic projection precision/count changed'
@@ -67,10 +78,10 @@ try:
   rows=[]
   for row in range(batch):
    ordinary=frames[(batch,0,'ordinary',row)];primary=frames[(batch,0,'primary',row)];old_hidden=witness/('prefix-1-batch-'+str(batch)+'-repeat-0-chunk-0-hidden-row-'+str(row)+'.f32');old_state=witness/('prefix-1-batch-'+str(batch)+'-repeat-0-chunk-0-layer-0-state-row-'+str(row)+'.f32')
-   rows.append({'row':row,'primary_matches_ordinary':primary==ordinary,'ordinary_repeat_exact':ordinary==frames[(batch,1,'ordinary',row)],'historical_hidden_exact':ordinary[:81920*4]==old_hidden.read_bytes(),'historical_state_exact':ordinary[81920*4:]==old_state.read_bytes(),'stage_repeats_exact':all(frames[(batch,0,label,row)]==frames[(batch,1,label,row)] for label in ['primary']+[n for n,_ in stages])})
+   rows.append({'row':row,'primary_matches_ordinary':primary==ordinary,'masked_input_matches_prompt':frames[(batch,0,'masked_input',row)]==frames[(batch,-1,'prompt_input',row)],'ordinary_repeat_exact':ordinary==frames[(batch,1,'ordinary',row)],'historical_hidden_exact':ordinary[:81920*4]==old_hidden.read_bytes(),'historical_state_exact':ordinary[81920*4:]==old_state.read_bytes(),'stage_repeats_exact':all(frames[(batch,0,label,row)]==frames[(batch,1,label,row)] for label in ['primary']+[n for n,_ in stages])})
   duplicate=all(frames[(batch,0,label,0)]==frames[(batch,0,label,row)] for label in ['ordinary','primary']+[n for n,_ in stages] for row in range(batch))
   report['cases'].append({'batch':batch,'rows':rows,'duplicate_rows_exact':duplicate,'ordinary_memory':ordinary_memory,'stage_graph':json.loads(graph.stats_json())});save()
-  assert duplicate and all(v['primary_matches_ordinary'] and v['ordinary_repeat_exact'] and v['stage_repeats_exact'] for v in rows),'Diagnostic changes primary or repeat/row isolation; raw outputs saved, no root-cause attribution'
+  assert duplicate and all(v['primary_matches_ordinary'] and v['masked_input_matches_prompt'] and v['ordinary_repeat_exact'] and v['stage_repeats_exact'] for v in rows),'Diagnostic changes primary or repeat/row isolation; raw outputs saved, no root-cause attribution'
   graph.close();graph=None;decoder.close();decoder=None
  report['cross_batch_stage_exact']={label:frames[(1,0,label,0)]==frames[(2,0,label,0)] for label in ['ordinary','primary']+[n for n,_ in stages]};report['library_sha256']=hashlib.sha256((r/'build/bin/garnet.dll').read_bytes()).hexdigest();report['status']='witness_passed_needs_independent_array_replay';save()
 except Exception as error:report['status']='failed';report['error']=repr(error);save();raise

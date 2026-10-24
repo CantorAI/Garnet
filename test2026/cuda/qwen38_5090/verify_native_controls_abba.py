@@ -17,12 +17,15 @@ with zipfile.ZipFile(archive) as z:
   hashes=json.loads(methods.read('methods-sha256.json'))
   for n,h in hashes.items():assert hashlib.sha256(methods.read(n)).hexdigest()==h,n
   assert methods.read('controls-abba-experiment-plan.json')==z.read(base+'plan.json')
-  template=(out/'verify-native-resident-controls-http.py').read_text(encoding='utf8');legs={};timestamps=[];telemetry={}
+  template=(out/'verify-native-resident-controls-http.py').read_text(encoding='utf8');legs={};timestamps=[];telemetry={};app_hashes=None
   for spec,record in zip(plan['order'],completed['legs']):
    leg=spec['leg'];prefix=spec['prefix'];assert record['workflow_exit_code']==0
    name=prefix+'-http-evidence.zip';assert e['linked_archives'][name]==record['archive_sha256']
    with zipfile.ZipFile(out/name) as raw:
     manifest=json.loads(raw.read('evidence-manifest.json'));assert manifest['library_sha256']==e['library_sha256']
+    current_app={n:h for n,h in manifest['files'].items() if n.startswith('Garnet/')}
+    if app_hashes is None:app_hashes=current_app
+    else:assert current_app==app_hashes,'Archived application source changed across legs'
     for n,h in plan['source_sha256'].items():assert hashlib.sha256(raw.read(n)).hexdigest()==h,n
     for name in hashes:
      if prefix in name:assert methods.read(name)==raw.read(name),name
@@ -45,5 +48,5 @@ with zipfile.ZipFile(archive) as z:
   for metric in ('decode_median_tokens_per_second','ttft_median_ms','output_tokens_per_second'):
    values={leg:v['run']['cohorts'][case]['metrics'][metric] for leg,v in legs.items()};a=[values[k] for k in ('a1','a2')];b=[values[k] for k in ('b1','b2')]
    table[case][metric]={'per_leg':values,'off_mean_of_two_cohort_summaries':statistics.mean(a),'on_mean_of_two_cohort_summaries':statistics.mean(b),'on_off_ratio_of_means':statistics.mean(b)/statistics.mean(a),'off_range':[min(a),max(a)],'on_range':[min(b),max(b)],'mirrored_pair_ratios':[values['b1']/values['a1'],values['b2']/values['a2']]}
- result={'status':'four_leg_controls_abba_evidence_verified','archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'parent_files_verified':len(e['files']),'legs':{k:{'archive_sha256':v['archive_sha256'],'files_verified':v['files_verified'],'strict_gates':v['strict_gates'],'measured_ids_exact':v['measured_ids_exact']} for k,v in legs.items()},'same_binary_source_and_workload_verified':True,'table':table,'telemetry':telemetry,'two_x_established':False,'scope':'Prespecified four fresh OFF/ON/ON/OFF same-binary B1 pilots; each20target/MTP+20oldIDs+2SSE+16measuredSSE+NVML. Two cohort summaries per mode, not enough for broad statistical claims. Report raw ranges/pair ratios; telemetry only before/after, not continuous timed clock/temperature proof. No default promotion, tuned-reference/broad-quality/full-context/trueCUDAconcurrency or2x admission.'}
+ result={'status':'four_leg_controls_abba_evidence_verified','archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'parent_files_verified':len(e['files']),'legs':{k:{'archive_sha256':v['archive_sha256'],'files_verified':v['files_verified'],'strict_gates':v['strict_gates'],'measured_ids_exact':v['measured_ids_exact']} for k,v in legs.items()},'same_binary_source_and_workload_verified':True,'common_archived_app_file_count':len(app_hashes),'table':table,'telemetry':telemetry,'two_x_established':False,'scope':'Prespecified four fresh OFF/ON/ON/OFF same-binary B1 pilots; common archived application source hashes checked across legs, not a claim that every external file/OS condition was independently observed; each20target/MTP+20oldIDs+2SSE+16measuredSSE+NVML. Two cohort summaries per mode, not enough for broad statistical claims. Report raw ranges/pair ratios; telemetry only before/after, not continuous timed clock/temperature proof. No default promotion, tuned-reference/broad-quality/full-context/trueCUDAconcurrency or2x admission.'}
 (out/'native-controls-abba-verified.json').write_text(json.dumps(result,indent=2),encoding='utf8');print(json.dumps(result,indent=2))
