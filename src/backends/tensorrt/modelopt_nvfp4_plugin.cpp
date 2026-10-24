@@ -11,26 +11,26 @@ using namespace nvinfer1;
 namespace {
 size_t Aligned(size_t bytes){return (bytes+255)&~size_t(255);}
 }
-ModelOptNVFP4Plugin::ModelOptNVFP4Plugin(int rows,int columns,float weightScale,float inputScale,bool downCandidate)
-    :state_{rows,columns,weightScale,inputScale},downCandidate_(downCandidate){
+ModelOptNVFP4Plugin::ModelOptNVFP4Plugin(int rows,int columns,float weightScale,float inputScale,bool downCandidate,bool decodeOnly)
+    :state_{rows,columns,weightScale,inputScale},candidatePolicy_(downCandidate?(decodeOnly?2:1):0){
     static_assert(sizeof(State)==16,"Stable NVFP4 plugin wire format");
     if(rows<=0||rows>1048576||rows%16||columns<=0||columns>65536||columns%64||
         !ModelOptNVFP4ScaleBytes(rows,columns)||ModelOptNVFP4ScaleBytes(rows,columns)>(256ULL<<20)||
         !std::isfinite(weightScale)||weightScale<=0||
         !std::isfinite(inputScale)||inputScale<=0||!std::isfinite(weightScale*inputScale)||weightScale*inputScale<=0)
         throw std::invalid_argument("Invalid ModelOpt NVFP4 plugin geometry/scales");
-    if(downCandidate_&&(rows!=5120||columns!=17408))throw std::invalid_argument("Unqualified NVFP4 down-candidate geometry");
+    if(candidatePolicy_&&(rows!=5120||columns!=17408))throw std::invalid_argument("Unqualified NVFP4 down-candidate geometry");
 }
 IPluginV2DynamicExt* ModelOptNVFP4Plugin::clone() const noexcept{
-    try{auto* p=new ModelOptNVFP4Plugin(state_.rows,state_.columns,state_.weightScale,state_.inputScale,downCandidate_);
+    try{auto* p=new ModelOptNVFP4Plugin(state_.rows,state_.columns,state_.weightScale,state_.inputScale,candidatePolicy_!=0,candidatePolicy_==2);
         p->namespace_=namespace_;p->context_=context_;return p;}catch(...){return nullptr;}
 }
 ModelOptNVFP4Plugin* ModelOptNVFP4Plugin::Deserialize(const void* data,size_t length) noexcept{
     if(!data||(length!=sizeof(State)&&length!=sizeof(State)+sizeof(uint32_t)))return nullptr;
     State s;std::memcpy(&s,data,sizeof(s));
-    const bool candidate=length>sizeof(State);
-    if(candidate){uint32_t policy=0;std::memcpy(&policy,static_cast<const unsigned char*>(data)+sizeof(State),sizeof(policy));if(policy!=1)return nullptr;}
-    try{return new ModelOptNVFP4Plugin(s.rows,s.columns,s.weightScale,s.inputScale,candidate);}catch(...){return nullptr;}
+    uint32_t policy=0;
+    if(length>sizeof(State)){std::memcpy(&policy,static_cast<const unsigned char*>(data)+sizeof(State),sizeof(policy));if(policy!=1&&policy!=2)return nullptr;}
+    try{return new ModelOptNVFP4Plugin(s.rows,s.columns,s.weightScale,s.inputScale,policy!=0,policy==2);}catch(...){return nullptr;}
 }
 DimsExprs ModelOptNVFP4Plugin::getOutputDimensions(int index,const DimsExprs* input,int count,IExprBuilder& builder) noexcept{
     if(index||count!=3||input[0].nbDims!=2||input[1].nbDims!=2||input[2].nbDims!=1)return DimsExprs{};
@@ -71,24 +71,25 @@ int ModelOptNVFP4Plugin::enqueue(const PluginTensorDesc* in,const PluginTensorDe
 }
 class ModelOptNVFP4Creator final:public IPluginCreator {
     std::string namespace_;PluginFieldCollection fields_{};
-    bool candidate_;
+    uint32_t policy_;
 public:
-    explicit ModelOptNVFP4Creator(bool candidate):candidate_(candidate){}
+    explicit ModelOptNVFP4Creator(uint32_t policy):policy_(policy){}
     const char* getPluginName() const noexcept override{return "GarnetModelOptNVFP4";}
-    const char* getPluginVersion() const noexcept override{return candidate_?"2":"1";}
+    const char* getPluginVersion() const noexcept override{return policy_==2?"3":policy_==1?"2":"1";}
     const PluginFieldCollection* getFieldNames() noexcept override{return &fields_;}
     // Native lowering supplies validated metadata directly. Wire deserialization
     // is the supported creator path; no ambiguous default projection is admitted.
     IPluginV2* createPlugin(const char*,const PluginFieldCollection*) noexcept override{return nullptr;}
     IPluginV2* deserializePlugin(const char*,const void* data,size_t length) noexcept override{
-        if(length!=(candidate_?20:16))return nullptr;
+        if(!data||length!=(policy_?20:16))return nullptr;
+        if(policy_){uint32_t tag=0;std::memcpy(&tag,static_cast<const unsigned char*>(data)+16,sizeof(tag));if(tag!=policy_)return nullptr;}
         auto* p=ModelOptNVFP4Plugin::Deserialize(data,length);if(p)p->setPluginNamespace(namespace_.c_str());return p;
     }
     void setPluginNamespace(const char* value) noexcept override{namespace_=value?value:"";}
     const char* getPluginNamespace() const noexcept override{return namespace_.c_str();}
 };
 bool EnsureModelOptNVFP4PluginRegistered(){
-    static ModelOptNVFP4Creator legacy(false),candidate(true);static std::once_flag once;static bool okay=false;
-    std::call_once(once,[&]{auto* registry=getPluginRegistry();okay=registry&&registry->registerCreator(legacy,"")&&registry->registerCreator(candidate,"");});return okay;
+    static ModelOptNVFP4Creator legacy(0),historical(1),decode(2);static std::once_flag once;static bool okay=false;
+    std::call_once(once,[&]{auto* registry=getPluginRegistry();okay=registry&&registry->registerCreator(legacy,"")&&registry->registerCreator(historical,"")&&registry->registerCreator(decode,"");});return okay;
 }
 }
