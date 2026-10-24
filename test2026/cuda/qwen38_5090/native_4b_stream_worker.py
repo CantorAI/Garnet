@@ -8,7 +8,7 @@ from runtime.cuda_serving import Model
 from test2026.cuda.qwen38_5090.native_worker_io import requests,emit
 from test2026.cuda.qwen38_5090.native_http_bridge import validate_body
 checkpoint,image_path=sys.argv[1:3]
-profile={'batch':1,'maxInputTokens':3968,'maxOutputTokens':128,'imagePixels':65536,'imageGrid':[16,16],
+profile={'batch':1,'maxInputTokens':3968,'maxOutputTokens':128,'imagePixels':65536,'imageMinPixels':65536,'imageGrid':[16,16],
  'prefillChunk':16,'decodeChunk':16,'fusedDelta':True,'fusedAttention':True,'cudaGraph':True}
 model=None
 try:

@@ -5,11 +5,11 @@ sys.path.insert(0,os.environ['GARNET_RUNTIME_ROOT']);sys.path.insert(0,os.getcwd
 import garnet
 from runtime.cuda_serving import Model
 from test2026.cuda.qwen38_5090.run_logged import source_identity
-root=Path(sys.argv[1]);out=root/'results/qwen35-4b-native-smoke';out.mkdir(exist_ok=True)
+root=Path(sys.argv[1]);out=Path(sys.argv[2]) if len(sys.argv)>2 else root/'results/qwen35-4b-native-smoke';out.mkdir(exist_ok=True)
 report_path=out/'report.json'
 if report_path.exists():raise ValueError('Preserve existing4B smoke')
 checkpoint=root/'models/Qwen3.5-4B';image=root/'qwen35-4b-smoke.jpg'
-profile={'batch':1,'maxInputTokens':3968,'maxOutputTokens':128,'imagePixels':65536,'imageGrid':[16,16],
+profile={'batch':1,'maxInputTokens':3968,'maxOutputTokens':128,'imagePixels':65536,'imageMinPixels':65536,'imageGrid':[16,16],
  'prefillChunk':16,'decodeChunk':16,'fusedDelta':True,'fusedAttention':True,'cudaGraph':True}
 report={'status':'starting','source':source_identity(),'profile':profile,'checkpoint_revision':'851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a',
  'scope':'Native4B text/image/repeat/long-input smoke with desktop GPU co-residency. Internal API times retained raw, not HTTP benchmark or matched model comparison.',

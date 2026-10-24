@@ -23,6 +23,8 @@ class Model:
         self.max_output=int(profile.get('maxOutputTokens',128));self.pixels=int(profile.get('imagePixels',65536))
         if self.batch not in (1,2,4,8) or self.max_input<1 or self.max_output<1 or self.pixels<1024:
             raise ValueError('CUDA batch/capacity profile invalid')
+        self.image_min_pixels=profile.get('imageMinPixels')
+        if self.image_min_pixels is not None and (type(self.image_min_pixels) is not int or not 1024<=self.image_min_pixels<=self.pixels):raise ValueError('Invalid CUDA minimum image pixels')
         self.capacity=self.max_input+self.max_output
         if self.capacity>8192:raise ValueError('CUDA context profile exceeds admitted capacity')
         self.prefill_chunk=int(profile.get('prefillChunk',1));self.decode_chunk=int(profile.get('decodeChunk',self.prefill_chunk))
@@ -118,7 +120,9 @@ class Model:
             for token in self.tokenizer.encode(value):ids.append(token);positions.append([current]*3);current+=1
         text('<|im_start|>user\n')
         if image:
-            prepared=io.prepare_image(image,self.pixels);gh,gw=prepared[1],prepared[2]
+            minimum=getattr(self,'image_min_pixels',None)
+            prepared=io.prepare_image(image,self.pixels) if minimum is None else io.prepare_image_profile(image,minimum,self.pixels)
+            gh,gw=prepared[1],prepared[2]
             compile_ms=self._build_vision(gh,gw)
             visual=self.vision.encode_patches(prepared[0]);text('<|vision_start|>')
             image_start=len(ids);mh,mw=gh//2,gw//2;visual_count=mh*mw
