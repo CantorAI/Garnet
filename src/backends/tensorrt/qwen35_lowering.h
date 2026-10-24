@@ -306,7 +306,7 @@ public:
         return cat({output,reshape(core[1],{batch,channels*kernel}),reshape(core[2],{batch,vh*kd*vd})},1);
     }
     T* linearDecoderChunk(T* x,T* history,T* state,T* active,const std::string& layer,
-        int kh,int vh,int kd,int vd,float eps,bool fusedDelta=false,bool retainInputs=false,bool register128=false,bool joinedInputs=false,bool joinedMLPProjections=false) {
+        int kh,int vh,int kd,int vd,float eps,bool fusedDelta=false,bool retainInputs=false,bool register128=false,bool joinedInputs=false,bool joinedMLPProjections=false,std::vector<T*>* diagnosticStages=nullptr) {
         if(retainInputs&&!fusedDelta)throw std::invalid_argument("Qwen3.5 retained projections require fused delta");
         if(register128&&(!fusedDelta||kd!=128||vd!=128||kh>64||vh>64))throw std::invalid_argument("Register delta requires fused128 dimensions and bounded heads");
         auto xs=shape(x),hs=shape(history);
@@ -329,6 +329,8 @@ public:
             qkv=project(normalized,w(".in_proj_qkv.weight"));z=project(normalized,w(".in_proj_z.weight"));
             beta=project(normalized,w(".in_proj_b.weight"));a=project(normalized,w(".in_proj_a.weight"));
         }
+        // Optional diagnostic exports; normal lowering keeps the original output contract.
+        if(diagnosticStages)*diagnosticStages={x,normalized,qkv,z,beta,a};
         auto token=[&](T* input,int index){auto s=shape(input);return reshape(slice(input,1,index,1),{batch,s[2]});};
         std::vector<T*> outputs;T* coreOutput=nullptr;
         if(fusedDelta){
@@ -348,11 +350,13 @@ public:
             outputs.push_back(reshape(core[0],{batch,1,vh*vd}));history=core[1];state=core[2];
         }
         if(!coreOutput)coreOutput=cat(outputs,1);
+        if(diagnosticStages)diagnosticStages->push_back(coreOutput);
         T* attention=project(coreOutput,w(".out_proj.weight"));
         attention=select(reshape(active,{batch,tokens,1}),attention,scalar(0,3));
         T* residual=add(x,attention);
         auto* mlpInput=norm(residual,layer+".post_attention_layernorm.weight",eps);
         T* output=add(residual,joinedMLPProjections?joinedMLP(mlpInput,layer+".mlp"):mlp(mlpInput,layer+".mlp"));
+        if(diagnosticStages)diagnosticStages->insert(diagnosticStages->end(),{attention,residual,mlpInput,output});
         std::vector<T*> packed={reshape(output,{batch,tokens*hidden}),reshape(history,{batch,channels*kernel}),reshape(state,{batch,vh*kd*vd})};
         if(retainInputs){
             packed.push_back(reshape(cast(qkv),{batch,tokens*channels}));packed.push_back(reshape(cast(z),{batch,tokens*vh*vd}));

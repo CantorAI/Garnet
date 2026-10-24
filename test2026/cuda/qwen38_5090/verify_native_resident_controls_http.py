@@ -1,5 +1,5 @@
 from pathlib import Path
-import hashlib,json,subprocess,sys,zipfile
+import hashlib,io,json,subprocess,sys,zipfile
 out=Path(__file__).parent;repo=Path('D:/CantorAI/work/qwen38-5090');sys.path.insert(0,str(repo/'test2026/cuda/qwen38_5090'))
 from compare_http_runs import verify_run,compare
 from run_shared_mtp_candidate import verify_records,KEYS,GOLDEN_SHA256
@@ -28,9 +28,12 @@ with zipfile.ZipFile(archive) as z,zipfile.ZipFile(out/'native-mtp3-shared-joine
  for name in ('native_worker_profile.py','native_stream_worker.py','benchmark_stream.py','compare_http_runs.py','metrics.py','probe_shared_mtp_sequences.py'):
   assert z.read('Garnet/test2026/cuda/qwen38_5090/'+name)==(repo/'test2026/cuda/qwen38_5090'/name).read_bytes(),name
  receipt=json.loads(z.read('results/resident-controls-http-source-install/receipt.json'));assert receipt['status']=='installed' and receipt['library_sha256']==e['library_sha256'] and receipt['package_sha256']==hashlib.sha256(z.read('resident-controls-http-install.zip')).hexdigest()
- for n,v in receipt['files'].items():
-  assert hashlib.sha256(z.read(n)).hexdigest()==v['sha256'],n
-  if 'previous_sha256' in v:assert hashlib.sha256(z.read('results/resident-controls-http-source-install/backup/'+n)).hexdigest()==v['previous_sha256']
+ with zipfile.ZipFile(io.BytesIO(z.read('resident-controls-http-install.zip'))) as installed:
+  for n,v in receipt['files'].items():
+   assert hashlib.sha256(installed.read(n)).hexdigest()==v['sha256'],n
+   if n in z.namelist():assert z.read(n)==installed.read(n),n
+   else:assert not n.startswith('Garnet/'),'Actual installed application source must be archived'
+   if 'previous_sha256' in v:assert hashlib.sha256(z.read('results/resident-controls-http-source-install/backup/'+n)).hexdigest()==v['previous_sha256']
  manifests=[n for n in z.namelist() if n.startswith(base+'benchmark/') and n.endswith('-manifest.json')];assert len(manifests)==1
  m=json.loads(z.read(manifests[0]));prefix=manifests[0].rsplit('/',1)[0]+'/';run=verify_run(m,lambda n:z.read(prefix+n));assert len(m['cohorts'])==2
  samples=[json.loads(l) for l in z.read(prefix+m['run_id']+'-vram.jsonl').decode().splitlines()]

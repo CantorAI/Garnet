@@ -6152,10 +6152,36 @@ namespace Garnet {
                     lastOutput=ops.restoreKVPrefix(source,b["qwen35_cache_bind_backup"],b["qwen35_cache_bind_spans"]);
                 }
                 else if(opName=="qwen35_linear_decoder_chunk") {
+                    auto* stageAttribute=FindKeyword(kwParams,"diagnostic_linear_stages");
+                    const auto diagnostic=stageAttribute?stageAttribute->second.ToLongLong():0;
+                    if(diagnostic!=0&&diagnostic!=1)throw std::invalid_argument("Linear stage diagnostic must be0 or1");
+                    auto dimensions=ops.shape(source);
+                    if(diagnostic&&(capturedWeightProfile!="modelopt_mixed"||!external.empty()||
+                        dimensions.size()!=3||(dimensions[0]!=1&&dimensions[0]!=2)||dimensions[1]!=16||dimensions[2]!=5120||
+                        keywordText("layer_prefix")!="model.language_model.layers.0"||keywordInt("key_heads",0)!=16||keywordInt("value_heads",0)!=48||
+                        keywordInt("key_dim",0)!=128||keywordInt("value_dim",0)!=128||keywordInt("fused_delta",0)!=1||
+                        keywordInt("retain_linear_inputs",0)!=0||keywordInt("register_delta_128",0)!=0||
+                        keywordInt("joined_input_projections",0)!=0||keywordInt("joined_mlp_projections",0)!=0))
+                        throw std::invalid_argument("Stage capture requires the embedded mixed27B layer0 B1/2 T16 diagnostic profile");
+                    std::vector<ITensor*> diagnosticStages;
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.linearDecoderChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],
                         b["qwen35_conv_bind_active"],keywordText("layer_prefix"),keywordInt("key_heads",0),keywordInt("value_heads",0),
-                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0,keywordInt("joined_input_projections",0)!=0,keywordInt("joined_mlp_projections",0)!=0);
+                        keywordInt("key_dim",0),keywordInt("value_dim",0),float(number("eps",1e-6)),keywordInt("fused_delta",0)!=0,keywordInt("retain_linear_inputs",0)!=0,keywordInt("register_delta_128",0)!=0,keywordInt("joined_input_projections",0)!=0,keywordInt("joined_mlp_projections",0)!=0,diagnostic?&diagnosticStages:nullptr);
+                    if(diagnostic){
+                        if(diagnosticStages.size()!=11)throw std::runtime_error("Linear stage diagnostic contract changed");
+                        std::vector<ITensor*> parts{lastOutput};
+                        for(auto* value:diagnosticStages){
+                            const auto shape=ops.shape(value);int width=1;
+                            if(shape.size()<2||shape[0]!=dimensions[0])throw std::runtime_error("Linear diagnostic batch differs");
+                            for(size_t i=1;i<shape.size();++i){
+                                if(shape[i]<1||width>1048576/shape[i])throw std::runtime_error("Linear diagnostic stage exceeds bounded row reader");
+                                width*=shape[i];
+                            }
+                            parts.push_back(ops.reshape(ops.cast(value),{dimensions[0],width}));
+                        }
+                        lastOutput=ops.cat(parts,1);
+                    }
                 }else if(opName=="qwen35_linear_replay_chunk") {
                     auto b=qwen35Bindings[TensorId(input)];
                     lastOutput=ops.linearReplayChunk(source,b["qwen35_conv_bind_state"],b["qwen35_delta_bind_state"],

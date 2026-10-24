@@ -2435,3 +2435,65 @@ Provisional B1 decode ratios to faster ordinary reference: text1.079438337954128
 Prepared fresh controlled A/B/B/A sequence a1(false),b1(true),b2(true),a2(false). Prior exploratory pilot excluded. Prespecified8requests/cohort/2warmups, exactsame corpus/precision/MTP3/T128/T4/cap4096 and same native binary/source hashes. Each new worker must pass20self-target pairs+20retained identities+2SSE gates before its own B1 pilot. Original server handle/terminal workflows govern owned shutdown, no timeout restart; archive each leg immediately including failures, stop sequence on any workflow failure. GPU telemetry before/after legs retained without collecting it inside timed requests. Source frozen for entire sequence. Finite fixed study results, no clone/weight duplication. Generated24methods+plan+manifest are reviewable from committed builder: all26raw package members independently reproduced byteexact from source templates. ZIP timestamps alone are not claimed reproducible. Root controller/methods ZIP retained under fixed remote study root.
 
 Started original helper48577 native-controls-abba-attempt1 under native-controls-abba-controller-ledger. Full4-leg evidence must be independently replayed and linked before gain confidence; source/quality/temperature/variation limitations remain. Local tree-state study requested quiet window through14:30UTC; only local CPU plotting/archive/source work performed, no local compiler/GPU/sharedSDK mutation. Original2x decoded/trueGPUconcurrency,4B references, nativebatching, broader/fullcontext quality and tuned/repeated references remain open.
+
+### P175 — first two ABBA legs verified; actual layer0 stage diagnostic prepared
+
+Original48577 native-controls-abba-attempt1 remains live: a1OFF and b1ON workflows completed0 and were archived after identity-guarded bridge shutdown/server terminal1; b2 is running. Downloaded both immutable archives. Independent verification PASSED all199file hashes/CRC/source/runtime/20target-MTP+20oldID+6golden+2SSE+16measuredSSE/VRAM/terminal gates per leg. Raw metrics:
+[
+  {
+    "leg": "a1",
+    "sha256": "da0dbf3d2307d6f1e4ccefccbc35b208ea0d58f40688dad38d3301c460133f65",
+    "cohorts": [
+      {
+        "case": "text",
+        "ttft_median_ms": 80.69479999903706,
+        "decode_median_tokens_per_second": 67.40036169801411,
+        "output_tokens_per_second": 65.23517669807451,
+        "sampled_peak_adapter_used_bytes": 28405977088,
+        "observed_sample_gap_max_seconds": 0.35044960000232095
+      },
+      {
+        "case": "image",
+        "ttft_median_ms": 117.83205000028829,
+        "decode_median_tokens_per_second": 70.43828545536203,
+        "output_tokens_per_second": 30.59310539734861,
+        "sampled_peak_adapter_used_bytes": 28412268544,
+        "observed_sample_gap_max_seconds": 3.5748804999966524
+      }
+    ]
+  },
+  {
+    "leg": "b1",
+    "sha256": "36c42f4c5bc4255c1a30ad7d947e08894671d1f239f4379b358bab0bb36a4870",
+    "cohorts": [
+      {
+        "case": "text",
+        "ttft_median_ms": 87.50764999786043,
+        "decode_median_tokens_per_second": 68.95736189441553,
+        "output_tokens_per_second": 36.82144208653321,
+        "sampled_peak_adapter_used_bytes": 28892516352,
+        "observed_sample_gap_max_seconds": 8.306386099997326
+      },
+      {
+        "case": "image",
+        "ttft_median_ms": 110.61675000019022,
+        "decode_median_tokens_per_second": 77.07152733636434,
+        "output_tokens_per_second": 69.89740480763848,
+        "sampled_peak_adapter_used_bytes": 28896710656,
+        "observed_sample_gap_max_seconds": 0.0948156000013114
+      }
+    ]
+  }
+]
+
+Pauses retained without exclusions: a1 image r5 elapsed16.25505400000111s (decode12.055322899999737s,tail4.070352400005504s),r7 elapsed5.530732300001546s. b1 text max sampler gap8.306386099997326s; its aggregate36.82144208653321 versus median68.95736189441553 shows why a median alone is insufficient. Reproducible raw-gap observer added. Causes unproven; both modes show pauses. Every request remains in metrics; planned4leg order continues unchanged. No causal/control-gain or2x claim. If pauses persist, separate worker/bridge/client/logging/driver boundaries before selecting another performance change. Current client/bridge flush event logs; no evidence yet that logging causes pauses. Any future measurement protocol change needs matching reference reruns.
+
+Initial a1 verifier failed because shared installation-receipt root B0 method files are inside authenticated install ZIP, not separately copied into each leg archive. Strict verifier and failure log retained. Corrected replay verifies every installed payload hash inside ZIP, requires actual application files separately present/equal, verifies executed leg methods from metadata and preserves original source backups. No quality/SSE/output gate relaxed. Corrected a1,b1 pass and original B0 pilot re-verifies unchanged. Parent ABBA archiver/verifier prepared to require original terminal0/GPU idle, exact order/linked4leg hashes/26-member planned methods/source/runtime/workload and perleg independent reaccounting, ranges/means/mirrored ratios and before/after telemetry. Parent not executed to claim unfinished legs.
+
+Prepared default-off bounded diagnostic_linear_stages native keyword plus real-activation witness probe, detailed in qwen38-5090-layer0-stage-protocol.md. Actual layer0 graph stage tensors are appended only under explicit mixed27B embedded B1/2 T16 guard; normal output contract unchanged. Probe saves full ordinary/diagnostic primary and11stages from real first16 prompt embedding IDs, with complete state,2repeats and duplicate rows before attribution. Four invalid-profile rejection checks and3NVFP4/3FP8/zeroINT4/output-size/graph-count checks prepared, UNRUN. Historical170MB prefix archive pinned32586aea53c0fd77b1d96935f700abe0061bd24f2cc1915400454929aac10564 supplies actual hidden/state witnesses; current primary must equal ordinary before stages are interpreted. Does not repair/admit full64-layer batching or establish speed.
+
+After local quiet-window early release, CPU-only MSVC17.14 /Zs syntax check of changed actual trt_builder.cpp against CUDA13.2/TensorRT10.16.1.11 headers completed0. No codegen/link/GPU/remote source change. Existing object SHA9761c041b96c00b7922ef32411bbe29aaa3b1c491e3102c947b2c1b1b0d5edb0 unchanged. Initial return-code recorder used a relative slash path and failed before compiler; corrected absolute-path recorder/log retained. Probe/setup Python syntax passes. CPU evidence ZIP79907bytes/12files/SHA c5434213bdbd9c506e26e38a1a85be432122dc16aafc18517becbcd3fde586c6 verified CRC/allSHA. Native build/deployment and all GPU diagnostic gates remain pending; remote754+2Python/ba67 frozen throughout ABBA. A new local quiet window through15:00UTC was requested later; no compiler/GPU remains here.
+
+Source hypothesis only: inline RequestPayload2560B/EmbeddingPayload4096B by-value dynamic access may merit deployed-kernel local-memory inspection. NVIDIA documents const __grid_constant__ preventing per-thread parameter copies (https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cpp-language-extensions.html). This does NOT prove spilling here or explain extra~0.5GB. After ABBA, inspect actual deployed DLL resource/SASS/attributes before changing kernels. No core IO source/policy changed from this hypothesis.
+
+Original2x matched decode/trueGPUconcurrency is unmet. Remaining scope includes all4leg verification, pause diagnosis, actual batching mismatch/stage witnesses,4B references, fullcontext/broader quality and tuned/repeated references.
