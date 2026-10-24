@@ -2795,3 +2795,8 @@ While the original B4 streaming worker remains live, local HTTP archival/replay 
 ### B4 streaming independently verified; HTTP pilot launched (2026-10-24)
 
 Original protocol job completed exit0. Archive9da7cd2d64ca72439b1a7b0061fe1badba9f1deeb27f934146f8054a31f1d3dd retains43 files/138,958 bytes. Independent replay passed on both machines for seven groups/seventeen requests, exact prompt/output IDs, image hashes, partial-row isolation/no dummy events and sampled resource/terminal records. Sampled adapter-wide peak31,365,058,560 bytes is not instantaneous or process-attributed. Native DLL unchanged3c3207. Only after both replays and original closure, guarded batch4-http-pilot-attempt1 was launched in the existing fixed study folder. It requires13 same-worker HTTP quality cases and the unchanged stream/serialization regression gates before timing. No B4 speed result is available at launch.
+
+
+### Physical B4 T4 candidate preparation (2026-10-24; not run)
+
+The current B4 T8 HTTP pilot remains live. A local B4 T4 retained-ID candidate reduces both target graph token dimensions from8 to4, reusing the existing shared compressed pool/native DLL. For a four-row graph this changes flattened projection M from32 to16. Motivation is to reduce masked token-slot projection work; no speed or numerical-equivalence claim is inferred from dimensions. The same four mixed text/image/short-output oracles and two resets remain mandatory. The wrapper requires the B4 T8 HTTP pilot to finish, archive and independently verify before launch, plus unchanged canonical build/source and idle-GPU/SSD guards. Syntax checks passed; not deployed or launched. Wider prefill, MTP and actual4K prompts remain distinct unqualified profiles.
