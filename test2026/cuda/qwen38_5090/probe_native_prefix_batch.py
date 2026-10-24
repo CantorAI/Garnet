@@ -6,8 +6,10 @@ from xModel.qwen35.vl_0_8b.cuda_packed_decoder import CUDAPackedDecoder
 from test2026.cuda.qwen38_5090.run_logged import source_identity
 
 root=Path(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(exist_ok=True)
-prefixes=tuple(int(v) for v in sys.argv[3:]) or (1,4)
+capture_internals='--internals' in sys.argv[3:]
+prefixes=tuple(int(v) for v in sys.argv[3:] if v!='--internals') or (1,4)
 if len(set(prefixes))!=len(prefixes) or any(v not in (1,2,3,4) for v in prefixes):raise ValueError('Diagnostic prefixes must be unique values1..4')
+if capture_internals and max(prefixes)>3:raise ValueError('Full internal capture is bounded to GDN-only prefixes1..3')
 path=out/'report.json'
 if path.exists():raise FileExistsError('Preserve prior prefix diagnostic')
 checkpoint=root/'models/Qwen3.8-27B-NVFP4'
@@ -15,11 +17,18 @@ config_path=checkpoint/'config.json';original=json.loads(config_path.read_text(e
 oracle=root/'results/native-mtp3-http/s3-text-c1-r0-greedy-response.json'
 ids=json.loads(oracle.read_text(encoding='utf8'))['choices'][0]['prompt_token_ids']
 assert len(ids)==41
-report={'status':'starting','source':source_identity(),'capacity':4096,'chunk':16,'prefixes':prefixes,'cases':[],
+report={'status':'starting','source':source_identity(),'capacity':4096,'chunk':16,'prefixes':prefixes,'capture_internals':capture_internals,'cases':[],
  'input_prompt_ids':ids,'config_sha256':hashlib.sha256(config_path.read_bytes()).hexdigest(),
  'oracle_sha256':hashlib.sha256(oracle.read_bytes()).hexdigest(),
  'scope':'Diagnostic truncated checkpoint prefixes1..4, identical text rows at B1/B2; no full-model IDs, VLM, serving, quality or timing claim. Original64-layer batch gate remains failed.'}
-decoder=None
+decoder=None;frames={}
+
+def save_frame(io,value,prefix,batch,repeat,chunk,label):
+ for row in range(batch):
+  raw=bytes(io.finite_f32_bytes(io.row(value,row)))
+  name='prefix-'+str(prefix)+'-batch-'+str(batch)+'-repeat-'+str(repeat)+'-chunk-'+str(chunk)+'-'+label+'-row-'+str(row)+'.f32'
+  (out/name).write_bytes(raw);frames[(prefix,batch,repeat,chunk,label,row)]=name
+  report.setdefault('internal_files',[]).append({'name':name,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
 try:
  for prefix in prefixes:
   snapshots={}
@@ -34,6 +43,14 @@ try:
     for start in range(0,len(ids),16):
      end=min(start+16,len(ids));decoder.chunk_hidden(hidden[start:end],[[1]*batch for _ in range(start,end)],
        [[[t]*3 for t in range(start,end)] for _ in range(batch)],False)
+     if capture_internals:
+      save_frame(io,io.storage_view(decoder.hidden,[batch,16*5120]),prefix,batch,repeat,start,'hidden')
+      for layer in decoder.programs[16].layout:
+       assert layer['kind']=='linear_attention'
+       width=layer['state1_width']+layer['state2_width']
+       if width>1048576:raise ValueError('Internal per-row dump exceeds bounded F32 reader')
+       part=io.zeros([batch,width]);io.slice_into(decoder.state,layer['offset'],part)
+       save_frame(io,part,prefix,batch,repeat,start,'layer-'+str(layer['index'])+'-state')
     decoder.prefill_mode=False
     raw=bytes(io.finite_f32_bytes(decoder.last_hidden));assert len(raw)==batch*5120*4
     name='prefix-'+str(prefix)+'-batch-'+str(batch)+'-repeat-'+str(repeat)+'-hidden.f32'
@@ -50,6 +67,23 @@ try:
     'max_abs':max(abs(a-b) for a,b in zip(left,right)),
     'relative_l2':math.sqrt(sum((a-b)**2 for a,b in zip(left,right))/max(sum(b*b for b in right),1e-30))}
   report.setdefault('b1_b2_comparisons',[]).append(comparison)
+  if capture_internals:
+   for key,name in list(frames.items()):
+    p,b,r,chunk,label,row=key
+    if p!=prefix or b!=1 or r!=0:continue
+    raw=(out/name).read_bytes()
+    same_profile=True
+    for batch in (1,2):
+     first=(out/frames[(prefix,batch,0,chunk,label,0)]).read_bytes()
+     for repeat in (0,1):
+      for row in range(batch):
+       same_profile &= first==(out/frames[(prefix,batch,repeat,chunk,label,row)]).read_bytes()
+    other=(out/frames[(prefix,2,0,chunk,label,0)]).read_bytes()
+    check={'prefix':prefix,'chunk_start':chunk,'part':label,'bytes_per_row':len(raw),
+      'same_profile_repeat_and_duplicate_rows_exact':same_profile,'b1_b2_exact':raw==other}
+    report.setdefault('internal_comparisons',[]).append(check)
+    path.write_text(json.dumps(report,indent=2))
+    assert same_profile,'Internal repeat/duplicate-row instability; raw arrays preserved'
   path.write_text(json.dumps(report,indent=2));print('PREFIX_BATCH_DIAGNOSTIC',json.dumps(comparison),flush=True)
  report['status']='diagnostic_completed'
 except Exception as error:
