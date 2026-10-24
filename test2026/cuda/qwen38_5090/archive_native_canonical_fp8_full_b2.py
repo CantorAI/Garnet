@@ -23,6 +23,8 @@ library = hashlib.sha256((root / "build/bin/garnet.dll").read_bytes()).hexdigest
 assert library == build["library_sha256"] == workflow["library_sha256"]
 files = [p for p in folder.rglob("*") if p.is_file()]
 files += [p for p in outer.rglob("*") if p.is_file()]
+for name in ("native-canonical-fp8-wait-capture-ledger", "native-canonical-fp8-file-wait-ledger"):
+    files += [p for p in (results / name).rglob("*") if p.is_file()]
 files += [root / n for n in ("run-native-canonical-fp8-full-b2.py", "test-native-canonical-fp8-full-b2.bat")]
 files += [root / "Garnet" / n for n in list(build["source_sha256"]) + [
     "test2026/cuda/qwen38_5090/probe_native_batch.py", "test2026/cuda/qwen38_5090/run_logged.py",
@@ -31,10 +33,12 @@ files += [root / "Garnet" / n for n in list(build["source_sha256"]) + [
 files += [results / "native-mtp3-http" / (key + suffix) for key in (
     "s3-text-c1-r0-greedy", "s3-image-c1-r0-greedy", "red", "green") for suffix in ("-request.json", "-response.json")]
 files += [build_path, results / "native-canonical-fp8-prefix123-attempt1-verified.json", Path(__file__)]
+files += [root / n for n in ("capture-full-b2-wait-dump.py", "inspect-full-b2-file-wait.py") if (root / n).exists()]
 raw = {p.relative_to(root).as_posix(): p.read_bytes() for p in files}
 manifest = {"library_sha256": library, "files": {n: hashlib.sha256(b).hexdigest() for n, b in raw.items()},
     "linked_archives": {n: hashlib.sha256((results / n).read_bytes()).hexdigest() for n in (
-        "native-canonical-fp8-prefix123-attempt1-evidence.zip", "native-batch2-initial-failure-evidence.zip")},
+        "native-canonical-fp8-prefix123-attempt1-evidence.zip", "native-batch2-initial-failure-evidence.zip",
+        "native-canonical-fp8-full-b2-wait-attempt1-evidence.zip")},
     "scope": "Closed original full64-layer B2 text/image/earlyEOS ID gate, success or failure retained. Loaded module receipt observes path and on-disk hash, not memory-image bytes. Not HTTP, MTP, broad quality or throughput admission."}
 with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as z:
     for n, b in raw.items(): z.writestr(n, b)
