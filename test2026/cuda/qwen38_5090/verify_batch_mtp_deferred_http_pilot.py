@@ -122,12 +122,18 @@ with zipfile.ZipFile(archive) as z:
     samples = [json.loads(line) for line in z.read(prefix+manifest['run_id']+'-vram.jsonl').decode().splitlines()]
     measured = 0
     dispatch_by_cohort = {}
+    sampling_by_cohort = {}
     dispatch_index = {request_id:index for index,group in enumerate(dispatch) for request_id in group["request_ids"]}
     for cohort in manifest['cohorts']:
         assert cohort['concurrency'] in (1,2,4,8) and len(cohort['request_keys']) == 8
         phase = cohort['case']+'-c'+str(cohort['concurrency'])
         rows = [s for s in samples if s['phase'] == phase][:cohort['samples']]
         assert len(rows) == cohort['samples'] and max(s['used_bytes'] for s in rows) == cohort['sampled_peak_adapter_used_bytes']
+        times = [float(sample['monotonic']) for sample in rows]
+        assert all(right >= left for left, right in zip(times, times[1:]))
+        sampling_by_cohort[phase] = {'samples': len(times),
+            'maximum_interval_seconds': max((right-left for left,right in zip(times,times[1:])), default=0),
+            'scope': 'Observed sampler interval; not a measurement of paging, eviction or GPU stall duration.'}
         cohort_native_ids=[]
         for key in cohort['request_keys']:
             event = final(prefix+key+'-events.jsonl'); work = workers[event['id']]
@@ -179,6 +185,7 @@ with zipfile.ZipFile(archive) as z:
         'actual_dispatch_by_cohort':dispatch_by_cohort,
         'dispatch_group_sizes':{str(n):sum(g['real_rows']==n for g in dispatch) for n in (1,2)},
         'run':run,'references':references,'comparison':compare(run,references),'raw_cohorts':manifest['cohorts'],
+        'sampling_by_cohort':sampling_by_cohort,'clean_repeat_required':True,
         'deferred_state_commit':True,'two_x_established':False,'scope':'One B2 deferred-state MTP3 two-real-row/equal-limit pilot; singles use greedy; C4/8 queue physical B2 groups. Bounded quality; ordinary references, tuning/repeats/4K/broad quality pending.'}
 (out/'batch-mtp-deferred-http-pilot-attempt1-verified.json').write_text(json.dumps(result,indent=2),encoding='utf8')
 print(json.dumps({k:v for k,v in result.items() if k not in ('run','references','raw_cohorts')},indent=2))
