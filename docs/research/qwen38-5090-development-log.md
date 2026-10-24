@@ -999,3 +999,15 @@ padded single-token decode, so no second compressed model copy is retained.
 It preserves batch1,4096 capacity and the same eight text request bodies and four
 matched JPEG smoke cases. Results are pending. General serving/tuned comparisons,
 INT4/4B execution and the2x objective remain incomplete.
+
+## P038 - 2026-10-23: full fused16 pilot measured; strict parity remains open
+
+Run601a6376c8fa4c0cbf0e3b3790b9aa69 tested source e5adb6d9f0cda0c683f66386cd43a19b49ccee96 on the single RTX5090. Existing fused16 engines served chunked prefill and padded one-token decode using one compressed weight set. Batch1,4096 capacity,41 actual prompt tokens,32 generated tokens, eight measured requests and one excluded warmup match the earlier direct-call pilot request bodies.
+
+Synchronized direct-call median TTFT was99.79560000010679ms, median decode36.489412479650696tokens/s, and cohort output32.951705388477315tokens/s. Earlier serial pilot values were1060.208299999431ms,37.318686598767705tokens/s and16.69191732112634tokens/s. These are exploratory single runs, exclude HTTP, and do not establish a matched2x advantage against either reference. No concurrent serving measurement was performed.
+
+All four JPEG color/spatial semantic smoke checks passed. Strict token parity improved from2/4 to3/4 but bottom-blue differed (native6105 versus reference11855, followed by EOS), although both decode as blue. The overall job correctly remained exit1. General serving admission and broader quality remain closed; no assertion or tolerance was relaxed.
+
+Whole-build/correctness/pilot sampled adapter-wide NVML maximum was27,810,942,976bytes over13,398 samples. Observed gaps median31.6873ms/max1.3155206s; no sampler errors. This is neither an instantaneous peak nor a warmed serving/process-only measurement. Source identity was unchanged before/after. Native DLL and VM hashes match the earlier pilot. Raw pilot SHA256 is47c86d5795f1ec0c1f67ef69970736d0704d3be9bb25602618623fb936bcf455f.
+
+Next: resolve/characterize exact-token quality differences, expose true streaming events through current Garnet serving, and establish tuned matched CUDA-graph references before any2x claim. INT4 W4A16,4B and concurrency execution remain outstanding. The active goal is not complete.
