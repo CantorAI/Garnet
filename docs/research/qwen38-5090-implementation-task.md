@@ -496,6 +496,12 @@ Relative to the faster supplied ordinary reference, decode1.022x/1.049x and
 TTFT0.468x/0.672x. Text meets half ordinary-reference TTFT in this one short-prompt
 trial; image and2xdecode/concurrency do not. No fastest-tuned or broad-quality claim.
 
+Head-cache follow-up passed strict correctness and exercised reuse in all timed
+requests, but its separate single HTTP pilot was slower:67.65/69.56tok/s and
+TTFT82.74/112.51ms. No benefit demonstrated; default stays off and causal repeat
+controls remain necessary. Instrumented stages point to target verification as
+the main cost; nested graph/state/head profiling is running before kernel changes.
+
 Next: profile decode/verification costs and improve actual decode and native
 batching, not just first-token delay. Preserve all regressions and repeat trials.
 Separate construction memory from serving memory. Continue reference MTP/tuning and
