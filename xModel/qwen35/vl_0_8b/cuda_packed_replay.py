@@ -16,8 +16,10 @@ class CUDAPackedDeltaReplayVerifier(CUDATargetVerifier):
         self.deferred=bool(getattr(decoder,'deferred_state_commit',False))
         if native_prefix_commit is None:native_prefix_commit=bool(getattr(decoder,'native_prefix_commit',False))
         self.reuse_verified_head=bool(getattr(decoder,'reuse_verified_head',False))
-        if self.reuse_verified_head and not native_prefix_commit:
-            raise ValueError('Verified head reuse requires the native packed-prefix profile')
+        # Accepted hidden rows and their authoritative predictions survive
+        # either replay backend. _read still refreshes masked normalization;
+        # active zero-prefix rows force fresh logits. This opt-in does not
+        # require register128 arithmetic or a different state-commit policy.
         if native_prefix_commit and (not self.deferred or not decoder.register_delta_128):
             raise ValueError('Native prefix commit requires deferred state and register128 arithmetic')
         super().__init__(decoder,checkpoint,max_tokens)
