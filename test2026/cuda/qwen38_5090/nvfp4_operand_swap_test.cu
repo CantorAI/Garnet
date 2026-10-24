@@ -222,6 +222,9 @@ Json CheckpointCase(const std::filesystem::path& fixture,const std::filesystem::
  BL(options.Launch(chosen,handle,dw.p,dx.p,b.p,workspace.p,budget,stream,alpha));CU(cudaStreamSynchronize(stream));
  std::vector<__nv_bfloat16> left(size_t(batch)*rows),right(left.size());CU(cudaMemcpy(left.data(),a.p,left.size()*2,cudaMemcpyDeviceToHost));CU(cudaMemcpy(right.data(),b.p,right.size()*2,cudaMemcpyDeviceToHost));
  const auto stem=std::string(timing?"checkpoint-timed-down-b":"checkpoint-down-b")+std::to_string(batch);Write(out/(stem+"-baseline.bf16"),left);Write(out/(stem+"-candidate.bf16"),right);
+ Buffer production(size_t(batch)*rows*2);BL(Garnet::RunModelOptNVFP4Matmul(handle,dw.p,dws.p,dx.p,dxs.p,production.p,batch,rows,k,alpha,workspace.p,budget,stream,true));CU(cudaStreamSynchronize(stream));
+ std::vector<__nv_bfloat16> productionOutput(left.size());CU(cudaMemcpy(productionOutput.data(),production.p,left.size()*2,cudaMemcpyDeviceToHost));Write(out/(stem+"-production-policy.bf16"),productionOutput);
+ size_t productionDifferences=0;for(size_t i=0;i<left.size();++i)if(std::memcmp(&left[i],&productionOutput[i],2))++productionDifferences;
  size_t differences=0,nonfinite=0,baselineOracleFailures=0,candidateOracleFailures=0;double maxDifference=0;
  for(size_t i=0;i<left.size();++i){const float l=__bfloat162float(left[i]),r=__bfloat162float(right[i]);if(!std::isfinite(l)||!std::isfinite(r))++nonfinite;
   if(std::memcmp(&left[i],&right[i],2))++differences;maxDifference=std::max(maxDifference,double(std::abs(l-r)));
@@ -233,8 +236,9 @@ Json CheckpointCase(const std::filesystem::path& fixture,const std::filesystem::
   baselineOracleFailures+=std::abs(double(__bfloat162float(left[size_t(br)*rows+channel]))-ref)>tolerance;
   candidateOracleFailures+=std::abs(double(__bfloat162float(right[size_t(br)*rows+channel]))-ref)>tolerance;
  }
- const bool passed=differences==0&&nonfinite==0&&baselineOracleFailures==0&&candidateOracleFailures==0;
+ const bool passed=differences==0&&productionDifferences==0&&nonfinite==0&&baselineOracleFailures==0&&candidateOracleFailures==0;
  Json result={{"batch",batch},{"outputs",left.size()},{"different_bf16_words",differences},{"nonfinite_outputs",nonfinite},{"max_absolute_difference",maxDifference},{"cpu_oracle_outputs",batch*32},{"baseline_oracle_failures",baselineOracleFailures},{"candidate_oracle_failures",candidateOracleFailures},{"candidate_matches",matches},{"chosen_heuristic_index",chosen},{"workspace_budget_bytes",budget},{"passed",passed}};
+ result["production_policy_different_bf16_words"]=productionDifferences;
  if(timing&&passed){
   cudaDeviceProp prop{};CU(cudaGetDeviceProperties(&prop,0));const size_t flushBytes=std::max<size_t>(256ULL<<20,2ULL*prop.l2CacheSize+(32ULL<<20));Buffer flush(flushBytes);CU(cudaMemsetAsync(flush.p,0,flushBytes,stream));
   TimedGraph baseline,candidate;baseline.Capture(stream,[&]{BL(Garnet::RunModelOptNVFP4Matmul(handle,dw.p,dws.p,dx.p,dxs.p,a.p,batch,rows,k,alpha,workspace.p,4ULL<<20,stream));});

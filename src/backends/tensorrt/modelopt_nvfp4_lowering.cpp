@@ -6,6 +6,7 @@
 #include <climits>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
 #include <stdexcept>
 namespace Garnet {
 using namespace nvinfer1;
@@ -133,7 +134,9 @@ ITensor* TRTBuilder::ProjectModelOptNVFP4(ITensor* input,ITensor* weight){
     auto* flatten=value?network->addShuffle(*value):nullptr;
     if(!flatten)throw std::runtime_error("Native NVFP4 input reshape failed");
     flatten->setReshapeDimensions(Dims2{int(rows),p.columns});
-    auto* plugin=new ModelOptNVFP4Plugin(p.rows,p.columns,p.weightScale,p.inputScale);ownedPlugins.push_back(plugin);
+    const auto* policy=std::getenv("GARNET_NVFP4_DOWN_CANDIDATE");
+    const bool candidate=p.rows==5120&&p.columns==17408&&policy&&std::strcmp(policy,"1")==0;
+    auto* plugin=new ModelOptNVFP4Plugin(p.rows,p.columns,p.weightScale,p.inputScale,candidate);ownedPlugins.push_back(plugin);
     ITensor* inputs[]={flatten->getOutput(0),weight,p.scales};
     auto* layer=network->addPluginV2(inputs,3,*plugin);
     if(!layer)throw std::runtime_error("Native NVFP4 projection layer failed");

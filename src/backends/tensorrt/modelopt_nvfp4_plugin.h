@@ -8,10 +8,13 @@
 namespace Garnet {
 class ModelOptNVFP4Plugin final:public nvinfer1::IPluginV2DynamicExt {
     struct State {int32_t rows,columns;float weightScale,inputScale;} state_;
+    bool downCandidate_=false;
+    bool useDownCandidate(int batch) const noexcept{return downCandidate_&&(batch==1||batch==4||batch==128);}
+    size_t blasWorkspace(int batch) const noexcept{return (useDownCandidate(batch)?64ULL:4ULL)<<20;}
     std::string namespace_;
     std::shared_ptr<void> context_;
 public:
-    ModelOptNVFP4Plugin(int rows,int columns,float weightScale,float inputScale);
+    ModelOptNVFP4Plugin(int rows,int columns,float weightScale,float inputScale,bool downCandidate=false);
     nvinfer1::IPluginV2DynamicExt* clone() const noexcept override;
     nvinfer1::DimsExprs getOutputDimensions(int,const nvinfer1::DimsExprs*,int,nvinfer1::IExprBuilder&) noexcept override;
     bool supportsFormatCombination(int,const nvinfer1::PluginTensorDesc*,int,int) noexcept override;
@@ -20,12 +23,15 @@ public:
     int enqueue(const nvinfer1::PluginTensorDesc*,const nvinfer1::PluginTensorDesc*,const void* const*,void* const*,void*,cudaStream_t) noexcept override;
     nvinfer1::DataType getOutputDataType(int,const nvinfer1::DataType*,int) const noexcept override{return nvinfer1::DataType::kBF16;}
     const char* getPluginType() const noexcept override{return "GarnetModelOptNVFP4";}
-    const char* getPluginVersion() const noexcept override{return "1";}
+    const char* getPluginVersion() const noexcept override{return downCandidate_?"2":"1";}
     int getNbOutputs() const noexcept override{return 1;}
     int initialize() noexcept override;
     void terminate() noexcept override{context_.reset();}
-    size_t getSerializationSize() const noexcept override{return sizeof(State);}
-    void serialize(void* data) const noexcept override{if(data)std::memcpy(data,&state_,sizeof(State));}
+    size_t getSerializationSize() const noexcept override{return sizeof(State)+(downCandidate_?sizeof(uint32_t):0);}
+    void serialize(void* data) const noexcept override{
+        if(!data)return;std::memcpy(data,&state_,sizeof(State));
+        if(downCandidate_){const uint32_t policy=1;std::memcpy(static_cast<unsigned char*>(data)+sizeof(State),&policy,sizeof(policy));}
+    }
     static ModelOptNVFP4Plugin* Deserialize(const void* data,size_t length) noexcept;
     void destroy() noexcept override{delete this;}
     void setPluginNamespace(const char* value) noexcept override{namespace_=value?value:"";}

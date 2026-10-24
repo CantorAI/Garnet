@@ -8,14 +8,14 @@ std::shared_ptr<void> CreateModelOptNVFP4Context();
 cublasStatus_t RunModelOptNVFP4MatmulContext(const std::shared_ptr<void>& context,
     const void* weights,const void* weightScales,const void* input,const void* inputScales,
     void* output,int batch,int rows,int columns,float globalScale,
-    void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept;
+    void* workspace,size_t workspaceBytes,cudaStream_t stream,bool downCandidate=false) noexcept;
 // X[batch,K] @ W[rows,K]^T, packed E2M1 input/weights, BF16 output.
 // Scale arrays use cuBLASLt's 128x4 tiled E4M3 layout; tensor scales
 // are combined in globalScale. Caller owns stream, workspace and handle.
 cublasStatus_t RunModelOptNVFP4Matmul(cublasLtHandle_t handle,
     const void* weights,const void* weightScales,const void* input,const void* inputScales,
     void* output,int batch,int rows,int columns,float globalScale,
-    void* workspace,size_t workspaceBytes,cudaStream_t stream) noexcept;
+    void* workspace,size_t workspaceBytes,cudaStream_t stream,bool downCandidate=false) noexcept;
 // Tensorwide E4M3 X/W, FP32 accumulation, BF16 output; alpha includes both scales.
 cublasStatus_t RunModelOptFP8Matmul(cublasLtHandle_t handle,
     const void* weights,const void* input,void* output,int batch,int rows,int columns,

@@ -16,6 +16,32 @@ template<class T> std::unique_ptr<T> Own(T* p){if(!p)throw std::runtime_error("T
 size_t Offset(int row,int col,int columns){return size_t(row/128)*128*columns+size_t(col/4)*512+(row%32)*16+((row%128)/32)*4+col%4;}
 int main(int argc,char** argv){try{
     using namespace nvinfer1;Logger logger;
+    if(argc==2&&!std::strcmp(argv[1],"--candidate-contracts")){
+        if(!Garnet::EnsureModelOptNVFP4PluginRegistered())throw std::runtime_error("Dual plugin registration failed");
+        Garnet::ModelOptNVFP4Plugin legacy(5120,17408,1.f,1.f),candidate(5120,17408,1.f,1.f,true);
+        if(std::strcmp(legacy.getPluginVersion(),"1")||legacy.getSerializationSize()!=16||std::strcmp(candidate.getPluginVersion(),"2")||candidate.getSerializationSize()!=20)throw std::runtime_error("Plugin wire/version contract changed");
+        std::vector<unsigned char> wire(20);candidate.serialize(wire.data());
+        std::unique_ptr<Garnet::ModelOptNVFP4Plugin> restored(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),wire.size()));
+        auto clone=Own(candidate.clone());
+        if(!restored||std::strcmp(restored->getPluginVersion(),"2")||std::strcmp(clone->getPluginVersion(),"2"))throw std::runtime_error("Candidate policy lost on clone/reload");
+        std::vector<unsigned char> again(20);restored->serialize(again.data());if(again!=wire)throw std::runtime_error("Candidate serialization not stable");
+        for(int batch:{1,2,4,128}){
+            PluginTensorDesc in[3]{};in[0].dims=Dims2{batch,17408};
+            const auto a=legacy.getWorkspaceSize(in,3,nullptr,1),b=candidate.getWorkspaceSize(in,3,nullptr,1);
+            if(!a||b-a!=((batch==2)?0:60ULL<<20)||restored->getWorkspaceSize(in,3,nullptr,1)!=b||clone->getWorkspaceSize(in,3,nullptr,1)!=b)throw std::runtime_error("Serialized workspace policy mismatch");
+        }
+        auto* oldCreator=getPluginRegistry()->getPluginCreator("GarnetModelOptNVFP4","1","");auto* newCreator=getPluginRegistry()->getPluginCreator("GarnetModelOptNVFP4","2","");
+        if(!oldCreator||!newCreator||oldCreator->deserializePlugin("wrong",wire.data(),20))throw std::runtime_error("Legacy creator admitted candidate wire");
+        std::vector<unsigned char> oldWire(16);legacy.serialize(oldWire.data());
+        if(newCreator->deserializePlugin("wrong",oldWire.data(),16))throw std::runtime_error("Candidate creator admitted legacy wire");
+        auto old=Own(oldCreator->deserializePlugin("legacy",oldWire.data(),16));auto current=Own(newCreator->deserializePlugin("candidate",wire.data(),20));
+        if(std::strcmp(old->getPluginVersion(),"1")||std::strcmp(current->getPluginVersion(),"2"))throw std::runtime_error("Creator changed serialized selection policy");
+        if(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),19))throw std::runtime_error("Truncated candidate wire admitted");
+        std::fill(wire.begin()+16,wire.end(),0);if(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),20))throw std::runtime_error("Unknown candidate policy admitted");
+        bool rejected=false;try{Garnet::ModelOptNVFP4Plugin invalid(256,256,1.f,1.f,true);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("Candidate admitted unqualified geometry");
+        puts("NVFP4_CANDIDATE_SERIALIZATION_CLONE_WORKSPACE_LEGACY_CONTRACTS_PASS; no GPU timing claim");return 0;
+    }
     {
         Garnet::ModelOptNVFP4Plugin plugin(256,256,1.f,1.f/448.f);
         PluginTensorDesc desc[4]{};
