@@ -1,0 +1,27 @@
+{
+  "scope": "One auxiliary Windows adapter-memory counter observation during the live B4 HTTP pilot after a sampling gap was observed. Extra observer differs from baseline monitoring; preserve as a possible measurement confound. Not process attribution, DXGI budget, eviction or causal proof. No GPU operation or source/runtime mutation.",
+  "command": "Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUAdapterMemory | Select-Object Name,DedicatedUsage,SharedUsage,TotalCommitted | ConvertTo-Json -Compress",
+  "exact_observation_timestamp_recorded": false,
+  "observed_before_completed_cohort": "text-c2",
+  "records": [
+    {
+      "Name": "luid_0x00000000_0x000112BC_phys_0",
+      "DedicatedUsage": 0,
+      "SharedUsage": 8192,
+      "TotalCommitted": 8192
+    },
+    {
+      "Name": "luid_0x00000000_0x00011291_phys_0",
+      "DedicatedUsage": 0,
+      "SharedUsage": 8192,
+      "TotalCommitted": 188416
+    },
+    {
+      "Name": "luid_0x00000000_0x0000FEE7_phys_0",
+      "DedicatedUsage": 30918864896,
+      "SharedUsage": 88580096,
+      "TotalCommitted": 31440572416
+    }
+  ],
+  "capture_method": "Transcribed from the SSH helper command JSON output; not a raw timestamped CIM export."
+}
