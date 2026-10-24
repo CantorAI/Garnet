@@ -8,6 +8,8 @@ import garnet
 from xModel.qwen38.vl_27b.model import create_cuda_decoder,create_cuda_vision,prepare_cuda_image
 from test2026.cuda.qwen38_5090.native_worker_io import requests,emit
 from test2026.cuda.qwen38_5090.native_prompt import image_positions
+from test2026.cuda.qwen38_5090.native_worker_profile import resolve_profile
+profile=resolve_profile(os.environ)
 checkpoint,image_path=sys.argv[1:3]
 with open(os.path.join(checkpoint,'config.json')) as f:config=json.load(f)
 tokenizer=garnet.tokenizer();tokenizer.open(checkpoint)
@@ -16,23 +18,24 @@ stops=[tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
 decoder=None;vision=None;speculative=None
 try:
     vision=create_cuda_vision(checkpoint,config,16,16)
-    packed_mode=os.environ.get('GARNET_STUDY_PACKED','0')=='1'
-    mtp_depth=int(os.environ.get('GARNET_STUDY_MTP_DEPTH','0'))
-    if mtp_depth not in (0,1,3,7) or mtp_depth and not packed_mode:raise ValueError('MTP study requires packed mode and depth1/3/7')
-    if packed_mode:
+    packed_mode=profile['packed'];mtp_depth=profile['depth']
+    if profile['shared']:
+        from xModel.qwen38.vl_27b.model import create_cuda_shared_compressed_decoder
+        decoder=create_cuda_shared_compressed_decoder(checkpoint,config,4096,retain_linear_inputs=mtp_depth>0)
+    elif packed_mode:
         from xModel.qwen38.vl_27b.model import create_cuda_packed_decoder
         decoder=create_cuda_packed_decoder(checkpoint,config,4096,retain_linear_inputs=mtp_depth>0)
     else:decoder=create_cuda_decoder(checkpoint,config,4096,chunk_size=16,fused_delta=True,fused_attention=True)
     decoder.enable_cuda_graph(True);vision.graph.enable_cuda_graph(True)
-    vision_policy=os.environ.get('GARNET_STUDY_RESIDENT_VISION','0')
+    vision_policy='1' if profile['resident'] else '0'
     if vision_policy not in ('0','1'):raise ValueError('Invalid resident vision profile')
     if vision_policy=='1':vision.enable_resident_input(decoder.io)
-    mtp_chunk=int(os.environ.get('GARNET_STUDY_MTP_CHUNK','16'))
+    mtp_chunk=profile['draft_chunk']
     if mtp_chunk not in (4,8,16) or mtp_depth and mtp_depth+1>mtp_chunk:raise ValueError('Invalid MTP draft chunk')
     if mtp_depth:
         from xModel.qwen38.vl_27b.model import create_cuda_mtp_session
         speculative=create_cuda_mtp_session(decoder,checkpoint,config,stops,mtp_depth,draft_chunk_size=mtp_chunk)
-    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':16,'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
+    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
     for item in requests():
         key=item['id'];body=item['body'];started=time.monotonic()
         try:
