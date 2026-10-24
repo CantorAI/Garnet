@@ -19,7 +19,9 @@ def compare_greedy_pair(key,teacher,trial):
  return row
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--study',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();root=a.study;out=a.output;out.mkdir(exist_ok=True)
+ p=argparse.ArgumentParser();p.add_argument('--study',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--launcher',type=Path);a=p.parse_args();root=a.study;out=a.output
+ if out.exists() and any(out.iterdir()):raise FileExistsError('Preserve previous MTP attempt')
+ out.mkdir(exist_ok=True)
  url='http://127.0.0.1:18082';deadline=time.monotonic()+1800
  while True:
   try:
@@ -42,7 +44,7 @@ def main():
   result=request(url,body,out,'mtp-stream-gate-'+case,128)
   if result['status']!='completed' or result['prompt_tokens']!=prompt_count:raise ValueError('Actual MTP stream/count gate failed')
  print('MTP_SIXTEEN_GREEDY_AND_REAL_STREAM_GATES_PASSED',flush=True)
- files=[root/'build/bin/garnet.dll',root/'build/bin/xlang3.exe',root/'serve-native-worker.bat',root/'models/Qwen3.8-27B-NVFP4/config.json']
+ files=[root/'build/bin/garnet.dll',root/'build/bin/xlang3.exe',a.launcher or root/'serve-native-worker.bat',root/'models/Qwen3.8-27B-NVFP4/config.json']
  metadata={'source':source_identity(),'health':health,'files':{str(f):hashlib.sha256(f.read_bytes()).hexdigest() for f in files},'color_gate':colors,'greedy_equivalence':rows,
   'scope':'Sixteen untimed self-greedy sequence checks plus four retained VLM checks only; not broad quality or full reference precision equivalence'}
  path=out/'metadata.json';path.write_text(json.dumps(metadata,indent=2))

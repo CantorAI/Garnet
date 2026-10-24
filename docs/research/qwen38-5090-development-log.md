@@ -1333,3 +1333,89 @@ Next: finish or diagnose this actual reference run; then corrected4B GPU streami
 Previous continuation made source/plan progress and verified the same reference processes live. Current vLLM server/gated-driver handles remain running; Linux compiler processes and newly completed .ninja_log FP4 objects prove active JIT work, not HTTP readiness or benchmark completion. No restart, cache deletion or concurrent GPU model was performed. Reference source remains frozen at1e19927bc with separate source-snapshot.zip; local documentation/source preparation does not change that running source.
 
 Prepared corrected4B smoke to enable vision CUDA graph mode, collect actual target-only Model callbacks on text/image, preserve raw events/results before assertions (including partial events on inference exceptions), compare callbacks with complete sampled IDs/EOS/prompt counts, and compare repeated calls with callbacks disabled. Existing repeat/near-capacity/independent-quality limitations remain. The4B research HTTP worker enables the same vision graph setting. CPU study suite68 tests passed after the callback change, both scripts compile, and whitespace checks pass. These additions are not yet run onGPU and produce no performance claim.
+
+
+## P074 - 2026-10-23: vLLM corrected-grid graph pilot completed and independently replayed
+
+Reference source1e19927bc, run cf140177a4f24bf3ad845ad32f8cb4c0 completed exit0, after native4-JPEG token/color gates passed. Actual FULL decode graph capture sizes1/2/4/8 completed. Resolved cache37774 tokens/log-estimated9.22x capacity at4096; this is not an actual eight-full4K-input admission test. BF16 KV/FP32 SSM, mixed checkpoint, prefixcache disabled. Actual workload short41-token text/104-token image, max128, seed3 JPEG/image-first/binary-grid,8 measured requests plus2 warmup waves/cohort. Every measured cohort generated1024 actual tokens, all measured arrivals single-token.
+
+[
+  {
+    "case": "text",
+    "concurrency": 1,
+    "ttft_median_ms": 152.36114999970596,
+    "decode_median_tokens_per_second": 68.48187553704147,
+    "output_tokens_per_second": 63.62260897505279,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27909734400
+  },
+  {
+    "case": "text",
+    "concurrency": 2,
+    "ttft_median_ms": 257.50035000055504,
+    "decode_median_tokens_per_second": 63.639642380250216,
+    "output_tokens_per_second": 113.24198465156229,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27909734400
+  },
+  {
+    "case": "text",
+    "concurrency": 4,
+    "ttft_median_ms": 272.6720500013471,
+    "decode_median_tokens_per_second": 61.885123191550846,
+    "output_tokens_per_second": 219.89214333320064,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27909734400
+  },
+  {
+    "case": "text",
+    "concurrency": 8,
+    "ttft_median_ms": 296.779250000327,
+    "decode_median_tokens_per_second": 63.7942554305161,
+    "output_tokens_per_second": 445.7684580249254,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27909734400
+  },
+  {
+    "case": "image",
+    "concurrency": 1,
+    "ttft_median_ms": 166.51065000041854,
+    "decode_median_tokens_per_second": 68.49756713461639,
+    "output_tokens_per_second": 63.21622392036499,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27916025856
+  },
+  {
+    "case": "image",
+    "concurrency": 2,
+    "ttft_median_ms": 331.79550000022573,
+    "decode_median_tokens_per_second": 64.02234111212088,
+    "output_tokens_per_second": 110.64390951956912,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27928608768
+  },
+  {
+    "case": "image",
+    "concurrency": 4,
+    "ttft_median_ms": 312.0722500025295,
+    "decode_median_tokens_per_second": 61.236407185715734,
+    "output_tokens_per_second": 214.92384591196142,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27932803072
+  },
+  {
+    "case": "image",
+    "concurrency": 8,
+    "ttft_median_ms": 327.7791000000434,
+    "decode_median_tokens_per_second": 63.69880718536221,
+    "output_tokens_per_second": 439.86431903929963,
+    "generated_tokens": 1024,
+    "sampled_peak_adapter_used_bytes": 27993620480
+  }
+]
+
+Archive vllm-graph-linkfix-evidence.zip: 1187004bytes, SHA256 8002dc620d88f1234e6a34548fa1f0d64ad71d0c13c8255e74fce9fcd98ca930. Independently verified ZIP CRC/allfile hashes and replayed64 measured request bytes/SSE timestamps/token counts/text/summaries. All62 image warmup/measured JPEG requests independently decoded and encoded/decoded hashes verified:62distinct encoded and62distinct RGB, fixing the legacy pixel-nonce collision. These checks do not prove broad pretrained quality or reference/native precision equivalence. Output-head FP4 tuning buckets for4/8 rows remain uncovered (fallback tactic=-1), so this is a candidate, not an optimized-fastest-reference claim. ServerPID301 was identity-checked/signaled; supervised server exit0 and GPU464MiB used/31724MiB free confirmed before another engine. Original failed startup logs remain intact.
+
+Prepared chart from archived manifests comparing historical text-only Garnet/SGLang with this vLLM candidate. Chart explicitly labels different run/request-preparation profiles and native C2/4/8 unmeasured. No2x claim; current Garnet historical decode is slower. Full matched corrected native/SGLang runs, arithmetic/quality/repetition and concurrent admission still required.
+
+Synced corrected4B sourcec8d0e21dc, verified6451 files/zero mismatches, started qwen35-4b-grid16-native-smoke in separate fixed results/ledger paths after vLLM shutdown. It remains live with growing CPU/file activity; no premature success claim. Prepared explicit MTP3 packed native launcher using the qualified DLL without forced rebuild, and validator --launcher provenance plus nonempty-output preservation guard.68 CPU study tests and CLI preservation check pass; MTP GPU self-greedy/quality/stream/benchmark remain pending. No concurrent GPU models or source mutation during the4B job.
