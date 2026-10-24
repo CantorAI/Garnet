@@ -2766,3 +2766,8 @@ Original supervised job completed exit0, all eight cohorts. Archive bb2a7145657a
 | image-c8 | 4565.5161 | 54.433241 | 90.708603 | 8/0 |
 
 C4/C8 queue physical B2 groups. Text C2 contains four MTP requests and four greedy fallback requests, so its cohort median is not an isolated MTP measurement. C1 is entirely greedy. C8 aggregate versus earlier greedy pilot is text 1.792949x; image 1.728579x; these are separate bounded pilots, not a controlled causal or repeated-study speedup claim. Faster ordinary reference C8 aggregate remains445.768458 text/439.864319 image tok/s. Target2x is unmet. Sampled adapter-wide measured peak reaches31,658,659,840 bytes; not an instantaneous process-attributed peak. Actual4K prompts, broad quality, repeats and tuned fastest reference configurations remain pending.
+
+
+### Physical B4 T8 original launch and replay preparation (2026-10-24)
+
+After the B2 MTP HTTP pilot closed, was archived and passed independent replay on both machines, guarded shared-full-b4-t8-attempt1 was launched through the original supervised handle. The remote source/runtime remains frozen while it lives. Local archival/replay preparation binds the prior verified HTTP and shared B2 archives, the same native DLL/five native build-source hashes, raw request/response oracles and resource records. It independently verifies that the new probe differs from the retained B2 probe only by the declared B4/T8 profile, guard and scope/docstring changes. All four retained B1 sequences must match across two resets (eight row comparisons); a partial or failed run remains failure evidence. No target-state-array, broader quality, HTTP or timing admission follows from this ID gate. Methods syntax-checked; original job remains live and no B4 result is claimed.
