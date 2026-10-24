@@ -43,7 +43,8 @@ int main(int argc,char** argv){try{
         auto historicalReload=OwnPlugin(historicalCreator->deserializePlugin("historical",historicalWire.data(),20));
         if(std::strcmp(historical.getPluginVersion(),"2")||std::strcmp(historicalReload->getPluginVersion(),"2")||newCreator->deserializePlugin("wrong",historicalWire.data(),20))throw std::runtime_error("Historical policy semantics not preserved");
         PluginTensorDesc prefill[3]{};prefill[0].dims=Dims2{128,17408};
-        if(historicalReload->getWorkspaceSize(prefill,3,nullptr,1)-candidate.getWorkspaceSize(prefill,3,nullptr,1)!=(60ULL<<20))throw std::runtime_error("Historical prefill workspace changed");
+        auto* historicalDynamic=dynamic_cast<IPluginV2DynamicExt*>(historicalReload.get());
+        if(!historicalDynamic||historicalDynamic->getWorkspaceSize(prefill,3,nullptr,1)-candidate.getWorkspaceSize(prefill,3,nullptr,1)!=(60ULL<<20))throw std::runtime_error("Historical prefill workspace changed");
         if(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),19))throw std::runtime_error("Truncated candidate wire admitted");
         std::fill(wire.begin()+16,wire.end(),0);if(Garnet::ModelOptNVFP4Plugin::Deserialize(wire.data(),20))throw std::runtime_error("Unknown candidate policy admitted");
         bool rejected=false;try{Garnet::ModelOptNVFP4Plugin invalid(256,256,1.f,1.f,true);}catch(const std::invalid_argument&){rejected=true;}
