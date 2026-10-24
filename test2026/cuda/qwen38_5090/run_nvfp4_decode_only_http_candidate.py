@@ -120,6 +120,6 @@ def main():
         'file_sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
         'scope':'Offered-loadC1/2/4/8 pilot after full model gates,20 exact target/MTP pairs,20 prior qualified identities,2 SSE gates and8 queued-client controls. One native B1 slot serializes concurrent callers. Not CUDA batching, broad quality, full-context, tuned reference or2x qualification.'}
     path=out/'metadata.json';path.write_text(json.dumps(metadata,indent=2));print('V3_EXACT_GOLDENS_MTP_SSE_AND_QUEUED_ISOLATION_GATES_PASSED',flush=True)
-    subprocess.run([sys.executable,str(root/'Garnet/test2026/cuda/qwen38_5090/benchmark_stream.py'),'--url',url,'--engine','garnet','--output',str(out/'benchmark'),'--metadata',str(path),'--concurrency','1,2,4,8','--requests','8','--warmups','2','--max-tokens','128','--workload-seed','3','--image-format','jpeg','--image-order','image-first','--image-nonce-pattern','binary-grid'],check=True)
+    subprocess.run([sys.executable,str(root/'Garnet/test2026/cuda/qwen38_5090/benchmark_stream.py'),'--url',url,'--engine','garnet','--output',str(out/'benchmark'),'--metadata',str(path),'--concurrency','1','2','4','8','--requests','8','--warmups','2','--max-tokens','128','--workload-seed','3','--image-format','jpeg','--image-order','image-first','--image-nonce-pattern','binary-grid'],check=True)
 
 if __name__=='__main__':main()
