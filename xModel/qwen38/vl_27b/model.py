@@ -145,7 +145,7 @@ def validate_mtp_metadata(config,metadata):
     return True
 
 
-def create_cuda_mtp_session(decoder,checkpoint,config,stops,depth=3):
+def create_cuda_mtp_session(decoder,checkpoint,config,stops,depth=3,draft_chunk_size=None):
     """Research-only verified draft; no indexed NVFP4 head or second target copy."""
     validate_cuda_profile(config,decoder.capacity,decoder.batch)
     if depth not in (1,3,7) or not getattr(decoder,'packed_state_program',False) or not decoder.retain_linear_inputs:
@@ -155,7 +155,7 @@ def create_cuda_mtp_session(decoder,checkpoint,config,stops,depth=3):
     validate_mtp_metadata(config,metadata)
     if json.loads(decoder.io.memory_json())['head_precision']!='modelopt_nvfp4_w4a4':raise ValueError('MTP requires the target native NVFP4 head')
     from xModel.qwen35.vl_0_8b.cuda_speculative import CUDASpeculativeSession
-    return CUDASpeculativeSession(decoder,checkpoint,stops,depth,head_candidates=0,prefix_replay=True)
+    return CUDASpeculativeSession(decoder,checkpoint,stops,depth,head_candidates=0,prefix_replay=True,draft_chunk_size=draft_chunk_size)
 
 
 def validate_image_processor(processor,max_pixels=1048576):

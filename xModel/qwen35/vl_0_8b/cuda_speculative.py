@@ -12,8 +12,14 @@ from .decoder_layer import T
 from .cuda_mtp import CUDAMTPProgram
 from .cuda_verify import CUDATargetVerifier
 
+def resolve_mtp_chunk(target_chunk,depth,draft_chunk=None):
+    size=target_chunk if draft_chunk is None else draft_chunk
+    if type(size) is not int or size not in (4,8,16) or size>target_chunk or depth+1>size:
+        raise ValueError('MTP draft chunk must fit correction width and target profile')
+    return size
+
 class CUDASpeculativeSession:
-    def __init__(self,decoder,checkpoint,stops,max_draft_tokens=3,head_candidates=0,prefix_replay=False):
+    def __init__(self,decoder,checkpoint,stops,max_draft_tokens=3,head_candidates=0,prefix_replay=False,draft_chunk_size=None):
         if max_draft_tokens not in (1,3,7) or max_draft_tokens+1>decoder.chunk_size:
             raise ValueError('MTP draft depth1/3/7 must fit the target chunk')
         vocab=json.loads(decoder.io.memory_json())['vocab_size']
@@ -21,7 +27,7 @@ class CUDASpeculativeSession:
         self.head_candidates=head_candidates;self.candidates=None
         self.prefix_replay=prefix_replay
         self.decoder=decoder;self.io=decoder.io;self.stops=set(stops);self.depth=max_draft_tokens
-        self.batch=decoder.batch;self.size=decoder.chunk_size;self.capacity=decoder.capacity
+        self.batch=decoder.batch;self.size=resolve_mtp_chunk(decoder.chunk_size,max_draft_tokens,draft_chunk_size);self.capacity=decoder.capacity
         self.hidden_size=decoder.config['hidden_size'];self.program=None;self.verifier=None;self.prefill_norm=None;self.buffers=[]
         self.ready=False;self.finished=False;self.poisoned=False
         self.reset_required=True
@@ -38,8 +44,8 @@ class CUDASpeculativeSession:
             self.program=CUDAMTPProgram(checkpoint,decoder.config,b,self.capacity,t,decoder.projection_workspace_bytes)
             self.program.graph.enable_cuda_graph(True)
             if getattr(decoder,'serial_graph_reuse',False):self.program.graph.enable_serial_graph_reuse(True)
-            self.prefill_width=getattr(decoder,'prefill_chunk_size',t)
-            if self.prefill_width!=t:
+            self.prefill_width=getattr(decoder,'prefill_chunk_size',decoder.chunk_size)
+            if self.prefill_width!=decoder.chunk_size:
                 config=decoder.config
                 @T.fusion(name='qwen35_mtp_wide_target_norm',boundary='required')
                 def wide_norm(value):

@@ -3,6 +3,8 @@ set GARNET_RUNTIME_ROOT=D:\CantorAI\5090-study-20261023\build\bin
 set CUDA_VISIBLE_DEVICES=0
 set GARNET_STUDY_PACKED=1
 set GARNET_STUDY_MTP_DEPTH=7
+set GARNET_STUDY_RESIDENT_VISION=0
+set GARNET_STUDY_MTP_CHUNK=16
 set PATH=%GARNET_RUNTIME_ROOT%;D:\CantorAI\5090-study-20261023\tools\TensorRT\bin;D:\CantorAI\5090-study-20261023\tools\cuda13\nvidia\cu13\bin\x86_64;%PATH%
 if not exist D:\CantorAI\5090-study-20261023\tmp mkdir D:\CantorAI\5090-study-20261023\tmp
 set TMP=D:\CantorAI\5090-study-20261023\tmp
