@@ -925,3 +925,32 @@ CPU steps at4K capacity, testing chunks4/16 plus a two-active-token continuation
 and inactive padding, future KV guards and CUDA replay. One engine/weight set
 must serve prefill and decode to avoid duplicating the compressed model in VRAM.
 These component/whole-model optimized results are not yet available.
+
+## P035 - 2026-10-23: fused GDN passes; four-token attention check fails
+
+The18-step CPU oracle completed exit0, SHA256
+9ccb239453c44da31d6d978628a2d78a6a66331583b68b38a741faf01a48e9d0.
+Native job native-real-fused-chunks4-16 completed exit1. Layer0 fused GDN passed
+four active tokens followed by two active/two inactive tokens, state continuation
+and replay. Layer3's four-token hidden output failed max absolute0.25/relative
+L20.015542778450663965 against the unchanged0.05/0.01 limits. The batch script
+therefore did not run its16-token check. No optimized full-model timing exists yet.
+
+This does not yet locate the discrepancy in the attention kernel: the earlier
+serial real-layer gate covered only two steps. The next diagnostic broadens
+serial coverage to six steps, records per-token and cache-state metrics before
+asserting, and tests4/16 profiles independently. This distinguishes a fused-core
+regression from batched projections, quantization/rounding or a newly exposed
+baseline/reference difference. Strict cutoffs remain unchanged; raw failures stay.
+
+The staged whole-model probe can select chunk4/16 explicitly, keeping one engine
+and compressed weight set per layer for both prefill and decode. Its chunked
+prefill uses the current Garnet batched embedding/prefill_sequence flow. This
+profile is prepared, not admitted or measured, pending the component gates.
+
+The full-vlm-pilot-evidence.zip transfer was verified:559,813 bytes,24 entries,
+SHA256901e7baac7c7af515156393680ae089bc516bec0255c47247062910feb31f6c4.
+It includes source snapshots, native raw token timings, NVML records, matched JPEG
+reference requests/responses and the strict VLM failure. CUDA memory snapshot
+29,194,911,744 bytes is also retained separately from the lower NVML sampled
+maximum; the APIs have different measurement scopes and are not equated.

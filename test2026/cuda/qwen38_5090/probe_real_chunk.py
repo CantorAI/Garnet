@@ -13,8 +13,7 @@ def compare(actual,expected):
     assert len(actual)==len(expected) and all(math.isfinite(x) for x in actual)
     errors=[abs(a-b) for a,b in zip(actual,expected)]
     rel=(sum(x*x for x in errors)/max(1e-20,sum(x*x for x in expected)))**.5
-    row={'max_absolute_error':max(errors),'relative_l2_error':rel}
-    assert rel<=.01 and row['max_absolute_error']<=.05,row
+    row={'max_absolute_error':max(errors),'relative_l2_error':rel,'passed':rel<=.01 and max(errors)<=.05}
     return row
 for item in oracle['layers']:
     graph=garnet.compiled_graph();io=garnet.cuda_tensor_io()
@@ -38,14 +37,20 @@ for item in oracle['layers']:
             for enabled in [False,True,True,True,True]:
                 graph.enable_cuda_graph(enabled);packed=graph.run_device(args);io.slice_into(packed,0,hidden)
                 actual=garnet.tensor_to_cpu(hidden).tolist()[:count*width]
-                checks.append(compare(actual,[v for c in selected for v in c['expected_hidden']]))
+                if not checks:
+                    with open(output+'.layer'+str(idx)+'.start'+str(start)+'.f32','wb') as f:f.write(io.finite_f32_bytes(hidden))
+                row=compare(actual,[v for c in selected for v in c['expected_hidden']])
+                row['tokens']=[compare(actual[i*width:(i+1)*width],selected[i]['expected_hidden']) for i in range(count)]
+                row['passed']=row['passed'] and all(t['passed'] for t in row['tokens']);checks.append(row)
             offset=chunk*width;states=[]
             for state,sample in zip(args[1:3],selected[-1]['state_samples']):
                 io.slice_into(packed,offset,state);values=garnet.tensor_to_cpu(state).tolist()
                 states.append(compare([values[i] for i in sample['indices']],sample['values']));offset+=len(values)
             chunks.append({'start':start,'active_tokens':count,'hidden':checks,'sampled_states':states})
         stats=json.loads(graph.stats_json());assert stats['graph_replays']>=2 and stats['graph_capture_failures']==0
-        reports.append({'layer':idx,'kind':kind,'chunks':chunks,'stats':stats})
+        passed=all(c['passed'] for block in chunks for c in block['hidden']+block['sampled_states'])
+        reports.append({'layer':idx,'kind':kind,'chunks':chunks,'stats':stats,'passed':passed})
         with open(output,'w') as f:json.dump({'layers':reports,'completed':len(reports)==2,'tested_chunk':chunk,'tested_steps':chunk+2,'scope':oracle['scope']},f,indent=2)
-        print('REAL_FUSED_QWEN38_CHUNK_PASS',idx,kind,flush=True)
+        print('REAL_FUSED_QWEN38_CHUNK_RESULT',idx,kind,'passed',passed,flush=True)
     finally:graph.close();io.close()
+assert all(r['passed'] for r in reports),[(r['layer'],r['passed']) for r in reports]

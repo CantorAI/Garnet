@@ -4,6 +4,7 @@ sys.path.insert(0,os.environ['GARNET_RUNTIME_ROOT']);sys.path.insert(0,os.getcwd
 import garnet
 from xModel.qwen38.vl_27b.model import create_cuda_decoder,create_cuda_vision,prepare_cuda_image
 checkpoint,fixture,output=sys.argv[1:4]
+chunk=int(os.environ.get('GARNET_STUDY_CHUNK','1'));assert chunk in [1,4,16]
 with open(os.path.join(checkpoint,'config.json')) as f:config=json.load(f)
 with open(os.path.join(fixture,'oracle.json')) as f:oracle=json.load(f)
 tokenizer=garnet.tokenizer();tokenizer.open(checkpoint)
@@ -24,7 +25,8 @@ if len(sys.argv)>4:
 decoder=None;vision=None;reports=[]
 try:
     vision=create_cuda_vision(checkpoint,config,16,16)
-    decoder=create_cuda_decoder(checkpoint,config,4096);decoder.enable_cuda_graph(True);vision.graph.enable_cuda_graph(True)
+    decoder=create_cuda_decoder(checkpoint,config,4096,chunk_size=chunk,fused_delta=chunk>1,fused_attention=chunk>1)
+    decoder.enable_cuda_graph(True);vision.graph.enable_cuda_graph(True)
     if len(sys.argv)>4:
         run_native_text_pilot(decoder,tokenizer,sys.argv[4],output+'.text-pilot.json')
     for case in oracle['cases']:
@@ -40,10 +42,15 @@ try:
                 if j==63:current+=8
             else:positions.append([current]*3);current+=1
         prediction=None
-        for i,token in enumerate(ids):
-            if image_start<=i<image_start+64:
-                prediction=decoder.step_hidden(io.visual_token(visual,i-image_start),positions=[positions[i]],predict=i+1==len(ids))
-            else:prediction=decoder.step([token],positions=[positions[i]],predict=i+1==len(ids))
+        if chunk>1:
+            embeddings=io.embedding(ids)
+            hidden=[io.visual_token(visual,i-image_start) if image_start<=i<image_start+64 else io.row(embeddings,i) for i in range(len(ids))]
+            prediction=decoder.prefill_sequence(hidden,[positions])
+        else:
+            for i,token in enumerate(ids):
+                if image_start<=i<image_start+64:
+                    prediction=decoder.step_hidden(io.visual_token(visual,i-image_start),positions=[positions[i]],predict=i+1==len(ids))
+                else:prediction=decoder.step([token],positions=[positions[i]],predict=i+1==len(ids))
         generated=[]
         for step in range(32):
             token=prediction[0];generated.append(token)
@@ -55,7 +62,7 @@ try:
             'semantic_smoke_pass':text.lower().rstrip('.')==case['expected_color'],
             'image_sha256':case['image_sha256'],'prompt_tokens':len(ids),'image_tokens':64}
         reports.append(row)
-        result={'cases':reports,'layers':64,'capacity':4096,'batch':1,'vision_projection_precision':'BF16 default',
+        result={'cases':reports,'layers':64,'capacity':4096,'batch':1,'chunk':chunk,'vision_projection_precision':'BF16 default',
             'io_memory':json.loads(io.memory_json()),'vision_stats':json.loads(vision.graph.stats_json()),
             'scope':'Four matched JPEG color/spatial smoke cases only; numerical vision failures and broader quality remain separate; no timing claim'}
         with open(output,'w') as f:json.dump(result,f,indent=2)

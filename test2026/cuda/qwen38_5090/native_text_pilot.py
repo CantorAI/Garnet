@@ -9,7 +9,12 @@ def run_native_text_pilot(decoder,tokenizer,request_path,output):
         assert body['temperature']==0 and body['max_tokens']==32 and isinstance(body['messages'][0]['content'],str)
         prompt='<|im_start|>user\n'+body['messages'][0]['content']+'<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n'
         ids=tokenizer.encode(prompt);assert len(ids)==41 and len(ids)+32<=4096
-        for i,token in enumerate(ids):prediction=decoder.step([token],predict=i+1==len(ids))
+        if decoder.chunk_size>1:
+            embeddings=decoder.io.embedding(ids)
+            hidden=[decoder.io.row(embeddings,i) for i in range(len(ids))]
+            prediction=decoder.prefill_sequence(hidden,[[[i]*3 for i in range(len(ids))]])
+        else:
+            for i,token in enumerate(ids):prediction=decoder.step([token],predict=i+1==len(ids))
         events=[{'token_id':prediction[0],'monotonic_seconds':time.monotonic()}]
         stops=[tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
         while len(events)<32 and events[-1]['token_id'] not in stops:
@@ -22,6 +27,8 @@ def run_native_text_pilot(decoder,tokenizer,request_path,output):
             'token_events':events,'generated_ids':generated,'text':tokenizer.decode([t for t in generated if t not in stops]),
             'finish_reason':'stop' if generated[-1] in stops else 'length'})
         result={'run_id':os.environ.get('GARNET_STUDY_RUN_ID'),'rows':reports,'status':'completed' if index==len(inputs['requests']) else 'running','context_capacity':4096,'batch':1,'concurrency':1,'warmups':1,
+            'prefill_chunk':decoder.chunk_size,'decode_chunk':decoder.chunk_size,
+            'fused_delta':decoder.fused_delta,'fused_attention':decoder.fused_attention,
             'source_request_manifest':inputs,'io_memory_snapshot':json.loads(decoder.io.memory_json()),
             'scope':'Exploratory synchronized direct native calls; includes tokenization/reset/prefill/sampling, excludes HTTP; not a matched TTFT/throughput or2x claim'}
         with open(output,'w') as f:json.dump(result,f,indent=2)
