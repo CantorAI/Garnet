@@ -1,0 +1,116 @@
+"""Replay actual B2 worker transport against independently retained B1 oracles."""
+from pathlib import Path
+import base64
+import hashlib
+import json
+import math
+import zipfile
+
+out = Path(__file__).parent
+sha = lambda raw: hashlib.sha256(raw).hexdigest()
+archive = out / 'batch-mtp-deferred-stream-protocol-attempt1-evidence.zip'
+with zipfile.ZipFile(archive) as z:
+    assert z.testzip() is None
+    evidence = json.loads(z.read('evidence-manifest.json'))
+    for name, digest in evidence['files'].items():
+        assert sha(z.read(name)) == digest
+    for name, digest in evidence['linked_archives'].items():
+        assert sha((out / name).read_bytes()) == digest
+    doc = lambda name: json.loads(z.read(name))
+    base = 'results/batch-mtp-deferred-stream-protocol-attempt1/'
+    workflow = doc(base+'workflow.json')
+    report = doc(base+'native/report.json')
+    assert workflow['exit_code'] == report['exit_code'] == 0
+    assert report['status'] == 'batch_stream_protocol_passed_needs_independent_replay'
+    build = doc('results/native-full-attention-fp8-build-attempt1/manifest.json')
+    assert evidence['library_sha256'] == workflow['library_sha256'] == build['library_sha256']
+    for name, digest in build['source_sha256'].items():
+        assert sha(z.read('Garnet/'+name)) == digest
+    prior = doc('results/shared-full-b2-attempt1-verified.json')
+    assert prior['model_gate_passed'] and prior['library_sha256'] == evidence['library_sha256']
+    mtp = doc('results/shared-mtp3-full-b2-deferred-attempt1-verified.json')
+    assert mtp['status'] == 'shared_mtp3_full_b2_deferred_id_state_hash_gate_verified'
+    assert mtp['model_gate_passed'] and mtp['strict_target_state_hash_gate_passed']
+    assert mtp['library_sha256'] == evidence['library_sha256']
+    assert mtp['archive_sha256'] == evidence['linked_archives']['shared-mtp3-full-b2-deferred-attempt1-evidence.zip']
+    workspace = doc('results/shared-mtp3-full-b2-deferred-attempt1/workflow.json')
+    for name, digest in workspace['workspace_source_sha256'].items():
+        assert sha(z.read('Garnet/'+name)) == digest
+
+    wire = z.read(base+'native/requests.jsonl')
+    assert sha(wire) == report['request_sha256']
+    frames = [json.loads(line) for line in wire.splitlines()]
+    names = ['s3-text-c1-r0-greedy', 's3-image-c1-r0-greedy', 'red', 'green']
+    groups = [names[:2], names[:2], [names[0]], [names[1]], names[2:], names[:2]]
+    assert len(frames) == 6
+    expected = {}
+    for index, (frame, group) in enumerate(zip(frames, groups)):
+        assert len(frame['batch']) == len(group)
+        for row, (job, name) in enumerate(zip(frame['batch'], group)):
+            reference = 'results/native-mtp3-http/'+name
+            body = doc(reference+'-request.json')
+            choice = doc(reference+'-response.json')['choices'][0]
+            if index == 5 and row == 0:
+                body['max_tokens'] = 2
+            key = str(index)+'-'+str(row)
+            assert job == {'id': key, 'body': body}
+            content = body['messages'][0]['content']
+            image_hash = None if isinstance(content, str) else sha(base64.b64decode(content[0]['image_url']['url'].split(',', 1)[1], validate=True))
+            expected[key] = {'prompt': choice['prompt_token_ids'], 'ids': choice['response_token_ids'][:body['max_tokens']], 'image_hash': image_hash}
+    tokens = {key: [] for key in expected}
+    completed = set()
+    ready = []
+    previous = -math.inf
+    for line in z.read(base+'native/worker-stdout.log').decode('utf8').splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        kind = event.get('event')
+        if kind == 'ready':
+            ready.append(event)
+            continue
+        if kind not in ('token', 'completed', 'error'):
+            continue
+        assert len(ready) == 1 and kind != 'error'
+        key = event['id']
+        assert key in expected and key not in completed
+        if kind == 'token':
+            tokens[key].append(event['token_id'])
+            now = event['native_monotonic_seconds']
+            assert math.isfinite(now) and now >= previous
+            previous = now
+            assert event['sampled_tokens'] == len(tokens[key])
+            assert event['prompt_tokens'] == len(expected[key]['prompt'])
+        else:
+            use_mtp = key.split('-')[0] in ('0', '1', '4')
+            assert event['generation_mode'] == ('verified_mtp' if use_mtp else 'greedy_target')
+            if use_mtp:
+                counters = event['speculative_metrics']
+                assert counters['target_forward_calls'] == counters['target_verification_calls'] + counters['target_prefix_recomputes']
+                assert counters['target_verification_calls'] == len(counters['iterations'])
+                assert 0 <= counters['accepted_draft_tokens'] <= counters['proposed_draft_tokens']
+                assert counters['mtp_prefill_calls'] > 0
+            assert event['generated_ids'] == tokens[key] == expected[key]['ids']
+            assert event['prompt_ids'] == expected[key]['prompt']
+            assert event['image_sha256'] == expected[key]['image_hash']
+            completed.add(key)
+    assert completed == set(expected) and len(completed) == 10
+    assert ready[0] == report['ready'] and ready[0]['protocol'] == 'study_batch_v1' and ready[0]['batch'] == 2
+    assert ready[0]['deferred_state_commit']
+    assert ready[0]['mtp_depth'] == 3 and ready[0]['mtp_policy'] == 'two_real_rows_equal_limits_else_greedy'
+    assert ready[0]['library_sha256'] == evidence['library_sha256'] and ready[0]['shared_compressed_weights']
+    assert {(v['id'], v['tokens'], v['exact']) for v in report['cases']} == {(key, len(v['ids']), True) for key, v in expected.items()}
+    events = [json.loads(line) for line in z.read(base+'ledger/commands.jsonl').decode().splitlines()]
+    assert events[-1]['event'] == 'finished' and events[-1]['exit_code'] == 0
+    monitor = doc(base+'resources/resource-monitor.json')
+    samples = [json.loads(line) for line in z.read(base+'resources/resource-vram.jsonl').decode().splitlines()]
+    assert monitor['child_exit_code'] == 0 and monitor['sampled_memory']['samples'] == len(samples)
+    peak = max(v['used_bytes'] for v in samples)
+    assert peak == monitor['sampled_memory']['sampled_peak_adapter_used_bytes']
+result = {'status': 'batch_mtp_deferred_stream_protocol_independently_verified', 'archive_sha256': sha(archive.read_bytes()),
+    'files_verified': len(evidence['files']), 'library_sha256': evidence['library_sha256'],
+    'groups': 6, 'requests': 10, 'exact_ids_and_prompt_ids': True, 'partial_groups_and_row_isolation': True,
+    'mtp_and_greedy_fallback_modes_verified': True, 'image_hashes_verified': True, 'sampled_peak_adapter_used_bytes': peak, 'performance_admitted': False}
+(out/'batch-mtp-deferred-stream-protocol-attempt1-verified.json').write_text(json.dumps(result, indent=2), encoding='utf8')
+print(json.dumps(result, indent=2))
