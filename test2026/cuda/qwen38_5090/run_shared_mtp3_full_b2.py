@@ -18,11 +18,15 @@ build_path = root / "results/native-full-attention-fp8-build-attempt1/manifest.j
 build = json.loads(build_path.read_text())
 assert build["status"] == "native_full_attention_policy_build_finished_unqualified" and build["exit_code"] == 0
 digest = build["library_sha256"]
-http_terminal = root / 'results/batch-http-pilot-attempt1/ledger/commands.jsonl'
+http_terminal = root / 'results/batch-http-pilot-attempt2/ledger/commands.jsonl'
 http_events = [json.loads(line) for line in http_terminal.read_text().splitlines()]
 assert http_events[-1]['event'] == 'finished', 'Do not overlap the original live HTTP GPU worker'
-http_workflow = json.loads((root / 'results/batch-http-pilot-attempt1/workflow.json').read_text())
+http_workflow = json.loads((root / 'results/batch-http-pilot-attempt2/workflow.json').read_text())
 assert http_workflow['exit_code'] == 0, 'Inspect any preceding HTTP failure before launching another experiment'
+http_proof_path=root/'results/batch-http-pilot-attempt2-verified.json'
+http_proof=json.loads(http_proof_path.read_text())
+assert http_proof['status']=='batch_http_pilot_independently_verified' and http_proof['serialization_regression_captures']==4
+assert http_proof['library_sha256']==digest
 shared_proof_path = root / 'results/shared-full-b2-attempt1-verified.json'
 shared_proof = json.loads(shared_proof_path.read_text())
 assert shared_proof['status'] == 'shared_full_b2_id_gate_verified' and shared_proof['model_gate_passed']
@@ -69,7 +73,7 @@ workflow = {"status": "running", "library_sha256": digest,
 code = run([sys.executable, str(methods / "monitor_native_probe.py"), "--study", str(root),
     "--output", str(out / "resources"), "--", "cmd.exe", "/d", "/c", str(launcher),
     str(out / "native"), str(cache)], out / "ledger", "correctness", "first-attention-real-stage-primary-gate",
-    [library, launcher, probe, proof, receipt, control_path, stage_path, full_path, shared_proof_path, http_terminal, root / "Garnet/xModel/qwen35/vl_0_8b/cuda_speculative.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_packed_replay.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_mtp.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_verify.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_packed_decoder.py", failure, Path(__file__),
+    [library, launcher, probe, proof, receipt, control_path, stage_path, full_path, shared_proof_path, http_terminal, http_proof_path, root / "Garnet/xModel/qwen35/vl_0_8b/cuda_speculative.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_packed_replay.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_mtp.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_verify.py", root / "Garnet/xModel/qwen35/vl_0_8b/cuda_packed_decoder.py", failure, Path(__file__),
      build_path, root / "results/first-attention-stage-witness/manifest.json"])
 workflow["exit_code"] = code
 workflow["status"] = "process_failed" if code else "completed_needs_independent_replay"
