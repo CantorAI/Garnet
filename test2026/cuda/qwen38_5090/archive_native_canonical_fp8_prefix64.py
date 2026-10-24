@@ -7,7 +7,7 @@ import subprocess
 import zipfile
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--experiment", choices=("prefix64", "prefix8-16"), default="prefix64")
+parser.add_argument("--experiment", choices=("prefix64", "prefix8-16", "prefix4-hidden"), default="prefix64")
 experiment = parser.parse_args().experiment
 stem = "native-canonical-fp8-" + experiment
 root = Path("D:/CantorAI/5090-study-20261023")
@@ -31,7 +31,7 @@ for directory in (folder, outer, results / "study-ssd-cache-setup-ledger",
 files.extend(root / n for n in ("run-" + stem + ".py",
     "test-" + stem + ".bat", "prepare-ssd-engine-cache.py"))
 files.extend(root / "Garnet" / n for n in (
-    "test2026/cuda/qwen38_5090/probe_native_deeper_prefix_batch.py",
+    "test2026/cuda/qwen38_5090/" + ("probe_native_prefix_hidden_chunks.py" if experiment == "prefix4-hidden" else "probe_native_deeper_prefix_batch.py"),
     "test2026/cuda/qwen38_5090/run_logged.py",
     "test2026/cuda/qwen38_5090/monitor_native_probe.py",
     "src/backends/tensorrt/qwen35_lowering.h",
@@ -53,7 +53,8 @@ manifest = {"storage": "sha256-objects-v1", "files": observations,
     "objects": {h: len(b) for h, b in objects.items()}, "library_sha256": library,
     "linked_archives": {n: sha((results / n).read_bytes()) for n in (
         "native-canonical-fp8-prefix4-attempt1-evidence.zip", "native-canonical-fp8-full-b2-attempt1-evidence.zip") +
-        (("native-canonical-fp8-prefix64-attempt1-evidence.zip",) if experiment != "prefix64" else ())},
+        (("native-canonical-fp8-prefix64-attempt1-evidence.zip",) if experiment != "prefix64" else ()) +
+        (("native-prefix-batch-evidence.zip", "native-canonical-fp8-prefix8-16-attempt1-evidence.zip") if experiment == "prefix4-hidden" else ())},
     "scope": "Deeper-prefix duplicate-text prefill outputs, raw arrays, source/build provenance and resources. No ragged text/image generation, quality or performance admission."}
 with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as z:
     for h, raw in objects.items(): z.writestr("objects/" + h, raw)
