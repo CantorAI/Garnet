@@ -8,7 +8,8 @@ def summarize(rows):
 
     Warmups must be removed by the caller. last_token means last generated token,
     while completed includes transport and final output processing. Chunk counts
-    must never be supplied as generated_tokens.
+    must never be supplied as generated_tokens. Decode excludes all tokens
+    already present in the first arrival batch (one for direct-token events).
     """
     if not rows:
         raise ValueError('No measured requests')
@@ -25,10 +26,13 @@ def summarize(rows):
         n = r['generated_tokens']
         if isinstance(n,bool) or not isinstance(n,int) or n < 1 or not s <= first <= last <= done:
             raise ValueError('Invalid token count or event ordering')
+        first_batch=r.get('first_arrival_batch_tokens',1)
+        if type(first_batch) is not int or not 1<=first_batch<=n:
+            raise ValueError('Invalid first arrival token count')
         if n > 1 and last <= first:
             raise ValueError('Multiple tokens require a positive decode interval')
         ttft.append((first-s)*1000)
-        if n > 1: decode.append((n-1)/(last-first))
+        if n > first_batch: decode.append((n-first_batch)/(last-first))
         tokens += n
         start, end = min(start,s), max(end,done)
     if end <= start:

@@ -6,6 +6,7 @@ from metrics import summarize
 class ComparisonEvidenceTests(unittest.TestCase):
  def fixture(self):
   key='run-s3-text-c1-r0';wire=b'{"max_tokens":2}';row={'status':'completed','submitted':1.,'first_token':2.,'last_token':3.,'completed':4.,'generated_tokens':2,'prompt_tokens':3,'text':'ab','finish_reason':'length','request_sha256':hashlib.sha256(wire).hexdigest()}
+  row.update(first_arrival_batch_tokens=1,largest_arrival_batch_tokens=1,single_token_arrivals=True)
   data={key+'-request.json':wire,key+'-result.json':json.dumps(row).encode()};events=[]
   for n,t in [(1,2.),(2,3.)]:events.append({'monotonic':t,'data':json.dumps({'choices':[{'delta':{'content':'a' if n==1 else 'b'},'finish_reason':'length' if n==2 else None}],'usage':{'prompt_tokens':3,'completion_tokens':n}})})
   events.append({'monotonic':3.1,'data':'[DONE]'});data[key+'-events.jsonl']='\n'.join(json.dumps(e) for e in events).encode()

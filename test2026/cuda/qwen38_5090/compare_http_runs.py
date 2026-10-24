@@ -19,7 +19,7 @@ def verify_run(manifest,read):
             for line in read(key+'-events.jsonl').decode().splitlines():
                 event=json.loads(line);state.feed(event['data'],event['monotonic'])
             replay=state.result(saved['submitted'],saved['completed'],body['max_tokens'])
-            for field in ('generated_tokens','prompt_tokens','first_token','last_token','text','finish_reason'):
+            for field in ('generated_tokens','prompt_tokens','first_token','last_token','text','finish_reason','first_arrival_batch_tokens','largest_arrival_batch_tokens','single_token_arrivals'):
                 if replay[field]!=saved[field]:raise ValueError('Raw stream/result mismatch '+field+': '+key)
             rows.append(saved)
             workload_key=key.removeprefix(manifest['run_id']+'-')

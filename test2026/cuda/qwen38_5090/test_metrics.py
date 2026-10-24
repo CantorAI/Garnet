@@ -18,6 +18,15 @@ class MetricsTest(unittest.TestCase):
         r = summarize([row(first=1,last=1,n=1)])
         self.assertIsNone(r['decode_median_tokens_per_second'])
 
+    def test_speculative_first_arrival_batch_is_excluded_in_full(self):
+        result=summarize([dict(row(n=5),first_arrival_batch_tokens=3)])
+        self.assertEqual(result['decode_median_tokens_per_second'],1)
+        self.assertEqual(result['generated_tokens'],5)
+        self.assertEqual(result['ttft_median_ms'],1000)
+        self.assertEqual(result['output_tokens_per_second'],1.25)
+        for count in (0,6,True):
+            with self.assertRaises(ValueError):summarize([dict(row(n=5),first_arrival_batch_tokens=count)])
+
     def test_failures_and_bad_events_cannot_claim_speed(self):
         for r in [dict(row(),status='error'),row(first=3,last=2),row(first=1,last=1),row(n=0),row(first=float('nan'))]:
             with self.assertRaises(ValueError): summarize([r])
