@@ -1428,3 +1428,91 @@ Corrected4B run c2e3b157aa34452a8ea5ec13a5837c52, sourcec8d0e21dc, completed exi
 qwen35-4b-grid16-evidence.zip 88689bytes SHA256 beb80c6e2aa69997eac5a96b03fa53ca8cd58674b654cb51a49652cceeb03c1b. Independently verified ZIP CRC/allfile hashes and actual callback/final-ID/long-input fields after downloading. Initial failed image-grid run remains separately preserved.
 
 After verified terminal4B and GPU464MiB used/31724MiB free, synchronized3e26eb8cc source with6452 verified files/zero mismatches. Started native-mtp3-http-server and native-mtp3-gated-http handles, using explicit packed/MTPdepth3 launcher and separately pinned existing qualified DLL. Native process24524 is live loading/building; no MTP readiness, numerical pass or timing result yet. Do not restart for quiet output, overlap a model, or change its running source. Installed-reference MTP source audit was invoked read-only; observation timeout does not establish that it failed or completed, so inspect its artifact/process before retry. Full final comparison must include feasible supported vLLM/SGLang MTP candidates as well as ordinary decode; generic MTP implementations do not prove this mixed-quantized VLM checkpoint is supported.2x remains unmet.
+
+
+## P076 - 2026-10-23: actual MTP3 passes strict greedy gates,72tok/s candidate remains far from2x
+
+Source3e26eb8cc, MTP3 runfdac816cfa4645ce845e3e2fafc4b3ed completed correctness+benchmark exit0. Four retained native VLM/prompt/semantic checks passed, reference exact3/4 remains the known bottom-blue whitespace difference. All16 complete128-token self-greedy text/image pairs matched exact prompt/generated IDs, actual verified_mtp mode and real metrics; real stream gates passed before timing. Measured16 requests generated2048 actual tokens, no fabricated arrivals. B1/capacity4096/short41text104image/max128/seed3/binary-grid image-first JPEG.
+
+[
+  {
+    "requests": 8,
+    "generated_tokens": 1024,
+    "ttft_median_ms": 111.15090000021155,
+    "decode_median_tokens_per_second": 72.11572324956046,
+    "output_tokens_per_second": 67.2679320557427,
+    "requests_per_second": 0.5255307191854899,
+    "sampled_peak_adapter_used_bytes": 27616133120,
+    "samples": 482,
+    "requested_interval_seconds": 0.02,
+    "observed_sample_gap_median_seconds": 0.03192420000050333,
+    "observed_sample_gap_max_seconds": 0.0339968999978737,
+    "scope": "NVML adapter-wide used memory, including background allocations; sampled maximum, not instantaneous or process-attributed peak",
+    "case": "text",
+    "concurrency": 1,
+    "single_token_arrivals": true,
+    "prompt_tokens": [
+      41,
+      41,
+      41,
+      41,
+      41,
+      41,
+      41,
+      41
+    ],
+    "request_keys": [
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r0",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r1",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r2",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r3",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r4",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r5",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r6",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-text-c1-r7"
+    ]
+  },
+  {
+    "requests": 8,
+    "generated_tokens": 1024,
+    "ttft_median_ms": 269.9392500016984,
+    "decode_median_tokens_per_second": 71.65596627478999,
+    "output_tokens_per_second": 62.18879488124505,
+    "requests_per_second": 0.48584996000972697,
+    "sampled_peak_adapter_used_bytes": 27620327424,
+    "samples": 521,
+    "requested_interval_seconds": 0.02,
+    "observed_sample_gap_median_seconds": 0.031915049999952316,
+    "observed_sample_gap_max_seconds": 0.03375939999750699,
+    "scope": "NVML adapter-wide used memory, including background allocations; sampled maximum, not instantaneous or process-attributed peak",
+    "case": "image",
+    "concurrency": 1,
+    "single_token_arrivals": true,
+    "prompt_tokens": [
+      104,
+      104,
+      104,
+      104,
+      104,
+      104,
+      104,
+      104
+    ],
+    "request_keys": [
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r0",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r1",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r2",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r3",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r4",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r5",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r6",
+      "fdac816cfa4645ce845e3e2fafc4b3ed-s3-image-c1-r7"
+    ]
+  }
+]
+
+Native MTP3 raw SSE and requests replayed independently after archive download. All16 measured streams confirmed actual verified_mtp mode/positive verification calls from saved final frames. Recomputed all16 complete teacher/trial checks from raw responses, not only saved booleans. Archive477332bytes/162entries SHA256 38b2eb3dc5cdf4a155c992fe616c0d8c508809fb165a79144a4cd71045c2acb0 verified CRC/allfile digests. See native-mtp3-evidence.zip and native-mtp3-raw-replay-comparison.json.
+
+B1 request bytes and prompt/output counts match the completed corrected-grid vLLM run. Provisional native/vLLM decode ratio text1.0531,image1.0461; aggregate output ratio text1.0573,image0.9837; native/vLLM TTFT ratio text0.7295,image1.6212. Thus image TTFT worsens and2x is not established. These are single-run arithmetic comparisons; SGLang corrected-grid, broad quality/precision equivalence, repetition, reference MTP/tuning and native batched concurrency remain pending. Earlier Garnet~36tok/s used a different profile, so do not attribute a controlled2x native improvement without matched ordinary-target timing.
+
+Intentional shutdown after benchmark: first guarded process lookup matched both supervisor and bridge and refused to act. Narrowed to the actual bridge excluding run_logged; recorded identity5596 and stopped only its tree (cmd15268,xlang24524). Server supervisor exit1 is the documented intentional force-stop, not benchmark failure; gated driver exit0. GPU464MiB used/31724MiB free confirmed. Source stayed fixed throughout. Prepared separate MTP7 launcher, identical packed target/4K/pixel/arithmetic profile with depth7 and own temporary image path; requires same strict gates, no assumed gain.
