@@ -21,7 +21,7 @@ try:
     packed_mode=profile['packed'];mtp_depth=profile['depth']
     if profile['shared']:
         from xModel.qwen38.vl_27b.model import create_cuda_shared_compressed_decoder
-        decoder=create_cuda_shared_compressed_decoder(checkpoint,config,4096,retain_linear_inputs=mtp_depth>0)
+        decoder=create_cuda_shared_compressed_decoder(checkpoint,config,4096,retain_linear_inputs=mtp_depth>0,joined_mlp_projections=profile['joined_mlp'])
     elif packed_mode:
         from xModel.qwen38.vl_27b.model import create_cuda_packed_decoder
         decoder=create_cuda_packed_decoder(checkpoint,config,4096,retain_linear_inputs=mtp_depth>0)
@@ -36,7 +36,9 @@ try:
     if mtp_depth:
         from xModel.qwen38.vl_27b.model import create_cuda_mtp_session
         speculative=create_cuda_mtp_session(decoder,checkpoint,config,stops,mtp_depth,draft_chunk_size=mtp_chunk)
-    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'reuse_verified_head':bool(speculative is not None and speculative.verifier.reuse_verified_head),'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
+    shared_pool=json.loads(decoder.io.memory_json()) if profile['shared'] else {}
+    shared_counts={key:shared_pool.get(key) for key in ('compressed_projection_pool_entries','compressed_nvfp4_entries','compressed_fp8_entries')} if profile['shared'] else None
+    emit({'event':'ready','research_only':True,'batch':1,'capacity':4096,'chunk':decoder.chunk_size,'prefill_chunk':getattr(decoder,'prefill_chunk_size',decoder.chunk_size),'shared_compressed_weights':bool(getattr(decoder,'external_compressed_weights',False)),'reuse_verified_head':bool(speculative is not None and speculative.verifier.reuse_verified_head),'joined_mlp_projections':bool(getattr(decoder,'joined_mlp_projections',False)),'shared_compressed_pool':shared_counts,'mtp_depth':mtp_depth,'mtp_chunk':speculative.size if speculative is not None else None,'decoder_layout':'packed_whole' if packed_mode else 'per_layer','precision':'mixed NVFP4/FP8; BF16 vision','vision_input_policy':'resident_copy' if vision_policy=='1' else 'direct','vision_resident_input_bytes':vision.resident_input_bytes,'exact_vlm_parity_gate':'open'})
     for item in requests():
         key=item['id'];body=item['body'];started=time.monotonic()
         try:

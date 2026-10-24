@@ -11,8 +11,18 @@ class WorkerProfileTests(unittest.TestCase):
                 self.assertIn('GARNET_STUDY_SHARED_COMPRESSED',values)
                 profile=resolve_profile(values)
                 self.assertIn('GARNET_STUDY_REUSE_VERIFIED_HEAD',values)
-                self.assertEqual(profile['shared'],path.name in ('serve_native_mtp3_shared_worker.bat','serve_native_mtp3_shared_headreuse_worker.bat'))
+                self.assertEqual(profile['shared'],path.name in ('serve_native_mtp3_shared_worker.bat','serve_native_mtp3_shared_headreuse_worker.bat','serve_native_mtp3_shared_joined_worker.bat'))
+                self.assertIn('GARNET_STUDY_JOINED_MLP',values)
+                self.assertEqual(profile['joined_mlp'],path.name=='serve_native_mtp3_shared_joined_worker.bat')
                 self.assertEqual(profile['reuse_head'],path.name=='serve_native_mtp3_shared_headreuse_worker.bat')
+
+    def test_joined_mlp_requires_the_explicit_single_variable_profile(self):
+        base={'GARNET_STUDY_PACKED':'1','GARNET_STUDY_SHARED_COMPRESSED':'1','GARNET_STUDY_MTP_DEPTH':'3'}
+        self.assertFalse(resolve_profile(base)['joined_mlp'])
+        self.assertTrue(resolve_profile(dict(base,GARNET_STUDY_JOINED_MLP='1'))['joined_mlp'])
+        for override in ({'GARNET_STUDY_MTP_DEPTH':'0'},{'GARNET_STUDY_MTP_DEPTH':'7'},{'GARNET_STUDY_SHARED_COMPRESSED':'0'},{'GARNET_STUDY_REUSE_VERIFIED_HEAD':'1'},{'GARNET_STUDY_JOINED_MLP':'yes'}):
+            values=dict(base,GARNET_STUDY_JOINED_MLP='1');values.update(override)
+            with self.subTest(override=override),self.assertRaises(ValueError):resolve_profile(values)
 
     def test_legacy_defaults(self):
         self.assertEqual(resolve_profile({})['decode_chunk'],16)

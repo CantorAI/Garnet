@@ -18,11 +18,16 @@ def compare_greedy_pair(key,teacher,trial):
  row['passed']=bool(right['response_token_ids']) and row['prompt_ids_match'] and row['generated_ids_match'] and row['teacher_mode']=='greedy_target' and row['trial_mode']=='verified_mtp' and isinstance(metrics,dict)
  return row
 
-def validate_worker_profile(health,depth=None,chunk=None,vision=None,target_chunk=None,prefill_chunk=None,shared=None,reuse_head=None):
+def validate_worker_profile(health,depth=None,chunk=None,vision=None,target_chunk=None,prefill_chunk=None,shared=None,reuse_head=None,joined_mlp=None):
  worker=health.get('native_worker',{})
  if worker.get('mtp_depth') not in (1,3,7):raise ValueError('Actual MTP worker readiness required')
- for key,expected in [('mtp_depth',depth),('mtp_chunk',chunk),('vision_input_policy',vision),('chunk',target_chunk),('prefill_chunk',prefill_chunk),('shared_compressed_weights',shared),('reuse_verified_head',reuse_head)]:
+ for key,expected in [('mtp_depth',depth),('mtp_chunk',chunk),('vision_input_policy',vision),('chunk',target_chunk),('prefill_chunk',prefill_chunk),('shared_compressed_weights',shared),('reuse_verified_head',reuse_head),('joined_mlp_projections',joined_mlp)]:
   if expected is not None and worker.get(key)!=expected:raise ValueError('Actual worker profile mismatch: '+key)
+ if joined_mlp:
+  if worker.get('joined_mlp_projections') is not True:raise ValueError('Actual joined MLP opt-in required')
+  counts=worker.get('shared_compressed_pool') or {}
+  for key,expected in [('compressed_projection_pool_entries',336),('compressed_nvfp4_entries',128),('compressed_fp8_entries',208)]:
+   if type(counts.get(key)) is not int or counts[key]!=expected:raise ValueError('Actual joined compressed matrix count mismatch: '+key)
  return worker
 
 def main():

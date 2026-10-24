@@ -2,6 +2,17 @@
 import copy,unittest
 from validate_native_mtp_http import compare_greedy_pair,validate_worker_profile
 class MTPGateTests(unittest.TestCase):
+ def test_joined_readiness_requires_actual_option_and_typed_native_counts(self):
+  worker={'mtp_depth':3,'mtp_chunk':4,'vision_input_policy':'direct','chunk':4,'prefill_chunk':128,'shared_compressed_weights':True,'reuse_verified_head':False,'joined_mlp_projections':True,
+   'shared_compressed_pool':{'compressed_projection_pool_entries':336,'compressed_nvfp4_entries':128,'compressed_fp8_entries':208}}
+  validate_worker_profile({'native_worker':worker},3,4,'direct',4,128,True,False,True)
+  for value in (None,False,1):
+   bad=copy.deepcopy(worker);bad['joined_mlp_projections']=value
+   with self.subTest(option=value),self.assertRaises(ValueError):validate_worker_profile({'native_worker':bad},3,4,'direct',4,128,True,False,True)
+  for key in worker['shared_compressed_pool']:
+   for value in (None,True,400):
+    bad=copy.deepcopy(worker);bad['shared_compressed_pool'][key]=value
+    with self.subTest(key=key,value=value),self.assertRaises(ValueError):validate_worker_profile({'native_worker':bad},3,4,'direct',4,128,True,False,True)
  def test_head_reuse_requires_actual_readiness_field(self):
   worker={'mtp_depth':3,'mtp_chunk':4,'vision_input_policy':'direct','chunk':4,'prefill_chunk':128,'shared_compressed_weights':True}
   for value in (None,False,16):

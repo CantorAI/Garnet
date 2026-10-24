@@ -2,7 +2,7 @@
 import argparse,json,sys
 from pathlib import Path
 parser=argparse.ArgumentParser();parser.add_argument('study',type=Path);parser.add_argument('output',type=Path)
-parser.add_argument('--reuse-verified-head',action='store_true');a=parser.parse_args();root,out=a.study,a.output
+parser.add_argument('--reuse-verified-head',action='store_true');parser.add_argument('--joined-mlp',action='store_true');a=parser.parse_args();root,out=a.study,a.output
 sys.path.insert(0,str(root/'Garnet/test2026/cuda/qwen38_5090'))
 from validate_native_mtp_http import post,compare_greedy_pair,validate_worker_profile
 from benchmark_stream import payload
@@ -11,7 +11,7 @@ out.mkdir(exist_ok=True);path=out/'report.json'
 if path.exists():raise FileExistsError('Preserve previous diagnostic')
 url='http://127.0.0.1:18082'
 with urlopen(url+'/health',timeout=5) as response:health=json.load(response)
-validate_worker_profile(health,3,4,'direct',4,128,True,True if a.reuse_verified_head else None)
+validate_worker_profile(health,3,4,'direct',4,128,True,True if a.reuse_verified_head else False if a.joined_mlp else None,True if a.joined_mlp else None)
 report={'status':'checking','health':health,'rows':[],
  'scope':'Untimed same-profile target versus MTP full token comparisons and VLM semantic diagnosis after historical T16 regression rejection. Does not waive historical gate, qualify broad precision or admit benchmarking.'}
 def save():path.write_text(json.dumps(report,indent=2))

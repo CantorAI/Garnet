@@ -35,7 +35,7 @@ def verify_records(golden,records,require_head_reuse=False):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('study',type=Path);parser.add_argument('output',type=Path)
-    parser.add_argument('--diagnostic',type=Path);parser.add_argument('--reuse-verified-head',action='store_true');a=parser.parse_args()
+    parser.add_argument('--diagnostic',type=Path);parser.add_argument('--reuse-verified-head',action='store_true');parser.add_argument('--joined-mlp',action='store_true');a=parser.parse_args()
     root,out=a.study,a.output;out.mkdir(exist_ok=True)
     if any(out.iterdir()):raise FileExistsError('Preserve candidate attempt')
     sys.path.insert(0,str(root/'Garnet/test2026/cuda/qwen38_5090'))
@@ -49,7 +49,7 @@ def main():
     golden=json.loads(raw);prior=json.loads((diagnostic/'report.json').read_text())
     if prior['status']!='diagnostic_passed':raise ValueError('Diagnostic did not complete')
     with urlopen(url+'/health',timeout=5) as response:health=json.load(response)
-    validate_worker_profile(health,3,4,'direct',4,128,True,True if a.reuse_verified_head else None)
+    validate_worker_profile(health,3,4,'direct',4,128,True,True if a.reuse_verified_head else False if a.joined_mlp else None,True if a.joined_mlp else None)
     if health!=prior['health']:raise ValueError('Worker profile changed after diagnosis')
     records={};files=[golden_path,diagnostic/'report.json',root/'build/bin/garnet.dll',root/'build/bin/xlang3.exe',root/'models/Qwen3.8-27B-NVFP4/config.json']
     for key in KEYS:
@@ -66,6 +66,17 @@ def main():
             if hashlib.sha256(original.read_bytes()).hexdigest()!=matched[0]['request_sha256']:raise ValueError('Retained request identity changed')
             body=json.loads(original.read_text());body.pop('study_target_only',None)
             if body!=bodies[0]:raise ValueError('Golden request differs')
+    model_gates=None
+    if a.joined_mlp:
+        from joined_model_gates import validate_joined_model_gates
+        state=root/'results/joined-program-equivalence'
+        paths=[state/'original-report.json',state/'joined-report.json',root/'results/joined-decoder-full-qualification/report.json']
+        original,joined,full=[json.loads(p.read_text()) for p in paths]
+        model_gates=validate_joined_model_gates(original,joined,full,golden,hashlib.sha256((root/'build/bin/garnet.dll').read_bytes()).hexdigest())
+        files.extend(paths)
+        for case in ('text','image'):
+            saved=state/(case+'-input.f32');files.append(saved)
+            if hashlib.sha256(saved.read_bytes()).hexdigest()!=original['inputs'][case]['sha256']:raise ValueError('Retained state input changed')
     gates=verify_records(golden,records,require_head_reuse=a.reuse_verified_head)
     for index,case in enumerate(('text','image')):
         key='s3-'+case+'-c1-r0';body,_=payload(case,key,301000+index*20000,'qwen38-27b-nvfp4',128,'jpeg','image-first','binary-grid')
@@ -74,7 +85,7 @@ def main():
         events=[json.loads(line)['data'] for line in (out/(stem+'-events.jsonl')).read_text().splitlines()]
         final=next(json.loads(value) for value in reversed(events) if value!='[DONE]')
         if final['response_token_ids']!=records[key][1]['choices'][0]['response_token_ids']:raise ValueError('Streamed full IDs differ')
-    metadata={'source':source_identity(),'health':health,'same_profile_gates':gates,'golden_sha256':GOLDEN_SHA256,
+    metadata={'source':source_identity(),'health':health,'same_profile_gates':gates,'joined_model_gates':model_gates,'golden_sha256':GOLDEN_SHA256,
         'file_sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
         'scope':'B1 pilot admitted against pinned retained shared-profile goldens plus twenty exact target/MTP pairs and real SSE. Historical T16 gate rejection retained; no cross-profile bit equivalence, broad quality, full-context/concurrency qualification or 2x claim.'}
     path=out/'metadata.json';path.write_text(json.dumps(metadata,indent=2));print('SHARED_PROFILE_EXACT_GOLDENS_MTP_AND_STREAM_GATES_PASSED',flush=True)
