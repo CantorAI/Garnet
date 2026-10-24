@@ -21,7 +21,7 @@ def run_native_text_pilot(decoder,tokenizer,request_path,output):
             'completed':completed,'generated_tokens':len(events),'prompt_tokens':len(ids),'status':'completed',
             'token_events':events,'generated_ids':generated,'text':tokenizer.decode([t for t in generated if t not in stops]),
             'finish_reason':'stop' if generated[-1] in stops else 'length'})
-        result={'rows':reports,'status':'completed' if index==len(inputs['requests']) else 'running','context_capacity':4096,'batch':1,'concurrency':1,'warmups':1,
+        result={'run_id':os.environ.get('GARNET_STUDY_RUN_ID'),'rows':reports,'status':'completed' if index==len(inputs['requests']) else 'running','context_capacity':4096,'batch':1,'concurrency':1,'warmups':1,
             'source_request_manifest':inputs,'io_memory_snapshot':json.loads(decoder.io.memory_json()),
             'scope':'Exploratory synchronized direct native calls; includes tokenization/reset/prefill/sampling, excludes HTTP; not a matched TTFT/throughput or2x claim'}
         with open(output,'w') as f:json.dump(result,f,indent=2)

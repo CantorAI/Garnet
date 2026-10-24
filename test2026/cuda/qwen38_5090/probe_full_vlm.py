@@ -10,6 +10,7 @@ tokenizer=garnet.tokenizer();tokenizer.open(checkpoint)
 suffix='<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n'
 image_id=config['image_token_id'];stops=[tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
 for case in oracle['cases']:
+    assert case['reference_text'].lower().rstrip('.')==case['expected_color']
     with open(os.path.join(fixture,case['image_file']),'rb') as f:assert hashlib.sha256(f.read()).hexdigest()==case['image_sha256']
     actual=tokenizer.encode('<|im_start|>user\n<|vision_start|>')+[image_id]*64+tokenizer.encode('<|vision_end|>'+case['question']+suffix)
     assert actual==case['prompt_ids'],{'case':case['name'],'native_ids':actual,'reference_ids':case['prompt_ids']}

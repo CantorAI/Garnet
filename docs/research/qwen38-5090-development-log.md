@@ -874,3 +874,11 @@ one excluded warmup, eight32-token requests, batch1 and4K capacity. This include
 native tokenization/reset/prefill/sampling and excludes HTTP; its TTFT/throughput
 must not be represented as a matched client HTTP result or proof of2x. It is
 intended to identify native bottlenecks before further optimization. Results pending.
+
+The native supervisor records a separate pilot manifest keyed to this invocation
+to reject stale results. NVML sampling covers the entire build/correctness/pilot
+job; its sampled adapter maximum includes builder allocations and must not be
+called a warmed serving peak. The measured direct-call subset remains separate
+from the outer correctness process duration. Exact runtime binaries are hashed
+after execution. The matched SGLang parent was signaled only after verified
+ownership, observed to exit0, and the GPU returned to106MiB/0% before native work.
